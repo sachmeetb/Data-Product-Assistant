@@ -1,0 +1,214 @@
+{
+    "domain": "campaign",
+    "display_name": "Digital Marketing & Ad-Tech (Campaign)",
+    "description": "Canonical Silver Layer framework for campaign data. Anchored to IAB OpenRTB (ad-tech vocabulary), Google CM / Meta Ads (metric structure), and Adobe XDM ExperienceEvent (journey event design). Every source platform (Google, Meta, DV360, email) normalises into this spine.",
+    "standards": [
+        "IAB_OpenRTB",
+        "Google_CM",
+        "Meta_Ads",
+        "Adobe_XDM_ExperienceEvent"
+    ],
+    "hierarchy": [
+        "slv_campaign",
+        "slv_ad_group",
+        "slv_ad",
+        "slv_creative",
+        "slv_channel",
+        "slv_placement",
+        "slv_audience",
+        "slv_impression_event",
+        "slv_click_event",
+        "slv_conversion_event",
+        "slv_campaign_performance_daily"
+    ],
+    "entity_types": {
+        "dimensions": [
+            "slv_campaign",
+            "slv_ad_group",
+            "slv_ad",
+            "slv_creative",
+            "slv_channel",
+            "slv_placement",
+            "slv_audience"
+        ],
+        "events": [
+            "slv_impression_event",
+            "slv_click_event",
+            "slv_conversion_event"
+        ],
+        "aggregates": [
+            "slv_campaign_performance_daily"
+        ]
+    },
+    "entities": {
+        "slv_campaign": {
+            "type": "dimension",
+            "grain": "one row per campaign",
+            "columns": [
+                {"name": "campaign_id",    "data_type": "STRING",    "nullable": false, "is_pk": true,  "description": "Unique campaign identifier"},
+                {"name": "campaign_name",  "data_type": "STRING",    "nullable": false, "is_pk": false, "description": "Human-readable campaign name"},
+                {"name": "objective",      "data_type": "STRING",    "nullable": true,  "is_pk": false, "description": "Campaign objective: Awareness, Acquisition, or Retention"},
+                {"name": "start_date",     "data_type": "DATE",      "nullable": true,  "is_pk": false, "description": "Campaign start date"},
+                {"name": "end_date",       "data_type": "DATE",      "nullable": true,  "is_pk": false, "description": "Campaign end date"},
+                {"name": "budget_amount",  "data_type": "DOUBLE",    "nullable": true,  "is_pk": false, "description": "Planned budget in reporting currency"},
+                {"name": "business_unit",  "data_type": "STRING",    "nullable": true,  "is_pk": false, "description": "Owning business unit e.g. Retail, EV, Lubricants"}
+            ]
+        },
+        "slv_ad_group": {
+            "type": "dimension",
+            "grain": "one row per ad group / line item",
+            "columns": [
+                {"name": "ad_group_id",   "data_type": "STRING", "nullable": false, "is_pk": true,  "fk_ref": null,                     "description": "Unique ad group identifier"},
+                {"name": "ad_group_name", "data_type": "STRING", "nullable": false, "is_pk": false, "fk_ref": null,                     "description": "Human-readable ad group name"},
+                {"name": "campaign_id",   "data_type": "STRING", "nullable": false, "is_pk": false, "fk_ref": "slv_campaign.campaign_id", "description": "FK to parent campaign"}
+            ]
+        },
+        "slv_ad": {
+            "type": "dimension",
+            "grain": "one row per ad",
+            "columns": [
+                {"name": "ad_id",       "data_type": "STRING", "nullable": false, "is_pk": true,  "fk_ref": null,                         "description": "Unique ad identifier"},
+                {"name": "ad_name",     "data_type": "STRING", "nullable": false, "is_pk": false, "fk_ref": null,                         "description": "Human-readable ad name"},
+                {"name": "ad_group_id", "data_type": "STRING", "nullable": false, "is_pk": false, "fk_ref": "slv_ad_group.ad_group_id",   "description": "FK to parent ad group"},
+                {"name": "campaign_id", "data_type": "STRING", "nullable": false, "is_pk": false, "fk_ref": "slv_campaign.campaign_id",   "description": "FK to parent campaign (denormalised for query convenience)"}
+            ]
+        },
+        "slv_creative": {
+            "type": "dimension",
+            "grain": "one row per creative asset",
+            "columns": [
+                {"name": "creative_id",   "data_type": "STRING", "nullable": false, "is_pk": true,  "fk_ref": null,           "description": "Unique creative asset identifier"},
+                {"name": "creative_name", "data_type": "STRING", "nullable": false, "is_pk": false, "fk_ref": null,           "description": "Human-readable creative name"},
+                {"name": "creative_type", "data_type": "STRING", "nullable": true,  "is_pk": false, "fk_ref": null,           "description": "Creative format: Image, Video, HTML5, Text"},
+                {"name": "ad_id",         "data_type": "STRING", "nullable": false, "is_pk": false, "fk_ref": "slv_ad.ad_id", "description": "FK to the ad this creative belongs to"}
+            ]
+        },
+        "slv_channel": {
+            "type": "dimension",
+            "grain": "one row per delivery channel",
+            "columns": [
+                {"name": "channel_id",   "data_type": "STRING", "nullable": false, "is_pk": true,  "fk_ref": null, "description": "Unique channel identifier"},
+                {"name": "channel_name", "data_type": "STRING", "nullable": false, "is_pk": false, "fk_ref": null, "description": "Normalised channel name: GOOGLE, META, DV360, EMAIL, PROGRAMMATIC"},
+                {"name": "channel_type", "data_type": "STRING", "nullable": true,  "is_pk": false, "fk_ref": null, "description": "Channel category: Paid Search, Paid Social, Programmatic, Email"}
+            ]
+        },
+        "slv_placement": {
+            "type": "dimension",
+            "grain": "one row per placement",
+            "columns": [
+                {"name": "placement_id",   "data_type": "STRING", "nullable": false, "is_pk": true,  "fk_ref": null,                   "description": "Unique placement identifier"},
+                {"name": "placement_name", "data_type": "STRING", "nullable": false, "is_pk": false, "fk_ref": null,                   "description": "Human-readable placement name"},
+                {"name": "channel_id",     "data_type": "STRING", "nullable": false, "is_pk": false, "fk_ref": "slv_channel.channel_id", "description": "FK to delivery channel"},
+                {"name": "site_domain",    "data_type": "STRING", "nullable": true,  "is_pk": false, "fk_ref": null,                   "description": "Domain of the site/app where the ad appeared"}
+            ]
+        },
+        "slv_audience": {
+            "type": "dimension",
+            "grain": "one row per audience segment",
+            "columns": [
+                {"name": "audience_id",   "data_type": "STRING", "nullable": false, "is_pk": true,  "fk_ref": null,                       "description": "Unique audience segment identifier"},
+                {"name": "audience_name", "data_type": "STRING", "nullable": false, "is_pk": false, "fk_ref": null,                       "description": "Human-readable audience/segment name"},
+                {"name": "audience_type", "data_type": "STRING", "nullable": true,  "is_pk": false, "fk_ref": null,                       "description": "Segment type: Lookalike, Retargeting, Interest, Custom"},
+                {"name": "campaign_id",   "data_type": "STRING", "nullable": false, "is_pk": false, "fk_ref": "slv_campaign.campaign_id", "description": "FK to the campaign this audience targets"}
+            ]
+        },
+        "slv_impression_event": {
+            "type": "event",
+            "grain": "one row per ad view",
+            "columns": [
+                {"name": "impression_id",  "data_type": "STRING",    "nullable": false, "is_pk": true,  "fk_ref": null,                       "description": "Unique ad-view identifier"},
+                {"name": "campaign_id",    "data_type": "STRING",    "nullable": false, "is_pk": false, "fk_ref": "slv_campaign.campaign_id", "description": "FK to campaign"},
+                {"name": "ad_id",          "data_type": "STRING",    "nullable": true,  "is_pk": false, "fk_ref": "slv_ad.ad_id",             "description": "FK to ad shown"},
+                {"name": "creative_id",    "data_type": "STRING",    "nullable": true,  "is_pk": false, "fk_ref": "slv_creative.creative_id", "description": "FK to creative rendered"},
+                {"name": "channel",        "data_type": "STRING",    "nullable": false, "is_pk": false, "fk_ref": null,                       "description": "Normalised channel: GOOGLE, META, DV360, EMAIL, PROGRAMMATIC"},
+                {"name": "user_id",        "data_type": "STRING",    "nullable": true,  "is_pk": false, "fk_ref": null,                       "description": "Authenticated user identifier, where known"},
+                {"name": "anonymous_id",   "data_type": "STRING",    "nullable": true,  "is_pk": false, "fk_ref": null,                       "description": "Cookie / device anonymous identifier"},
+                {"name": "timestamp",      "data_type": "TIMESTAMP", "nullable": false, "is_pk": false, "fk_ref": null,                       "description": "UTC timestamp when the ad was shown"},
+                {"name": "device_type",    "data_type": "STRING",    "nullable": true,  "is_pk": false, "fk_ref": null,                       "description": "Normalised device: MOBILE, DESKTOP, TABLET"},
+                {"name": "geo",            "data_type": "STRING",    "nullable": true,  "is_pk": false, "fk_ref": null,                       "description": "Geographic location of the impression (country or region code)"}
+            ]
+        },
+        "slv_click_event": {
+            "type": "event",
+            "grain": "one row per click",
+            "columns": [
+                {"name": "click_id",          "data_type": "STRING",    "nullable": false, "is_pk": true,  "fk_ref": null,                                 "description": "Unique click identifier"},
+                {"name": "impression_id",      "data_type": "STRING",    "nullable": true,  "is_pk": false, "fk_ref": "slv_impression_event.impression_id", "description": "Link back to originating impression — nullable for cross-channel clicks"},
+                {"name": "campaign_id",        "data_type": "STRING",    "nullable": false, "is_pk": false, "fk_ref": "slv_campaign.campaign_id",           "description": "FK to campaign"},
+                {"name": "ad_id",              "data_type": "STRING",    "nullable": true,  "is_pk": false, "fk_ref": "slv_ad.ad_id",                       "description": "FK to ad clicked"},
+                {"name": "timestamp",          "data_type": "TIMESTAMP", "nullable": false, "is_pk": false, "fk_ref": null,                                 "description": "UTC timestamp of the click"},
+                {"name": "landing_page_url",   "data_type": "STRING",    "nullable": true,  "is_pk": false, "fk_ref": null,                                 "description": "Destination URL the user was sent to"},
+                {"name": "cost",               "data_type": "DOUBLE",    "nullable": true,  "is_pk": false, "fk_ref": null,                                 "description": "CPC or allocated cost for this click in reporting currency"}
+            ]
+        },
+        "slv_conversion_event": {
+            "type": "event",
+            "grain": "one row per conversion",
+            "columns": [
+                {"name": "conversion_id",    "data_type": "STRING",    "nullable": false, "is_pk": true,  "fk_ref": null,                           "description": "Unique conversion identifier"},
+                {"name": "click_id",         "data_type": "STRING",    "nullable": true,  "is_pk": false, "fk_ref": "slv_click_event.click_id",     "description": "FK to originating click — nullable for view-through conversions"},
+                {"name": "campaign_id",      "data_type": "STRING",    "nullable": false, "is_pk": false, "fk_ref": "slv_campaign.campaign_id",     "description": "Campaign credited with the conversion"},
+                {"name": "conversion_type",  "data_type": "STRING",    "nullable": false, "is_pk": false, "fk_ref": null,                           "description": "Conversion action: Signup, Purchase, AppInstall, Lead"},
+                {"name": "conversion_value", "data_type": "DOUBLE",    "nullable": true,  "is_pk": false, "fk_ref": null,                           "description": "Revenue or value of the conversion (0.0 for non-revenue conversions)"},
+                {"name": "timestamp",        "data_type": "TIMESTAMP", "nullable": false, "is_pk": false, "fk_ref": null,                           "description": "UTC timestamp of the conversion"}
+            ]
+        },
+        "slv_campaign_performance_daily": {
+            "type": "aggregate",
+            "grain": "one row per campaign + channel + day",
+            "columns": [
+                {"name": "date",        "data_type": "DATE",   "nullable": false, "is_pk": true,  "fk_ref": null,                       "description": "Reporting day (UTC)"},
+                {"name": "campaign_id", "data_type": "STRING", "nullable": false, "is_pk": true,  "fk_ref": "slv_campaign.campaign_id", "description": "FK to campaign (composite PK)"},
+                {"name": "channel",     "data_type": "STRING", "nullable": false, "is_pk": true,  "fk_ref": null,                       "description": "Delivery channel — composite PK (GOOGLE, META, DV360, EMAIL, PROGRAMMATIC)"},
+                {"name": "impressions", "data_type": "BIGINT", "nullable": false, "is_pk": false, "fk_ref": null,                       "description": "COUNT of impression_id from slv_impression_event"},
+                {"name": "clicks",      "data_type": "BIGINT", "nullable": false, "is_pk": false, "fk_ref": null,                       "description": "COUNT of click_id from slv_click_event"},
+                {"name": "conversions", "data_type": "BIGINT", "nullable": false, "is_pk": false, "fk_ref": null,                       "description": "COUNT of conversion_id from slv_conversion_event"},
+                {"name": "spend",       "data_type": "DOUBLE", "nullable": false, "is_pk": false, "fk_ref": null,                       "description": "SUM of cost from slv_click_event for the day and channel"},
+                {"name": "revenue",     "data_type": "DOUBLE", "nullable": true,  "is_pk": false, "fk_ref": null,                       "description": "SUM of conversion_value from slv_conversion_event — null when no conversion value tracked"}
+            ]
+        }
+    },
+    "derived_metrics": {
+        "CTR":  {"formula": "clicks / impressions",   "description": "Click-through rate"},
+        "CPC":  {"formula": "spend / clicks",          "description": "Cost per click"},
+        "CPA":  {"formula": "spend / conversions",     "description": "Cost per acquisition"},
+        "ROAS": {"formula": "revenue / spend",         "description": "Return on ad spend"}
+    },
+    "source_platform_mappings": {
+        "google_ads_impressions":     "slv_impression_event",
+        "google_ads_clicks":          "slv_click_event",
+        "meta_inline_link_clicks":    "slv_click_event",
+        "meta_impressions":           "slv_impression_event",
+        "dv360_creative_id":          "slv_creative",
+        "dv360_impressions":          "slv_impression_event",
+        "email_opens":                "slv_impression_event",
+        "email_clicks":               "slv_click_event",
+        "website_purchase":           "slv_conversion_event",
+        "app_install":                "slv_conversion_event",
+        "lead_form_submit":           "slv_conversion_event",
+        "signup":                     "slv_conversion_event"
+    },
+    "channel_normalisation": {
+        "valid_values": ["GOOGLE", "META", "DV360", "EMAIL", "PROGRAMMATIC"],
+        "transform": "UPPER",
+        "aliases": {
+            "google": "GOOGLE", "google ads": "GOOGLE", "gads": "GOOGLE",
+            "meta": "META", "facebook": "META", "fb": "META", "instagram": "META",
+            "dv360": "DV360", "display & video 360": "DV360", "dbm": "DV360",
+            "email": "EMAIL", "emailing": "EMAIL",
+            "programmatic": "PROGRAMMATIC", "prog": "PROGRAMMATIC", "dsp": "PROGRAMMATIC"
+        }
+    },
+    "device_type_normalisation": {
+        "valid_values": ["MOBILE", "DESKTOP", "TABLET"],
+        "transform": "UPPER"
+    },
+    "domain_keywords": [
+        "campaign", "impression", "impressions", "click", "clicks", "conversion", "conversions",
+        "spend", "ad spend", "budget", "creative", "ad group", "line item", "placement",
+        "channel", "audience", "segment", "ctr", "cpc", "cpa", "roas", "revenue",
+        "programmatic", "dsp", "dv360", "google ads", "meta ads", "facebook ads",
+        "email marketing", "ad-tech", "adtech", "digital advertising", "paid media",
+        "display", "video ad", "banner", "landing page", "attribution"
+    ]
+}

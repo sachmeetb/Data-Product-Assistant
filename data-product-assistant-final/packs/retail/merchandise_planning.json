@@ -1,0 +1,120 @@
+{
+    "schema_version": "2.0",
+    "industry": "retail",
+    "domain": "merchandise_planning",
+    "display_name": "Merchandise Planning",
+    "description": "Canonical Silver Layer framework for retail merchandise planning data. Covers SKUs, stores, categories, sales transactions, inventory events, and retail performance. Anchored to GS1 GTIN/GPC standards and NRF retail data model.",
+    "standards": ["GS1", "NRF_Retail", "ARTS_Retail"],
+    "detection_signals": ["sku", "store", "inventory", "sell-through", "markdown", "pos", "shrinkage", "assortment", "planogram", "replenishment", "gtin", "merchandise", "stock", "on-hand"],
+    "hierarchy": [
+        "slv_category",
+        "slv_sku",
+        "slv_store",
+        "slv_sales_transaction_event",
+        "slv_inventory_event",
+        "slv_retail_performance_daily"
+    ],
+    "entity_types": {
+        "dimensions": ["slv_category", "slv_sku", "slv_store"],
+        "events": ["slv_sales_transaction_event", "slv_inventory_event"],
+        "aggregates": ["slv_retail_performance_daily"]
+    },
+    "entities": {
+        "slv_category": {
+            "type": "dimension",
+            "grain": "one row per merchandise category",
+            "columns": [
+                {"name": "category_id",    "data_type": "STRING", "nullable": false, "is_pk": true,  "fk_ref": null, "description": "Unique category identifier"},
+                {"name": "category_name",  "data_type": "STRING", "nullable": false, "is_pk": false, "fk_ref": null, "description": "Category display name"},
+                {"name": "department",     "data_type": "STRING", "nullable": true,  "is_pk": false, "fk_ref": null, "description": "Parent department e.g. Grocery, Apparel, Electronics"},
+                {"name": "segment",        "data_type": "STRING", "nullable": true,  "is_pk": false, "fk_ref": null, "description": "Sub-segment within department"}
+            ]
+        },
+        "slv_sku": {
+            "type": "dimension",
+            "grain": "one row per stock-keeping unit",
+            "columns": [
+                {"name": "sku_id",         "data_type": "STRING", "nullable": false, "is_pk": true,  "fk_ref": null,                          "description": "Unique SKU identifier"},
+                {"name": "brand",          "data_type": "STRING", "nullable": true,  "is_pk": false, "fk_ref": null,                          "description": "Brand name"},
+                {"name": "category_id",    "data_type": "STRING", "nullable": false, "is_pk": false, "fk_ref": "slv_category.category_id",    "description": "FK to category"},
+                {"name": "unit_cost",      "data_type": "DOUBLE", "nullable": true,  "is_pk": false, "fk_ref": null,                          "description": "Unit cost price"},
+                {"name": "unit_price",     "data_type": "DOUBLE", "nullable": true,  "is_pk": false, "fk_ref": null,                          "description": "Retail selling price"},
+                {"name": "gtin",           "data_type": "STRING", "nullable": true,  "is_pk": false, "fk_ref": null,                          "description": "GS1 Global Trade Item Number (barcode)"},
+                {"name": "gs1_gpc_code",   "data_type": "STRING", "nullable": true,  "is_pk": false, "fk_ref": null,                          "description": "GS1 Global Product Classification segment code"}
+            ]
+        },
+        "slv_store": {
+            "type": "dimension",
+            "grain": "one row per retail store",
+            "columns": [
+                {"name": "store_id",      "data_type": "STRING", "nullable": false, "is_pk": true,  "fk_ref": null, "description": "Unique store identifier"},
+                {"name": "store_format",  "data_type": "STRING", "nullable": false, "is_pk": false, "fk_ref": null, "description": "HYPERMARKET, SUPERMARKET, CONVENIENCE, ONLINE, WAREHOUSE_CLUB"},
+                {"name": "region",        "data_type": "STRING", "nullable": true,  "is_pk": false, "fk_ref": null, "description": "Geographic region or territory"},
+                {"name": "country",       "data_type": "STRING", "nullable": false, "is_pk": false, "fk_ref": null, "description": "ISO 3166-1 alpha-2 country code"}
+            ]
+        },
+        "slv_sales_transaction_event": {
+            "type": "event",
+            "grain": "one row per POS line item",
+            "columns": [
+                {"name": "txn_id",       "data_type": "STRING",    "nullable": false, "is_pk": true,  "fk_ref": null,                    "description": "Unique transaction line identifier"},
+                {"name": "sku_id",       "data_type": "STRING",    "nullable": false, "is_pk": false, "fk_ref": "slv_sku.sku_id",        "description": "FK to SKU"},
+                {"name": "store_id",     "data_type": "STRING",    "nullable": false, "is_pk": false, "fk_ref": "slv_store.store_id",    "description": "FK to store"},
+                {"name": "quantity",     "data_type": "LONG",      "nullable": false, "is_pk": false, "fk_ref": null,                    "description": "Units sold"},
+                {"name": "gross_sales",  "data_type": "DOUBLE",    "nullable": false, "is_pk": false, "fk_ref": null,                    "description": "Gross sales value before discounts"},
+                {"name": "net_sales",    "data_type": "DOUBLE",    "nullable": false, "is_pk": false, "fk_ref": null,                    "description": "Net sales after discounts and returns"},
+                {"name": "discount",     "data_type": "DOUBLE",    "nullable": true,  "is_pk": false, "fk_ref": null,                    "description": "Total discount applied"},
+                {"name": "event_ts",     "data_type": "TIMESTAMP", "nullable": false, "is_pk": false, "fk_ref": null,                    "description": "POS transaction timestamp"}
+            ]
+        },
+        "slv_inventory_event": {
+            "type": "event",
+            "grain": "one row per inventory movement event",
+            "columns": [
+                {"name": "inv_event_id",   "data_type": "STRING",    "nullable": false, "is_pk": true,  "fk_ref": null,                    "description": "Unique inventory event identifier"},
+                {"name": "sku_id",         "data_type": "STRING",    "nullable": false, "is_pk": false, "fk_ref": "slv_sku.sku_id",        "description": "FK to SKU"},
+                {"name": "store_id",       "data_type": "STRING",    "nullable": false, "is_pk": false, "fk_ref": "slv_store.store_id",    "description": "FK to store"},
+                {"name": "event_type",     "data_type": "STRING",    "nullable": false, "is_pk": false, "fk_ref": null,                    "description": "RECEIPT, TRANSFER_IN, TRANSFER_OUT, ADJUSTMENT, WRITE_OFF, MARKDOWN"},
+                {"name": "quantity_delta", "data_type": "LONG",      "nullable": false, "is_pk": false, "fk_ref": null,                    "description": "Change in units (positive=in, negative=out)"},
+                {"name": "on_hand_after",  "data_type": "LONG",      "nullable": true,  "is_pk": false, "fk_ref": null,                    "description": "Stock on hand after this event"},
+                {"name": "event_ts",       "data_type": "TIMESTAMP", "nullable": false, "is_pk": false, "fk_ref": null,                    "description": "Inventory event timestamp"}
+            ]
+        },
+        "slv_retail_performance_daily": {
+            "type": "aggregate",
+            "grain": "one row per SKU per store per day",
+            "columns": [
+                {"name": "date",               "data_type": "DATE",   "nullable": false, "is_pk": true,  "fk_ref": null,                    "description": "Reporting date (composite PK part 1)"},
+                {"name": "sku_id",             "data_type": "STRING", "nullable": false, "is_pk": true,  "fk_ref": "slv_sku.sku_id",        "description": "FK to SKU (composite PK part 2)"},
+                {"name": "store_id",           "data_type": "STRING", "nullable": false, "is_pk": true,  "fk_ref": "slv_store.store_id",    "description": "FK to store (composite PK part 3)"},
+                {"name": "units_sold",         "data_type": "LONG",   "nullable": false, "is_pk": false, "fk_ref": null,                    "description": "Total units sold in the day"},
+                {"name": "gross_sales",        "data_type": "DOUBLE", "nullable": false, "is_pk": false, "fk_ref": null,                    "description": "Gross sales value for the day"},
+                {"name": "inventory_on_hand",  "data_type": "LONG",   "nullable": true,  "is_pk": false, "fk_ref": null,                    "description": "Closing inventory on hand"},
+                {"name": "sell_through_rate",  "data_type": "DOUBLE", "nullable": true,  "is_pk": false, "fk_ref": null,                    "description": "units_sold / (units_sold + inventory_on_hand)"}
+            ]
+        }
+    },
+    "derived_metrics": [
+        {"name": "Sell_Through_Rate", "formula": "units_sold / (units_sold + closing_inventory)",         "grain": "sku+store+period", "description": "Percentage of inventory sold in a period"},
+        {"name": "Gross_Margin",      "formula": "(net_sales - unit_cost * units_sold) / net_sales",       "grain": "sku+store+period", "description": "Gross margin percentage"},
+        {"name": "Inventory_Turn",    "formula": "COGS / average_inventory_value",                         "grain": "sku+store+period", "description": "Inventory turnover rate"}
+    ],
+    "source_platform_mappings": {
+        "pos_system": {
+            "description": "Point-of-sale system (NCR, Toshiba, Oracle Retail)",
+            "maps_to": ["slv_sales_transaction_event"]
+        },
+        "wms": {
+            "description": "Warehouse management system (Manhattan, SAP EWM, Blue Yonder)",
+            "maps_to": ["slv_inventory_event"]
+        },
+        "product_master": {
+            "description": "Product information management system",
+            "maps_to": ["slv_sku", "slv_category"]
+        },
+        "store_master": {
+            "description": "Store / location master data",
+            "maps_to": ["slv_store"]
+        }
+    }
+}

@@ -1,0 +1,98 @@
+trigger:
+- feature_frontend
+
+variables:
+  azureServiceConnection: 'data-agents-sc'
+  webAppName: 'dataagents-ui'
+  vmImageName: 'ubuntu-latest'
+  environmentName: 'dataagents-api'
+  projectRoot: $(System.DefaultWorkingDirectory)
+
+  # 👇 CHANGE THIS if your folder is different (e.g. client, ui, frontend-app, etc.)
+  nodeAppFolder: 'frontend'
+
+stages:
+- stage: Build
+  displayName: Build stage
+  jobs:
+  - job: Build
+    displayName: Build
+    pool:
+      vmImage: $(vmImageName)
+
+    steps:
+    - checkout: self
+
+    - script: |
+        ls -la
+        ls -la $(nodeAppFolder)
+      displayName: 'Debug workspace structure'
+
+    - script: |
+        npm install
+        npm run build
+      workingDirectory: $(nodeAppFolder)
+      displayName: 'npm install and build'
+
+    - task: ArchiveFiles@2
+      displayName: 'Archive dist directory'
+      inputs:
+        rootFolderOrFile: '$(System.DefaultWorkingDirectory)/$(nodeAppFolder)/dist'
+        includeRootFolder: false
+        archiveType: zip
+        archiveFile: $(Build.ArtifactStagingDirectory)/dist.zip
+        replaceExistingArchive: true
+
+    - task: PublishBuildArtifacts@1
+      displayName: 'Publish Artifact: dist'
+      inputs:
+        PathtoPublish: '$(Build.ArtifactStagingDirectory)/dist.zip'
+        ArtifactName: 'dist'
+        publishLocation: 'Container'
+
+- stage: Deploy
+  displayName: Deploy stage
+  dependsOn: Build
+  condition: succeeded()
+  jobs:
+  - deployment: Deploy
+    displayName: Deploy
+    environment: $(environmentName)
+    pool:
+      vmImage: $(vmImageName)
+
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - task: DownloadBuildArtifacts@0
+            displayName: 'Download Artifact: dist'
+            inputs:
+              buildType: 'current'
+              downloadType: 'single'
+              artifactName: 'dist'
+              downloadPath: '$(Pipeline.Workspace)'
+
+          - task: AzureAppServiceManage@0
+            displayName: Stop $(webAppName)
+            inputs:
+              azureSubscription: $(azureServiceConnection)
+              Action: 'Stop Azure App Service'
+              WebAppName: $(webAppName)
+
+          - task: AzureRmWebAppDeployment@4
+            displayName: 'Azure App Service Deploy'
+            inputs:
+              azureSubscription: $(azureServiceConnection)
+              appType: webAppLinux
+              WebAppName: $(webAppName)
+              packageForLinux: '$(Pipeline.Workspace)/dist/dist.zip'
+              RuntimeStack: 'NODE|20.0'
+              StartupCommand: 'pm2 serve /home/site/wwwroot/ --no-daemon --spa'
+
+          - task: AzureAppServiceManage@0
+            displayName: Start $(webAppName)
+            inputs:
+              azureSubscription: $(azureServiceConnection)
+              Action: 'Start Azure App Service'
+              WebAppName: $(webAppName)

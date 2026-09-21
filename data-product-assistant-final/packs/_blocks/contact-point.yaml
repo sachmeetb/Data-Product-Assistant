@@ -1,0 +1,18 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$id: "bfsi.silver/common/contact-point.yaml"
+title: ContactPoint
+description: A single channel of contact. Repeat the block for multiple channels.
+type: object
+properties:
+  channel:
+    type: string
+    enum: [EMAIL, MOBILE, PHONE, FAX, WEB, SOCIAL, OTHER]
+  value:
+    type: string
+    description: Normalized value (E.164 for phones, lowercased email, etc.).
+  usage:
+    type: [string, "null"]
+    enum: [PERSONAL, WORK, BILLING, EMERGENCY, null]
+  is_primary: { type: boolean, default: false }
+  is_verified: { type: boolean, default: false }
+required: [channel, value]

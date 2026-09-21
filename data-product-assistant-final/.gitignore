@@ -1,0 +1,26 @@
+.env
+*.env
+!.env.example
+
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+build/
+dist/
+.venv/
+venv/
+
+node_modules/
+frontend/dist/
+
+# Generated run artifacts. A predecessor committed ~30 of these, including one
+# from a Databricks era that no longer reflected the live contract.
+output/
+*.local.json
+
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

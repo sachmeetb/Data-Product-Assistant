@@ -1,0 +1,13 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$id: "bfsi.silver/common/quantity.yaml"
+title: Quantity
+description: A decimal quantity with a unit of measure (shares, units, notional, weight).
+type: object
+properties:
+  value:
+    type: string
+    pattern: '^-?[0-9]+(\.[0-9]+)?$'
+  unit:
+    type: string
+    description: e.g. SHARES, UNITS, CONTRACTS, TROY_OZ, BARREL, FACE_VALUE.
+required: [value, unit]

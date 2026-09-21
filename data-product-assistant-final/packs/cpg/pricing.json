@@ -1,0 +1,121 @@
+{
+    "domain": "pricing",
+    "display_name": "Pricing",
+    "description": "Canonical Silver Layer framework for pricing data. Covers price points, price changes, competitive pricing, and price performance. Anchored to common price management and revenue management system models.",
+    "standards": ["SAP_Pricing", "Vendavo", "Zilliant"],
+    "hierarchy": [
+        "slv_price_zone",
+        "slv_price_product",
+        "slv_price_list",
+        "slv_price_point",
+        "slv_price_change_event",
+        "slv_competitor_price_event",
+        "slv_price_performance_daily"
+    ],
+    "entity_types": {
+        "dimensions": ["slv_price_zone", "slv_price_product", "slv_price_list"],
+        "events": ["slv_price_point", "slv_price_change_event", "slv_competitor_price_event"],
+        "aggregates": ["slv_price_performance_daily"]
+    },
+    "entities": {
+        "slv_price_zone": {
+            "type": "dimension",
+            "grain": "one row per pricing zone or market",
+            "columns": [
+                {"name": "zone_id",     "data_type": "STRING", "nullable": false, "is_pk": true,  "fk_ref": null, "description": "Unique price zone identifier"},
+                {"name": "zone_name",   "data_type": "STRING", "nullable": false, "is_pk": false, "fk_ref": null, "description": "Zone name e.g. North, South, Export"},
+                {"name": "country",     "data_type": "STRING", "nullable": true,  "is_pk": false, "fk_ref": null, "description": "Country code (ISO 3166-1 alpha-2)"},
+                {"name": "currency",    "data_type": "STRING", "nullable": false, "is_pk": false, "fk_ref": null, "description": "ISO 4217 currency code for this zone"}
+            ]
+        },
+        "slv_price_product": {
+            "type": "dimension",
+            "grain": "one row per priceable product",
+            "columns": [
+                {"name": "product_id",   "data_type": "STRING", "nullable": false, "is_pk": true,  "fk_ref": null, "description": "Unique product identifier"},
+                {"name": "product_name", "data_type": "STRING", "nullable": false, "is_pk": false, "fk_ref": null, "description": "Product name"},
+                {"name": "category",     "data_type": "STRING", "nullable": true,  "is_pk": false, "fk_ref": null, "description": "Product category"},
+                {"name": "brand",        "data_type": "STRING", "nullable": true,  "is_pk": false, "fk_ref": null, "description": "Brand"},
+                {"name": "cost",         "data_type": "DOUBLE", "nullable": true,  "is_pk": false, "fk_ref": null, "description": "Standard cost per unit — basis for margin calculation"}
+            ]
+        },
+        "slv_price_list": {
+            "type": "dimension",
+            "grain": "one row per price list",
+            "columns": [
+                {"name": "price_list_id",   "data_type": "STRING", "nullable": false, "is_pk": true,  "fk_ref": null, "description": "Unique price list identifier"},
+                {"name": "price_list_name", "data_type": "STRING", "nullable": false, "is_pk": false, "fk_ref": null, "description": "Price list name e.g. Standard, Key Account, Export"},
+                {"name": "channel",         "data_type": "STRING", "nullable": true,  "is_pk": false, "fk_ref": null, "description": "Target sales channel for this list"},
+                {"name": "effective_from",  "data_type": "DATE",   "nullable": false, "is_pk": false, "fk_ref": null, "description": "Date this price list became active"},
+                {"name": "effective_to",    "data_type": "DATE",   "nullable": true,  "is_pk": false, "fk_ref": null, "description": "Date this price list expires (null = still active)"}
+            ]
+        },
+        "slv_price_point": {
+            "type": "event",
+            "grain": "one row per product + price zone + price list + effective date",
+            "columns": [
+                {"name": "price_point_id",  "data_type": "STRING", "nullable": false, "is_pk": true,  "fk_ref": null, "description": "Unique price point identifier"},
+                {"name": "product_id",      "data_type": "STRING", "nullable": false, "is_pk": false, "fk_ref": "slv_price_product.product_id", "description": "FK to product"},
+                {"name": "zone_id",         "data_type": "STRING", "nullable": false, "is_pk": false, "fk_ref": "slv_price_zone.zone_id", "description": "FK to price zone"},
+                {"name": "price_list_id",   "data_type": "STRING", "nullable": false, "is_pk": false, "fk_ref": "slv_price_list.price_list_id", "description": "FK to price list"},
+                {"name": "list_price",      "data_type": "DOUBLE", "nullable": false, "is_pk": false, "fk_ref": null, "description": "Gross list price per unit"},
+                {"name": "net_price",       "data_type": "DOUBLE", "nullable": true,  "is_pk": false, "fk_ref": null, "description": "Net price after standard discounts"},
+                {"name": "effective_from",  "data_type": "DATE",   "nullable": false, "is_pk": false, "fk_ref": null, "description": "Date this price took effect"},
+                {"name": "effective_to",    "data_type": "DATE",   "nullable": true,  "is_pk": false, "fk_ref": null, "description": "Date this price expired (null = current)"}
+            ]
+        },
+        "slv_price_change_event": {
+            "type": "event",
+            "grain": "one row per price change action",
+            "columns": [
+                {"name": "change_id",       "data_type": "STRING",    "nullable": false, "is_pk": true,  "fk_ref": null, "description": "Unique price change event identifier"},
+                {"name": "product_id",      "data_type": "STRING",    "nullable": false, "is_pk": false, "fk_ref": "slv_price_product.product_id", "description": "FK to product"},
+                {"name": "zone_id",         "data_type": "STRING",    "nullable": false, "is_pk": false, "fk_ref": "slv_price_zone.zone_id", "description": "FK to zone"},
+                {"name": "old_price",       "data_type": "DOUBLE",    "nullable": true,  "is_pk": false, "fk_ref": null, "description": "Price before the change"},
+                {"name": "new_price",       "data_type": "DOUBLE",    "nullable": false, "is_pk": false, "fk_ref": null, "description": "Price after the change"},
+                {"name": "change_pct",      "data_type": "DOUBLE",    "nullable": true,  "is_pk": false, "fk_ref": null, "description": "Percentage change ((new-old)/old)"},
+                {"name": "reason",          "data_type": "STRING",    "nullable": true,  "is_pk": false, "fk_ref": null, "description": "Reason code: Cost Increase, Market Adjustment, Promo"},
+                {"name": "effective_date",  "data_type": "DATE",      "nullable": false, "is_pk": false, "fk_ref": null, "description": "Effective date of the price change"},
+                {"name": "timestamp",       "data_type": "TIMESTAMP", "nullable": false, "is_pk": false, "fk_ref": null, "description": "UTC timestamp when change was recorded"}
+            ]
+        },
+        "slv_competitor_price_event": {
+            "type": "event",
+            "grain": "one row per competitor price observation",
+            "columns": [
+                {"name": "observation_id",  "data_type": "STRING",    "nullable": false, "is_pk": true,  "fk_ref": null, "description": "Unique price observation identifier"},
+                {"name": "product_id",      "data_type": "STRING",    "nullable": false, "is_pk": false, "fk_ref": "slv_price_product.product_id", "description": "FK to our matched product"},
+                {"name": "competitor_name", "data_type": "STRING",    "nullable": false, "is_pk": false, "fk_ref": null, "description": "Competitor brand or retailer name"},
+                {"name": "competitor_price","data_type": "DOUBLE",    "nullable": false, "is_pk": false, "fk_ref": null, "description": "Observed competitor price"},
+                {"name": "zone_id",         "data_type": "STRING",    "nullable": true,  "is_pk": false, "fk_ref": "slv_price_zone.zone_id", "description": "FK to zone where observed"},
+                {"name": "observed_date",   "data_type": "DATE",      "nullable": false, "is_pk": false, "fk_ref": null, "description": "Date of observation"},
+                {"name": "source",          "data_type": "STRING",    "nullable": true,  "is_pk": false, "fk_ref": null, "description": "Data source: Nielsen, IRI, Web Scrape, Field Visit"},
+                {"name": "timestamp",       "data_type": "TIMESTAMP", "nullable": false, "is_pk": false, "fk_ref": null, "description": "UTC timestamp of observation record"}
+            ]
+        },
+        "slv_price_performance_daily": {
+            "type": "aggregate",
+            "grain": "one row per product + zone + day",
+            "columns": [
+                {"name": "date",              "data_type": "DATE",   "nullable": false, "is_pk": true,  "fk_ref": null, "description": "Reporting day — composite PK"},
+                {"name": "product_id",        "data_type": "STRING", "nullable": false, "is_pk": true,  "fk_ref": "slv_price_product.product_id", "description": "FK to product — composite PK"},
+                {"name": "zone_id",           "data_type": "STRING", "nullable": false, "is_pk": true,  "fk_ref": "slv_price_zone.zone_id", "description": "FK to zone — composite PK"},
+                {"name": "list_price",        "data_type": "DOUBLE", "nullable": true,  "is_pk": false, "fk_ref": null, "description": "Current list price on this day"},
+                {"name": "net_price",         "data_type": "DOUBLE", "nullable": true,  "is_pk": false, "fk_ref": null, "description": "Current net price on this day"},
+                {"name": "price_changes",     "data_type": "BIGINT", "nullable": false, "is_pk": false, "fk_ref": null, "description": "COUNT of price changes on this day"},
+                {"name": "avg_competitor_price","data_type": "DOUBLE","nullable": true,  "is_pk": false, "fk_ref": null, "description": "AVG competitor price observed on this day"},
+                {"name": "price_index",       "data_type": "DOUBLE", "nullable": true,  "is_pk": false, "fk_ref": null, "description": "Our price / avg competitor price (1.0 = parity)"}
+            ]
+        }
+    },
+    "derived_metrics": {
+        "Margin_Pct":    {"formula": "(net_price - cost) / net_price",   "description": "Gross margin percentage"},
+        "Price_Index":   {"formula": "net_price / avg_competitor_price", "description": "Relative price vs competition"},
+        "Price_Change_Frequency": {"formula": "COUNT(price_changes) / days", "description": "Average price change frequency"}
+    },
+    "domain_keywords": [
+        "pricing", "price", "list price", "net price", "margin", "cost",
+        "price change", "competitor", "price index", "price zone",
+        "price optimisation", "price optimization", "price management", "asp"
+    ]
+}

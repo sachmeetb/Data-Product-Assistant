@@ -1,0 +1,88 @@
+{
+  "schema_version": "3.0",
+  "description": "Domain pack registry. Ported from the GOLD product's gcs_registry.json, which was the live registry; its domain_registry.json was read by nothing and has been dropped. Paths are relative to packs/. Consumed by packs/spec.py::PackRegistry.",
+  "industries": {
+    "cpg": {
+      "campaign": {
+        "path": "cpg/campaign.json",
+        "display_name": "Digital Marketing & Ad-Tech",
+        "detection_signals": ["campaign", "impression", "impressions", "click", "clicks", "spend", "ctr", "cpc", "cpa", "roas", "ad-tech", "adtech", "programmatic", "dv360", "google ads", "meta ads", "creative", "placement", "attribution", "ad spend"],
+        "standards": ["IAB_OpenRTB", "Google_CM", "Meta_Ads", "Adobe_XDM_ExperienceEvent"]
+      },
+      "sales": {
+        "path": "cpg/sales.json",
+        "display_name": "Sales & Commercial",
+        "detection_signals": ["sales", "order", "revenue", "customer", "crm", "erp", "asp", "account", "invoice", "sell-through", "sell-in", "product", "sku", "territory", "channel", "distributor"],
+        "standards": ["GS1", "Salesforce_CRM", "SAP_S4HANA"]
+      },
+      "loyalty": {
+        "path": "cpg/loyalty.json",
+        "display_name": "Loyalty & Rewards",
+        "detection_signals": ["loyalty", "member", "reward", "points", "redemption", "tier", "earn", "churn", "retention", "programme", "enrolment", "burn", "engagement"],
+        "standards": ["CRM_Loyalty", "Adobe_XDM_Loyalty", "Salesforce_Loyalty"]
+      },
+      "trade_promotions": {
+        "path": "cpg/trade_promotions.json",
+        "display_name": "Trade Promotions",
+        "detection_signals": ["trade promotion", "tpm", "promotion", "retailer", "uplift", "promo roi", "trade spend", "promotional spend", "mechanic", "off-invoice", "scan-back", "sell-out"],
+        "standards": ["SAP_TPM", "Salesforce_CPG", "Nielsen_TPM"]
+      },
+      "pricing": {
+        "path": "cpg/pricing.json",
+        "display_name": "Pricing",
+        "detection_signals": ["pricing", "price list", "margin", "competitor price", "price index", "price point", "price change", "srp", "edlp", "vendor price", "list price"],
+        "standards": ["SAP_Pricing", "Vendavo", "Zilliant"]
+      },
+      "digital_commerce": {
+        "path": "cpg/digital_commerce.json",
+        "display_name": "Digital Commerce",
+        "detection_signals": ["ecommerce", "cart", "checkout", "aov", "bounce rate", "shopify", "session", "visitor", "product view", "add to cart", "purchase", "conversion rate", "ga4", "google analytics", "adobe analytics"],
+        "standards": ["Adobe_XDM_ExperienceEvent", "Google_Analytics_4", "Shopify_Commerce"]
+      }
+    },
+    "banking": {
+      "retail_banking": {
+        "path": "banking/retail_banking.json",
+        "display_name": "Retail Banking",
+        "detection_signals": ["account", "transaction", "deposit", "withdrawal", "card", "loan", "mortgage", "kyc", "iban", "swift", "bic", "overdraft", "credit", "debit", "balance", "statement", "bank"],
+        "standards": ["FIBO", "BIAN", "ISO_20022"]
+      },
+      "wealth_management": {
+        "path": "banking/wealth_management.json",
+        "display_name": "Wealth Management",
+        "detection_signals": ["portfolio", "holding", "trade", "aum", "nav", "client", "equity", "bond", "fund", "advisory", "asset", "wealth", "investment", "hnwi", "uhnwi", "securities", "isin"],
+        "standards": ["FIX_Protocol", "ISO_20022"]
+      }
+    },
+    "healthcare": {
+      "patient_journey": {
+        "path": "healthcare/patient_journey.json",
+        "display_name": "Patient Journey",
+        "detection_signals": ["patient", "encounter", "diagnosis", "procedure", "provider", "fhir", "icd", "admission", "readmission", "discharge", "clinical", "ehr", "emr", "snomed", "cpt", "npi"],
+        "standards": ["HL7_FHIR", "ICD_10", "SNOMED_CT"]
+      }
+    },
+    "retail": {
+      "merchandise_planning": {
+        "path": "retail/merchandise_planning.json",
+        "display_name": "Merchandise Planning",
+        "detection_signals": ["sku", "store", "inventory", "sell-through", "markdown", "pos", "shrinkage", "assortment", "planogram", "replenishment", "gtin", "merchandise", "stock", "on-hand"],
+        "standards": ["GS1", "NRF_Retail", "ARTS_Retail"]
+      }
+    },
+    "cross_industry": {
+      "supply_chain": {
+        "path": "cross_industry/supply_chain.json",
+        "display_name": "Supply Chain",
+        "detection_signals": ["supplier", "warehouse", "shipment", "purchase order", "lead time", "otif", "procurement", "freight", "logistics", "epcis", "scor", "inbound", "outbound", "3pl"],
+        "standards": ["GS1_EPCIS", "SCOR", "ISO_28000"]
+      },
+      "finance": {
+        "path": "cross_industry/finance.json",
+        "display_name": "Finance",
+        "detection_signals": ["journal", "gl", "general ledger", "cost centre", "budget", "actuals", "p&l", "legal entity", "ifrs", "xbrl", "trial balance", "chart of accounts", "cost center", "variance"],
+        "standards": ["XBRL", "IFRS", "US_GAAP"]
+      }
+    }
+  }
+}

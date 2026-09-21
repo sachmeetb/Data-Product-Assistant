@@ -1,0 +1,22 @@
+silver_component,type,iso_20022,fdx_open_finance,fibo,bian,cdm_finos,other_standards
+common/technical-metadata,block,,,,DataGovernance patterns,,DAMA-DMBOK; medallion SCD2
+common/money,block,ActiveCurrencyAndAmount,Amount,MonetaryAmount,Amount,Money,ISO 4217
+common/identifier,block,GenericIdentification,Identifier,Identifier,Reference,Identifier,"ISO 17442 LEI; ISO 9362 BIC; ISO 6166 ISIN; ISO 10383 MIC; ISO 4914 UPI"
+common/code-value,block,ExternalCodeSets,,,,,"ISO 20022 External Code Sets; genericode"
+common/postal-address,block,PostalAddress24,Address,Address,Address,,"ISO 3166; CBPR+ structured address"
+common/party-name,block,PartyName,Name,hasName,,,
+common/contact-point,block,Contact4,TelephoneNumber/Email,ContactPoint,,,
+common/temporal,block,DateTimePeriod,,hasDatePeriod,,Period,ISO 8601
+common/rate,block,PercentageRate/InterestRate,Rate,InterestRate,,RateSpecification,
+common/quantity,block,FinancialInstrumentQuantity,Units,Quantity,,Quantity,
+entities/party,entity,Party/PartyIdentification,Customer,LegalEntity/AutonomousAgent,Party Reference Data Directory,Party,"GLEIF LEI; KYC/AML"
+entities/party-relationship,entity,,,partyRelationship,,PartyRole,GLEIF Level-2 who-owns-whom
+entities/account,entity,CashAccount,Account,Account,Current/Savings/Loan Account,Account,
+entities/product,entity,,ProductType,FinancialProduct,Product Directory,,
+entities/agreement,entity,,,Contract,Product Agreement,MasterAgreement/TradeAgreement,ISDA Master Agreement
+entities/financial-instrument,entity,FinancialInstrument,Security,Security,,Product,"ISO 6166 ISIN; ISO 10962 CFI; FIGI"
+entities/transaction,entity,pacs.008/camt.053 Entry,Transaction,,Transaction Engine,,"ISO 8583 (cards); ISO 18245 MCC"
+entities/payment,entity,pain.001/pacs.008/pain.002,Payments,,Payment Order,,"Berlin Group NextGenPSD2 PIS; UK Open Banking"
+entities/balance,entity,camt.052/053 Balance,Balance,,,,
+entities/position-holding,entity,semt (securities),Investments Holdings,Position,,Position,
+entities/loan,entity,,Loan,LoanContract,Loan fulfilment,,MISMO (mortgage)

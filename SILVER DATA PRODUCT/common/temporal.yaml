@@ -1,0 +1,20 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$id: "bfsi.silver/common/temporal.yaml"
+title: Temporal
+description: Reusable date/time building blocks.
+$defs:
+  DateRange:
+    type: object
+    properties:
+      from_date: { type: string, format: date }
+      to_date: { type: [string, "null"], format: date }
+    required: [from_date]
+  Period:
+    type: object
+    description: Duration expressed as an ISO 8601 unit + count (e.g. 3 MONTH).
+    properties:
+      unit:
+        type: string
+        enum: [DAY, WEEK, MONTH, QUARTER, YEAR]
+      count: { type: integer, minimum: 1 }
+    required: [unit, count]

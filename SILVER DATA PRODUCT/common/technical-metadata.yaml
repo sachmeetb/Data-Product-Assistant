@@ -1,0 +1,106 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$id: "bfsi.silver/common/technical-metadata.yaml"
+title: TechnicalMetadata
+description: >
+  Reusable Silver-layer technical envelope embedded in EVERY conformed entity.
+  Carries surrogate keys, lineage, SCD Type-2 versioning, and data-quality state.
+  This block is layer machinery, not business data: Bronze feeds it, Silver
+  populates it, Gold reads it. Keep it identical across all entities so that
+  orchestration, CDC, and DQ tooling can operate generically.
+type: object
+$defs:
+
+  Lineage:
+    type: object
+    description: Where this record came from and how it was produced.
+    properties:
+      source_system:
+        type: string
+        description: Canonical code of the originating system (e.g. CORE_BANKING, CARD_SWITCH, FDX_AGGREGATOR).
+      source_record_id:
+        type: string
+        description: Natural/business key of the record in the source system.
+      source_extract_ts:
+        type: string
+        format: date-time
+        description: When the record was extracted from source (event time at Bronze boundary).
+      bronze_ingest_ts:
+        type: string
+        format: date-time
+        description: When the raw record landed in the Bronze layer.
+      silver_load_ts:
+        type: string
+        format: date-time
+        description: When this conformed record was written to Silver.
+      source_file:
+        type: [string, "null"]
+        description: Bronze file / topic / offset the record was derived from, for replay.
+      pipeline_run_id:
+        type: string
+        description: Orchestration run identifier for full traceability.
+      source_schema_version:
+        type: [string, "null"]
+        description: Version tag of the source contract (e.g. "ISO20022:pain.001.001.09", "FDX:6.4").
+    required: [source_system, source_record_id, silver_load_ts]
+
+  Versioning:
+    type: object
+    description: SCD Type-2 columns enabling point-in-time reconstruction of any entity.
+    properties:
+      effective_from_ts:
+        type: string
+        format: date-time
+        description: Start of the validity window for this version of the record.
+      effective_to_ts:
+        type: [string, "null"]
+        format: date-time
+        description: End of the validity window; null for the current/open version.
+      is_current:
+        type: boolean
+        description: True for the currently active version.
+      version_number:
+        type: integer
+        minimum: 1
+      is_deleted:
+        type: boolean
+        default: false
+        description: Soft-delete tombstone propagated from source deletes.
+      record_hash:
+        type: string
+        description: Deterministic hash of business columns used for change detection.
+    required: [effective_from_ts, is_current, record_hash]
+
+  DataQuality:
+    type: object
+    description: Outcome of Silver validation and cleansing.
+    properties:
+      dq_status:
+        type: string
+        enum: [PASS, WARN, QUARANTINE]
+        description: PASS = conformed; WARN = usable with issues; QUARANTINE = held from Gold.
+      dq_score:
+        type: [number, "null"]
+        minimum: 0
+        maximum: 1
+      failed_rules:
+        type: array
+        items:
+          type: string
+        description: Codes of validation rules that failed (e.g. IBAN_CHECKSUM, CCY_NOT_ISO4217).
+      is_enriched:
+        type: boolean
+        default: false
+        description: Whether reference-data enrichment (LEI lookup, MCC decode, etc.) was applied.
+    required: [dq_status]
+
+properties:
+  surrogate_key:
+    type: string
+    description: Stable, system-generated key for this Silver entity instance (hash or sequence).
+  lineage:
+    $ref: "#/$defs/Lineage"
+  versioning:
+    $ref: "#/$defs/Versioning"
+  data_quality:
+    $ref: "#/$defs/DataQuality"
+required: [surrogate_key, lineage, versioning, data_quality]

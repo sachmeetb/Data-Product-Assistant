@@ -1,0 +1,141 @@
+{
+    "domain": "digital_commerce",
+    "display_name": "Digital Commerce",
+    "description": "Canonical Silver Layer framework for digital commerce and e-commerce data. Covers visitor sessions, product browsing, cart events, and purchase transactions. Anchored to Adobe XDM ExperienceEvent, Google Analytics 4, and Shopify/SAP Commerce models.",
+    "standards": ["Adobe_XDM_ExperienceEvent", "Google_Analytics_4", "Shopify_Commerce"],
+    "hierarchy": [
+        "slv_visitor",
+        "slv_ecom_product",
+        "slv_ecom_channel",
+        "slv_session_event",
+        "slv_product_view_event",
+        "slv_cart_event",
+        "slv_purchase_event",
+        "slv_ecommerce_performance_daily"
+    ],
+    "entity_types": {
+        "dimensions": ["slv_visitor", "slv_ecom_product", "slv_ecom_channel"],
+        "events": ["slv_session_event", "slv_product_view_event", "slv_cart_event", "slv_purchase_event"],
+        "aggregates": ["slv_ecommerce_performance_daily"]
+    },
+    "entities": {
+        "slv_visitor": {
+            "type": "dimension",
+            "grain": "one row per known visitor / user",
+            "columns": [
+                {"name": "visitor_id",       "data_type": "STRING", "nullable": false, "is_pk": true,  "fk_ref": null, "description": "Unique visitor identifier (authenticated user or cookie)"},
+                {"name": "visitor_type",     "data_type": "STRING", "nullable": true,  "is_pk": false, "fk_ref": null, "description": "AUTHENTICATED or ANONYMOUS"},
+                {"name": "first_seen_date",  "data_type": "DATE",   "nullable": true,  "is_pk": false, "fk_ref": null, "description": "First visit date"},
+                {"name": "country",          "data_type": "STRING", "nullable": true,  "is_pk": false, "fk_ref": null, "description": "Country from geo-IP lookup"},
+                {"name": "device_type",      "data_type": "STRING", "nullable": true,  "is_pk": false, "fk_ref": null, "description": "Normalised: MOBILE, DESKTOP, TABLET"}
+            ]
+        },
+        "slv_ecom_product": {
+            "type": "dimension",
+            "grain": "one row per product listed online",
+            "columns": [
+                {"name": "product_id",    "data_type": "STRING", "nullable": false, "is_pk": true,  "fk_ref": null, "description": "Unique product SKU identifier"},
+                {"name": "product_name",  "data_type": "STRING", "nullable": false, "is_pk": false, "fk_ref": null, "description": "Product display name"},
+                {"name": "category",      "data_type": "STRING", "nullable": true,  "is_pk": false, "fk_ref": null, "description": "Product category"},
+                {"name": "brand",         "data_type": "STRING", "nullable": true,  "is_pk": false, "fk_ref": null, "description": "Brand name"},
+                {"name": "list_price",    "data_type": "DOUBLE", "nullable": true,  "is_pk": false, "fk_ref": null, "description": "Listed price on the site"}
+            ]
+        },
+        "slv_ecom_channel": {
+            "type": "dimension",
+            "grain": "one row per acquisition channel",
+            "columns": [
+                {"name": "channel_id",   "data_type": "STRING", "nullable": false, "is_pk": true,  "fk_ref": null, "description": "Unique channel identifier"},
+                {"name": "channel_name", "data_type": "STRING", "nullable": false, "is_pk": false, "fk_ref": null, "description": "Normalised: ORGANIC_SEARCH, PAID_SEARCH, SOCIAL, EMAIL, DIRECT, REFERRAL"},
+                {"name": "medium",       "data_type": "STRING", "nullable": true,  "is_pk": false, "fk_ref": null, "description": "UTM medium value"},
+                {"name": "source",       "data_type": "STRING", "nullable": true,  "is_pk": false, "fk_ref": null, "description": "UTM source value e.g. google, facebook, newsletter"}
+            ]
+        },
+        "slv_session_event": {
+            "type": "event",
+            "grain": "one row per user session",
+            "columns": [
+                {"name": "session_id",    "data_type": "STRING",    "nullable": false, "is_pk": true,  "fk_ref": null, "description": "Unique session identifier — PK"},
+                {"name": "visitor_id",    "data_type": "STRING",    "nullable": false, "is_pk": false, "fk_ref": "slv_visitor.visitor_id", "description": "FK to visitor"},
+                {"name": "channel_id",    "data_type": "STRING",    "nullable": true,  "is_pk": false, "fk_ref": "slv_ecom_channel.channel_id", "description": "FK to acquisition channel"},
+                {"name": "device_type",   "data_type": "STRING",    "nullable": true,  "is_pk": false, "fk_ref": null, "description": "Normalised device: MOBILE, DESKTOP, TABLET"},
+                {"name": "session_start", "data_type": "TIMESTAMP", "nullable": false, "is_pk": false, "fk_ref": null, "description": "UTC session start timestamp"},
+                {"name": "session_end",   "data_type": "TIMESTAMP", "nullable": true,  "is_pk": false, "fk_ref": null, "description": "UTC session end timestamp"},
+                {"name": "page_views",    "data_type": "INTEGER",   "nullable": true,  "is_pk": false, "fk_ref": null, "description": "Number of pages viewed in session"},
+                {"name": "bounced",       "data_type": "BOOLEAN",   "nullable": true,  "is_pk": false, "fk_ref": null, "description": "True if session had only one page view"}
+            ]
+        },
+        "slv_product_view_event": {
+            "type": "event",
+            "grain": "one row per product page view",
+            "columns": [
+                {"name": "view_id",      "data_type": "STRING",    "nullable": false, "is_pk": true,  "fk_ref": null, "description": "Unique product view identifier"},
+                {"name": "session_id",   "data_type": "STRING",    "nullable": false, "is_pk": false, "fk_ref": "slv_session_event.session_id", "description": "FK to session"},
+                {"name": "visitor_id",   "data_type": "STRING",    "nullable": false, "is_pk": false, "fk_ref": "slv_visitor.visitor_id", "description": "FK to visitor"},
+                {"name": "product_id",   "data_type": "STRING",    "nullable": false, "is_pk": false, "fk_ref": "slv_ecom_product.product_id", "description": "FK to product viewed"},
+                {"name": "timestamp",    "data_type": "TIMESTAMP", "nullable": false, "is_pk": false, "fk_ref": null, "description": "UTC timestamp of page view"}
+            ]
+        },
+        "slv_cart_event": {
+            "type": "event",
+            "grain": "one row per cart action (add or remove)",
+            "columns": [
+                {"name": "cart_event_id", "data_type": "STRING",    "nullable": false, "is_pk": true,  "fk_ref": null, "description": "Unique cart event identifier"},
+                {"name": "session_id",    "data_type": "STRING",    "nullable": false, "is_pk": false, "fk_ref": "slv_session_event.session_id", "description": "FK to session"},
+                {"name": "visitor_id",    "data_type": "STRING",    "nullable": false, "is_pk": false, "fk_ref": "slv_visitor.visitor_id", "description": "FK to visitor"},
+                {"name": "product_id",    "data_type": "STRING",    "nullable": false, "is_pk": false, "fk_ref": "slv_ecom_product.product_id", "description": "FK to product"},
+                {"name": "action",        "data_type": "STRING",    "nullable": false, "is_pk": false, "fk_ref": null, "description": "Cart action: ADD or REMOVE"},
+                {"name": "quantity",      "data_type": "INTEGER",   "nullable": false, "is_pk": false, "fk_ref": null, "description": "Quantity added or removed"},
+                {"name": "timestamp",     "data_type": "TIMESTAMP", "nullable": false, "is_pk": false, "fk_ref": null, "description": "UTC timestamp of cart action"}
+            ]
+        },
+        "slv_purchase_event": {
+            "type": "event",
+            "grain": "one row per online purchase transaction",
+            "columns": [
+                {"name": "order_id",        "data_type": "STRING",    "nullable": false, "is_pk": true,  "fk_ref": null, "description": "Unique online order identifier — PK"},
+                {"name": "session_id",      "data_type": "STRING",    "nullable": true,  "is_pk": false, "fk_ref": "slv_session_event.session_id", "description": "FK to originating session"},
+                {"name": "visitor_id",      "data_type": "STRING",    "nullable": false, "is_pk": false, "fk_ref": "slv_visitor.visitor_id", "description": "FK to visitor"},
+                {"name": "channel_id",      "data_type": "STRING",    "nullable": true,  "is_pk": false, "fk_ref": "slv_ecom_channel.channel_id", "description": "FK to acquisition channel"},
+                {"name": "order_value",     "data_type": "DOUBLE",    "nullable": false, "is_pk": false, "fk_ref": null, "description": "Total order value"},
+                {"name": "item_count",      "data_type": "INTEGER",   "nullable": false, "is_pk": false, "fk_ref": null, "description": "Number of line items"},
+                {"name": "currency",        "data_type": "STRING",    "nullable": true,  "is_pk": false, "fk_ref": null, "description": "ISO 4217 currency code"},
+                {"name": "timestamp",       "data_type": "TIMESTAMP", "nullable": false, "is_pk": false, "fk_ref": null, "description": "UTC timestamp of purchase"}
+            ]
+        },
+        "slv_ecommerce_performance_daily": {
+            "type": "aggregate",
+            "grain": "one row per channel + device + day",
+            "columns": [
+                {"name": "date",               "data_type": "DATE",   "nullable": false, "is_pk": true,  "fk_ref": null, "description": "Reporting day — composite PK"},
+                {"name": "channel_id",         "data_type": "STRING", "nullable": false, "is_pk": true,  "fk_ref": "slv_ecom_channel.channel_id", "description": "FK to channel — composite PK"},
+                {"name": "device_type",        "data_type": "STRING", "nullable": false, "is_pk": true,  "fk_ref": null, "description": "Device type — composite PK"},
+                {"name": "sessions",           "data_type": "BIGINT", "nullable": false, "is_pk": false, "fk_ref": null, "description": "COUNT of sessions"},
+                {"name": "product_views",      "data_type": "BIGINT", "nullable": false, "is_pk": false, "fk_ref": null, "description": "COUNT of product page views"},
+                {"name": "add_to_cart",        "data_type": "BIGINT", "nullable": false, "is_pk": false, "fk_ref": null, "description": "COUNT of add-to-cart events"},
+                {"name": "purchases",          "data_type": "BIGINT", "nullable": false, "is_pk": false, "fk_ref": null, "description": "COUNT of completed purchases"},
+                {"name": "revenue",            "data_type": "DOUBLE", "nullable": false, "is_pk": false, "fk_ref": null, "description": "SUM of order_value"},
+                {"name": "bounces",            "data_type": "BIGINT", "nullable": false, "is_pk": false, "fk_ref": null, "description": "COUNT of bounced sessions"}
+            ]
+        }
+    },
+    "derived_metrics": {
+        "Conversion_Rate":     {"formula": "purchases / sessions",        "description": "Session-to-purchase conversion rate"},
+        "Bounce_Rate":         {"formula": "bounces / sessions",           "description": "Proportion of single-page sessions"},
+        "AOV":                 {"formula": "revenue / purchases",          "description": "Average order value"},
+        "Cart_Abandon_Rate":   {"formula": "1 - (purchases / add_to_cart)","description": "Proportion of carts that did not convert"}
+    },
+    "source_platform_mappings": {
+        "google_analytics_session":   "slv_session_event",
+        "adobe_analytics_hit":        "slv_session_event",
+        "shopify_order":              "slv_purchase_event",
+        "ga4_add_to_cart":            "slv_cart_event",
+        "ga4_view_item":              "slv_product_view_event"
+    },
+    "domain_keywords": [
+        "digital commerce", "ecommerce", "e-commerce", "online commerce",
+        "digital sales", "online sales", "session", "cart", "purchase",
+        "conversion", "bounce", "aov", "checkout", "add to cart",
+        "product view", "basket", "revenue", "utm"
+    ]
+}

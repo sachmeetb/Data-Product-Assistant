@@ -1,0 +1,41 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$id: "bfsi.silver/common/postal-address.yaml"
+title: PostalAddress
+description: >
+  Fully STRUCTURED postal address, aligned to ISO 20022 PostalAddress24+ and the
+  CBPR+ mandate to retire unstructured addresses. Silver should parse legacy
+  free-text addresses into these components during cleansing.
+type: object
+properties:
+  address_type:
+    $ref: "./code-value.yaml"
+    description: e.g. ISO20022 AddressType (ADDR, PBOX, HOME, BIZZ, MLTO, DLVY).
+  department: { type: [string, "null"] }
+  sub_department: { type: [string, "null"] }
+  street_name: { type: [string, "null"] }
+  building_number: { type: [string, "null"] }
+  building_name: { type: [string, "null"] }
+  floor: { type: [string, "null"] }
+  room: { type: [string, "null"] }
+  post_box: { type: [string, "null"] }
+  post_code: { type: [string, "null"] }
+  town_name: { type: [string, "null"] }
+  town_location_name: { type: [string, "null"] }
+  district_name: { type: [string, "null"] }
+  country_sub_division:
+    type: [string, "null"]
+    description: State / province / region (ISO 3166-2 where available).
+  country:
+    type: [string, "null"]
+    description: ISO 3166-1 alpha-2 country code.
+    pattern: '^[A-Z]{2}$'
+  geo:
+    type: [object, "null"]
+    properties:
+      latitude: { type: number }
+      longitude: { type: number }
+  is_structured:
+    type: boolean
+    default: true
+    description: False if Silver could not fully parse a legacy unstructured address.
+required: [country]

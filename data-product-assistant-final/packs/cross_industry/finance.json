@@ -1,0 +1,115 @@
+{
+    "schema_version": "2.0",
+    "industry": "cross_industry",
+    "domain": "finance",
+    "display_name": "Finance & General Ledger",
+    "description": "Canonical Silver Layer framework for finance and general ledger data. Covers cost centres, accounts, legal entities, journal entries, budgets, and financial performance. Anchored to XBRL, IFRS, and US GAAP reporting standards.",
+    "standards": ["XBRL", "IFRS", "US_GAAP"],
+    "detection_signals": ["journal", "gl", "general ledger", "cost centre", "budget", "actuals", "p&l", "legal entity", "ifrs", "xbrl", "trial balance", "chart of accounts", "cost center", "variance"],
+    "hierarchy": [
+        "slv_legal_entity",
+        "slv_cost_centre",
+        "slv_account",
+        "slv_journal_event",
+        "slv_budget_event",
+        "slv_finance_performance_daily"
+    ],
+    "entity_types": {
+        "dimensions": ["slv_legal_entity", "slv_cost_centre", "slv_account"],
+        "events": ["slv_journal_event", "slv_budget_event"],
+        "aggregates": ["slv_finance_performance_daily"]
+    },
+    "entities": {
+        "slv_legal_entity": {
+            "type": "dimension",
+            "grain": "one row per legal reporting entity",
+            "columns": [
+                {"name": "entity_id",      "data_type": "STRING", "nullable": false, "is_pk": true,  "fk_ref": null, "description": "Unique legal entity identifier"},
+                {"name": "entity_name",    "data_type": "STRING", "nullable": false, "is_pk": false, "fk_ref": null, "description": "Legal entity name"},
+                {"name": "country",        "data_type": "STRING", "nullable": false, "is_pk": false, "fk_ref": null, "description": "ISO 3166-1 alpha-2 country of incorporation"},
+                {"name": "currency_code",  "data_type": "STRING", "nullable": false, "is_pk": false, "fk_ref": null, "description": "Functional currency ISO 4217 code"},
+                {"name": "reporting_std",  "data_type": "STRING", "nullable": true,  "is_pk": false, "fk_ref": null, "description": "Primary reporting standard: IFRS, US_GAAP, LOCAL_GAAP"}
+            ]
+        },
+        "slv_cost_centre": {
+            "type": "dimension",
+            "grain": "one row per cost centre",
+            "columns": [
+                {"name": "cost_centre_id",    "data_type": "STRING", "nullable": false, "is_pk": true,  "fk_ref": null,                              "description": "Unique cost centre code"},
+                {"name": "cost_centre_name",  "data_type": "STRING", "nullable": false, "is_pk": false, "fk_ref": null,                              "description": "Cost centre description"},
+                {"name": "entity_id",         "data_type": "STRING", "nullable": false, "is_pk": false, "fk_ref": "slv_legal_entity.entity_id",      "description": "FK to legal entity"},
+                {"name": "department",        "data_type": "STRING", "nullable": true,  "is_pk": false, "fk_ref": null,                              "description": "Owning department"},
+                {"name": "cc_type",           "data_type": "STRING", "nullable": true,  "is_pk": false, "fk_ref": null,                              "description": "PROFIT_CENTRE, COST_CENTRE, INVESTMENT_CENTRE"}
+            ]
+        },
+        "slv_account": {
+            "type": "dimension",
+            "grain": "one row per chart of accounts entry",
+            "columns": [
+                {"name": "account_id",      "data_type": "STRING", "nullable": false, "is_pk": true,  "fk_ref": null,                          "description": "Unique GL account code"},
+                {"name": "account_name",    "data_type": "STRING", "nullable": false, "is_pk": false, "fk_ref": null,                          "description": "Account description"},
+                {"name": "account_type",    "data_type": "STRING", "nullable": false, "is_pk": false, "fk_ref": null,                          "description": "ASSET, LIABILITY, EQUITY, REVENUE, EXPENSE"},
+                {"name": "entity_id",       "data_type": "STRING", "nullable": false, "is_pk": false, "fk_ref": "slv_legal_entity.entity_id",  "description": "FK to legal entity"},
+                {"name": "xbrl_element",    "data_type": "STRING", "nullable": true,  "is_pk": false, "fk_ref": null,                          "description": "XBRL taxonomy element tag for regulatory reporting"}
+            ]
+        },
+        "slv_journal_event": {
+            "type": "event",
+            "grain": "one row per journal line entry",
+            "columns": [
+                {"name": "journal_line_id",  "data_type": "STRING",    "nullable": false, "is_pk": true,  "fk_ref": null,                              "description": "Unique journal line identifier"},
+                {"name": "journal_id",       "data_type": "STRING",    "nullable": false, "is_pk": false, "fk_ref": null,                              "description": "Journal batch / voucher number"},
+                {"name": "account_id",       "data_type": "STRING",    "nullable": false, "is_pk": false, "fk_ref": "slv_account.account_id",          "description": "FK to GL account"},
+                {"name": "cost_centre_id",   "data_type": "STRING",    "nullable": true,  "is_pk": false, "fk_ref": "slv_cost_centre.cost_centre_id",  "description": "FK to cost centre"},
+                {"name": "entity_id",        "data_type": "STRING",    "nullable": false, "is_pk": false, "fk_ref": "slv_legal_entity.entity_id",      "description": "FK to legal entity"},
+                {"name": "debit_amount",     "data_type": "DOUBLE",    "nullable": false, "is_pk": false, "fk_ref": null,                              "description": "Debit amount in functional currency"},
+                {"name": "credit_amount",    "data_type": "DOUBLE",    "nullable": false, "is_pk": false, "fk_ref": null,                              "description": "Credit amount in functional currency"},
+                {"name": "posting_ts",       "data_type": "TIMESTAMP", "nullable": false, "is_pk": false, "fk_ref": null,                              "description": "Journal posting timestamp"},
+                {"name": "fiscal_period",    "data_type": "STRING",    "nullable": false, "is_pk": false, "fk_ref": null,                              "description": "Fiscal year-period e.g. 2024/P03"},
+                {"name": "entry_type",       "data_type": "STRING",    "nullable": false, "is_pk": false, "fk_ref": null,                              "description": "ACTUAL, ADJUSTMENT, ACCRUAL, RECLASSIFICATION"}
+            ]
+        },
+        "slv_budget_event": {
+            "type": "event",
+            "grain": "one row per budget line per fiscal period",
+            "columns": [
+                {"name": "budget_line_id",  "data_type": "STRING", "nullable": false, "is_pk": true,  "fk_ref": null,                              "description": "Unique budget line identifier"},
+                {"name": "account_id",      "data_type": "STRING", "nullable": false, "is_pk": false, "fk_ref": "slv_account.account_id",          "description": "FK to GL account"},
+                {"name": "cost_centre_id",  "data_type": "STRING", "nullable": true,  "is_pk": false, "fk_ref": "slv_cost_centre.cost_centre_id",  "description": "FK to cost centre"},
+                {"name": "entity_id",       "data_type": "STRING", "nullable": false, "is_pk": false, "fk_ref": "slv_legal_entity.entity_id",      "description": "FK to legal entity"},
+                {"name": "fiscal_period",   "data_type": "STRING", "nullable": false, "is_pk": false, "fk_ref": null,                              "description": "Fiscal year-period e.g. 2024/P03"},
+                {"name": "budget_amount",   "data_type": "DOUBLE", "nullable": false, "is_pk": false, "fk_ref": null,                              "description": "Budgeted amount in functional currency"},
+                {"name": "budget_version",  "data_type": "STRING", "nullable": false, "is_pk": false, "fk_ref": null,                              "description": "Budget version: ORIGINAL, REVISED_Q1, REVISED_Q2, FORECAST"}
+            ]
+        },
+        "slv_finance_performance_daily": {
+            "type": "aggregate",
+            "grain": "one row per account per cost centre per fiscal period",
+            "columns": [
+                {"name": "fiscal_period",    "data_type": "STRING", "nullable": false, "is_pk": true,  "fk_ref": null,                              "description": "Fiscal period (composite PK part 1)"},
+                {"name": "account_id",       "data_type": "STRING", "nullable": false, "is_pk": true,  "fk_ref": "slv_account.account_id",          "description": "FK to GL account (composite PK part 2)"},
+                {"name": "cost_centre_id",   "data_type": "STRING", "nullable": false, "is_pk": true,  "fk_ref": "slv_cost_centre.cost_centre_id",  "description": "FK to cost centre (composite PK part 3)"},
+                {"name": "entity_id",        "data_type": "STRING", "nullable": false, "is_pk": false, "fk_ref": "slv_legal_entity.entity_id",      "description": "FK to legal entity"},
+                {"name": "actuals",          "data_type": "DOUBLE", "nullable": false, "is_pk": false, "fk_ref": null,                              "description": "Period actual spend / revenue"},
+                {"name": "budget",           "data_type": "DOUBLE", "nullable": true,  "is_pk": false, "fk_ref": null,                              "description": "Period budget amount"},
+                {"name": "ytd_actuals",      "data_type": "DOUBLE", "nullable": false, "is_pk": false, "fk_ref": null,                              "description": "Year-to-date actuals"},
+                {"name": "ytd_budget",       "data_type": "DOUBLE", "nullable": true,  "is_pk": false, "fk_ref": null,                              "description": "Year-to-date budget"}
+            ]
+        }
+    },
+    "derived_metrics": [
+        {"name": "Variance_Pct",        "formula": "(actuals - budget) / ABS(budget) * 100",    "grain": "account+cc+period", "description": "Budget variance as a percentage"},
+        {"name": "Budget_Utilization",  "formula": "actuals / budget",                           "grain": "account+cc+period", "description": "Actual spend as a fraction of budget"},
+        {"name": "YTD_Actuals",         "formula": "SUM(actuals) WHERE fiscal_period <= current", "grain": "account+cc+ytd",   "description": "Year-to-date cumulative actuals"}
+    ],
+    "source_platform_mappings": {
+        "erp_finance": {
+            "description": "ERP financial module (SAP FI/CO, Oracle Financials, Workday Finance)",
+            "maps_to": ["slv_journal_event", "slv_account", "slv_cost_centre", "slv_legal_entity"]
+        },
+        "budgeting_tool": {
+            "description": "Planning and budgeting tool (Anaplan, Hyperion, SAP BPC)",
+            "maps_to": ["slv_budget_event"]
+        }
+    }
+}

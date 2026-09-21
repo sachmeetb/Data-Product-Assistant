@@ -1,0 +1,148 @@
+{
+  "version": "1.0.0",
+  "description": "Banking domain hierarchy and ontology for Silver-layer schema generation",
+  "last_updated": "2026-08",
+  "domain_hierarchy": {
+    "banking": {
+      "label": "Banking & Financial Services",
+      "sub_domains": {
+        "retail_banking": {
+          "label": "Retail Banking",
+          "bian_service_domains": ["Customer Management", "Servicing Order", "Contact Handler"],
+          "capabilities": ["account_management", "deposits", "lending", "payments", "cards"],
+          "key_entities": ["party", "account", "transaction", "payment", "loan"],
+          "sub_domains": {
+            "deposits": {
+              "label": "Deposits & Savings",
+              "product_types": ["current_account", "savings_account", "term_deposit", "notice_account"],
+              "key_entities": ["account", "balance", "transaction"],
+              "iso_20022_messages": ["camt.052", "camt.053", "camt.054"]
+            },
+            "lending": {
+              "label": "Retail Lending",
+              "product_types": ["personal_loan", "mortgage", "auto_loan", "student_loan", "overdraft"],
+              "key_entities": ["loan", "account", "party", "agreement"],
+              "iso_20022_messages": ["acmt.001", "acmt.002"]
+            },
+            "payments": {
+              "label": "Retail Payments",
+              "product_types": ["domestic_transfer", "international_wire", "direct_debit", "standing_order", "real_time_payment"],
+              "key_entities": ["payment", "transaction", "account", "party"],
+              "iso_20022_messages": ["pain.001", "pain.002", "pain.008", "pacs.002", "pacs.003", "pacs.004", "pacs.008"]
+            },
+            "cards": {
+              "label": "Cards & Digital Wallets",
+              "product_types": ["credit_card", "debit_card", "prepaid_card", "virtual_card"],
+              "key_entities": ["account", "transaction", "party"],
+              "iso_20022_messages": ["canm.001"]
+            }
+          }
+        },
+        "corporate_banking": {
+          "label": "Corporate & Business Banking",
+          "bian_service_domains": ["Corporate Finance", "Trade Finance", "Cash Management", "Corporate Loans"],
+          "capabilities": ["trade_finance", "cash_management", "treasury", "lending", "guarantees"],
+          "key_entities": ["party", "account", "agreement", "financial_instrument", "transaction"],
+          "sub_domains": {
+            "trade_finance": {
+              "label": "Trade Finance",
+              "product_types": ["letter_of_credit", "bank_guarantee", "documentary_collection", "supply_chain_finance"],
+              "key_entities": ["agreement", "party", "financial_instrument"],
+              "iso_20022_messages": ["tsmt.001", "tsmt.002"]
+            },
+            "cash_management": {
+              "label": "Cash Management & Treasury",
+              "product_types": ["notional_pooling", "zero_balance_sweeping", "fx_spot", "fx_forward"],
+              "key_entities": ["account", "balance", "transaction", "financial_instrument"]
+            }
+          }
+        },
+        "investment_banking": {
+          "label": "Investment Banking & Capital Markets",
+          "bian_service_domains": ["Securities Position Keeping", "Investment Portfolio Management", "Underwriting"],
+          "capabilities": ["equities", "fixed_income", "derivatives", "structured_products"],
+          "key_entities": ["financial_instrument", "position_holding", "party", "transaction"],
+          "regulatory_frameworks": ["MiFID II", "EMIR", "FRTB"]
+        },
+        "wealth_management": {
+          "label": "Private & Wealth Management",
+          "bian_service_domains": ["Investment Portfolio Management", "Fiduciary Agreement"],
+          "key_entities": ["party", "account", "position_holding", "financial_instrument", "agreement"],
+          "product_types": ["discretionary_mandate", "advisory", "custody", "structured_notes"]
+        },
+        "insurance": {
+          "label": "Bancassurance & Insurance",
+          "bian_service_domains": ["Product Directory", "Party Lifecycle Management"],
+          "key_entities": ["party", "agreement", "product"]
+        },
+        "compliance_risk": {
+          "label": "Compliance, Risk & Regulatory",
+          "bian_service_domains": ["Regulatory Compliance", "Financial Crimes Compliance", "Credit Risk Operations"],
+          "sub_domains": {
+            "aml_kyc": {
+              "label": "AML / KYC / CDD",
+              "key_entities": ["party", "party_relationship"],
+              "regulatory_frameworks": ["FATF", "6AMLD", "FinCEN"],
+              "required_attributes": ["risk_rating", "kyc_status", "pep_flag", "sanctions_flag", "cdd_level", "last_review_date", "next_review_date", "adverse_media_flag"]
+            },
+            "credit_risk": {
+              "label": "Credit Risk",
+              "key_entities": ["party", "account", "loan"],
+              "regulatory_frameworks": ["Basel III", "IFRS 9"],
+              "required_attributes": ["pd_score", "lgd_estimate", "ead_amount", "ecl_stage", "credit_rating", "provision_amount"]
+            },
+            "market_risk": {
+              "label": "Market Risk",
+              "key_entities": ["position_holding", "financial_instrument"],
+              "regulatory_frameworks": ["FRTB", "SA-CCR"]
+            },
+            "reporting": {
+              "label": "Regulatory Reporting",
+              "frameworks": ["COREP", "FINREP", "MiFIR", "EMIR", "BCBS 239"],
+              "output_formats": ["XBRL", "CSV", "XML"]
+            }
+          }
+        }
+      }
+    }
+  },
+  "entity_to_domain_map": {
+    "party": ["retail_banking", "corporate_banking", "wealth_management", "compliance_risk", "aml_kyc"],
+    "account": ["retail_banking", "corporate_banking", "deposits", "lending", "cards"],
+    "transaction": ["retail_banking", "corporate_banking", "payments", "cards"],
+    "payment": ["payments", "trade_finance", "cash_management"],
+    "loan": ["lending", "corporate_banking", "trade_finance"],
+    "balance": ["deposits", "lending", "cash_management"],
+    "position_holding": ["investment_banking", "wealth_management"],
+    "financial_instrument": ["investment_banking", "wealth_management", "trade_finance"],
+    "agreement": ["lending", "trade_finance", "wealth_management", "insurance"],
+    "product": ["retail_banking", "corporate_banking", "wealth_management"],
+    "party_relationship": ["aml_kyc", "wealth_management", "corporate_banking"]
+  },
+  "regulatory_entity_requirements": {
+    "aml_kyc": {
+      "entities": ["party", "party_relationship"],
+      "mandatory_attributes": ["kyc_status", "cdd_level", "risk_rating", "pep_flag", "sanctions_flag", "adverse_media_flag", "last_review_date", "next_review_date"]
+    },
+    "ifrs9": {
+      "entities": ["loan", "account"],
+      "mandatory_attributes": ["ecl_stage", "pd_score", "lgd_estimate", "ead_amount", "provision_amount"]
+    },
+    "gdpr": {
+      "entities": ["party"],
+      "mandatory_attributes": ["consent_status", "data_retention_expiry_date", "marketing_opt_in"]
+    },
+    "mifid2": {
+      "entities": ["party", "position_holding", "transaction"],
+      "mandatory_attributes": ["client_classification", "appropriateness_result", "best_execution_venue"]
+    },
+    "basel_iii": {
+      "entities": ["party", "account", "loan", "financial_instrument"],
+      "mandatory_attributes": ["risk_weight", "capital_requirement", "exposure_class"]
+    },
+    "psd2": {
+      "entities": ["payment", "account", "party"],
+      "mandatory_attributes": ["sca_method", "tpp_id", "consent_id"]
+    }
+  }
+}

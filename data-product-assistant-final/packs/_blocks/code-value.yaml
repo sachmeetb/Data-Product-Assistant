@@ -1,0 +1,25 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$id: "bfsi.silver/common/code-value.yaml"
+title: CodeValue
+description: >
+  Controlled-vocabulary value carrying the ORIGINAL source code, the CONFORMED
+  canonical code, and the code list it belongs to. This is the single most reused
+  block: it lets Silver standardize enumerations (status, type, category) while
+  preserving the raw source value for audit and reversibility.
+type: object
+properties:
+  code:
+    type: string
+    description: Canonical/conformed code after mapping to the standard code list.
+  code_list:
+    type: string
+    description: >
+      Identifier of the governing code list, e.g. ISO4217, ISO3166-1, ISO20022:ExternalPurpose1Code,
+      ISO18245:MCC, FDX:TransactionStatus, INTERNAL:AccountStatus.
+  description:
+    type: [string, "null"]
+    description: Human-readable label for the code.
+  source_code:
+    type: [string, "null"]
+    description: Raw code as received from source, retained for lineage.
+required: [code, code_list]

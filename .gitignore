@@ -1,0 +1,44 @@
+# Secrets — never commit
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*_credentials.json
+service_account*.json
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+env/
+.Python
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+htmlcov/
+.coverage
+coverage.xml
+
+# Node
+node_modules/
+.npm
+*.tgz
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# Logs and temp
+*.log
+*.tmp
+*.bak

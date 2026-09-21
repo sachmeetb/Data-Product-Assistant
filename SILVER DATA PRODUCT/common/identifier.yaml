@@ -1,0 +1,49 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$id: "bfsi.silver/common/identifier.yaml"
+title: Identifier
+description: >
+  Scheme-qualified identifier. One reusable shape for every industry identifier so
+  downstream code never has to special-case them. Model with a controlled scheme code
+  rather than a fixed column per identifier type -> new schemes need no schema change.
+type: object
+$defs:
+  Scheme:
+    type: string
+    description: Registry / standard that issued the identifier.
+    enum:
+      - LEI            # ISO 17442 Legal Entity Identifier (GLEIF)
+      - BIC            # ISO 9362 Business Identifier Code (SWIFT)
+      - IBAN           # ISO 13616 International Bank Account Number
+      - ISIN           # ISO 6166 International Securities Identification Number
+      - CUSIP          # North American security id
+      - SEDOL          # UK/Ireland security id
+      - FIGI           # OMG Financial Instrument Global Identifier
+      - MIC            # ISO 10383 Market Identifier Code
+      - UPI            # ISO 4914 Unique Product Identifier (derivatives)
+      - UTI            # Unique Transaction Identifier (ISO 23897)
+      - MCC            # ISO 18245 Merchant Category Code
+      - CLABE          # Mexican bank account standard
+      - SORT_CODE      # UK domestic routing
+      - ROUTING_ABA    # US ABA routing number
+      - TAX_ID         # National tax identifier (SSN/EIN/PAN/TIN)
+      - NATIONAL_ID    # Government-issued person id
+      - DUNS           # Dun & Bradstreet
+      - PROPRIETARY    # Source-system internal id
+      - OTHER
+properties:
+  scheme:
+    $ref: "#/$defs/Scheme"
+  scheme_name:
+    type: [string, "null"]
+    description: Free-text scheme name when scheme = PROPRIETARY or OTHER.
+  value:
+    type: string
+    description: The identifier value (already normalized/validated in Silver).
+  issuer:
+    type: [string, "null"]
+    description: Issuing authority, where relevant (e.g. GLEIF LOU for an LEI).
+  is_verified:
+    type: boolean
+    default: false
+    description: True if checksum/registry validation passed during cleansing.
+required: [scheme, value]

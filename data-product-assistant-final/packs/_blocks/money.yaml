@@ -1,0 +1,21 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$id: "bfsi.silver/common/money.yaml"
+title: Money
+description: >
+  Monetary amount + ISO 4217 currency. Models ISO 20022 ActiveCurrencyAndAmount /
+  FIBO MonetaryAmount / FDX Amount. Store amount as an exact decimal (never float).
+type: object
+properties:
+  amount:
+    type: string
+    x-canonical-type: DECIMAL
+    description: Exact decimal serialized as a string to preserve precision (e.g. "1050.75").
+    pattern: '^-?[0-9]+(\.[0-9]+)?$'
+  currency:
+    type: string
+    description: ISO 4217 alphabetic currency code.
+    pattern: '^[A-Z]{3}$'
+  scale:
+    type: [integer, "null"]
+    description: Number of minor-unit digits (2 for USD, 0 for JPY); derived from ISO 4217.
+required: [amount, currency]

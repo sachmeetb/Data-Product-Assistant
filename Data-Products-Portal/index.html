@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Accenture · Data Products Portal</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script crossorigin src="https://unpkg.com/react@18.3.1/umd/react.development.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.23.10/babel.min.js"></script>
+  <script src="https://unpkg.com/lucide@0.474.0/dist/umd/lucide.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    html, body, #root { height: 100%; margin: 0; padding: 0; }
+    body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background-color: #F7F4FA; }
+    .lucide-icon { display: inline-block; vertical-align: middle; }
+    
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #D1C7DC; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #A100FF; }
+    
+    .card-hover {
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .card-hover:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 20px 35px -8px rgba(70, 0, 115, 0.15), 0 8px 16px -6px rgba(0, 0, 0, 0.06);
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel" data-presets="react">
+    const { useState, useEffect, useRef, Fragment } = React;
+
+    // ─── Lucide Icon Loader ──────────────────────────────────────────────────
+    const ICON_KEY = {
+      CheckCircle2: 'check-circle-2',
+      AlertTriangle: 'alert-triangle',
+      Sparkles: 'sparkles',
+      Layers: 'layers',
+      Shield: 'shield',
+      Loader2: 'loader-circle',
+      ArrowRight: 'arrow-right',
+      ArrowUpRight: 'arrow-up-right',
+      ExternalLink: 'external-link',
+      Maximize2: 'maximize-2',
+      RefreshCw: 'refresh-cw',
+      LogOut: 'log-out',
+      Lock: 'lock'
+    };
+
+    function makeIcon(name) {
+      return function IconCmp({ size = 16, color = 'currentColor', fill = 'none', className = '', style }) {
+        const ref = useRef(null);
+        useEffect(() => {
+          if (!ref.current) return;
+          const lib = window.lucide;
+          if (!lib || !lib.icons) { ref.current.innerHTML = ''; return; }
+          const candidates = [name, ICON_KEY[name], name.replace(/([A-Z])/g, '-$1').toLowerCase().replace(/^-/, '')];
+          if (name === 'Loader2') candidates.unshift('LoaderCircle', 'loader-circle');
+          let node = null;
+          for (const k of candidates) {
+            if (lib.icons[k]) { node = lib.icons[k]; break; }
+          }
+          if (!node) { ref.current.innerHTML = ''; return; }
+          let svgString = '';
+          try {
+            let iconNode = null;
+            if (Array.isArray(node)) {
+              iconNode = node[2] || [];
+            } else if (Array.isArray(node.iconNode)) {
+              iconNode = node.iconNode;
+            } else if (typeof node.toSvg === 'function') {
+              svgString = node.toSvg({ width: size, height: size, stroke: color, fill });
+            }
+            if (iconNode && !svgString) {
+              const childSvg = iconNode.map(([ctag, cattrs]) => {
+                const a = Object.entries(cattrs).map(([k,v]) => k+'="'+v+'"').join(' ');
+                return '<'+ctag+' '+a+' />';
+              }).join('');
+              svgString = '<svg xmlns="http://www.w3.org/2000/svg" width="'+size+'" height="'+size+'" viewBox="0 0 24 24" fill="'+fill+'" stroke="'+color+'" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+childSvg+'</svg>';
+            }
+          } catch (e) { console.warn('icon error', name, e); }
+          ref.current.innerHTML = svgString || '';
+        }, [size, color, fill]);
+        return React.createElement('span', {
+          ref,
+          className: 'lucide-icon ' + className,
+          style: Object.assign({ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: size, height: size }, style || {})
+        });
+      };
+    }
+
+    const Icons = Object.fromEntries(Object.keys(ICON_KEY).map(n => [n, makeIcon(n)]));
+    const { 
+      Shield, Loader2, CheckCircle2, ArrowRight, ArrowUpRight, 
+      Layers, Sparkles, ExternalLink, Maximize2, RefreshCw, 
+      LogOut, Lock, AlertTriangle 
+    } = Icons;
+
+    // ─── Accenture Brand Palette ─────────────────────────────────────────────
+    const BP = {
+      purple:       "#A100FF",   // Accenture primary purple
+      purpleDark:   "#7800C4",
+      purpleDeep:   "#460073",   // deep brand / sidebar
+      purpleDeeper: "#2E004D",
+      purpleLight:  "#F3E6FF",
+      purpleSoft:   "#E0C2FF",
+      orange:       "#FF6B00",   // Accenture accent orange
+      text:         "#0F0A14",
+      textMuted:    "#5C5066",
+      textSubtle:   "#8A8091",
+      bg:           "#F7F4FA",
+      panel:        "#FFFFFF",
+      border:       "#E2DCE8",
+    };
+
+    // ─── Product Definitions ─────────────────────────────────────────────────
+    const PRODUCTS = [
+      {
+        id: "gold",
+        title: "Gold Product Assistant (BP - Product)",
+        url: "https://proxy-dp-assistant-v2-frontend-preview-743146199.us-central1.run.app",
+        gradient: "linear-gradient(135deg, #451A03 0%, #78350F 50%, #B45309 100%)",
+        icon: Sparkles
+      },
+      {
+        id: "silver",
+        title: "Silver Product Assistant (Banking)",
+        url: "https://proxy-bfsi-silver-frontend-v1-1-743146199.us-central1.run.app/",
+        gradient: "linear-gradient(135deg, #1E293B 0%, #334155 100%)",
+        icon: Layers
+      }
+    ];
+
+    // ─── 1. Login Screen Component ───────────────────────────────────────────
+    function LoginScreen({ onSignIn }) {
+      const [email, setEmail] = useState("r.yuva.kishore@accenture.com");
+      const [authState, setAuthState] = useState("idle");
+      const [error, setError] = useState(null);
+
+      const quickPresets = [
+        { label: "R Yuva Kishore", email: "r.yuva.kishore@accenture.com", role: "Lead Data Architect" },
+        { label: "Sarah Jenkins", email: "sarah.jenkins@accenture.com", role: "Campaign Manager" },
+        { label: "Alex Rivera", email: "alex.rivera@accenture.com", role: "Data Product Owner" }
+      ];
+
+      const submit = (targetEmail) => {
+        setError(null);
+        const emailToValidate = (targetEmail || email || "").trim().toLowerCase();
+        if (!emailToValidate.endsWith("@accenture.com")) {
+          setError("Please use your @accenture.com corporate email.");
+          return;
+        }
+        setAuthState("authenticating");
+        setTimeout(() => setAuthState("success"), 850);
+        setTimeout(() => {
+          const namePart = emailToValidate.split("@")[0].split(".").map(s => s.charAt(0).toUpperCase() + s.slice(1)).join(" ");
+          onSignIn({
+            email: emailToValidate,
+            name: namePart || "Accenture Professional",
+            initials: (namePart.split(" ").map(p => p[0]).join("") || "AC").slice(0, 2).toUpperCase()
+          });
+        }, 1500);
+      };
+
+      return (
+        <div
+          className="min-h-screen flex items-center justify-center p-4 sm:p-6"
+          style={{
+            background: `radial-gradient(circle at 25% 10%, ${BP.purpleLight} 0%, ${BP.bg} 55%, white 100%)`
+          }}
+        >
+          <div 
+            className="w-full max-w-4xl bg-white rounded-2xl overflow-hidden flex flex-col md:flex-row"
+            style={{ 
+              boxShadow: "0 25px 65px -15px rgba(70, 0, 115, 0.22), 0 10px 25px -5px rgba(0, 0, 0, 0.05)",
+              border: `1px solid ${BP.border}`
+            }}
+          >
+            {/* Left Brand Panel */}
+            <div
+              className="md:w-5/12 p-8 sm:p-10 text-white flex flex-col justify-between relative overflow-hidden"
+              style={{
+                background: `linear-gradient(155deg, ${BP.purpleDeep} 0%, ${BP.purpleDeeper} 100%)`
+              }}
+            >
+              <div>
+                <div className="flex items-center gap-2.5">
+                  <div
+                    className="w-9 h-9 rounded-lg flex items-center justify-center font-extrabold text-sm"
+                    style={{ background: BP.orange, color: "white" }}
+                  >
+                    &gt;
+                  </div>
+                  <div>
+                    <div className="text-xs tracking-widest font-bold text-purple-200">ACCENTURE</div>
+                    <div className="text-xs font-semibold opacity-75">Data Products Platform</div>
+                  </div>
+                </div>
+
+                <h1 className="text-2xl sm:text-3xl font-bold mt-8 leading-tight tracking-tight">
+                  From a business question to a governed data product — in one conversation.
+                </h1>
+
+                <p className="mt-4 text-xs sm:text-sm text-purple-100 leading-relaxed opacity-90">
+                  Sign in with your Accenture account to discover, design and build data products with the agentic platform.
+                </p>
+
+                <div className="mt-6 space-y-2.5">
+                  <div className="flex items-center gap-2 text-xs text-purple-200">
+                    <CheckCircle2 size={13} color={BP.orange} />
+                    <span>Gold Product Assistant (BP - Product)</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs text-purple-200">
+                    <CheckCircle2 size={13} color={BP.orange} />
+                    <span>Silver Product Assistant (Banking)</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-10 pt-4 border-t border-purple-800 text-xs text-purple-300 flex items-center justify-between">
+                <span>Prototype · internal demo · not production</span>
+              </div>
+            </div>
+
+            {/* Right Form Panel */}
+            <div className="md:w-7/12 p-8 sm:p-10 flex flex-col justify-between bg-white">
+              <div>
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-bold tracking-widest uppercase" style={{ color: BP.purple }}>
+                    Single Sign-On (SSO)
+                  </span>
+                  <span className="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Systems Active
+                  </span>
+                </div>
+
+                <h2 className="text-2xl font-bold mt-2" style={{ color: BP.text }}>
+                  Welcome back
+                </h2>
+                <p className="text-xs text-gray-500 mt-1">
+                  Authenticate with your corporate credentials to continue.
+                </p>
+
+                {/* Email Input */}
+                <div className="mt-6">
+                  <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-600 mb-1.5">
+                    Corporate Email
+                  </label>
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={e => setEmail(e.target.value)}
+                    onKeyDown={e => e.key === 'Enter' && submit()}
+                    disabled={authState !== "idle"}
+                    placeholder="name.surname@accenture.com"
+                    className="w-full px-3.5 py-2.5 rounded-lg text-sm border focus:outline-none transition"
+                    style={{
+                      borderColor: error ? "#EF4444" : BP.border,
+                      background: authState !== "idle" ? "#F9FAFB" : "white",
+                      color: BP.text
+                    }}
+                  />
+                  {error && (
+                    <div className="text-xs text-red-600 mt-1.5 flex items-center gap-1">
+                      <AlertTriangle size={12} /> {error}
+                    </div>
+                  )}
+
+                  {/* SSO Button */}
+                  <button
+                    onClick={() => submit()}
+                    disabled={authState !== "idle"}
+                    className="w-full mt-4 py-3 px-4 rounded-lg font-semibold text-sm text-white flex items-center justify-center gap-2 transition duration-200 shadow-md"
+                    style={{
+                      background: authState === "success" ? BP.purpleDark : BP.purple,
+                      cursor: authState === "idle" ? "pointer" : "default"
+                    }}
+                  >
+                    {authState === "idle" && (
+                      <>
+                        <Shield size={16} /> Sign in with Accenture SSO
+                      </>
+                    )}
+                    {authState === "authenticating" && (
+                      <>
+                        <Loader2 size={16} className="animate-spin" /> Verifying Credentials…
+                      </>
+                    )}
+                    {authState === "success" && (
+                      <>
+                        <CheckCircle2 size={16} /> Access Granted · Redirecting…
+                      </>
+                    )}
+                  </button>
+
+                  <div className="flex items-center gap-2 mt-3 text-[11px] text-gray-400 justify-center">
+                    <Lock size={11} color={BP.purple} />
+                    <span>Microsoft Entra ID · FIDO2 / MFA Enforced</span>
+                  </div>
+                </div>
+
+                {/* Persona quick select */}
+                <div className="mt-6 pt-5 border-t border-gray-100">
+                  <div className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-2">
+                    Quick Demo Profiles:
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                    {quickPresets.map((p, idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => {
+                          setEmail(p.email);
+                          submit(p.email);
+                        }}
+                        className="text-left p-2 rounded-lg border border-gray-200 hover:border-purple-300 hover:bg-purple-50/50 transition group"
+                      >
+                        <div className="text-xs font-semibold text-gray-800 group-hover:text-purple-700">{p.label}</div>
+                        <div className="text-[10px] text-gray-400 truncate">{p.role}</div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-6 pt-4 border-t border-gray-100 flex items-center justify-between text-[11px] text-gray-400">
+                <span>Accenture Practice</span>
+                <a href="mailto:support@accenture.com" className="text-purple-600 hover:underline">IT Help Desk</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // ─── 2. Top Navigation Bar ───────────────────────────────────────────────
+    function Header({ user, onSignOut, activeView, setActiveView, currentProduct }) {
+      return (
+        <header className="bg-white border-b sticky top-0 z-30 shadow-xs" style={{ borderColor: BP.border }}>
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            {/* Logo & Product Title */}
+            <div className="flex items-center gap-3">
+              <button 
+                onClick={() => setActiveView("hub")}
+                className="flex items-center gap-2 text-left hover:opacity-85 transition"
+                title="Return to Product Selection Hub"
+              >
+                <div
+                  className="w-8 h-8 rounded-lg flex items-center justify-center font-black text-sm text-white shadow-xs"
+                  style={{ background: BP.purple }}
+                >
+                  &gt;
+                </div>
+                <div>
+                  <div className="text-sm font-bold leading-tight" style={{ color: BP.text }}>
+                    Accenture <span className="font-normal text-gray-400">|</span> Data Products Hub
+                  </div>
+                  <div className="text-[10.5px] text-gray-400">
+                    Silver & Gold Product Assistants
+                  </div>
+                </div>
+              </button>
+
+              {/* View Breadcrumb badge if in workspace */}
+              {activeView === "workspace" && currentProduct && (
+                <div className="hidden sm:flex items-center gap-2 ml-4 pl-4 border-l border-gray-200">
+                  <span className="text-xs text-gray-400">Viewing:</span>
+                  <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-purple-100 text-purple-900 flex items-center gap-1.5">
+                    <currentProduct.icon size={12} />
+                    {currentProduct.title}
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {/* Actions & User profile */}
+            <div className="flex items-center gap-3">
+              {/* Navigation toggle */}
+              <div className="bg-gray-100 p-0.5 rounded-lg flex items-center text-xs">
+                <button
+                  onClick={() => setActiveView("hub")}
+                  className={`px-3 py-1.5 rounded-md font-semibold transition ${
+                    activeView === "hub" 
+                      ? "bg-white text-purple-900 shadow-xs" 
+                      : "text-gray-600 hover:text-gray-900"
+                  }`}
+                >
+                  Products Hub
+                </button>
+                <button
+                  onClick={() => setActiveView("workspace")}
+                  className={`px-3 py-1.5 rounded-md font-semibold transition flex items-center gap-1.5 ${
+                    activeView === "workspace" 
+                      ? "bg-white text-purple-900 shadow-xs" 
+                      : "text-gray-600 hover:text-gray-900"
+                  }`}
+                >
+                  <span>Workspace</span>
+                  {activeView === "workspace" && (
+                    <span className="w-1.5 h-1.5 rounded-full bg-purple-600"></span>
+                  )}
+                </button>
+              </div>
+
+              {/* User Chip & Sign Out */}
+              <div className="flex items-center gap-2 pl-3 border-l border-gray-200">
+                <div 
+                  className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-purple-800"
+                  style={{ background: BP.purpleLight }}
+                  title={user.email}
+                >
+                  {user.initials}
+                </div>
+                <div className="hidden md:block text-left">
+                  <div className="text-xs font-semibold text-gray-800 leading-tight">{user.name}</div>
+                  <div className="text-[10px] text-gray-400 truncate max-w-[130px]">{user.email}</div>
+                </div>
+                <button
+                  onClick={onSignOut}
+                  title="Sign Out"
+                  className="ml-1 p-1.5 text-gray-400 hover:text-red-600 rounded-md hover:bg-red-50 transition"
+                >
+                  <LogOut size={16} />
+                </button>
+              </div>
+            </div>
+          </div>
+        </header>
+      );
+    }
+
+    // ─── 3. Clean Product Selection Hub Component ─────────────────────────────
+    function ProductHub({ onSelectProduct }) {
+      return (
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+          {/* Header */}
+          <div className="text-center max-w-2xl mx-auto mb-14">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold mb-3 border"
+              style={{ background: BP.purpleLight, color: BP.purpleDark, borderColor: BP.purpleSoft }}>
+              <Sparkles size={13} color={BP.purple} /> Product Portfolio
+            </div>
+            <h1 className="text-3xl sm:text-4xl font-extrabold text-gray-900 tracking-tight">
+              How can we help you
+            </h1>
+            <p className="mt-3 text-sm sm:text-base text-gray-600 leading-relaxed">
+              Click on a product below to access its workspace.
+            </p>
+          </div>
+
+          {/* 2 Clean Clickable Product Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+            {PRODUCTS.map((prod) => {
+              const IconCmp = prod.icon;
+              return (
+                <div
+                  key={prod.id}
+                  className="card-hover bg-white rounded-2xl border flex flex-col justify-between group cursor-pointer p-8 sm:p-10"
+                  style={{ borderColor: BP.border }}
+                  onClick={() => onSelectProduct(prod, "workspace")}
+                >
+                  <div>
+                    {/* Top Row: Icon & Direct Link Icon */}
+                    <div className="flex items-center justify-between mb-8">
+                      <div 
+                        className="w-16 h-16 rounded-2xl flex items-center justify-center text-white shadow-sm transition group-hover:scale-105 duration-200"
+                        style={{ background: prod.gradient }}
+                      >
+                        <IconCmp size={32} />
+                      </div>
+
+                      <a
+                        href={prod.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={e => e.stopPropagation()}
+                        title="Open directly in new window"
+                        className="p-3 text-gray-400 hover:text-purple-700 hover:bg-purple-50 rounded-xl transition"
+                      >
+                        <ArrowUpRight size={22} />
+                      </a>
+                    </div>
+
+                    {/* Title only */}
+                    <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 group-hover:text-purple-700 transition leading-snug">
+                      {prod.title}
+                    </h2>
+                  </div>
+
+                  {/* Card Actions Footer */}
+                  <div className="mt-12 pt-6 border-t border-gray-100 flex flex-col sm:flex-row items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onSelectProduct(prod, "workspace");
+                      }}
+                      className="w-full sm:w-1/2 py-3 px-4 rounded-xl font-semibold text-xs text-gray-700 bg-white border border-gray-200 hover:bg-gray-100 flex items-center justify-center gap-2 transition"
+                    >
+                      <Maximize2 size={14} /> Open In Portal
+                    </button>
+                    <a
+                      href={prod.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={e => e.stopPropagation()}
+                      className="w-full sm:w-1/2 py-3 px-4 rounded-xl font-semibold text-xs text-white flex items-center justify-center gap-2 shadow-xs transition"
+                      style={{ background: BP.purple }}
+                    >
+                      <ExternalLink size={14} /> Open in New Tab
+                    </a>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </main>
+      );
+    }
+
+    // ─── 4. In-App Workspace Viewer Component ────────────────────────────────
+    function WorkspaceViewer({ currentProduct, onSwitchProduct, onBackToHub }) {
+      const [isLoading, setIsLoading] = useState(true);
+      const iframeRef = useRef(null);
+
+      const reloadIframe = () => {
+        setIsLoading(true);
+        if (iframeRef.current) {
+          iframeRef.current.src = currentProduct.url;
+        }
+      };
+
+      useEffect(() => {
+        setIsLoading(true);
+      }, [currentProduct]);
+
+      return (
+        <div className="flex-1 flex flex-col overflow-hidden bg-gray-100">
+          {/* Workspace Sub-Toolbar */}
+          <div className="bg-white border-b px-4 py-2.5 flex items-center justify-between shadow-2xs" style={{ borderColor: BP.border }}>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={onBackToHub}
+                className="text-xs font-semibold text-gray-600 hover:text-purple-700 flex items-center gap-1.5 px-2.5 py-1.5 rounded hover:bg-gray-100 transition"
+              >
+                <ArrowRight size={13} className="rotate-180" /> Back to Products Hub
+              </button>
+
+              <div className="h-4 w-px bg-gray-200" />
+
+              {/* Product Switcher Dropdown */}
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs text-gray-400 font-medium hidden sm:inline">Active Product:</span>
+                <div className="flex bg-gray-100 p-0.5 rounded-lg text-xs">
+                  {PRODUCTS.map(p => (
+                    <button
+                      key={p.id}
+                      onClick={() => onSwitchProduct(p)}
+                      className={`px-2.5 py-1 rounded-md font-semibold transition flex items-center gap-1.5 ${
+                        currentProduct.id === p.id 
+                          ? "bg-white text-purple-900 shadow-2xs" 
+                          : "text-gray-500 hover:text-gray-800"
+                      }`}
+                    >
+                      <p.icon size={11} />
+                      <span>{p.title}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Right Workspace Actions */}
+            <div className="flex items-center gap-2">
+              <button
+                onClick={reloadIframe}
+                title="Reload Product View"
+                className="p-1.5 text-gray-500 hover:text-gray-800 hover:bg-gray-100 rounded transition text-xs flex items-center gap-1"
+              >
+                <RefreshCw size={13} className={isLoading ? "animate-spin" : ""} />
+                <span className="hidden sm:inline">Reload</span>
+              </button>
+
+              <a
+                href={currentProduct.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                title="Open in external browser window"
+                className="px-2.5 py-1.5 text-xs font-semibold text-white rounded-md flex items-center gap-1.5 shadow-2xs transition"
+                style={{ background: BP.purple }}
+              >
+                <span>Open in New Tab</span>
+                <ExternalLink size={12} />
+              </a>
+            </div>
+          </div>
+
+          {/* Iframe Viewport Container */}
+          <div className="flex-1 relative w-full bg-slate-50 overflow-hidden">
+            {/* Loading Indicator Overlay */}
+            {isLoading && (
+              <div className="absolute inset-0 bg-white/75 backdrop-blur-xs flex flex-col items-center justify-center z-10">
+                <Loader2 size={28} className="animate-spin text-purple-600 mb-2" />
+                <div className="text-xs font-semibold text-gray-700">
+                  Connecting to {currentProduct.title}…
+                </div>
+                <div className="text-[11px] text-gray-400 mt-1 font-mono">
+                  {currentProduct.url}
+                </div>
+              </div>
+            )}
+
+            {/* Embedded Live Iframe */}
+            <iframe
+              ref={iframeRef}
+              src={currentProduct.url}
+              className="absolute inset-0 w-full h-full border-0"
+              title={currentProduct.title}
+              sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-downloads"
+              onLoad={() => setIsLoading(false)}
+            />
+
+            {/* Friendly Frame Banner / Notice */}
+            <div className="absolute bottom-3 right-4 z-20 pointer-events-auto">
+              <div className="bg-white/95 backdrop-blur-md border rounded-lg px-3 py-2 shadow-lg flex items-center gap-3 text-xs" style={{ borderColor: BP.border }}>
+                <div className="flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                  <span className="font-semibold text-gray-800">{currentProduct.title}</span>
+                </div>
+                <a
+                  href={currentProduct.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-purple-700 hover:underline font-semibold flex items-center gap-1"
+                >
+                  Full Screen Tab <ArrowUpRight size={12} />
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // ─── 5. Main App Shell ───────────────────────────────────────────────────
+    function App() {
+      const [user, setUser] = useState(null);
+      const [activeView, setActiveView] = useState("hub");
+      const [currentProduct, setCurrentProduct] = useState(PRODUCTS[0]);
+
+      if (!user) {
+        return <LoginScreen onSignIn={u => setUser(u)} />;
+      }
+
+      return (
+        <div className="h-screen flex flex-col overflow-hidden bg-[#F7F4FA]">
+          <Header
+            user={user}
+            onSignOut={() => setUser(null)}
+            activeView={activeView}
+            setActiveView={setActiveView}
+            currentProduct={currentProduct}
+          />
+
+          {activeView === "hub" ? (
+            <ProductHub
+              onSelectProduct={(prod, targetView) => {
+                setCurrentProduct(prod);
+                if (targetView) setActiveView(targetView);
+              }}
+            />
+          ) : (
+            <WorkspaceViewer
+              currentProduct={currentProduct}
+              onSwitchProduct={p => setCurrentProduct(p)}
+              onBackToHub={() => setActiveView("hub")}
+            />
+          )}
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>

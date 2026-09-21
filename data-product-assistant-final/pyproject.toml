@@ -1,0 +1,37 @@
+[project]
+name = "data-product-assistant-final"
+version = "0.1.0"
+description = "Cross-domain agentic data product assistant on GCP"
+requires-python = ">=3.11"
+
+dependencies = [
+    "pyyaml>=6.0",
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.32",
+    "google-genai>=0.8",
+    "google-cloud-bigquery>=3.25",
+    "google-cloud-storage>=2.18",
+    "google-cloud-firestore>=2.19",
+    "opentelemetry-exporter-gcp-trace>=1.7",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.24",
+    "ruff>=0.7",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+
+[tool.setuptools]
+packages = ["core", "packs", "agents", "bronze", "pipelines", "api"]

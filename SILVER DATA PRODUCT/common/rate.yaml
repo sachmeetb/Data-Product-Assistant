@@ -1,0 +1,23 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$id: "bfsi.silver/common/rate.yaml"
+title: Rate
+description: A percentage/rate with its basis. Used for interest, fees, FX, yields.
+type: object
+properties:
+  rate_type:
+    type: string
+    enum: [FIXED, FLOATING, TIERED, PENALTY, INTRODUCTORY, EXCHANGE, YIELD]
+  value:
+    type: string
+    description: Exact decimal percentage as a string (e.g. "4.250" for 4.25%).
+    pattern: '^-?[0-9]+(\.[0-9]+)?$'
+  basis:
+    type: [string, "null"]
+    description: Day-count / compounding basis (e.g. ACT/360, 30/360).
+  reference_index:
+    type: [string, "null"]
+    description: Benchmark for floating rates (e.g. SOFR, ESTR, EURIBOR_3M).
+  spread:
+    type: [string, "null"]
+    description: Margin over the reference index, as a decimal string.
+required: [rate_type, value]

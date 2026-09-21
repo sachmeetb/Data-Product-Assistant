@@ -1,0 +1,116 @@
+{
+    "domain": "trade_promotions",
+    "display_name": "Trade Promotions",
+    "description": "Canonical Silver Layer framework for trade promotion management data. Covers promotional planning, spend tracking, execution, and ROI measurement. Anchored to TPM (Trade Promotion Management) system models such as SAP TPM and Salesforce CPG.",
+    "standards": ["SAP_TPM", "Salesforce_CPG", "Nielsen_TPM"],
+    "hierarchy": [
+        "slv_promotion",
+        "slv_retailer",
+        "slv_trade_product",
+        "slv_promotion_mechanic",
+        "slv_trade_spend_event",
+        "slv_promotional_uplift_event",
+        "slv_promotion_performance"
+    ],
+    "entity_types": {
+        "dimensions": ["slv_promotion", "slv_retailer", "slv_trade_product", "slv_promotion_mechanic"],
+        "events": ["slv_trade_spend_event", "slv_promotional_uplift_event"],
+        "aggregates": ["slv_promotion_performance"]
+    },
+    "entities": {
+        "slv_promotion": {
+            "type": "dimension",
+            "grain": "one row per trade promotion",
+            "columns": [
+                {"name": "promotion_id",    "data_type": "STRING", "nullable": false, "is_pk": true,  "fk_ref": null, "description": "Unique promotion identifier"},
+                {"name": "promotion_name",  "data_type": "STRING", "nullable": false, "is_pk": false, "fk_ref": null, "description": "Human-readable promotion name"},
+                {"name": "mechanic_id",     "data_type": "STRING", "nullable": true,  "is_pk": false, "fk_ref": "slv_promotion_mechanic.mechanic_id", "description": "FK to promotion mechanic"},
+                {"name": "start_date",      "data_type": "DATE",   "nullable": false, "is_pk": false, "fk_ref": null, "description": "Promotion start date"},
+                {"name": "end_date",        "data_type": "DATE",   "nullable": false, "is_pk": false, "fk_ref": null, "description": "Promotion end date"},
+                {"name": "planned_spend",   "data_type": "DOUBLE", "nullable": true,  "is_pk": false, "fk_ref": null, "description": "Planned trade investment in reporting currency"},
+                {"name": "status",          "data_type": "STRING", "nullable": false, "is_pk": false, "fk_ref": null, "description": "Status: PLANNED, ACTIVE, COMPLETED, CANCELLED"}
+            ]
+        },
+        "slv_retailer": {
+            "type": "dimension",
+            "grain": "one row per retail customer / account",
+            "columns": [
+                {"name": "retailer_id",     "data_type": "STRING", "nullable": false, "is_pk": true,  "fk_ref": null, "description": "Unique retailer identifier"},
+                {"name": "retailer_name",   "data_type": "STRING", "nullable": false, "is_pk": false, "fk_ref": null, "description": "Retailer trading name"},
+                {"name": "retailer_type",   "data_type": "STRING", "nullable": true,  "is_pk": false, "fk_ref": null, "description": "Type: National, Regional, Independent, Discounter"},
+                {"name": "country",         "data_type": "STRING", "nullable": true,  "is_pk": false, "fk_ref": null, "description": "Country code (ISO 3166-1 alpha-2)"}
+            ]
+        },
+        "slv_trade_product": {
+            "type": "dimension",
+            "grain": "one row per product promoted",
+            "columns": [
+                {"name": "product_id",      "data_type": "STRING", "nullable": false, "is_pk": true,  "fk_ref": null, "description": "Unique product identifier"},
+                {"name": "product_name",    "data_type": "STRING", "nullable": false, "is_pk": false, "fk_ref": null, "description": "Product name"},
+                {"name": "category",        "data_type": "STRING", "nullable": true,  "is_pk": false, "fk_ref": null, "description": "Product category"},
+                {"name": "brand",           "data_type": "STRING", "nullable": true,  "is_pk": false, "fk_ref": null, "description": "Brand name"},
+                {"name": "base_price",      "data_type": "DOUBLE", "nullable": true,  "is_pk": false, "fk_ref": null, "description": "Baseline unit price before promotion"}
+            ]
+        },
+        "slv_promotion_mechanic": {
+            "type": "dimension",
+            "grain": "one row per promotion mechanic type",
+            "columns": [
+                {"name": "mechanic_id",     "data_type": "STRING", "nullable": false, "is_pk": true,  "fk_ref": null, "description": "Unique mechanic identifier"},
+                {"name": "mechanic_name",   "data_type": "STRING", "nullable": false, "is_pk": false, "fk_ref": null, "description": "Mechanic name: Price Cut, BOGOF, Multibuy, Feature, Display, Coupon"},
+                {"name": "mechanic_type",   "data_type": "STRING", "nullable": true,  "is_pk": false, "fk_ref": null, "description": "Category: Price, Volume, Visibility"}
+            ]
+        },
+        "slv_trade_spend_event": {
+            "type": "event",
+            "grain": "one row per trade spend invoice / accrual",
+            "columns": [
+                {"name": "spend_id",         "data_type": "STRING",    "nullable": false, "is_pk": true,  "fk_ref": null, "description": "Unique spend event identifier"},
+                {"name": "promotion_id",     "data_type": "STRING",    "nullable": false, "is_pk": false, "fk_ref": "slv_promotion.promotion_id", "description": "FK to promotion"},
+                {"name": "retailer_id",      "data_type": "STRING",    "nullable": false, "is_pk": false, "fk_ref": "slv_retailer.retailer_id", "description": "FK to retailer"},
+                {"name": "product_id",       "data_type": "STRING",    "nullable": true,  "is_pk": false, "fk_ref": "slv_trade_product.product_id", "description": "FK to product"},
+                {"name": "spend_type",       "data_type": "STRING",    "nullable": false, "is_pk": false, "fk_ref": null, "description": "Spend type: Lump Sum, Per Case, Scan Down, Invoice Deduction"},
+                {"name": "spend_amount",     "data_type": "DOUBLE",    "nullable": false, "is_pk": false, "fk_ref": null, "description": "Actual trade spend amount in reporting currency"},
+                {"name": "spend_date",       "data_type": "DATE",      "nullable": false, "is_pk": false, "fk_ref": null, "description": "Date the spend was incurred"},
+                {"name": "timestamp",        "data_type": "TIMESTAMP", "nullable": false, "is_pk": false, "fk_ref": null, "description": "UTC timestamp of spend event"}
+            ]
+        },
+        "slv_promotional_uplift_event": {
+            "type": "event",
+            "grain": "one row per promoted product + retailer + week",
+            "columns": [
+                {"name": "uplift_id",          "data_type": "STRING", "nullable": false, "is_pk": true,  "fk_ref": null, "description": "Unique uplift event identifier"},
+                {"name": "promotion_id",       "data_type": "STRING", "nullable": false, "is_pk": false, "fk_ref": "slv_promotion.promotion_id", "description": "FK to promotion"},
+                {"name": "retailer_id",        "data_type": "STRING", "nullable": false, "is_pk": false, "fk_ref": "slv_retailer.retailer_id", "description": "FK to retailer"},
+                {"name": "product_id",         "data_type": "STRING", "nullable": false, "is_pk": false, "fk_ref": "slv_trade_product.product_id", "description": "FK to product"},
+                {"name": "week_start_date",    "data_type": "DATE",   "nullable": false, "is_pk": false, "fk_ref": null, "description": "Monday of the promo week"},
+                {"name": "baseline_volume",    "data_type": "DOUBLE", "nullable": true,  "is_pk": false, "fk_ref": null, "description": "Expected volume without promotion"},
+                {"name": "actual_volume",      "data_type": "DOUBLE", "nullable": false, "is_pk": false, "fk_ref": null, "description": "Actual sold volume during promotion"},
+                {"name": "incremental_volume", "data_type": "DOUBLE", "nullable": true,  "is_pk": false, "fk_ref": null, "description": "Actual minus baseline volume"}
+            ]
+        },
+        "slv_promotion_performance": {
+            "type": "aggregate",
+            "grain": "one row per promotion + retailer + product",
+            "columns": [
+                {"name": "promotion_id",       "data_type": "STRING", "nullable": false, "is_pk": true,  "fk_ref": "slv_promotion.promotion_id", "description": "FK to promotion — composite PK"},
+                {"name": "retailer_id",        "data_type": "STRING", "nullable": false, "is_pk": true,  "fk_ref": "slv_retailer.retailer_id", "description": "FK to retailer — composite PK"},
+                {"name": "product_id",         "data_type": "STRING", "nullable": false, "is_pk": true,  "fk_ref": "slv_trade_product.product_id", "description": "FK to product — composite PK"},
+                {"name": "total_spend",        "data_type": "DOUBLE", "nullable": false, "is_pk": false, "fk_ref": null, "description": "SUM of trade spend for this promotion"},
+                {"name": "total_uplift_volume","data_type": "DOUBLE", "nullable": true,  "is_pk": false, "fk_ref": null, "description": "SUM of incremental volume"},
+                {"name": "total_revenue",      "data_type": "DOUBLE", "nullable": true,  "is_pk": false, "fk_ref": null, "description": "Total promoted revenue"},
+                {"name": "roi",                "data_type": "DOUBLE", "nullable": true,  "is_pk": false, "fk_ref": null, "description": "Promotion ROI: incremental_revenue / spend"}
+            ]
+        }
+    },
+    "derived_metrics": {
+        "Promo_ROI":   {"formula": "incremental_revenue / total_spend",   "description": "Return on trade investment"},
+        "Efficiency":  {"formula": "incremental_volume / total_spend",    "description": "Volume uplift per unit of spend"},
+        "Spend_Rate":  {"formula": "total_spend / total_revenue",         "description": "Trade spend as % of revenue"}
+    },
+    "domain_keywords": [
+        "trade promotion", "trade spend", "tpm", "promotional spend", "promotion",
+        "roi", "uplift", "scan down", "lump sum", "per case", "mechanic",
+        "multibuy", "bogof", "feature", "display", "promo", "accrual"
+    ]
+}

@@ -1,0 +1,156 @@
+# BFSI Silver Layer — Validation Rules & Guardrails
+version: "1.0.0"
+
+global_rules:
+  - id: GR001
+    name: technical_envelope_required
+    description: Every Silver table must have all 10 technical envelope columns
+    severity: ERROR
+    required_columns: [surrogate_key, source_system, source_system_id, load_ts,
+                       effective_from_ts, effective_to_ts, is_current, record_hash,
+                       dq_status, dq_issues]
+
+  - id: GR002
+    name: no_float_for_money
+    description: Monetary amounts must use NUMERIC, never FLOAT64 or FLOAT
+    severity: ERROR
+    forbidden_types_for_amount_columns: [FLOAT64, FLOAT, REAL]
+
+  - id: GR003
+    name: surrogate_key_required
+    description: Every Silver table must have a STRING surrogate_key NOT NULL column
+    severity: ERROR
+
+  - id: GR004
+    name: scd2_columns_required
+    description: SCD2 columns must be present (effective_from_ts, effective_to_ts, is_current)
+    severity: ERROR
+
+  - id: GR005
+    name: dq_status_required
+    description: dq_status STRING NOT NULL is required on all Silver tables
+    severity: ERROR
+
+  - id: GR006
+    name: naming_snake_case
+    description: All column and table names must be snake_case
+    severity: ERROR
+    pattern: "^[a-z][a-z0-9_]*$"
+
+  - id: GR007
+    name: silver_prefix_required
+    description: Silver table names must start with slv_
+    severity: ERROR
+
+  - id: GR008
+    name: partition_required_for_facts
+    description: Fact tables must be partitioned by DATE(load_ts)
+    severity: WARNING
+    applies_to: [slv_transaction, slv_payment, slv_balance, slv_position_holding]
+
+  - id: GR009
+    name: no_databricks_syntax
+    description: BigQuery DDL must not contain Databricks-specific syntax
+    severity: ERROR
+    forbidden_patterns: ["USING DELTA", "TBLPROPERTIES", "DBFS", "spark.", "DeltaTable", "LOCATION 'dbfs"]
+
+  - id: GR010
+    name: bigquery_backtick_quoting
+    description: Qualified table names must use backtick quoting in BigQuery
+    severity: WARNING
+
+entity_rules:
+  party:
+    - id: PR001
+      severity: ERROR
+      description: party_type must be present with allowed values
+      allowed_values: [INDIVIDUAL, ORGANISATION, TRUST, GOVERNMENT, SOLE_TRADER]
+    - id: PR002
+      severity: WARNING
+      description: At least one identifier (national_id, tax_id, or lei) should be present
+    - id: PR003
+      severity: ERROR
+      description: LEI must be 20-character alphanumeric when present
+      regex: "^[A-Z0-9]{20}$"
+
+  account:
+    - id: AR001
+      severity: ERROR
+      description: account_type must be present from allowed list
+      allowed_values: [CURRENT, SAVINGS, LOAN, CREDIT_CARD, INVESTMENT, TERM_DEPOSIT, MORTGAGE, OVERDRAFT, PREPAID]
+    - id: AR002
+      severity: ERROR
+      description: account_currency must be valid 3-letter ISO 4217 code
+      regex: "^[A-Z]{3}$"
+    - id: AR003
+      severity: ERROR
+      description: account must reference a party via party_key
+
+  transaction:
+    - id: TR001
+      severity: ERROR
+      description: transaction_amount must not be null and must be NUMERIC
+    - id: TR002
+      severity: ERROR
+      description: booking_ts (booking timestamp) must be present as TIMESTAMP
+    - id: TR003
+      severity: ERROR
+      description: debit_credit_indicator must be CRDT or DBIT
+      allowed_values: [CRDT, DBIT]
+    - id: TR004
+      severity: ERROR
+      description: account_key foreign key must be present
+
+  payment:
+    - id: PMT001
+      severity: ERROR
+      description: payment_scheme must be specified
+      allowed_values: [SEPA_CT, SEPA_DD, SWIFT, FASTER_PAYMENTS, CHIPS, FEDWIRE,
+                       TARGET2, BACS, RTP, SPEI, UPI_IN, LOCAL, INTERNAL]
+    - id: PMT002
+      severity: WARNING
+      description: end_to_end_id should be preserved from ISO 20022 message
+
+  loan:
+    - id: LN001
+      severity: ERROR
+      description: loan_type must be specified
+      allowed_values: [PERSONAL_LOAN, MORTGAGE, AUTO_LOAN, STUDENT_LOAN,
+                       BUSINESS_LOAN, CREDIT_LINE, OVERDRAFT, TRADE_FINANCE]
+    - id: LN002
+      severity: ERROR
+      description: origination_date must be present as DATE
+
+regulatory_guardrails:
+  aml_kyc:
+    trigger_domains: [aml_kyc, compliance_risk, financial_crimes]
+    trigger_keywords: [KYC, AML, sanctions, PEP, onboarding, due diligence, CDD]
+    required_on_party: [kyc_status, cdd_level, risk_rating, pep_flag,
+                        sanctions_flag, adverse_media_flag, last_review_date, next_review_date]
+
+  ifrs9:
+    trigger_domains: [credit_risk, lending]
+    trigger_frameworks: ["IFRS 9", "IFRS9"]
+    required_on_loan_account: [ecl_stage, pd_score, lgd_estimate, ead_amount, provision_amount]
+
+  gdpr:
+    trigger_regions: [EU, UK, EEA, DE, FR, NL, ES, IT, PL, SE, DK, NO]
+    required_on_party: [consent_status, data_retention_expiry_date, marketing_opt_in]
+    pii_tagging_required: true
+
+  mifid2:
+    trigger_domains: [investment_banking, wealth_management]
+    trigger_frameworks: ["MiFID II", "MiFID2", "MiFIR"]
+    required_on_party: [client_classification, appropriateness_result]
+    required_on_transaction: [best_execution_venue, transaction_reporting_id]
+
+  basel_iii:
+    trigger_domains: [credit_risk, market_risk, compliance_risk]
+    trigger_frameworks: ["Basel III", "Basel 3", "FRTB", "SA-CCR"]
+    required_on_exposure: [risk_weight, capital_requirement, exposure_class]
+
+  psd2:
+    trigger_regions: [EU, UK, EEA]
+    trigger_domains: [payments]
+    trigger_frameworks: ["PSD2", "PSD3"]
+    required_on_payment: [sca_method, consent_id]

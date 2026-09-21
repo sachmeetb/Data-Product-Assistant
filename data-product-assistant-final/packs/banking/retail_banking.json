@@ -1,0 +1,121 @@
+{
+    "schema_version": "2.0",
+    "industry": "banking",
+    "domain": "retail_banking",
+    "display_name": "Retail Banking",
+    "description": "Canonical Silver Layer framework for retail banking data. Covers accounts, customers, transactions, card events, and daily performance. Anchored to BIAN service domains, FIBO financial ontology, and ISO 20022 message standards.",
+    "standards": ["FIBO", "BIAN", "ISO_20022"],
+    "detection_signals": ["account", "transaction", "deposit", "withdrawal", "card", "loan", "mortgage", "kyc", "iban", "swift", "bic", "overdraft", "credit", "debit", "balance", "statement", "bank"],
+    "hierarchy": [
+        "slv_customer",
+        "slv_product",
+        "slv_account",
+        "slv_transaction_event",
+        "slv_card_event",
+        "slv_banking_performance_daily"
+    ],
+    "entity_types": {
+        "dimensions": ["slv_customer", "slv_product", "slv_account"],
+        "events": ["slv_transaction_event", "slv_card_event"],
+        "aggregates": ["slv_banking_performance_daily"]
+    },
+    "entities": {
+        "slv_customer": {
+            "type": "dimension",
+            "grain": "one row per customer",
+            "columns": [
+                {"name": "customer_id",    "data_type": "STRING",  "nullable": false, "is_pk": true,  "fk_ref": null, "description": "Unique customer identifier"},
+                {"name": "full_name",      "data_type": "STRING",  "nullable": false, "is_pk": false, "fk_ref": null, "description": "Customer full name"},
+                {"name": "date_of_birth",  "data_type": "DATE",    "nullable": true,  "is_pk": false, "fk_ref": null, "description": "Customer date of birth"},
+                {"name": "kyc_status",     "data_type": "STRING",  "nullable": false, "is_pk": false, "fk_ref": null, "description": "KYC verification status: PENDING, VERIFIED, REJECTED"},
+                {"name": "segment",        "data_type": "STRING",  "nullable": true,  "is_pk": false, "fk_ref": null, "description": "Customer segment: RETAIL, PREMIER, PRIVATE"},
+                {"name": "onboard_date",   "data_type": "DATE",    "nullable": true,  "is_pk": false, "fk_ref": null, "description": "Date customer was onboarded"}
+            ]
+        },
+        "slv_product": {
+            "type": "dimension",
+            "grain": "one row per banking product",
+            "columns": [
+                {"name": "product_id",          "data_type": "STRING", "nullable": false, "is_pk": true,  "fk_ref": null, "description": "Unique product identifier"},
+                {"name": "product_name",        "data_type": "STRING", "nullable": false, "is_pk": false, "fk_ref": null, "description": "Human-readable product name"},
+                {"name": "product_family",      "data_type": "STRING", "nullable": true,  "is_pk": false, "fk_ref": null, "description": "Product family: CURRENT_ACCOUNT, SAVINGS, MORTGAGE, CREDIT_CARD, PERSONAL_LOAN"},
+                {"name": "bian_service_domain", "data_type": "STRING", "nullable": true,  "is_pk": false, "fk_ref": null, "description": "BIAN service domain classification"}
+            ]
+        },
+        "slv_account": {
+            "type": "dimension",
+            "grain": "one row per account",
+            "columns": [
+                {"name": "account_id",     "data_type": "STRING",  "nullable": false, "is_pk": true,  "fk_ref": null,                          "description": "Unique account identifier"},
+                {"name": "customer_id",    "data_type": "STRING",  "nullable": false, "is_pk": false, "fk_ref": "slv_customer.customer_id",     "description": "FK to owning customer"},
+                {"name": "product_id",     "data_type": "STRING",  "nullable": false, "is_pk": false, "fk_ref": "slv_product.product_id",       "description": "FK to product type"},
+                {"name": "account_type",   "data_type": "STRING",  "nullable": false, "is_pk": false, "fk_ref": null,                          "description": "Account type: CURRENT, SAVINGS, LOAN, CREDIT_CARD, MORTGAGE"},
+                {"name": "status",         "data_type": "STRING",  "nullable": false, "is_pk": false, "fk_ref": null,                          "description": "Account status: ACTIVE, DORMANT, CLOSED"},
+                {"name": "open_date",      "data_type": "DATE",    "nullable": false, "is_pk": false, "fk_ref": null,                          "description": "Account opening date"},
+                {"name": "currency_code",  "data_type": "STRING",  "nullable": false, "is_pk": false, "fk_ref": null,                          "description": "ISO 4217 currency code e.g. GBP, USD, EUR"}
+            ]
+        },
+        "slv_transaction_event": {
+            "type": "event",
+            "grain": "one row per banking transaction",
+            "columns": [
+                {"name": "transaction_id",       "data_type": "STRING",    "nullable": false, "is_pk": true,  "fk_ref": null,                     "description": "Unique transaction identifier"},
+                {"name": "account_id",           "data_type": "STRING",    "nullable": false, "is_pk": false, "fk_ref": "slv_account.account_id", "description": "FK to account"},
+                {"name": "transaction_type",     "data_type": "STRING",    "nullable": false, "is_pk": false, "fk_ref": null,                     "description": "DEBIT or CREDIT"},
+                {"name": "amount",               "data_type": "DOUBLE",    "nullable": false, "is_pk": false, "fk_ref": null,                     "description": "Transaction amount in account currency"},
+                {"name": "channel",              "data_type": "STRING",    "nullable": true,  "is_pk": false, "fk_ref": null,                     "description": "Channel: BRANCH, ATM, ONLINE, MOBILE, POS"},
+                {"name": "event_ts",             "data_type": "TIMESTAMP", "nullable": false, "is_pk": false, "fk_ref": null,                     "description": "Transaction timestamp"},
+                {"name": "iso_20022_msg_type",   "data_type": "STRING",    "nullable": true,  "is_pk": false, "fk_ref": null,                     "description": "ISO 20022 message type e.g. pain.001, camt.053"}
+            ]
+        },
+        "slv_card_event": {
+            "type": "event",
+            "grain": "one row per card transaction event",
+            "columns": [
+                {"name": "card_event_id",           "data_type": "STRING",    "nullable": false, "is_pk": true,  "fk_ref": null,                     "description": "Unique card event identifier"},
+                {"name": "account_id",              "data_type": "STRING",    "nullable": false, "is_pk": false, "fk_ref": "slv_account.account_id", "description": "FK to account"},
+                {"name": "card_last_four",          "data_type": "STRING",    "nullable": true,  "is_pk": false, "fk_ref": null,                     "description": "Last four digits of card number"},
+                {"name": "event_type",              "data_type": "STRING",    "nullable": false, "is_pk": false, "fk_ref": null,                     "description": "AUTHORISATION, SETTLEMENT, REVERSAL, DECLINE"},
+                {"name": "merchant_category_code",  "data_type": "STRING",    "nullable": true,  "is_pk": false, "fk_ref": null,                     "description": "ISO 18245 MCC code"},
+                {"name": "amount",                  "data_type": "DOUBLE",    "nullable": false, "is_pk": false, "fk_ref": null,                     "description": "Transaction amount"},
+                {"name": "event_ts",                "data_type": "TIMESTAMP", "nullable": false, "is_pk": false, "fk_ref": null,                     "description": "Card event timestamp"}
+            ]
+        },
+        "slv_banking_performance_daily": {
+            "type": "aggregate",
+            "grain": "one row per account per day",
+            "columns": [
+                {"name": "date",              "data_type": "DATE",   "nullable": false, "is_pk": true,  "fk_ref": null,                     "description": "Reporting date (composite PK part 1)"},
+                {"name": "account_id",        "data_type": "STRING", "nullable": false, "is_pk": true,  "fk_ref": "slv_account.account_id", "description": "FK to account (composite PK part 2)"},
+                {"name": "transaction_count", "data_type": "LONG",   "nullable": false, "is_pk": false, "fk_ref": null,                     "description": "Total transaction count for the day"},
+                {"name": "total_debit",       "data_type": "DOUBLE", "nullable": false, "is_pk": false, "fk_ref": null,                     "description": "Sum of all debit amounts"},
+                {"name": "total_credit",      "data_type": "DOUBLE", "nullable": false, "is_pk": false, "fk_ref": null,                     "description": "Sum of all credit amounts"},
+                {"name": "net_movement",      "data_type": "DOUBLE", "nullable": false, "is_pk": false, "fk_ref": null,                     "description": "total_credit - total_debit"},
+                {"name": "card_spend",        "data_type": "DOUBLE", "nullable": true,  "is_pk": false, "fk_ref": null,                     "description": "Total card spend for the day"}
+            ]
+        }
+    },
+    "derived_metrics": [
+        {"name": "NPA_Rate",       "formula": "COUNT(accounts WHERE status='NPA') / COUNT(accounts)",     "grain": "portfolio",   "description": "Non-performing asset rate"},
+        {"name": "Churn_Rate",     "formula": "COUNT(accounts closed in period) / COUNT(active accounts)", "grain": "monthly",    "description": "Account closure rate"},
+        {"name": "Average_Balance","formula": "SUM(total_credit - total_debit) / COUNT(account_id)",       "grain": "account+date","description": "Average daily balance"}
+    ],
+    "source_platform_mappings": {
+        "core_banking_system": {
+            "description": "Core banking ledger (e.g. Temenos, Finacle, FIS)",
+            "maps_to": ["slv_account", "slv_transaction_event"]
+        },
+        "card_management_system": {
+            "description": "Card scheme / acquirer feed (e.g. Visa, Mastercard, FIS CardLink)",
+            "maps_to": ["slv_card_event"]
+        },
+        "crm": {
+            "description": "Customer relationship management system",
+            "maps_to": ["slv_customer"]
+        },
+        "product_catalogue": {
+            "description": "Product and tariff catalogue",
+            "maps_to": ["slv_product"]
+        }
+    }
+}

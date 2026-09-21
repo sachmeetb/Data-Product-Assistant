@@ -1,0 +1,136 @@
+{
+    "domain": "loyalty",
+    "display_name": "Loyalty & Rewards",
+    "description": "Canonical Silver Layer framework for loyalty, rewards, and retention data. Covers member enrolment, transaction earning, tier progression, and redemption. Anchored to common CRM loyalty models and retention analytics patterns.",
+    "standards": ["CRM_Loyalty", "Adobe_XDM_Loyalty", "Salesforce_Loyalty"],
+    "hierarchy": [
+        "slv_member",
+        "slv_tier",
+        "slv_reward",
+        "slv_programme",
+        "slv_enrolment_event",
+        "slv_transaction_event",
+        "slv_redemption_event",
+        "slv_loyalty_performance_daily"
+    ],
+    "entity_types": {
+        "dimensions": ["slv_member", "slv_tier", "slv_reward", "slv_programme"],
+        "events": ["slv_enrolment_event", "slv_transaction_event", "slv_redemption_event"],
+        "aggregates": ["slv_loyalty_performance_daily"]
+    },
+    "entities": {
+        "slv_member": {
+            "type": "dimension",
+            "grain": "one row per loyalty member",
+            "columns": [
+                {"name": "member_id",       "data_type": "STRING", "nullable": false, "is_pk": true,  "fk_ref": null, "description": "Unique loyalty member identifier"},
+                {"name": "programme_id",    "data_type": "STRING", "nullable": false, "is_pk": false, "fk_ref": "slv_programme.programme_id", "description": "FK to loyalty programme"},
+                {"name": "tier_id",         "data_type": "STRING", "nullable": true,  "is_pk": false, "fk_ref": "slv_tier.tier_id", "description": "Current tier FK"},
+                {"name": "enrolment_date",  "data_type": "DATE",   "nullable": false, "is_pk": false, "fk_ref": null, "description": "Date member joined the programme"},
+                {"name": "status",          "data_type": "STRING", "nullable": false, "is_pk": false, "fk_ref": null, "description": "Member status: ACTIVE, LAPSED, CHURNED"},
+                {"name": "points_balance",  "data_type": "DOUBLE", "nullable": true,  "is_pk": false, "fk_ref": null, "description": "Current redeemable points balance"},
+                {"name": "lifetime_value",  "data_type": "DOUBLE", "nullable": true,  "is_pk": false, "fk_ref": null, "description": "Lifetime transaction value in reporting currency"}
+            ]
+        },
+        "slv_tier": {
+            "type": "dimension",
+            "grain": "one row per tier level",
+            "columns": [
+                {"name": "tier_id",          "data_type": "STRING", "nullable": false, "is_pk": true,  "fk_ref": null, "description": "Unique tier identifier"},
+                {"name": "tier_name",        "data_type": "STRING", "nullable": false, "is_pk": false, "fk_ref": null, "description": "Tier name e.g. Bronze, Silver, Gold, Platinum"},
+                {"name": "tier_rank",        "data_type": "INTEGER","nullable": false, "is_pk": false, "fk_ref": null, "description": "Ordinal rank (1 = lowest tier)"},
+                {"name": "points_threshold", "data_type": "DOUBLE", "nullable": true,  "is_pk": false, "fk_ref": null, "description": "Minimum points to qualify for this tier"},
+                {"name": "programme_id",     "data_type": "STRING", "nullable": false, "is_pk": false, "fk_ref": "slv_programme.programme_id", "description": "FK to loyalty programme"}
+            ]
+        },
+        "slv_reward": {
+            "type": "dimension",
+            "grain": "one row per reward type",
+            "columns": [
+                {"name": "reward_id",     "data_type": "STRING", "nullable": false, "is_pk": true,  "fk_ref": null, "description": "Unique reward identifier"},
+                {"name": "reward_name",   "data_type": "STRING", "nullable": false, "is_pk": false, "fk_ref": null, "description": "Reward name or description"},
+                {"name": "reward_type",   "data_type": "STRING", "nullable": false, "is_pk": false, "fk_ref": null, "description": "Type: Discount, Cashback, Product, Experience"},
+                {"name": "points_cost",   "data_type": "DOUBLE", "nullable": true,  "is_pk": false, "fk_ref": null, "description": "Points required to redeem"},
+                {"name": "cash_value",    "data_type": "DOUBLE", "nullable": true,  "is_pk": false, "fk_ref": null, "description": "Cash equivalent value of the reward"}
+            ]
+        },
+        "slv_programme": {
+            "type": "dimension",
+            "grain": "one row per loyalty programme",
+            "columns": [
+                {"name": "programme_id",   "data_type": "STRING", "nullable": false, "is_pk": true,  "fk_ref": null, "description": "Unique programme identifier"},
+                {"name": "programme_name", "data_type": "STRING", "nullable": false, "is_pk": false, "fk_ref": null, "description": "Programme name"},
+                {"name": "launch_date",    "data_type": "DATE",   "nullable": true,  "is_pk": false, "fk_ref": null, "description": "Programme launch date"},
+                {"name": "country",        "data_type": "STRING", "nullable": true,  "is_pk": false, "fk_ref": null, "description": "Country where programme operates"}
+            ]
+        },
+        "slv_enrolment_event": {
+            "type": "event",
+            "grain": "one row per member enrolment",
+            "columns": [
+                {"name": "enrolment_id",  "data_type": "STRING",    "nullable": false, "is_pk": true,  "fk_ref": null, "description": "Unique enrolment event identifier"},
+                {"name": "member_id",     "data_type": "STRING",    "nullable": false, "is_pk": false, "fk_ref": "slv_member.member_id", "description": "FK to member"},
+                {"name": "programme_id",  "data_type": "STRING",    "nullable": false, "is_pk": false, "fk_ref": "slv_programme.programme_id", "description": "FK to programme"},
+                {"name": "channel",       "data_type": "STRING",    "nullable": true,  "is_pk": false, "fk_ref": null, "description": "Enrolment channel: ONLINE, IN_STORE, APP, CALL_CENTRE"},
+                {"name": "timestamp",     "data_type": "TIMESTAMP", "nullable": false, "is_pk": false, "fk_ref": null, "description": "UTC timestamp of enrolment"}
+            ]
+        },
+        "slv_transaction_event": {
+            "type": "event",
+            "grain": "one row per qualifying transaction (points earn)",
+            "columns": [
+                {"name": "transaction_id",    "data_type": "STRING",    "nullable": false, "is_pk": true,  "fk_ref": null, "description": "Unique transaction identifier — PK"},
+                {"name": "member_id",         "data_type": "STRING",    "nullable": false, "is_pk": false, "fk_ref": "slv_member.member_id", "description": "FK to member"},
+                {"name": "programme_id",      "data_type": "STRING",    "nullable": false, "is_pk": false, "fk_ref": "slv_programme.programme_id", "description": "FK to programme"},
+                {"name": "transaction_value", "data_type": "DOUBLE",    "nullable": false, "is_pk": false, "fk_ref": null, "description": "Spend value that triggered the earn"},
+                {"name": "points_earned",     "data_type": "DOUBLE",    "nullable": false, "is_pk": false, "fk_ref": null, "description": "Points awarded for this transaction"},
+                {"name": "channel",           "data_type": "STRING",    "nullable": true,  "is_pk": false, "fk_ref": null, "description": "Transaction channel: ONLINE, IN_STORE, APP"},
+                {"name": "timestamp",         "data_type": "TIMESTAMP", "nullable": false, "is_pk": false, "fk_ref": null, "description": "UTC timestamp of transaction"}
+            ]
+        },
+        "slv_redemption_event": {
+            "type": "event",
+            "grain": "one row per points redemption",
+            "columns": [
+                {"name": "redemption_id",     "data_type": "STRING",    "nullable": false, "is_pk": true,  "fk_ref": null, "description": "Unique redemption event identifier"},
+                {"name": "member_id",         "data_type": "STRING",    "nullable": false, "is_pk": false, "fk_ref": "slv_member.member_id", "description": "FK to member"},
+                {"name": "reward_id",         "data_type": "STRING",    "nullable": false, "is_pk": false, "fk_ref": "slv_reward.reward_id", "description": "FK to reward redeemed"},
+                {"name": "points_redeemed",   "data_type": "DOUBLE",    "nullable": false, "is_pk": false, "fk_ref": null, "description": "Points consumed in this redemption"},
+                {"name": "redemption_value",  "data_type": "DOUBLE",    "nullable": true,  "is_pk": false, "fk_ref": null, "description": "Cash value of reward redeemed"},
+                {"name": "timestamp",         "data_type": "TIMESTAMP", "nullable": false, "is_pk": false, "fk_ref": null, "description": "UTC timestamp of redemption"}
+            ]
+        },
+        "slv_loyalty_performance_daily": {
+            "type": "aggregate",
+            "grain": "one row per programme + tier + day",
+            "columns": [
+                {"name": "date",              "data_type": "DATE",   "nullable": false, "is_pk": true,  "fk_ref": null, "description": "Reporting day — composite PK"},
+                {"name": "programme_id",      "data_type": "STRING", "nullable": false, "is_pk": true,  "fk_ref": "slv_programme.programme_id", "description": "FK to programme — composite PK"},
+                {"name": "tier_id",           "data_type": "STRING", "nullable": false, "is_pk": true,  "fk_ref": "slv_tier.tier_id", "description": "FK to tier — composite PK"},
+                {"name": "new_enrolments",    "data_type": "BIGINT", "nullable": false, "is_pk": false, "fk_ref": null, "description": "COUNT of new enrolments"},
+                {"name": "active_members",    "data_type": "BIGINT", "nullable": false, "is_pk": false, "fk_ref": null, "description": "COUNT of members with at least one transaction"},
+                {"name": "transactions",      "data_type": "BIGINT", "nullable": false, "is_pk": false, "fk_ref": null, "description": "COUNT of qualifying transactions"},
+                {"name": "points_issued",     "data_type": "DOUBLE", "nullable": false, "is_pk": false, "fk_ref": null, "description": "SUM of points earned"},
+                {"name": "points_redeemed",   "data_type": "DOUBLE", "nullable": false, "is_pk": false, "fk_ref": null, "description": "SUM of points redeemed"},
+                {"name": "redemption_value",  "data_type": "DOUBLE", "nullable": true,  "is_pk": false, "fk_ref": null, "description": "SUM of cash value of redemptions"}
+            ]
+        }
+    },
+    "derived_metrics": {
+        "Redemption_Rate":  {"formula": "points_redeemed / points_issued",        "description": "Proportion of earned points that are redeemed"},
+        "Earn_Rate":        {"formula": "points_issued / transaction_value",       "description": "Points earned per unit of spend"},
+        "Churn_Rate":       {"formula": "churned_members / active_members",        "description": "Member churn rate"},
+        "Engagement_Rate":  {"formula": "active_members / total_members",          "description": "Active member ratio"}
+    },
+    "source_platform_mappings": {
+        "crm_member_record":       "slv_member",
+        "loyalty_transaction_log": "slv_transaction_event",
+        "redemption_log":          "slv_redemption_event",
+        "programme_enrolment":     "slv_enrolment_event"
+    },
+    "domain_keywords": [
+        "loyalty", "reward", "retention", "member", "points", "redeem", "tier",
+        "programme", "program", "churn", "engagement", "win-back", "repeat purchase",
+        "enrolment", "earn", "cashback", "lifetime value", "clv", "ltv"
+    ]
+}

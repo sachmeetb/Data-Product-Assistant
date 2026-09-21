@@ -1,0 +1,117 @@
+# BFSI Silver Layer — Naming Conventions
+version: "1.0.0"
+
+datasets:
+  silver: "{bank_code}_silver"   # e.g. acme_silver
+  gold:   "{bank_code}_gold"
+  bronze: "{bank_code}_bronze"
+  # Falls back to BQ_SILVER_DATASET / BQ_GOLD_DATASET env vars when bank_code not set
+
+tables:
+  prefix:
+    silver: "slv_"   # e.g. slv_party, slv_account
+    gold:   "gld_"
+    bronze: "brz_"
+  case: snake_case
+  examples:
+    - slv_party
+    - slv_account
+    - slv_transaction
+    - slv_payment
+    - slv_loan
+    - slv_balance
+    - slv_position_holding
+    - slv_financial_instrument
+    - slv_agreement
+    - slv_product
+    - slv_party_relationship
+
+columns:
+  case: snake_case
+  suffixes:
+    surrogate_key: "_key"       # e.g. party_key (STRING, BigQuery primary key)
+    foreign_key:   "_key"       # e.g. account_key → references slv_account.surrogate_key
+    timestamp:     "_ts"        # e.g. created_ts, load_ts, effective_from_ts
+    date:          "_date"      # e.g. effective_date, origination_date
+    flag:          "_flag"      # e.g. pep_flag, is_active_flag, sanctions_flag
+    amount:        "_amount"    # e.g. principal_amount, transaction_amount
+    currency:      "_currency"  # e.g. account_currency (ISO 4217, STRING)
+    code:          "_code"      # e.g. status_code, category_code
+    type:          "_type"      # e.g. party_type, account_type
+    id:            "_id"        # e.g. source_system_id, end_to_end_id
+    count:         "_count"     # e.g. transaction_count
+    rate:          "_rate"      # e.g. interest_rate, pd_score
+    score:         "_score"     # e.g. credit_score, risk_score
+  reserved_names:
+    - surrogate_key
+    - source_system
+    - source_system_id
+    - load_ts
+    - effective_from_ts
+    - effective_to_ts
+    - is_current
+    - record_hash
+    - dq_status
+    - dq_issues
+
+technical_envelope:
+  # Every Silver table MUST contain these columns
+  required:
+    - name: surrogate_key
+      type: STRING
+      mode: REQUIRED
+      description: "Stable Silver primary key (UUID v4)"
+    - name: source_system
+      type: STRING
+      mode: REQUIRED
+      description: "Source system identifier (e.g. CORE_BANKING, CRM, PAYMENT_HUB)"
+    - name: source_system_id
+      type: STRING
+      mode: NULLABLE
+      description: "Natural key from the source system before silver mapping"
+    - name: load_ts
+      type: TIMESTAMP
+      mode: REQUIRED
+      description: "Timestamp when this record was loaded into the Silver layer"
+    - name: effective_from_ts
+      type: TIMESTAMP
+      mode: REQUIRED
+      description: "SCD Type-2 validity start — when this version became active"
+    - name: effective_to_ts
+      type: TIMESTAMP
+      mode: NULLABLE
+      description: "SCD Type-2 validity end — NULL means this is the current version"
+    - name: is_current
+      type: BOOL
+      mode: REQUIRED
+      description: "True if this is the current active version of the record"
+    - name: record_hash
+      type: STRING
+      mode: NULLABLE
+      description: "MD5 or SHA256 hash of business attributes for CDC detection"
+    - name: dq_status
+      type: STRING
+      mode: REQUIRED
+      description: "Data quality status: VALID | QUARANTINE | WARNING"
+    - name: dq_issues
+      type: JSON
+      mode: NULLABLE
+      description: "JSON array of DQ issue codes when dq_status != VALID"
+
+bigquery:
+  partition_column: load_ts           # default partition column (TIMESTAMP → DATE)
+  partition_syntax: "PARTITION BY DATE(load_ts)"
+  clustering_recommendations:
+    slv_party:             ["party_type", "country_of_residence"]
+    slv_account:           ["account_type", "status_code"]
+    slv_transaction:       ["transaction_type", "debit_credit_indicator"]
+    slv_payment:           ["payment_scheme", "status_code"]
+    slv_loan:              ["loan_type", "status_code"]
+    slv_balance:           ["balance_type", "account_type"]
+    slv_position_holding:  ["asset_class", "status_code"]
+    slv_financial_instrument: ["instrument_type", "asset_class"]
+    slv_agreement:         ["agreement_type", "status_code"]
+  table_options_template: |
+    OPTIONS(
+      description = '{description}'
+    )

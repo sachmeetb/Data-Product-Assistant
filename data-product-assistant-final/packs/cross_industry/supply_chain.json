@@ -1,0 +1,122 @@
+{
+    "schema_version": "2.0",
+    "industry": "cross_industry",
+    "domain": "supply_chain",
+    "display_name": "Supply Chain",
+    "description": "Canonical Silver Layer framework for supply chain data. Covers suppliers, items, warehouses, purchase orders, shipments, and supply chain performance. Anchored to GS1 EPCIS, SCOR (Supply Chain Operations Reference), and ISO 28000.",
+    "standards": ["GS1_EPCIS", "SCOR", "ISO_28000"],
+    "detection_signals": ["supplier", "warehouse", "shipment", "purchase order", "lead time", "otif", "procurement", "freight", "logistics", "epcis", "scor", "inbound", "outbound", "3pl"],
+    "hierarchy": [
+        "slv_supplier",
+        "slv_item",
+        "slv_warehouse",
+        "slv_purchase_order_event",
+        "slv_shipment_event",
+        "slv_supply_chain_performance_daily"
+    ],
+    "entity_types": {
+        "dimensions": ["slv_supplier", "slv_item", "slv_warehouse"],
+        "events": ["slv_purchase_order_event", "slv_shipment_event"],
+        "aggregates": ["slv_supply_chain_performance_daily"]
+    },
+    "entities": {
+        "slv_supplier": {
+            "type": "dimension",
+            "grain": "one row per supplier",
+            "columns": [
+                {"name": "supplier_id",    "data_type": "STRING", "nullable": false, "is_pk": true,  "fk_ref": null, "description": "Unique supplier identifier"},
+                {"name": "supplier_name",  "data_type": "STRING", "nullable": false, "is_pk": false, "fk_ref": null, "description": "Supplier legal name"},
+                {"name": "country",        "data_type": "STRING", "nullable": false, "is_pk": false, "fk_ref": null, "description": "ISO 3166-1 alpha-2 supplier country"},
+                {"name": "tier",           "data_type": "STRING", "nullable": true,  "is_pk": false, "fk_ref": null, "description": "Supply chain tier: TIER_1, TIER_2, TIER_3"},
+                {"name": "category",       "data_type": "STRING", "nullable": true,  "is_pk": false, "fk_ref": null, "description": "Procurement category e.g. Raw Materials, Packaging, Logistics"}
+            ]
+        },
+        "slv_item": {
+            "type": "dimension",
+            "grain": "one row per supply chain item / material",
+            "columns": [
+                {"name": "item_id",        "data_type": "STRING", "nullable": false, "is_pk": true,  "fk_ref": null,                      "description": "Unique item / material identifier"},
+                {"name": "item_name",      "data_type": "STRING", "nullable": false, "is_pk": false, "fk_ref": null,                      "description": "Item description"},
+                {"name": "supplier_id",    "data_type": "STRING", "nullable": true,  "is_pk": false, "fk_ref": "slv_supplier.supplier_id","description": "FK to primary supplier"},
+                {"name": "uom",            "data_type": "STRING", "nullable": false, "is_pk": false, "fk_ref": null,                      "description": "Unit of measure e.g. EA, KG, L, PALLET"},
+                {"name": "gtin",           "data_type": "STRING", "nullable": true,  "is_pk": false, "fk_ref": null,                      "description": "GS1 Global Trade Item Number"}
+            ]
+        },
+        "slv_warehouse": {
+            "type": "dimension",
+            "grain": "one row per warehouse / DC location",
+            "columns": [
+                {"name": "warehouse_id",    "data_type": "STRING", "nullable": false, "is_pk": true,  "fk_ref": null, "description": "Unique warehouse identifier"},
+                {"name": "warehouse_name",  "data_type": "STRING", "nullable": false, "is_pk": false, "fk_ref": null, "description": "Warehouse name or code"},
+                {"name": "location_type",   "data_type": "STRING", "nullable": false, "is_pk": false, "fk_ref": null, "description": "DC, REGIONAL_WAREHOUSE, CROSS_DOCK, THIRD_PARTY"},
+                {"name": "country",         "data_type": "STRING", "nullable": false, "is_pk": false, "fk_ref": null, "description": "ISO 3166-1 alpha-2 country code"}
+            ]
+        },
+        "slv_purchase_order_event": {
+            "type": "event",
+            "grain": "one row per purchase order line",
+            "columns": [
+                {"name": "po_line_id",      "data_type": "STRING",    "nullable": false, "is_pk": true,  "fk_ref": null,                          "description": "Unique PO line identifier"},
+                {"name": "po_id",           "data_type": "STRING",    "nullable": false, "is_pk": false, "fk_ref": null,                          "description": "Purchase order header number"},
+                {"name": "supplier_id",     "data_type": "STRING",    "nullable": false, "is_pk": false, "fk_ref": "slv_supplier.supplier_id",    "description": "FK to supplier"},
+                {"name": "item_id",         "data_type": "STRING",    "nullable": false, "is_pk": false, "fk_ref": "slv_item.item_id",            "description": "FK to item"},
+                {"name": "warehouse_id",    "data_type": "STRING",    "nullable": false, "is_pk": false, "fk_ref": "slv_warehouse.warehouse_id",  "description": "FK to destination warehouse"},
+                {"name": "order_qty",       "data_type": "DOUBLE",    "nullable": false, "is_pk": false, "fk_ref": null,                          "description": "Ordered quantity"},
+                {"name": "unit_price",      "data_type": "DOUBLE",    "nullable": true,  "is_pk": false, "fk_ref": null,                          "description": "Agreed unit price"},
+                {"name": "order_ts",        "data_type": "TIMESTAMP", "nullable": false, "is_pk": false, "fk_ref": null,                          "description": "PO creation timestamp"},
+                {"name": "requested_date",  "data_type": "DATE",      "nullable": true,  "is_pk": false, "fk_ref": null,                          "description": "Requested delivery date"},
+                {"name": "confirmed_date",  "data_type": "DATE",      "nullable": true,  "is_pk": false, "fk_ref": null,                          "description": "Supplier confirmed delivery date"}
+            ]
+        },
+        "slv_shipment_event": {
+            "type": "event",
+            "grain": "one row per shipment / ASN line",
+            "columns": [
+                {"name": "shipment_line_id",  "data_type": "STRING",    "nullable": false, "is_pk": true,  "fk_ref": null,                          "description": "Unique shipment line identifier"},
+                {"name": "asn_id",            "data_type": "STRING",    "nullable": false, "is_pk": false, "fk_ref": null,                          "description": "Advance Ship Notice number"},
+                {"name": "po_line_id",        "data_type": "STRING",    "nullable": true,  "is_pk": false, "fk_ref": "slv_purchase_order_event.po_line_id", "description": "FK to PO line"},
+                {"name": "supplier_id",       "data_type": "STRING",    "nullable": false, "is_pk": false, "fk_ref": "slv_supplier.supplier_id",    "description": "FK to supplier"},
+                {"name": "warehouse_id",      "data_type": "STRING",    "nullable": false, "is_pk": false, "fk_ref": "slv_warehouse.warehouse_id",  "description": "FK to receiving warehouse"},
+                {"name": "shipped_qty",       "data_type": "DOUBLE",    "nullable": false, "is_pk": false, "fk_ref": null,                          "description": "Quantity shipped"},
+                {"name": "received_qty",      "data_type": "DOUBLE",    "nullable": true,  "is_pk": false, "fk_ref": null,                          "description": "Quantity received and accepted"},
+                {"name": "ship_ts",           "data_type": "TIMESTAMP", "nullable": true,  "is_pk": false, "fk_ref": null,                          "description": "Shipment departure timestamp"},
+                {"name": "delivery_ts",       "data_type": "TIMESTAMP", "nullable": true,  "is_pk": false, "fk_ref": null,                          "description": "Actual delivery timestamp"},
+                {"name": "is_on_time",        "data_type": "BOOLEAN",   "nullable": true,  "is_pk": false, "fk_ref": null,                          "description": "Delivered on or before requested date"},
+                {"name": "is_in_full",        "data_type": "BOOLEAN",   "nullable": true,  "is_pk": false, "fk_ref": null,                          "description": "received_qty >= order_qty"}
+            ]
+        },
+        "slv_supply_chain_performance_daily": {
+            "type": "aggregate",
+            "grain": "one row per supplier per warehouse per day",
+            "columns": [
+                {"name": "date",               "data_type": "DATE",   "nullable": false, "is_pk": true,  "fk_ref": null,                          "description": "Reporting date (composite PK part 1)"},
+                {"name": "supplier_id",        "data_type": "STRING", "nullable": false, "is_pk": true,  "fk_ref": "slv_supplier.supplier_id",    "description": "FK to supplier (composite PK part 2)"},
+                {"name": "warehouse_id",       "data_type": "STRING", "nullable": false, "is_pk": true,  "fk_ref": "slv_warehouse.warehouse_id",  "description": "FK to warehouse (composite PK part 3)"},
+                {"name": "shipment_count",     "data_type": "LONG",   "nullable": false, "is_pk": false, "fk_ref": null,                          "description": "Total shipments received"},
+                {"name": "on_time_count",      "data_type": "LONG",   "nullable": false, "is_pk": false, "fk_ref": null,                          "description": "Shipments that were on time"},
+                {"name": "in_full_count",      "data_type": "LONG",   "nullable": false, "is_pk": false, "fk_ref": null,                          "description": "Shipments that were in full"},
+                {"name": "otif_count",         "data_type": "LONG",   "nullable": false, "is_pk": false, "fk_ref": null,                          "description": "Shipments that were both on-time and in-full"},
+                {"name": "avg_lead_time_days", "data_type": "DOUBLE", "nullable": true,  "is_pk": false, "fk_ref": null,                          "description": "Average lead time in calendar days"}
+            ]
+        }
+    },
+    "derived_metrics": [
+        {"name": "OTIF",               "formula": "otif_count / shipment_count",          "grain": "supplier+warehouse+period", "description": "On-time in-full delivery rate"},
+        {"name": "Fill_Rate",          "formula": "in_full_count / shipment_count",        "grain": "supplier+warehouse+period", "description": "Percentage of shipments received in full"},
+        {"name": "Lead_Time_Variance", "formula": "STDDEV(actual_lead_time - agreed_lead_time)", "grain": "supplier+period",  "description": "Variability in supplier lead time performance"}
+    ],
+    "source_platform_mappings": {
+        "erp": {
+            "description": "ERP procurement module (SAP MM, Oracle Purchasing)",
+            "maps_to": ["slv_purchase_order_event"]
+        },
+        "wms": {
+            "description": "Warehouse management system",
+            "maps_to": ["slv_shipment_event", "slv_warehouse"]
+        },
+        "supplier_portal": {
+            "description": "Supplier collaboration / EDI portal",
+            "maps_to": ["slv_supplier", "slv_shipment_event"]
+        }
+    }
+}

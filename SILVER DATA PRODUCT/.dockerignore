@@ -1,0 +1,9 @@
+.env
+*.pyc
+__pycache__/
+.git/
+.gitignore
+frontend/
+certs/
+*.md
+deploy.ps1

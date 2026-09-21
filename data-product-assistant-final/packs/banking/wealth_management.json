@@ -1,0 +1,104 @@
+{
+    "schema_version": "2.0",
+    "industry": "banking",
+    "domain": "wealth_management",
+    "display_name": "Wealth Management",
+    "description": "Canonical Silver Layer framework for wealth management data. Covers clients, portfolios, holdings, trade events, and daily performance. Anchored to FIX Protocol messaging standards and ISO 20022.",
+    "standards": ["FIX_Protocol", "ISO_20022"],
+    "detection_signals": ["portfolio", "holding", "trade", "aum", "nav", "client", "equity", "bond", "fund", "advisory", "asset", "wealth", "investment", "hnwi", "uhnwi", "securities", "isin"],
+    "hierarchy": [
+        "slv_client",
+        "slv_portfolio",
+        "slv_holding",
+        "slv_trade_event",
+        "slv_wealth_performance_daily"
+    ],
+    "entity_types": {
+        "dimensions": ["slv_client", "slv_portfolio", "slv_holding"],
+        "events": ["slv_trade_event"],
+        "aggregates": ["slv_wealth_performance_daily"]
+    },
+    "entities": {
+        "slv_client": {
+            "type": "dimension",
+            "grain": "one row per wealth client",
+            "columns": [
+                {"name": "client_id",               "data_type": "STRING", "nullable": false, "is_pk": true,  "fk_ref": null, "description": "Unique client identifier"},
+                {"name": "segment",                 "data_type": "STRING", "nullable": false, "is_pk": false, "fk_ref": null, "description": "Client wealth segment: MASS_AFFLUENT, HNWI, UHNWI"},
+                {"name": "relationship_manager_id", "data_type": "STRING", "nullable": true,  "is_pk": false, "fk_ref": null, "description": "Assigned relationship manager identifier"},
+                {"name": "risk_profile",            "data_type": "STRING", "nullable": true,  "is_pk": false, "fk_ref": null, "description": "Risk appetite: CONSERVATIVE, MODERATE, AGGRESSIVE, SPECULATIVE"},
+                {"name": "onboard_date",            "data_type": "DATE",   "nullable": true,  "is_pk": false, "fk_ref": null, "description": "Date client was onboarded"}
+            ]
+        },
+        "slv_portfolio": {
+            "type": "dimension",
+            "grain": "one row per investment portfolio",
+            "columns": [
+                {"name": "portfolio_id",   "data_type": "STRING", "nullable": false, "is_pk": true,  "fk_ref": null,                  "description": "Unique portfolio identifier"},
+                {"name": "client_id",      "data_type": "STRING", "nullable": false, "is_pk": false, "fk_ref": "slv_client.client_id","description": "FK to owning client"},
+                {"name": "benchmark",      "data_type": "STRING", "nullable": true,  "is_pk": false, "fk_ref": null,                  "description": "Benchmark index e.g. MSCI World, S&P 500"},
+                {"name": "base_currency",  "data_type": "STRING", "nullable": false, "is_pk": false, "fk_ref": null,                  "description": "ISO 4217 base reporting currency"}
+            ]
+        },
+        "slv_holding": {
+            "type": "dimension",
+            "grain": "one row per holding position per as-of date",
+            "columns": [
+                {"name": "holding_id",    "data_type": "STRING", "nullable": false, "is_pk": true,  "fk_ref": null,                          "description": "Unique holding identifier"},
+                {"name": "portfolio_id",  "data_type": "STRING", "nullable": false, "is_pk": false, "fk_ref": "slv_portfolio.portfolio_id",   "description": "FK to portfolio"},
+                {"name": "isin",          "data_type": "STRING", "nullable": false, "is_pk": false, "fk_ref": null,                          "description": "ISO 6166 security identifier"},
+                {"name": "asset_class",   "data_type": "STRING", "nullable": false, "is_pk": false, "fk_ref": null,                          "description": "EQUITY, BOND, CASH, ALTERNATIVE, REAL_ESTATE"},
+                {"name": "quantity",      "data_type": "DOUBLE", "nullable": false, "is_pk": false, "fk_ref": null,                          "description": "Number of units held"},
+                {"name": "market_value",  "data_type": "DOUBLE", "nullable": false, "is_pk": false, "fk_ref": null,                          "description": "Market value in base currency"},
+                {"name": "as_of_date",    "data_type": "DATE",   "nullable": false, "is_pk": false, "fk_ref": null,                          "description": "Valuation date"}
+            ]
+        },
+        "slv_trade_event": {
+            "type": "event",
+            "grain": "one row per trade order / execution",
+            "columns": [
+                {"name": "trade_id",         "data_type": "STRING",    "nullable": false, "is_pk": true,  "fk_ref": null,                          "description": "Unique trade identifier"},
+                {"name": "portfolio_id",     "data_type": "STRING",    "nullable": false, "is_pk": false, "fk_ref": "slv_portfolio.portfolio_id",   "description": "FK to portfolio"},
+                {"name": "isin",             "data_type": "STRING",    "nullable": false, "is_pk": false, "fk_ref": null,                          "description": "ISO 6166 security identifier"},
+                {"name": "trade_type",       "data_type": "STRING",    "nullable": false, "is_pk": false, "fk_ref": null,                          "description": "BUY, SELL, SWITCH, REINVESTMENT"},
+                {"name": "price",            "data_type": "DOUBLE",    "nullable": false, "is_pk": false, "fk_ref": null,                          "description": "Execution price per unit"},
+                {"name": "quantity",         "data_type": "DOUBLE",    "nullable": false, "is_pk": false, "fk_ref": null,                          "description": "Number of units traded"},
+                {"name": "settlement_date",  "data_type": "DATE",      "nullable": true,  "is_pk": false, "fk_ref": null,                          "description": "Settlement date (T+2 typically)"},
+                {"name": "event_ts",         "data_type": "TIMESTAMP", "nullable": false, "is_pk": false, "fk_ref": null,                          "description": "Trade execution timestamp"},
+                {"name": "fix_msg_type",     "data_type": "STRING",    "nullable": true,  "is_pk": false, "fk_ref": null,                          "description": "FIX Protocol message type e.g. NewOrderSingle (D), ExecutionReport (8)"}
+            ]
+        },
+        "slv_wealth_performance_daily": {
+            "type": "aggregate",
+            "grain": "one row per portfolio per day",
+            "columns": [
+                {"name": "date",              "data_type": "DATE",   "nullable": false, "is_pk": true,  "fk_ref": null,                          "description": "Reporting date (composite PK part 1)"},
+                {"name": "portfolio_id",      "data_type": "STRING", "nullable": false, "is_pk": true,  "fk_ref": "slv_portfolio.portfolio_id",   "description": "FK to portfolio (composite PK part 2)"},
+                {"name": "beginning_value",   "data_type": "DOUBLE", "nullable": false, "is_pk": false, "fk_ref": null,                          "description": "Portfolio value at start of day"},
+                {"name": "ending_value",      "data_type": "DOUBLE", "nullable": false, "is_pk": false, "fk_ref": null,                          "description": "Portfolio value at end of day"},
+                {"name": "net_contribution",  "data_type": "DOUBLE", "nullable": false, "is_pk": false, "fk_ref": null,                          "description": "Net new money in / out during the day"},
+                {"name": "daily_return_pct",  "data_type": "DOUBLE", "nullable": true,  "is_pk": false, "fk_ref": null,                          "description": "Daily return percentage"},
+                {"name": "aum",               "data_type": "DOUBLE", "nullable": false, "is_pk": false, "fk_ref": null,                          "description": "Assets under management at end of day"}
+            ]
+        }
+    },
+    "derived_metrics": [
+        {"name": "TWR",          "formula": "Time-Weighted Return: chain-link daily returns across period", "grain": "portfolio+period", "description": "Time-weighted return — removes cash flow distortion"},
+        {"name": "MWR",          "formula": "Money-Weighted Return (IRR of cash flows)",                    "grain": "portfolio+period", "description": "Money-weighted return — reflects client cash flow timing"},
+        {"name": "Sharpe_Ratio", "formula": "(portfolio_return - risk_free_rate) / portfolio_std_dev",      "grain": "portfolio+period", "description": "Risk-adjusted return measure"}
+    ],
+    "source_platform_mappings": {
+        "order_management_system": {
+            "description": "OMS / execution management system (Bloomberg AIM, Charles River, SimCorp)",
+            "maps_to": ["slv_trade_event"]
+        },
+        "portfolio_management_system": {
+            "description": "Portfolio accounting system (Advent Geneva, SimCorp Dimension)",
+            "maps_to": ["slv_portfolio", "slv_holding", "slv_wealth_performance_daily"]
+        },
+        "crm": {
+            "description": "Wealth CRM (Salesforce Financial Services Cloud, Dynamics 365)",
+            "maps_to": ["slv_client"]
+        }
+    }
+}

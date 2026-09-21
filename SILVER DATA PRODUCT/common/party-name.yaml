@@ -1,0 +1,21 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$id: "bfsi.silver/common/party-name.yaml"
+title: PartyName
+description: Structured name usable for both natural persons and organizations.
+type: object
+properties:
+  full_name:
+    type: string
+    description: Complete display name, always populated after cleansing.
+  given_name: { type: [string, "null"] }
+  middle_name: { type: [string, "null"] }
+  family_name: { type: [string, "null"] }
+  prefix: { type: [string, "null"] }
+  suffix: { type: [string, "null"] }
+  legal_name:
+    type: [string, "null"]
+    description: Registered legal name for organizations.
+  trading_name:
+    type: [string, "null"]
+    description: DBA / trading-as name for organizations.
+required: [full_name]
