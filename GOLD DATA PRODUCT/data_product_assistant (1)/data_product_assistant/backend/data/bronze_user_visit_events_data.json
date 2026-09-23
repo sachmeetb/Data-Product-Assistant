@@ -1,0 +1,168 @@
+{
+  "bronze_data_fixture": {
+    "version": "1.0",
+    "source": "raw_ad_server_events.xlsx",
+    "description": "Raw Bronze data fixture for the Silver Transformation Agent — Marketing / Advertising domain. Contains the raw ad-server event feed (impression and click events on one stream, keyed by event_type) as landed from source, before conforming. Each row carries either an impression_id (impression events) or a click_id (click events); the other id is blank. Unconformed: inconsistent casing on event_type / campaign_name / device_type, string-typed booleans (is_billable), untyped timestamps (event_ts, no timezone). The Silver agent reads this to design the conform transformations (case normalisation, timestamp parsing, boolean coercion) and the split into the two existing Silver tables: acn_aggregated.marketing.campaign_impressions_conformed (impression events → impression_id) and acn_aggregated.marketing.campaign_clicks_conformed (click events → click_id). Both conformed tables share campaign_id, campaign_name and timestamp. This fixture mirrors the bronze catalog table acn_source.marketing.raw_ad_server_events in utility_catalog.json.",
+    "table": "acn_source.marketing.raw_ad_server_events",
+    "layer": "bronze",
+    "row_count": 12,
+    "columns": [
+      "event_type",
+      "campaign_id",
+      "campaign_name",
+      "event_ts",
+      "impression_id",
+      "click_id",
+      "device_type",
+      "is_billable",
+      "source_file",
+      "ingestion_ts"
+    ],
+    "rows": [
+      {
+        "event_type": "impression",
+        "campaign_id": "cmp_8821",
+        "campaign_name": "Spring Sale 2026",
+        "event_ts": "2026-05-01 09:15:00",
+        "impression_id": "imp_1001",
+        "click_id": "",
+        "device_type": "Mobile",
+        "is_billable": "true",
+        "source_file": "ad_server_events_20260501.csv",
+        "ingestion_ts": "2026-05-01 10:00:00"
+      },
+      {
+        "event_type": "Impression",
+        "campaign_id": "cmp_8821",
+        "campaign_name": "spring sale 2026",
+        "event_ts": "2026-05-01 09:18:42",
+        "impression_id": "imp_1002",
+        "click_id": "",
+        "device_type": "mobile",
+        "is_billable": "True",
+        "source_file": "ad_server_events_20260501.csv",
+        "ingestion_ts": "2026-05-01 10:00:00"
+      },
+      {
+        "event_type": "IMPRESSION",
+        "campaign_id": "cmp_3344",
+        "campaign_name": "Loyalty Q2 Push",
+        "event_ts": "2026-05-02 14:42:11",
+        "impression_id": "imp_2048",
+        "click_id": "",
+        "device_type": "DESKTOP",
+        "is_billable": "false",
+        "source_file": "ad_server_events_20260502.csv",
+        "ingestion_ts": "2026-05-02 15:00:00"
+      },
+      {
+        "event_type": "impression",
+        "campaign_id": "cmp_3344",
+        "campaign_name": "loyalty q2 push",
+        "event_ts": "2026-05-02 15:10:03",
+        "impression_id": "imp_3310",
+        "click_id": "",
+        "device_type": "Mobile",
+        "is_billable": "TRUE",
+        "source_file": "ad_server_events_20260502.csv",
+        "ingestion_ts": "2026-05-02 16:00:00"
+      },
+      {
+        "event_type": "impression",
+        "campaign_id": "cmp_7720",
+        "campaign_name": "Back-to-School",
+        "event_ts": "2026-05-03 18:07:55",
+        "impression_id": "imp_5193",
+        "click_id": "",
+        "device_type": "Tablet",
+        "is_billable": "true",
+        "source_file": "ad_server_events_20260503.csv",
+        "ingestion_ts": "2026-05-03 19:00:00"
+      },
+      {
+        "event_type": "IMPRESSION",
+        "campaign_id": "cmp_7720",
+        "campaign_name": "back-to-school",
+        "event_ts": "2026-05-03 19:22:40",
+        "impression_id": "imp_4402",
+        "click_id": "",
+        "device_type": "mobile",
+        "is_billable": "false",
+        "source_file": "ad_server_events_20260503.csv",
+        "ingestion_ts": "2026-05-03 20:00:00"
+      },
+      {
+        "event_type": "Impression",
+        "campaign_id": "cmp_1059",
+        "campaign_name": "Summer Brand Lift",
+        "event_ts": "2026-05-04 06:31:22",
+        "impression_id": "imp_7720",
+        "click_id": "",
+        "device_type": "desktop",
+        "is_billable": "true",
+        "source_file": "ad_server_events_20260504.csv",
+        "ingestion_ts": "2026-05-04 07:00:00"
+      },
+      {
+        "event_type": "click",
+        "campaign_id": "cmp_8821",
+        "campaign_name": "Spring Sale 2026",
+        "event_ts": "2026-05-01 10:30:00",
+        "impression_id": "",
+        "click_id": "clk_2001",
+        "device_type": "Mobile",
+        "is_billable": "true",
+        "source_file": "ad_server_events_20260501.csv",
+        "ingestion_ts": "2026-05-01 11:00:00"
+      },
+      {
+        "event_type": "Click",
+        "campaign_id": "cmp_8821",
+        "campaign_name": "SPRING SALE 2026",
+        "event_ts": "2026-05-01 10:45:18",
+        "impression_id": "",
+        "click_id": "clk_2002",
+        "device_type": "mobile",
+        "is_billable": "true",
+        "source_file": "ad_server_events_20260501.csv",
+        "ingestion_ts": "2026-05-01 11:00:00"
+      },
+      {
+        "event_type": "CLICK",
+        "campaign_id": "cmp_3344",
+        "campaign_name": "Loyalty Q2 Push",
+        "event_ts": "2026-05-02 12:14:48",
+        "impression_id": "",
+        "click_id": "clk_4091",
+        "device_type": "Desktop",
+        "is_billable": "false",
+        "source_file": "ad_server_events_20260502.csv",
+        "ingestion_ts": "2026-05-02 13:00:00"
+      },
+      {
+        "event_type": "click",
+        "campaign_id": "cmp_7720",
+        "campaign_name": "Back-to-School",
+        "event_ts": "2026-05-03 19:51:09",
+        "impression_id": "",
+        "click_id": "clk_6677",
+        "device_type": "tablet",
+        "is_billable": "true",
+        "source_file": "ad_server_events_20260503.csv",
+        "ingestion_ts": "2026-05-03 20:30:00"
+      },
+      {
+        "event_type": "Click",
+        "campaign_id": "cmp_1059",
+        "campaign_name": "Summer Brand Lift",
+        "event_ts": "2026-05-04 08:02:36",
+        "impression_id": "",
+        "click_id": "clk_9215",
+        "device_type": "DESKTOP",
+        "is_billable": "true",
+        "source_file": "ad_server_events_20260504.csv",
+        "ingestion_ts": "2026-05-04 09:00:00"
+      }
+    ]
+  }
+}

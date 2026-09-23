@@ -1,0 +1,13 @@
+.env
+.env.*
+__pycache__/
+**/__pycache__/
+*.pyc
+*.pyo
+output/
+.pytest_cache/
+tests/
+*.log
+.DS_Store
+azure-pipelines-backend.yaml
+cicd.yaml

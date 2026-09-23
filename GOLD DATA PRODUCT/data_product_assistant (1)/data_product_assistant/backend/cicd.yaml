@@ -1,0 +1,110 @@
+trigger:
+- feature_backend_v3
+
+variables:
+  azureServiceConnection: 'data-agents-sc'
+  webAppName: 'dataagents3-api'
+  vmImageName: 'ubuntu-latest'
+  environmentName: 'dataagents-api'
+  pythonVersion: 3.12
+  backendFolder: 'backend'
+
+stages:
+
+# =========================
+# BUILD STAGE
+# =========================
+- stage: Build
+  displayName: 'Build Stage'
+  jobs:
+  - job: BuildJob
+    pool:
+      vmImage: $(vmImageName)
+
+    steps:
+    - checkout: self
+
+    - task: UsePythonVersion@0
+      inputs:
+        versionSpec: '$(pythonVersion)'
+      displayName: 'Use Python $(pythonVersion)'
+
+    - script: |
+        python -m pip install --upgrade pip setuptools wheel
+        pip install -r requirements.txt
+      workingDirectory: $(System.DefaultWorkingDirectory)/$(backendFolder)
+      displayName: 'Install Dependencies'
+
+    # CRITICAL FIX: flatten backend to root for Azure
+    - script: |
+        mkdir -p artifact
+        cp -r $(backendFolder)/* artifact/
+      displayName: 'Prepare Deployment Package'
+
+    - task: ArchiveFiles@2
+      displayName: 'Archive Files'
+      inputs:
+        rootFolderOrFile: 'artifact'
+        includeRootFolder: false
+        archiveType: zip
+        archiveFile: $(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip
+        replaceExistingArchive: true
+
+    - task: PublishBuildArtifacts@1
+      displayName: 'Publish Artifact'
+      inputs:
+        PathtoPublish: '$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip'
+        ArtifactName: 'drop'
+        publishLocation: 'Container'
+
+
+# =========================
+# DEPLOY STAGE
+# =========================
+- stage: Deploy
+  displayName: 'Deploy Stage'
+  dependsOn: Build
+  condition: succeeded()
+
+  jobs:
+  - deployment: DeployJob
+    pool:
+      vmImage: $(vmImageName)
+    environment: $(environmentName)
+
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+
+          - task: UsePythonVersion@0
+            inputs:
+              versionSpec: '$(pythonVersion)'
+            displayName: 'Use Python'
+
+          - task: AzureAppServiceManage@0
+            displayName: Stop App Service
+            inputs:
+              azureSubscription: $(azureServiceConnection)
+              Action: 'Stop Azure App Service'
+              WebAppName: $(webAppName)
+
+          # FIXED DEPLOY WITH EXPLICIT START COMMAND
+          - task: AzureRmWebAppDeployment@4
+            displayName: Deploy to Azure Web App
+            inputs:
+              ConnectionType: 'AzureRM'
+              azureSubscription: $(azureServiceConnection)
+              appType: 'webAppLinux'
+              WebAppName: $(webAppName)
+              packageForLinux: '$(Pipeline.Workspace)/drop/$(Build.BuildId).zip'
+              RuntimeStack: 'PYTHON|3.12'
+              StartupCommand: 'gunicorn --bind=0.0.0.0:8000 -w 1 -k uvicorn.workers.UvicornWorker server:app'
+              AppSettings: '-SCM_DO_BUILD_DURING_DEPLOYMENT true -ENABLE_ORYX_BUILD true'
+
+          - task: AzureAppServiceManage@0
+            displayName: Start App Service
+            inputs:
+              azureSubscription: $(azureServiceConnection)
+              Action: 'Start Azure App Service'
+              WebAppName: $(webAppName)

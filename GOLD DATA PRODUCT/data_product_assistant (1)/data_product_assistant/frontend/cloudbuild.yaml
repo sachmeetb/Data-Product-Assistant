@@ -1,0 +1,48 @@
+steps:
+  # Build Docker image with VITE_API_URL baked in at build time
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '--build-arg=VITE_API_URL=${_BACKEND_URL}'
+      - '-t'
+      - '${_REGION}-docker.pkg.dev/${_PROJECT_ID}/${_REPO_NAME}/dp-assistant-v2-frontend:$BUILD_ID'
+      - '.'
+    dir: 'frontend'
+
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - '${_REGION}-docker.pkg.dev/${_PROJECT_ID}/${_REPO_NAME}/dp-assistant-v2-frontend:$BUILD_ID'
+
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - '${_SERVICE_NAME}'
+      - '--image=${_REGION}-docker.pkg.dev/${_PROJECT_ID}/${_REPO_NAME}/dp-assistant-v2-frontend:$BUILD_ID'
+      - '--region=${_REGION}'
+      - '--platform=managed'
+      - '--memory=256Mi'
+      - '--cpu=1'
+      - '--concurrency=80'
+      - '--min-instances=0'
+      - '--max-instances=5'
+      - '--port=8080'
+      - '--service-account=dp-assistant-sa@${_PROJECT_ID}.iam.gserviceaccount.com'
+      - '--allow-unauthenticated'
+
+substitutions:
+  _SERVICE_NAME: dp-assistant-v2-frontend
+  _REGION: us-central1
+  _PROJECT_ID: ''
+  _REPO_NAME: dp-assistant
+  # Relative path, NOT an absolute backend URL: browsers cannot call the backend
+  # Cloud Run service directly (run.invoker is restricted to auth-proxy-sa), so the
+  # SPA calls same-origin /__api and the proxy tier forwards it to the backend.
+  # NOTE: if overriding on the CLI from Git Bash, MSYS rewrites a leading "/" into a
+  # Windows path — submit from PowerShell or set MSYS_NO_PATHCONV=1.
+  _BACKEND_URL: '/__api'
+
+options:
+  logging: CLOUD_LOGGING_ONLY

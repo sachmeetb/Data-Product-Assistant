@@ -42,3 +42,6 @@ Thumbs.db
 *.log
 *.tmp
 *.bak
+
+# Disabled nested git dir (GOLD repo history, kept locally for recovery)
+.git.disabled/

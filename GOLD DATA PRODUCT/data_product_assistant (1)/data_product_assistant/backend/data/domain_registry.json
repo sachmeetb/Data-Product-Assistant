@@ -1,0 +1,114 @@
+{
+    "version": "1.0",
+    "description": "Master registry of all Silver Layer domain frameworks. Each entry points to a domain_silver_domain.json file containing the canonical slv_* entity skeleton for that subject area.",
+    "domains": [
+        {
+            "name": "campaign",
+            "display_name": "Digital Marketing & Ad-Tech",
+            "status": "green",
+            "framework_file": "campaign_silver_domain.json",
+            "entity_count": 11,
+            "dimension_count": 7,
+            "event_count": 3,
+            "aggregate_count": 1,
+            "standards": ["IAB_OpenRTB", "Google_CM", "Meta_Ads", "Adobe_XDM_ExperienceEvent"],
+            "summary": "Canonical silver spine for campaign data: impressions → clicks → conversions → performance. Covers Google Ads, Meta, DV360, and email platform sources.",
+            "key_metrics": ["CTR", "CPC", "CPA", "ROAS"],
+            "domain_scope_names": ["Marketing", "Advertising"],
+            "color": "#6366f1"
+        },
+        {
+            "name": "sales",
+            "display_name": "Sales & Commercial",
+            "status": "green",
+            "framework_file": "sales_silver_domain.json",
+            "entity_count": 8,
+            "dimension_count": 5,
+            "event_count": 2,
+            "aggregate_count": 1,
+            "standards": ["GS1", "Salesforce_CRM", "SAP_S4HANA"],
+            "summary": "Canonical silver spine for sales data: customer → product → order → order line → performance. Covers CRM, ERP, and sell-through data.",
+            "key_metrics": ["ASP", "Revenue_Mix", "Order_Value"],
+            "domain_scope_names": ["Sales"],
+            "color": "#059669"
+        },
+        {
+            "name": "loyalty",
+            "display_name": "Loyalty & Rewards",
+            "status": "green",
+            "framework_file": "loyalty_silver_domain.json",
+            "entity_count": 8,
+            "dimension_count": 4,
+            "event_count": 3,
+            "aggregate_count": 1,
+            "standards": ["CRM_Loyalty", "Adobe_XDM_Loyalty", "Salesforce_Loyalty"],
+            "summary": "Canonical silver spine for loyalty data: member → tier → enrolment → transaction → redemption → performance. Covers points earn, burn, and churn.",
+            "key_metrics": ["Redemption_Rate", "Earn_Rate", "Churn_Rate", "Engagement_Rate"],
+            "domain_scope_names": ["Loyalty & Rewards"],
+            "color": "#d97706"
+        },
+        {
+            "name": "trade_promotions",
+            "display_name": "Trade Promotions",
+            "status": "green",
+            "framework_file": "trade_promotions_silver_domain.json",
+            "entity_count": 7,
+            "dimension_count": 4,
+            "event_count": 2,
+            "aggregate_count": 1,
+            "standards": ["SAP_TPM", "Salesforce_CPG", "Nielsen_TPM"],
+            "summary": "Canonical silver spine for trade promotion data: promotion → retailer → product → spend → uplift → ROI. Covers TPM systems and sell-out data.",
+            "key_metrics": ["Promo_ROI", "Efficiency", "Spend_Rate"],
+            "domain_scope_names": ["Trade Promotions"],
+            "color": "#dc2626"
+        },
+        {
+            "name": "pricing",
+            "display_name": "Pricing",
+            "status": "green",
+            "framework_file": "pricing_silver_domain.json",
+            "entity_count": 7,
+            "dimension_count": 3,
+            "event_count": 3,
+            "aggregate_count": 1,
+            "standards": ["SAP_Pricing", "Vendavo", "Zilliant"],
+            "summary": "Canonical silver spine for pricing data: product → zone → price list → price point → price change → competitor price → performance.",
+            "key_metrics": ["Margin_Pct", "Price_Index", "Price_Change_Frequency"],
+            "domain_scope_names": ["Pricing"],
+            "color": "#7c3aed"
+        },
+        {
+            "name": "digital_commerce",
+            "display_name": "Digital Commerce",
+            "status": "green",
+            "framework_file": "digital_commerce_silver_domain.json",
+            "entity_count": 8,
+            "dimension_count": 3,
+            "event_count": 4,
+            "aggregate_count": 1,
+            "standards": ["Adobe_XDM_ExperienceEvent", "Google_Analytics_4", "Shopify_Commerce"],
+            "summary": "Canonical silver spine for e-commerce data: visitor → session → product view → cart → purchase → performance. Covers GA4, Adobe Analytics, and Shopify.",
+            "key_metrics": ["Conversion_Rate", "Bounce_Rate", "AOV", "Cart_Abandon_Rate"],
+            "domain_scope_names": ["Digital Commerce"],
+            "color": "#0891b2"
+        }
+    ],
+    "amber_domains": [
+        {
+            "name": "supply_chain",
+            "display_name": "Supply Chain",
+            "status": "amber",
+            "framework_file": null,
+            "summary": "Supply Chain spans multiple domains. Framework coming soon — scope to consumer or product impact before proceeding.",
+            "color": "#b45309"
+        },
+        {
+            "name": "finance",
+            "display_name": "Finance",
+            "status": "amber",
+            "framework_file": null,
+            "summary": "Finance data is broad in scope. Framework coming soon — link to a specific product line or consumer segment.",
+            "color": "#b45309"
+        }
+    ]
+}

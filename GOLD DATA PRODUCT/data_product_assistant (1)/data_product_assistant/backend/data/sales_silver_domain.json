@@ -1,0 +1,132 @@
+{
+    "domain": "sales",
+    "display_name": "Sales & Commercial",
+    "description": "Canonical Silver Layer framework for sales and commercial data. Covers sell-through, order-to-cash, and revenue performance. Anchored to GS1 product standards and common CRM/ERP data models (Salesforce, SAP S/4HANA).",
+    "standards": ["GS1", "Salesforce_CRM", "SAP_S4HANA"],
+    "hierarchy": [
+        "slv_customer",
+        "slv_product",
+        "slv_territory",
+        "slv_sales_channel",
+        "slv_sales_rep",
+        "slv_order_event",
+        "slv_order_line_event",
+        "slv_sales_performance_daily"
+    ],
+    "entity_types": {
+        "dimensions": ["slv_customer", "slv_product", "slv_territory", "slv_sales_channel", "slv_sales_rep"],
+        "events": ["slv_order_event", "slv_order_line_event"],
+        "aggregates": ["slv_sales_performance_daily"]
+    },
+    "entities": {
+        "slv_customer": {
+            "type": "dimension",
+            "grain": "one row per customer account",
+            "columns": [
+                {"name": "customer_id",      "data_type": "STRING", "nullable": false, "is_pk": true,  "fk_ref": null, "description": "Unique customer identifier"},
+                {"name": "customer_name",    "data_type": "STRING", "nullable": false, "is_pk": false, "fk_ref": null, "description": "Legal business name of the customer"},
+                {"name": "customer_segment", "data_type": "STRING", "nullable": true,  "is_pk": false, "fk_ref": null, "description": "Customer segment: Key Account, National, Regional, Independents"},
+                {"name": "territory_id",     "data_type": "STRING", "nullable": true,  "is_pk": false, "fk_ref": "slv_territory.territory_id", "description": "FK to territory"},
+                {"name": "channel_id",       "data_type": "STRING", "nullable": true,  "is_pk": false, "fk_ref": "slv_sales_channel.channel_id", "description": "FK to sales channel"}
+            ]
+        },
+        "slv_product": {
+            "type": "dimension",
+            "grain": "one row per product SKU",
+            "columns": [
+                {"name": "product_id",       "data_type": "STRING", "nullable": false, "is_pk": true,  "fk_ref": null, "description": "Unique product SKU identifier"},
+                {"name": "product_name",     "data_type": "STRING", "nullable": false, "is_pk": false, "fk_ref": null, "description": "Product name"},
+                {"name": "category",         "data_type": "STRING", "nullable": true,  "is_pk": false, "fk_ref": null, "description": "Product category"},
+                {"name": "sub_category",     "data_type": "STRING", "nullable": true,  "is_pk": false, "fk_ref": null, "description": "Product sub-category"},
+                {"name": "brand",            "data_type": "STRING", "nullable": true,  "is_pk": false, "fk_ref": null, "description": "Brand name"},
+                {"name": "unit_of_measure",  "data_type": "STRING", "nullable": true,  "is_pk": false, "fk_ref": null, "description": "Unit of measure: EA, CS, KG, L"}
+            ]
+        },
+        "slv_territory": {
+            "type": "dimension",
+            "grain": "one row per sales territory",
+            "columns": [
+                {"name": "territory_id",    "data_type": "STRING", "nullable": false, "is_pk": true,  "fk_ref": null, "description": "Unique territory identifier"},
+                {"name": "territory_name",  "data_type": "STRING", "nullable": false, "is_pk": false, "fk_ref": null, "description": "Territory name"},
+                {"name": "region",          "data_type": "STRING", "nullable": true,  "is_pk": false, "fk_ref": null, "description": "Parent region"},
+                {"name": "country",         "data_type": "STRING", "nullable": true,  "is_pk": false, "fk_ref": null, "description": "Country code (ISO 3166-1 alpha-2)"}
+            ]
+        },
+        "slv_sales_channel": {
+            "type": "dimension",
+            "grain": "one row per sales channel",
+            "columns": [
+                {"name": "channel_id",    "data_type": "STRING", "nullable": false, "is_pk": true,  "fk_ref": null, "description": "Unique channel identifier"},
+                {"name": "channel_name",  "data_type": "STRING", "nullable": false, "is_pk": false, "fk_ref": null, "description": "Normalised channel: DIRECT, DISTRIBUTOR, RETAIL, ONLINE, WHOLESALE"},
+                {"name": "channel_type",  "data_type": "STRING", "nullable": true,  "is_pk": false, "fk_ref": null, "description": "Channel type: B2B, B2C, B2B2C"}
+            ]
+        },
+        "slv_sales_rep": {
+            "type": "dimension",
+            "grain": "one row per sales representative",
+            "columns": [
+                {"name": "rep_id",          "data_type": "STRING", "nullable": false, "is_pk": true,  "fk_ref": null, "description": "Unique sales rep identifier"},
+                {"name": "rep_name",        "data_type": "STRING", "nullable": false, "is_pk": false, "fk_ref": null, "description": "Sales rep full name"},
+                {"name": "territory_id",    "data_type": "STRING", "nullable": true,  "is_pk": false, "fk_ref": "slv_territory.territory_id", "description": "FK to territory"}
+            ]
+        },
+        "slv_order_event": {
+            "type": "event",
+            "grain": "one row per sales order header",
+            "columns": [
+                {"name": "order_id",         "data_type": "STRING",    "nullable": false, "is_pk": true,  "fk_ref": null, "description": "Unique order identifier — PK"},
+                {"name": "customer_id",      "data_type": "STRING",    "nullable": false, "is_pk": false, "fk_ref": "slv_customer.customer_id", "description": "FK to customer"},
+                {"name": "rep_id",           "data_type": "STRING",    "nullable": true,  "is_pk": false, "fk_ref": "slv_sales_rep.rep_id", "description": "FK to sales rep"},
+                {"name": "channel_id",       "data_type": "STRING",    "nullable": true,  "is_pk": false, "fk_ref": "slv_sales_channel.channel_id", "description": "FK to sales channel"},
+                {"name": "order_date",       "data_type": "DATE",      "nullable": false, "is_pk": false, "fk_ref": null, "description": "Date the order was placed"},
+                {"name": "order_status",     "data_type": "STRING",    "nullable": false, "is_pk": false, "fk_ref": null, "description": "Normalised status: OPEN, CONFIRMED, SHIPPED, DELIVERED, CANCELLED"},
+                {"name": "total_value",      "data_type": "DOUBLE",    "nullable": true,  "is_pk": false, "fk_ref": null, "description": "Total order value in reporting currency"},
+                {"name": "currency",         "data_type": "STRING",    "nullable": true,  "is_pk": false, "fk_ref": null, "description": "ISO 4217 currency code"},
+                {"name": "timestamp",        "data_type": "TIMESTAMP", "nullable": false, "is_pk": false, "fk_ref": null, "description": "UTC timestamp of order creation"}
+            ]
+        },
+        "slv_order_line_event": {
+            "type": "event",
+            "grain": "one row per order line item",
+            "columns": [
+                {"name": "line_id",          "data_type": "STRING", "nullable": false, "is_pk": true,  "fk_ref": null, "description": "Unique order line identifier — PK"},
+                {"name": "order_id",         "data_type": "STRING", "nullable": false, "is_pk": false, "fk_ref": "slv_order_event.order_id", "description": "FK to parent order"},
+                {"name": "product_id",       "data_type": "STRING", "nullable": false, "is_pk": false, "fk_ref": "slv_product.product_id", "description": "FK to product"},
+                {"name": "quantity",         "data_type": "DOUBLE", "nullable": false, "is_pk": false, "fk_ref": null, "description": "Quantity ordered"},
+                {"name": "unit_price",       "data_type": "DOUBLE", "nullable": false, "is_pk": false, "fk_ref": null, "description": "Net unit price after discounts"},
+                {"name": "line_value",       "data_type": "DOUBLE", "nullable": false, "is_pk": false, "fk_ref": null, "description": "Total line value (quantity × unit_price)"},
+                {"name": "discount_pct",     "data_type": "DOUBLE", "nullable": true,  "is_pk": false, "fk_ref": null, "description": "Discount percentage applied"}
+            ]
+        },
+        "slv_sales_performance_daily": {
+            "type": "aggregate",
+            "grain": "one row per customer + product + channel + day",
+            "columns": [
+                {"name": "date",           "data_type": "DATE",   "nullable": false, "is_pk": true,  "fk_ref": null, "description": "Reporting day — composite PK"},
+                {"name": "customer_id",    "data_type": "STRING", "nullable": false, "is_pk": true,  "fk_ref": "slv_customer.customer_id", "description": "FK to customer — composite PK"},
+                {"name": "product_id",     "data_type": "STRING", "nullable": false, "is_pk": true,  "fk_ref": "slv_product.product_id", "description": "FK to product — composite PK"},
+                {"name": "channel_id",     "data_type": "STRING", "nullable": false, "is_pk": true,  "fk_ref": "slv_sales_channel.channel_id", "description": "FK to channel — composite PK"},
+                {"name": "order_count",    "data_type": "BIGINT", "nullable": false, "is_pk": false, "fk_ref": null, "description": "COUNT of distinct orders"},
+                {"name": "total_quantity", "data_type": "DOUBLE", "nullable": false, "is_pk": false, "fk_ref": null, "description": "SUM of quantity from order lines"},
+                {"name": "total_revenue",  "data_type": "DOUBLE", "nullable": false, "is_pk": false, "fk_ref": null, "description": "SUM of line_value from order lines"}
+            ]
+        }
+    },
+    "derived_metrics": {
+        "ASP":          {"formula": "total_revenue / total_quantity", "description": "Average selling price"},
+        "Revenue_Mix":  {"formula": "product_revenue / total_revenue", "description": "Revenue share by product"},
+        "Order_Value":  {"formula": "total_revenue / order_count",    "description": "Average order value"}
+    },
+    "source_platform_mappings": {
+        "sap_sales_order":        "slv_order_event",
+        "salesforce_opportunity": "slv_order_event",
+        "sap_order_line":         "slv_order_line_event",
+        "crm_account":            "slv_customer",
+        "sap_material":           "slv_product"
+    },
+    "domain_keywords": [
+        "sales", "sell-through", "revenue", "order", "commercial", "customer",
+        "product", "sku", "territory", "channel", "distributor", "wholesale",
+        "asp", "volume", "quantity", "invoice", "discount", "sell-in", "sell-out"
+    ]
+}

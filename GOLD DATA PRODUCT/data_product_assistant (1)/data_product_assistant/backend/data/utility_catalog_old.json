@@ -1,0 +1,2502 @@
+{
+  "data_catalog": {
+    "version": "1.0",
+    "source": "discovery_agent_mock_data.xlsx",
+    "description": "Production-grade mock data catalog for Data Discovery Agent. Contains two test scenarios: S1 (Vendor Invoice Reconciliation) and S2 (B2B Customer 360). All tables and confidence scores are authoritative mock data for POC.",
+    "layers": {
+      "gold": [
+        {
+          "full_name": "acn_consumption.procurement.fact_invoice_status",
+          "catalog": "acn_consumption",
+          "schema_name": "procurement",
+          "table_name": "fact_invoice_status",
+          "layer": "gold",
+          "format": "DELTA",
+          "description": "Invoice processing status fact table with vendor and cost centre dimensions. Tracks invoice lifecycle from receipt through payment. Does NOT currently include PO matching or dispute tracking.",
+          "tags": {
+            "domain": "procurement",
+            "layer": "gold",
+            "refresh": "weekly",
+            "sensitivity": "confidential"
+          },
+          "owner": "procurement_data_team",
+          "refresh_cadence": "Weekly (Monday 06:00 UTC)",
+          "last_updated": "2026-04-21T06:12:00Z",
+          "upstream_lineage": [
+            "acn_aggregated.finance.ap_invoices_conformed"
+          ],
+          "columns": [
+            {
+              "name": "invoice_id",
+              "data_type": "STRING",
+              "nullable": false,
+              "description": "Unique invoice identifier from SAP AP module",
+              "is_pk": true,
+              "fk_ref": null,
+              "tags": {
+                "pii": "false"
+              }
+            },
+            {
+              "name": "vendor_id",
+              "data_type": "STRING",
+              "nullable": false,
+              "description": "Vendor master identifier — foreign key to dim_vendor",
+              "is_pk": false,
+              "fk_ref": "dim_vendor",
+              "tags": {
+                "pii": "false"
+              }
+            },
+            {
+              "name": "invoice_date",
+              "data_type": "DATE",
+              "nullable": false,
+              "description": "Date invoice was received and recorded in SAP",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {}
+            },
+            {
+              "name": "amount",
+              "data_type": "DECIMAL(18,2)",
+              "nullable": false,
+              "description": "Invoice line item amount in local currency",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {
+                "sensitivity": "confidential"
+              }
+            },
+            {
+              "name": "currency_code",
+              "data_type": "STRING",
+              "nullable": false,
+              "description": "ISO 4217 currency code",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {}
+            },
+            {
+              "name": "cost_centre",
+              "data_type": "STRING",
+              "nullable": false,
+              "description": "Cost centre code for budget allocation",
+              "is_pk": false,
+              "fk_ref": "dim_cost_centre",
+              "tags": {}
+            },
+            {
+              "name": "payment_status",
+              "data_type": "STRING",
+              "nullable": false,
+              "description": "Current payment status: OPEN, PARTIAL, PAID, BLOCKED",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {}
+            },
+            {
+              "name": "payment_date",
+              "data_type": "DATE",
+              "nullable": true,
+              "description": "Date payment was executed — null if unpaid",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {}
+            },
+            {
+              "name": "fiscal_quarter",
+              "data_type": "STRING",
+              "nullable": false,
+              "description": "Fiscal quarter in format YYYY-Q# (e.g., 2026-Q1)",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {}
+            },
+            {
+              "name": "etl_load_timestamp",
+              "data_type": "TIMESTAMP",
+              "nullable": false,
+              "description": "Pipeline load timestamp",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {
+                "technical": "true"
+              }
+            }
+          ],
+          "expected_confidence": {
+            "status": "extend",
+            "overall_confidence": 0.72,
+            "structural_score": 0.65,
+            "semantic_score": 0.87,
+            "matched_fields": [
+              "invoice_id | exact",
+              "vendor_id | exact",
+              "amount | semantic_alias | requirement_term: invoice_amount",
+              "cost_centre | semantic_alias | requirement_term: cost_centre_id"
+            ],
+            "missing_information": [
+              "Whether the invoice matched a purchase order",
+              "Current dispute or exception status",
+              "Time taken to resolve discrepancies"
+            ],
+            "suggested_names": [
+              "po_match_flag",
+              "dispute_status",
+              "resolution_days"
+            ],
+            "close_call": false
+          }
+        },
+        {
+          "full_name": "acn_consumption.procurement.dim_vendor",
+          "catalog": "acn_consumption",
+          "schema_name": "procurement",
+          "table_name": "dim_vendor",
+          "layer": "gold",
+          "format": "DELTA",
+          "description": "Vendor master dimension table. Contains vendor demographics, classification, and payment terms. Refreshed weekly from SAP vendor master.",
+          "tags": {
+            "domain": "procurement",
+            "layer": "gold",
+            "refresh": "weekly",
+            "type": "dimension"
+          },
+          "owner": "procurement_data_team",
+          "refresh_cadence": "Weekly (Monday 05:00 UTC)",
+          "last_updated": "2026-04-21T05:08:00Z",
+          "upstream_lineage": [
+            "acn_aggregated.finance.vendor_master_conformed"
+          ],
+          "columns": [
+            {
+              "name": "vendor_id",
+              "data_type": "STRING",
+              "nullable": false,
+              "description": "Vendor master identifier",
+              "is_pk": true,
+              "fk_ref": null,
+              "tags": {
+                "pii": "false"
+              }
+            },
+            {
+              "name": "vendor_name",
+              "data_type": "STRING",
+              "nullable": false,
+              "description": "Legal entity name of the vendor",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {
+                "pii": "false",
+                "sensitivity": "internal"
+              }
+            },
+            {
+              "name": "vendor_category",
+              "data_type": "STRING",
+              "nullable": false,
+              "description": "Vendor classification: STRATEGIC, PREFERRED, STANDARD, SPOT",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {}
+            },
+            {
+              "name": "country_code",
+              "data_type": "STRING",
+              "nullable": false,
+              "description": "ISO 3166-1 alpha-2 country code",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {}
+            },
+            {
+              "name": "payment_terms",
+              "data_type": "STRING",
+              "nullable": true,
+              "description": "Standard payment terms code (e.g., NET30, NET60)",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {}
+            },
+            {
+              "name": "is_active",
+              "data_type": "BOOLEAN",
+              "nullable": false,
+              "description": "Whether vendor is currently active in the system",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {}
+            }
+          ]
+        },
+        {
+          "full_name": "acn_consumption.procurement.fact_purchase_cycle_time",
+          "catalog": "acn_consumption",
+          "schema_name": "procurement",
+          "table_name": "fact_purchase_cycle_time",
+          "layer": "gold",
+          "format": "DELTA",
+          "description": "Measures average procurement cycle time from requisition to delivery. Used by supply chain analytics team.",
+          "tags": {
+            "domain": "procurement",
+            "layer": "gold",
+            "refresh": "daily"
+          },
+          "owner": "supply_chain_analytics",
+          "refresh_cadence": "Daily (02:00 UTC)",
+          "last_updated": "2026-04-23T02:15:00Z",
+          "upstream_lineage": [
+            "acn_aggregated.procurement.po_lifecycle_conformed"
+          ],
+          "columns": [
+            {
+              "name": "requisition_id",
+              "data_type": "STRING",
+              "nullable": false,
+              "description": "Unique requisition identifier",
+              "is_pk": true,
+              "fk_ref": null,
+              "tags": {}
+            },
+            {
+              "name": "cycle_days",
+              "data_type": "INT",
+              "nullable": false,
+              "description": "Days from requisition creation to goods receipt",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {}
+            },
+            {
+              "name": "buyer_id",
+              "data_type": "STRING",
+              "nullable": false,
+              "description": "Procurement buyer responsible",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {
+                "pii": "true"
+              }
+            }
+          ]
+        },
+        {
+          "full_name": "acn_consumption.sales.fact_sales_orders",
+          "catalog": "acn_consumption",
+          "schema_name": "sales",
+          "table_name": "fact_sales_orders",
+          "layer": "gold",
+          "format": "DELTA",
+          "description": "Sales order fact table. One row per order line item. Tracks order value, product, region, and customer. Does NOT include credit risk, CLV, churn, or customer segmentation.",
+          "tags": {
+            "domain": "sales",
+            "layer": "gold",
+            "refresh": "daily",
+            "sensitivity": "confidential"
+          },
+          "owner": "sales_analytics_team",
+          "refresh_cadence": "Daily (04:00 UTC)",
+          "last_updated": "2026-04-23T04:12:00Z",
+          "upstream_lineage": [
+            "acn_aggregated.sales.sales_orders_conformed"
+          ],
+          "columns": [
+            {
+              "name": "order_id",
+              "data_type": "STRING",
+              "nullable": false,
+              "description": "Sales order identifier",
+              "is_pk": true,
+              "fk_ref": null,
+              "tags": {}
+            },
+            {
+              "name": "order_line",
+              "data_type": "INT",
+              "nullable": false,
+              "description": "Order line sequence",
+              "is_pk": true,
+              "fk_ref": null,
+              "tags": {}
+            },
+            {
+              "name": "customer_id",
+              "data_type": "STRING",
+              "nullable": false,
+              "description": "B2B customer account identifier",
+              "is_pk": false,
+              "fk_ref": "dim_customer",
+              "tags": {}
+            },
+            {
+              "name": "product_id",
+              "data_type": "STRING",
+              "nullable": false,
+              "description": "Product identifier",
+              "is_pk": false,
+              "fk_ref": "dim_product",
+              "tags": {}
+            },
+            {
+              "name": "region_code",
+              "data_type": "STRING",
+              "nullable": false,
+              "description": "Sales region code",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {}
+            },
+            {
+              "name": "order_amount",
+              "data_type": "DECIMAL(18,2)",
+              "nullable": false,
+              "description": "Order line value in reporting currency",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {
+                "sensitivity": "confidential"
+              }
+            },
+            {
+              "name": "order_date",
+              "data_type": "DATE",
+              "nullable": false,
+              "description": "Date order was placed",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {}
+            },
+            {
+              "name": "delivery_status",
+              "data_type": "STRING",
+              "nullable": false,
+              "description": "PENDING, SHIPPED, DELIVERED, CANCELLED",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {}
+            }
+          ],
+          "expected_confidence": {
+            "status": "extend",
+            "overall_confidence": 0.52,
+            "structural_score": 0.0,
+            "semantic_score": 0.0,
+            "matched_fields": [
+              "customer_id(exact), product_id(exact), region_code(semantic→region), order_amount(semantic→revenue)"
+            ],
+            "missing_information": [
+              "Customer demographic and segmentation attributes",
+              "Credit risk and churn probability metrics"
+            ],
+            "suggested_names": [],
+            "close_call": true
+          }
+        },
+        {
+          "full_name": "acn_consumption.sales.dim_customer",
+          "catalog": "acn_consumption",
+          "schema_name": "sales",
+          "table_name": "dim_customer",
+          "layer": "gold",
+          "format": "DELTA",
+          "description": "Customer dimension table. Basic demographics and segmentation. Does NOT include credit risk scores, CLV, churn probability, or revenue concentration metrics.",
+          "tags": {
+            "domain": "sales",
+            "layer": "gold",
+            "refresh": "weekly",
+            "type": "dimension"
+          },
+          "owner": "sales_analytics_team",
+          "refresh_cadence": "Weekly (Sunday 03:00 UTC)",
+          "last_updated": "2026-04-20T03:15:00Z",
+          "upstream_lineage": [
+            "acn_aggregated.sales.customer_master_conformed"
+          ],
+          "columns": [
+            {
+              "name": "customer_id",
+              "data_type": "STRING",
+              "nullable": false,
+              "description": "B2B customer account identifier",
+              "is_pk": true,
+              "fk_ref": null,
+              "tags": {}
+            },
+            {
+              "name": "customer_name",
+              "data_type": "STRING",
+              "nullable": false,
+              "description": "Legal entity name",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {
+                "sensitivity": "internal"
+              }
+            },
+            {
+              "name": "segment",
+              "data_type": "STRING",
+              "nullable": false,
+              "description": "Customer segment: ENTERPRISE, MID_MARKET, SMB",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {}
+            },
+            {
+              "name": "region",
+              "data_type": "STRING",
+              "nullable": false,
+              "description": "Primary operating region",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {}
+            },
+            {
+              "name": "country_code",
+              "data_type": "STRING",
+              "nullable": false,
+              "description": "ISO country code",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {}
+            },
+            {
+              "name": "account_status",
+              "data_type": "STRING",
+              "nullable": false,
+              "description": "ACTIVE, DORMANT, CHURNED",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {}
+            },
+            {
+              "name": "account_manager",
+              "data_type": "STRING",
+              "nullable": true,
+              "description": "Assigned account manager",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {
+                "pii": "true"
+              }
+            },
+            {
+              "name": "onboarding_date",
+              "data_type": "DATE",
+              "nullable": false,
+              "description": "Date customer was onboarded",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {}
+            }
+          ],
+          "expected_confidence": {
+            "status": "extend",
+            "overall_confidence": 0.58,
+            "structural_score": 0.45,
+            "semantic_score": 0.86,
+            "matched_fields": [
+              "customer_id | exact",
+              "segment | exact",
+              "region | exact",
+              "account_status | exact"
+            ],
+            "missing_information": [
+              "Projected lifetime value of each customer relationship",
+              "Likelihood of customer not renewing within 12 months",
+              "Total outstanding receivables and credit facilities per customer",
+              "Share of total portfolio revenue attributable to each customer",
+              "Product line breakdown of customer activity"
+            ],
+            "suggested_names": [
+              "customer_lifetime_value",
+              "churn_risk_score",
+              "credit_exposure_usd",
+              "revenue_concentration_pct",
+              "product_line"
+            ],
+            "close_call": false
+          }
+        }
+      ],
+      "silver": [
+        {
+          "full_name": "acn_aggregated.finance.ap_po_joined",
+          "catalog": "acn_aggregated",
+          "schema_name": "finance",
+          "table_name": "ap_po_joined",
+          "layer": "silver",
+          "format": "DELTA",
+          "description": "Accounts Payable and Purchase Order joined view with vendor details and GL codes. Conformed from SAP AP and Ariba PO bronze feeds. Business keys resolved, data types normalised, nulls handled. One row per invoice line item joined to its corresponding PO line.",
+          "tags": {
+            "domain": "finance",
+            "layer": "silver",
+            "refresh": "weekly",
+            "quality": "validated",
+            "sensitivity": "confidential"
+          },
+          "owner": "finance_data_engineering",
+          "refresh_cadence": "Weekly (Sunday 22:00 UTC)",
+          "last_updated": "2026-04-20T22:45:00Z",
+          "upstream_lineage": [
+            "acn_source.sap.raw_ap_invoices",
+            "acn_source.ariba.raw_purchase_orders"
+          ],
+          "columns": [
+            {
+              "name": "invoice_id",
+              "data_type": "STRING",
+              "nullable": false,
+              "description": "Deduplicated invoice identifier from SAP AP",
+              "is_pk": true,
+              "fk_ref": null,
+              "tags": {
+                "pii": "false"
+              }
+            },
+            {
+              "name": "invoice_line_num",
+              "data_type": "INT",
+              "nullable": false,
+              "description": "Invoice line item sequence number",
+              "is_pk": true,
+              "fk_ref": null,
+              "tags": {}
+            },
+            {
+              "name": "po_id",
+              "data_type": "STRING",
+              "nullable": true,
+              "description": "Purchase order identifier from Ariba — null if no PO matched",
+              "is_pk": false,
+              "fk_ref": "po_header",
+              "tags": {
+                "pii": "false"
+              }
+            },
+            {
+              "name": "vendor_id",
+              "data_type": "STRING",
+              "nullable": false,
+              "description": "Conformed vendor identifier (SAP vendor master key)",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {
+                "pii": "false"
+              }
+            },
+            {
+              "name": "amount",
+              "data_type": "DECIMAL(18,2)",
+              "nullable": false,
+              "description": "Invoice line amount in reporting currency (USD)",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {
+                "sensitivity": "confidential"
+              }
+            },
+            {
+              "name": "gl_code",
+              "data_type": "STRING",
+              "nullable": false,
+              "description": "General ledger account code from SAP FI",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {}
+            },
+            {
+              "name": "cost_centre_id",
+              "data_type": "STRING",
+              "nullable": false,
+              "description": "Cost centre identifier — conformed from SAP CO module",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {}
+            },
+            {
+              "name": "invoice_date",
+              "data_type": "DATE",
+              "nullable": false,
+              "description": "Date invoice was received",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {}
+            },
+            {
+              "name": "po_date",
+              "data_type": "DATE",
+              "nullable": true,
+              "description": "PO creation date from Ariba — null if no PO",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {}
+            },
+            {
+              "name": "vendor_name",
+              "data_type": "STRING",
+              "nullable": false,
+              "description": "Vendor legal name",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {
+                "pii": "false"
+              }
+            },
+            {
+              "name": "source_system",
+              "data_type": "STRING",
+              "nullable": false,
+              "description": "Origin system tag: SAP-ECC or ARIBA",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {}
+            },
+            {
+              "name": "etl_load_timestamp",
+              "data_type": "TIMESTAMP",
+              "nullable": false,
+              "description": "DLT pipeline load timestamp",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {
+                "technical": "true"
+              }
+            }
+          ],
+          "expected_confidence": {
+            "status": "reuse",
+            "overall_confidence": 0.85,
+            "structural_score": 0.88,
+            "semantic_score": 0.92,
+            "matched_fields": [
+              "invoice_id | exact",
+              "po_id | semantic_alias | requirement_term: purchase_order_id",
+              "vendor_id | exact",
+              "amount | semantic_alias | requirement_term: invoice_amount",
+              "gl_code | exact"
+            ],
+            "missing_information": [],
+            "suggested_names": [],
+            "close_call": false
+          }
+        },
+        {
+          "full_name": "acn_aggregated.finance.gl_postings_conformed",
+          "catalog": "acn_aggregated",
+          "schema_name": "finance",
+          "table_name": "gl_postings_conformed",
+          "layer": "silver",
+          "format": "DELTA",
+          "description": "Conformed general ledger postings from SAP FI. One row per journal entry line. Cleaned, deduplicated, with standardised account codes and posting dates.",
+          "tags": {
+            "domain": "finance",
+            "layer": "silver",
+            "refresh": "daily",
+            "quality": "validated"
+          },
+          "owner": "finance_data_engineering",
+          "refresh_cadence": "Daily (01:00 UTC)",
+          "last_updated": "2026-04-23T01:22:00Z",
+          "upstream_lineage": [
+            "acn_source.sap.raw_gl_postings"
+          ],
+          "columns": [
+            {
+              "name": "document_number",
+              "data_type": "STRING",
+              "nullable": false,
+              "description": "SAP FI document number",
+              "is_pk": true,
+              "fk_ref": null,
+              "tags": {}
+            },
+            {
+              "name": "line_item",
+              "data_type": "INT",
+              "nullable": false,
+              "description": "Journal entry line sequence",
+              "is_pk": true,
+              "fk_ref": null,
+              "tags": {}
+            },
+            {
+              "name": "gl_account",
+              "data_type": "STRING",
+              "nullable": false,
+              "description": "General ledger account number",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {}
+            },
+            {
+              "name": "posting_date",
+              "data_type": "DATE",
+              "nullable": false,
+              "description": "Date the journal entry was posted",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {}
+            },
+            {
+              "name": "amount",
+              "data_type": "DECIMAL(18,2)",
+              "nullable": false,
+              "description": "Posting amount in document currency",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {
+                "sensitivity": "confidential"
+              }
+            },
+            {
+              "name": "currency_code",
+              "data_type": "STRING",
+              "nullable": false,
+              "description": "ISO 4217 currency code",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {}
+            },
+            {
+              "name": "company_code",
+              "data_type": "STRING",
+              "nullable": false,
+              "description": "SAP company code",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {}
+            },
+            {
+              "name": "cost_centre",
+              "data_type": "STRING",
+              "nullable": true,
+              "description": "Cost centre — null for balance sheet postings",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {}
+            },
+            {
+              "name": "profit_centre",
+              "data_type": "STRING",
+              "nullable": true,
+              "description": "Profit centre code",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {}
+            },
+            {
+              "name": "reference_doc",
+              "data_type": "STRING",
+              "nullable": true,
+              "description": "Cross-reference to originating document (invoice, PO)",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {}
+            },
+            {
+              "name": "source_system",
+              "data_type": "STRING",
+              "nullable": false,
+              "description": "Always SAP-ECC for this table",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {}
+            }
+          ]
+        },
+        {
+          "full_name": "acn_aggregated.finance.fx_rates_daily",
+          "catalog": "acn_aggregated",
+          "schema_name": "finance",
+          "table_name": "fx_rates_daily",
+          "layer": "silver",
+          "format": "DELTA",
+          "description": "Daily foreign exchange rates from Bloomberg feed. Used for currency conversion across all finance silver tables.",
+          "tags": {
+            "domain": "finance",
+            "layer": "silver",
+            "refresh": "daily",
+            "type": "reference"
+          },
+          "owner": "finance_data_engineering",
+          "refresh_cadence": "Daily (00:30 UTC)",
+          "last_updated": "2026-04-23T00:35:00Z",
+          "upstream_lineage": [
+            "acn_source.bloomberg.raw_fx_rates"
+          ],
+          "columns": [
+            {
+              "name": "rate_date",
+              "data_type": "DATE",
+              "nullable": false,
+              "description": "Effective date of the exchange rate",
+              "is_pk": true,
+              "fk_ref": null,
+              "tags": {}
+            },
+            {
+              "name": "from_currency",
+              "data_type": "STRING",
+              "nullable": false,
+              "description": "Source currency ISO code",
+              "is_pk": true,
+              "fk_ref": null,
+              "tags": {}
+            },
+            {
+              "name": "to_currency",
+              "data_type": "STRING",
+              "nullable": false,
+              "description": "Target currency ISO code",
+              "is_pk": true,
+              "fk_ref": null,
+              "tags": {}
+            },
+            {
+              "name": "rate",
+              "data_type": "DECIMAL(18,8)",
+              "nullable": false,
+              "description": "Exchange rate",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {}
+            }
+          ]
+        },
+        {
+          "full_name": "acn_aggregated.sales.customer_master_conformed",
+          "catalog": "acn_aggregated",
+          "schema_name": "sales",
+          "table_name": "customer_master_conformed",
+          "layer": "silver",
+          "format": "DELTA",
+          "description": "Conformed B2B customer master from Salesforce CRM and SAP SD. One row per customer. Includes account demographics, segmentation, and basic commercial profile. Does NOT include credit risk, churn scores, or CLV — those data points are not currently sourced.",
+          "tags": {
+            "domain": "sales",
+            "layer": "silver",
+            "refresh": "daily",
+            "quality": "validated",
+            "sensitivity": "internal"
+          },
+          "owner": "commercial_data_engineering",
+          "refresh_cadence": "Daily (02:00 UTC)",
+          "last_updated": "2026-04-23T02:18:00Z",
+          "upstream_lineage": [
+            "acn_source.salesforce.raw_accounts",
+            "acn_source.sap_sd.raw_customers"
+          ],
+          "columns": [
+            {
+              "name": "customer_id",
+              "data_type": "STRING",
+              "nullable": false,
+              "description": "Conformed customer identifier (golden record)",
+              "is_pk": true,
+              "fk_ref": null,
+              "tags": {}
+            },
+            {
+              "name": "customer_name",
+              "data_type": "STRING",
+              "nullable": false,
+              "description": "Legal entity name",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {
+                "sensitivity": "internal"
+              }
+            },
+            {
+              "name": "segment",
+              "data_type": "STRING",
+              "nullable": false,
+              "description": "ENTERPRISE, MID_MARKET, SMB",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {}
+            },
+            {
+              "name": "industry_code",
+              "data_type": "STRING",
+              "nullable": false,
+              "description": "SIC/NAICS industry classification",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {}
+            },
+            {
+              "name": "region",
+              "data_type": "STRING",
+              "nullable": false,
+              "description": "Primary operating region",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {}
+            },
+            {
+              "name": "country_code",
+              "data_type": "STRING",
+              "nullable": false,
+              "description": "ISO country code",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {}
+            },
+            {
+              "name": "annual_revenue_usd",
+              "data_type": "DECIMAL(18,2)",
+              "nullable": true,
+              "description": "Customer's reported annual revenue — from D&B enrichment",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {
+                "sensitivity": "confidential"
+              }
+            },
+            {
+              "name": "employee_count",
+              "data_type": "INT",
+              "nullable": true,
+              "description": "Number of employees — from D&B enrichment",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {}
+            },
+            {
+              "name": "account_status",
+              "data_type": "STRING",
+              "nullable": false,
+              "description": "ACTIVE, DORMANT, CHURNED",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {}
+            },
+            {
+              "name": "account_owner_id",
+              "data_type": "STRING",
+              "nullable": true,
+              "description": "Salesforce account owner",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {
+                "pii": "true"
+              }
+            },
+            {
+              "name": "first_order_date",
+              "data_type": "DATE",
+              "nullable": true,
+              "description": "Date of first sales order",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {}
+            },
+            {
+              "name": "last_order_date",
+              "data_type": "DATE",
+              "nullable": true,
+              "description": "Date of most recent sales order",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {}
+            },
+            {
+              "name": "total_orders_ltm",
+              "data_type": "INT",
+              "nullable": true,
+              "description": "Total orders in last twelve months",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {}
+            },
+            {
+              "name": "total_revenue_ltm",
+              "data_type": "DECIMAL(18,2)",
+              "nullable": true,
+              "description": "Total revenue in last twelve months (reporting currency)",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {
+                "sensitivity": "confidential"
+              }
+            },
+            {
+              "name": "source_system",
+              "data_type": "STRING",
+              "nullable": false,
+              "description": "CRM or ERP — indicates which system is the golden source for this record",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {}
+            },
+            {
+              "name": "etl_load_timestamp",
+              "data_type": "TIMESTAMP",
+              "nullable": false,
+              "description": "DLT pipeline load timestamp",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {
+                "technical": "true"
+              }
+            }
+          ],
+          "expected_confidence": {
+            "status": "extend",
+            "overall_confidence": 0.71,
+            "structural_score": 0.72,
+            "semantic_score": 0.91,
+            "matched_fields": [
+              "customer_id | exact",
+              "customer_name | exact",
+              "segment | exact",
+              "region | exact",
+              "country_code | exact",
+              "account_status | exact",
+              "total_revenue_ltm | partial | requirement_term: customer_lifetime_value"
+            ],
+            "missing_information": [
+              "Projected lifetime value model output (not the same as last-twelve-month revenue)",
+              "Churn risk probability score from predictive model",
+              "Credit risk assessment and exposure limits per customer",
+              "Revenue concentration metric as a percentage of total portfolio"
+            ],
+            "suggested_names": [
+              "customer_lifetime_value_usd",
+              "churn_risk_score",
+              "credit_exposure_usd",
+              "revenue_concentration_pct"
+            ],
+            "close_call": false
+          }
+        },
+        {
+          "full_name": "acn_aggregated.sales.sales_orders_conformed",
+          "catalog": "acn_aggregated",
+          "schema_name": "sales",
+          "table_name": "sales_orders_conformed",
+          "layer": "silver",
+          "format": "DELTA",
+          "description": "Conformed sales orders from SAP SD. One row per order line item. Cleaned, deduplicated, currency-normalised.",
+          "tags": {
+            "domain": "sales",
+            "layer": "silver",
+            "refresh": "daily",
+            "quality": "validated"
+          },
+          "owner": "commercial_data_engineering",
+          "refresh_cadence": "Daily (02:30 UTC)",
+          "last_updated": "2026-04-23T02:42:00Z",
+          "upstream_lineage": [
+            "acn_source.sap_sd.raw_sales_orders"
+          ],
+          "columns": [
+            {
+              "name": "order_id",
+              "data_type": "STRING",
+              "nullable": false,
+              "description": "Conformed order identifier",
+              "is_pk": true,
+              "fk_ref": null,
+              "tags": {}
+            },
+            {
+              "name": "order_line",
+              "data_type": "INT",
+              "nullable": false,
+              "description": "Line item sequence",
+              "is_pk": true,
+              "fk_ref": null,
+              "tags": {}
+            },
+            {
+              "name": "customer_id",
+              "data_type": "STRING",
+              "nullable": false,
+              "description": "Customer identifier (FK to customer_master_conformed)",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {}
+            },
+            {
+              "name": "product_id",
+              "data_type": "STRING",
+              "nullable": false,
+              "description": "Product identifier",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {}
+            },
+            {
+              "name": "product_line",
+              "data_type": "STRING",
+              "nullable": false,
+              "description": "Product line grouping",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {}
+            },
+            {
+              "name": "region_code",
+              "data_type": "STRING",
+              "nullable": false,
+              "description": "Sales region",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {}
+            },
+            {
+              "name": "order_amount_usd",
+              "data_type": "DECIMAL(18,2)",
+              "nullable": false,
+              "description": "Order value in USD",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {
+                "sensitivity": "confidential"
+              }
+            },
+            {
+              "name": "order_date",
+              "data_type": "DATE",
+              "nullable": false,
+              "description": "Order placement date",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {}
+            },
+            {
+              "name": "fiscal_quarter",
+              "data_type": "STRING",
+              "nullable": false,
+              "description": "Fiscal quarter YYYY-Q#",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {}
+            }
+          ],
+          "expected_confidence": {
+            "status": "extend",
+            "overall_confidence": 0.62,
+            "structural_score": 0.0,
+            "semantic_score": 0.0,
+            "matched_fields": [
+              "customer_id(exact), product_line(exact), region_code(exact), order_amount_usd(semantic→revenue), fiscal_quarter(exact)"
+            ],
+            "missing_information": [
+              "This is transaction-level data, not customer-level aggregated metrics"
+            ],
+            "suggested_names": [],
+            "close_call": false
+          }
+        }
+      ],
+      "bronze": [
+        {
+          "full_name": "acn_source.sap.raw_ap_invoices",
+          "catalog": "acn_source",
+          "schema_name": "sap",
+          "table_name": "raw_ap_invoices",
+          "layer": "bronze",
+          "format": "DELTA",
+          "description": "Raw accounts payable invoice feed from SAP ECC. Append-only landing table. No deduplication, no type coercion. Full fidelity extract from BKPF/BSEG tables.",
+          "tags": {
+            "domain": "finance",
+            "layer": "bronze",
+            "refresh": "daily",
+            "source_system": "SAP-ECC",
+            "sensitivity": "confidential"
+          },
+          "owner": "data_ingestion_team",
+          "refresh_cadence": "Daily (batch, T+1, 23:00 UTC)",
+          "last_updated": "2026-04-23T23:15:00Z",
+          "upstream_lineage": [
+            "External: SAP ECC → ADLS raw zone"
+          ],
+          "columns": [
+            {
+              "name": "BELNR",
+              "data_type": "STRING",
+              "nullable": false,
+              "description": "SAP document number (invoice header)",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {}
+            },
+            {
+              "name": "BUZEI",
+              "data_type": "STRING",
+              "nullable": false,
+              "description": "SAP line item number",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {}
+            },
+            {
+              "name": "BUKRS",
+              "data_type": "STRING",
+              "nullable": false,
+              "description": "Company code",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {}
+            },
+            {
+              "name": "LIFNR",
+              "data_type": "STRING",
+              "nullable": false,
+              "description": "Vendor account number (SAP vendor master key)",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {}
+            },
+            {
+              "name": "WRBTR",
+              "data_type": "DECIMAL(13,2)",
+              "nullable": false,
+              "description": "Amount in document currency",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {
+                "sensitivity": "confidential"
+              }
+            },
+            {
+              "name": "WAERS",
+              "data_type": "STRING",
+              "nullable": false,
+              "description": "Currency key (ISO)",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {}
+            },
+            {
+              "name": "BLDAT",
+              "data_type": "STRING",
+              "nullable": false,
+              "description": "Document date (raw string format YYYYMMDD)",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {}
+            },
+            {
+              "name": "BUDAT",
+              "data_type": "STRING",
+              "nullable": false,
+              "description": "Posting date (raw string format YYYYMMDD)",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {}
+            },
+            {
+              "name": "HKONT",
+              "data_type": "STRING",
+              "nullable": false,
+              "description": "GL account number",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {}
+            },
+            {
+              "name": "KOSTL",
+              "data_type": "STRING",
+              "nullable": true,
+              "description": "Cost centre — may be blank for certain posting types",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {}
+            },
+            {
+              "name": "EBELN",
+              "data_type": "STRING",
+              "nullable": true,
+              "description": "Purchase order number — populated if invoice references a PO",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {}
+            },
+            {
+              "name": "EBELP",
+              "data_type": "STRING",
+              "nullable": true,
+              "description": "PO line item number",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {}
+            },
+            {
+              "name": "XBLNR",
+              "data_type": "STRING",
+              "nullable": true,
+              "description": "Reference document number (external invoice number)",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {}
+            },
+            {
+              "name": "_ingestion_timestamp",
+              "data_type": "TIMESTAMP",
+              "nullable": false,
+              "description": "ADLS ingestion timestamp",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {
+                "technical": "true"
+              }
+            },
+            {
+              "name": "_source_file",
+              "data_type": "STRING",
+              "nullable": false,
+              "description": "Source file path in ADLS raw zone",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {
+                "technical": "true"
+              }
+            }
+          ],
+          "expected_confidence": {
+            "status": "reuse",
+            "overall_confidence": 0.88,
+            "structural_score": 0.0,
+            "semantic_score": 0.0,
+            "matched_fields": [
+              "BELNR(exact→invoice_id), LIFNR(semantic→vendor_id), WRBTR(semantic→invoice_amount)"
+            ],
+            "missing_information": [],
+            "suggested_names": [],
+            "close_call": true
+          }
+        },
+        {
+          "full_name": "acn_source.ariba.raw_purchase_orders",
+          "catalog": "acn_source",
+          "schema_name": "ariba",
+          "table_name": "raw_purchase_orders",
+          "layer": "bronze",
+          "format": "DELTA",
+          "description": "Raw purchase order feed from SAP Ariba. Append-only. Contains PO headers and line items as nested structure. Full procurement lifecycle from requisition through approval.",
+          "tags": {
+            "domain": "procurement",
+            "layer": "bronze",
+            "refresh": "daily",
+            "source_system": "SAP-Ariba",
+            "sensitivity": "internal"
+          },
+          "owner": "data_ingestion_team",
+          "refresh_cadence": "Daily (batch, T+1, 23:30 UTC)",
+          "last_updated": "2026-04-23T23:42:00Z",
+          "upstream_lineage": [
+            "External: Ariba Cloud → ADLS raw zone"
+          ],
+          "columns": [
+            {
+              "name": "PO_NUMBER",
+              "data_type": "STRING",
+              "nullable": false,
+              "description": "Ariba purchase order number",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {}
+            },
+            {
+              "name": "PO_LINE",
+              "data_type": "STRING",
+              "nullable": false,
+              "description": "PO line item sequence",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {}
+            },
+            {
+              "name": "SUPPLIER_ID",
+              "data_type": "STRING",
+              "nullable": false,
+              "description": "Ariba supplier identifier (maps to SAP LIFNR via xref)",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {}
+            },
+            {
+              "name": "PO_AMOUNT",
+              "data_type": "DECIMAL(18,2)",
+              "nullable": false,
+              "description": "PO line item amount",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {
+                "sensitivity": "internal"
+              }
+            },
+            {
+              "name": "PO_CURRENCY",
+              "data_type": "STRING",
+              "nullable": false,
+              "description": "Currency code",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {}
+            },
+            {
+              "name": "PO_DATE",
+              "data_type": "STRING",
+              "nullable": false,
+              "description": "PO creation date (ISO 8601 string)",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {}
+            },
+            {
+              "name": "APPROVAL_STATUS",
+              "data_type": "STRING",
+              "nullable": false,
+              "description": "Current approval status: DRAFT, SUBMITTED, APPROVED, REJECTED",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {}
+            },
+            {
+              "name": "APPROVED_BY",
+              "data_type": "STRING",
+              "nullable": true,
+              "description": "Approver user ID",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {
+                "pii": "true"
+              }
+            },
+            {
+              "name": "MATERIAL_GROUP",
+              "data_type": "STRING",
+              "nullable": true,
+              "description": "Material group classification",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {}
+            },
+            {
+              "name": "PLANT",
+              "data_type": "STRING",
+              "nullable": true,
+              "description": "Receiving plant code",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {}
+            },
+            {
+              "name": "_ingestion_timestamp",
+              "data_type": "TIMESTAMP",
+              "nullable": false,
+              "description": "ADLS ingestion timestamp",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {
+                "technical": "true"
+              }
+            }
+          ],
+          "expected_confidence": {
+            "status": "reuse",
+            "overall_confidence": 0.86,
+            "structural_score": 0.0,
+            "semantic_score": 0.0,
+            "matched_fields": [
+              "PO_NUMBER(exact→po_id), SUPPLIER_ID(semantic→vendor_id), APPROVAL_STATUS(exact)"
+            ],
+            "missing_information": [],
+            "suggested_names": [],
+            "close_call": true
+          }
+        },
+        {
+          "full_name": "acn_source.sap.raw_gl_postings",
+          "catalog": "acn_source",
+          "schema_name": "sap",
+          "table_name": "raw_gl_postings",
+          "layer": "bronze",
+          "format": "DELTA",
+          "description": "Raw general ledger journal entries from SAP FI module. Append-only extract from BKPF/BSEG GL view. Contains all posting types including AP, AR, asset, and manual entries.",
+          "tags": {
+            "domain": "finance",
+            "layer": "bronze",
+            "refresh": "daily",
+            "source_system": "SAP-ECC",
+            "sensitivity": "confidential"
+          },
+          "owner": "data_ingestion_team",
+          "refresh_cadence": "Daily (batch, T+1, 23:15 UTC)",
+          "last_updated": "2026-04-23T23:20:00Z",
+          "upstream_lineage": [
+            "External: SAP ECC → ADLS raw zone"
+          ],
+          "columns": [
+            {
+              "name": "BELNR",
+              "data_type": "STRING",
+              "nullable": false,
+              "description": "SAP document number",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {}
+            },
+            {
+              "name": "GJAHR",
+              "data_type": "STRING",
+              "nullable": false,
+              "description": "Fiscal year",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {}
+            },
+            {
+              "name": "BUZEI",
+              "data_type": "STRING",
+              "nullable": false,
+              "description": "Line item number",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {}
+            },
+            {
+              "name": "HKONT",
+              "data_type": "STRING",
+              "nullable": false,
+              "description": "GL account number",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {}
+            },
+            {
+              "name": "BUDAT",
+              "data_type": "STRING",
+              "nullable": false,
+              "description": "Posting date (YYYYMMDD)",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {}
+            },
+            {
+              "name": "WRBTR",
+              "data_type": "DECIMAL(13,2)",
+              "nullable": false,
+              "description": "Amount in document currency",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {
+                "sensitivity": "confidential"
+              }
+            },
+            {
+              "name": "SHKZG",
+              "data_type": "STRING",
+              "nullable": false,
+              "description": "Debit/credit indicator (S=debit, H=credit)",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {}
+            },
+            {
+              "name": "KOSTL",
+              "data_type": "STRING",
+              "nullable": true,
+              "description": "Cost centre — null for balance sheet accounts",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {}
+            },
+            {
+              "name": "PRCTR",
+              "data_type": "STRING",
+              "nullable": true,
+              "description": "Profit centre",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {}
+            },
+            {
+              "name": "BKTXT",
+              "data_type": "STRING",
+              "nullable": true,
+              "description": "Document header text (free text)",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {}
+            },
+            {
+              "name": "_ingestion_timestamp",
+              "data_type": "TIMESTAMP",
+              "nullable": false,
+              "description": "ADLS ingestion timestamp",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {
+                "technical": "true"
+              }
+            }
+          ],
+          "expected_confidence": {
+            "status": "reuse",
+            "overall_confidence": 0.81,
+            "structural_score": 0.0,
+            "semantic_score": 0.0,
+            "matched_fields": [
+              "HKONT(exact→gl_account), BUDAT(exact→posting_date), BELNR(exact→document_number)"
+            ],
+            "missing_information": [
+              "Cost centre to GL account mapping not available as a direct column"
+            ],
+            "suggested_names": [
+              "cost_centre_mapping"
+            ],
+            "close_call": false
+          }
+        },
+        {
+          "full_name": "acn_source.salesforce.raw_accounts",
+          "catalog": "acn_source",
+          "schema_name": "salesforce",
+          "table_name": "raw_accounts",
+          "layer": "bronze",
+          "format": "DELTA",
+          "description": "Raw Salesforce account records. Full CRM account extract including all standard and custom fields. Append-only.",
+          "tags": {
+            "domain": "sales",
+            "layer": "bronze",
+            "refresh": "daily",
+            "source_system": "Salesforce",
+            "sensitivity": "internal"
+          },
+          "owner": "data_ingestion_team",
+          "refresh_cadence": "Daily (batch, T+0, 21:00 UTC)",
+          "last_updated": "2026-04-23T21:08:00Z",
+          "upstream_lineage": [
+            "External: Salesforce → ADLS raw zone"
+          ],
+          "columns": [
+            {
+              "name": "ACCOUNT_ID",
+              "data_type": "STRING",
+              "nullable": false,
+              "description": "Salesforce account ID (18-char)",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {}
+            },
+            {
+              "name": "ACCOUNT_NAME",
+              "data_type": "STRING",
+              "nullable": false,
+              "description": "Account name",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {
+                "sensitivity": "internal"
+              }
+            },
+            {
+              "name": "ACCOUNT_TYPE",
+              "data_type": "STRING",
+              "nullable": false,
+              "description": "Customer, Partner, Prospect, Competitor",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {}
+            },
+            {
+              "name": "INDUSTRY",
+              "data_type": "STRING",
+              "nullable": true,
+              "description": "Salesforce industry picklist value",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {}
+            },
+            {
+              "name": "ANNUAL_REVENUE",
+              "data_type": "DECIMAL(18,2)",
+              "nullable": true,
+              "description": "Self-reported annual revenue",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {
+                "sensitivity": "confidential"
+              }
+            },
+            {
+              "name": "NUMBER_OF_EMPLOYEES",
+              "data_type": "INT",
+              "nullable": true,
+              "description": "Employee count",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {}
+            },
+            {
+              "name": "BILLING_COUNTRY",
+              "data_type": "STRING",
+              "nullable": true,
+              "description": "Billing address country",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {}
+            },
+            {
+              "name": "OWNER_ID",
+              "data_type": "STRING",
+              "nullable": false,
+              "description": "Account owner (Salesforce user ID)",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {
+                "pii": "true"
+              }
+            },
+            {
+              "name": "CREATED_DATE",
+              "data_type": "STRING",
+              "nullable": false,
+              "description": "Account creation date (ISO 8601)",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {}
+            },
+            {
+              "name": "LAST_ACTIVITY_DATE",
+              "data_type": "STRING",
+              "nullable": true,
+              "description": "Date of most recent activity on the account",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {}
+            },
+            {
+              "name": "RATING",
+              "data_type": "STRING",
+              "nullable": true,
+              "description": "Hot, Warm, Cold",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {}
+            },
+            {
+              "name": "_ingestion_timestamp",
+              "data_type": "TIMESTAMP",
+              "nullable": false,
+              "description": "ADLS ingestion timestamp",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {
+                "technical": "true"
+              }
+            }
+          ],
+          "expected_confidence": {
+            "status": "reuse",
+            "overall_confidence": 0.83,
+            "structural_score": 0.0,
+            "semantic_score": 0.0,
+            "matched_fields": [
+              "ACCOUNT_ID(exact→customer_id), ACCOUNT_NAME(exact→customer_name), INDUSTRY(exact), BILLING_COUNTRY(semantic→region), ANNUAL_REVENUE(semantic→revenue)"
+            ],
+            "missing_information": [],
+            "suggested_names": [],
+            "close_call": false
+          }
+        },
+        {
+          "full_name": "acn_source.sap_sd.raw_customers",
+          "catalog": "acn_source",
+          "schema_name": "sap_sd",
+          "table_name": "raw_customers",
+          "layer": "bronze",
+          "format": "DELTA",
+          "description": "Raw customer master from SAP SD module. Contains sold-to, ship-to, and bill-to partner functions. One row per customer-partner function combination.",
+          "tags": {
+            "domain": "sales",
+            "layer": "bronze",
+            "refresh": "daily",
+            "source_system": "SAP-SD",
+            "sensitivity": "internal"
+          },
+          "owner": "data_ingestion_team",
+          "refresh_cadence": "Daily (batch, T+1, 23:00 UTC)",
+          "last_updated": "2026-04-23T23:12:00Z",
+          "upstream_lineage": [
+            "External: SAP SD → ADLS raw zone"
+          ],
+          "columns": [
+            {
+              "name": "KUNNR",
+              "data_type": "STRING",
+              "nullable": false,
+              "description": "SAP customer number",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {}
+            },
+            {
+              "name": "NAME1",
+              "data_type": "STRING",
+              "nullable": false,
+              "description": "Customer name line 1",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {
+                "sensitivity": "internal"
+              }
+            },
+            {
+              "name": "LAND1",
+              "data_type": "STRING",
+              "nullable": false,
+              "description": "Country key",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {}
+            },
+            {
+              "name": "BRSCH",
+              "data_type": "STRING",
+              "nullable": true,
+              "description": "Industry key",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {}
+            },
+            {
+              "name": "KTOKD",
+              "data_type": "STRING",
+              "nullable": false,
+              "description": "Account group (defines partner function)",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {}
+            },
+            {
+              "name": "ERDAT",
+              "data_type": "STRING",
+              "nullable": false,
+              "description": "Creation date (YYYYMMDD)",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {}
+            },
+            {
+              "name": "VKORG",
+              "data_type": "STRING",
+              "nullable": false,
+              "description": "Sales organisation",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {}
+            },
+            {
+              "name": "VTWEG",
+              "data_type": "STRING",
+              "nullable": false,
+              "description": "Distribution channel",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {}
+            },
+            {
+              "name": "_ingestion_timestamp",
+              "data_type": "TIMESTAMP",
+              "nullable": false,
+              "description": "ADLS ingestion timestamp",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {
+                "technical": "true"
+              }
+            }
+          ],
+          "expected_confidence": {
+            "status": "reuse",
+            "overall_confidence": 0.8,
+            "structural_score": 0.0,
+            "semantic_score": 0.0,
+            "matched_fields": [
+              "KUNNR(semantic→customer_id), NAME1(semantic→customer_name), LAND1(semantic→country_code), VKORG(semantic→sales_org)"
+            ],
+            "missing_information": [],
+            "suggested_names": [],
+            "close_call": true
+          }
+        },
+        {
+          "full_name": "acn_source.dunnbradstreet.raw_credit_ratings",
+          "catalog": "acn_source",
+          "schema_name": "dunnbradstreet",
+          "table_name": "raw_credit_ratings",
+          "layer": "bronze",
+          "format": "DELTA",
+          "description": "Raw credit rating and risk assessment feed from Dun & Bradstreet. Contains DUNS numbers, credit scores, risk indicators, and financial stress scores.",
+          "tags": {
+            "domain": "risk",
+            "layer": "bronze",
+            "refresh": "weekly",
+            "source_system": "D&B",
+            "sensitivity": "confidential"
+          },
+          "owner": "data_ingestion_team",
+          "refresh_cadence": "Weekly (Saturday 08:00 UTC)",
+          "last_updated": "2026-04-19T08:22:00Z",
+          "upstream_lineage": [
+            "External: D&B API → ADLS raw zone"
+          ],
+          "columns": [
+            {
+              "name": "DUNS_NUMBER",
+              "data_type": "STRING",
+              "nullable": false,
+              "description": "D&B DUNS identifier",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {}
+            },
+            {
+              "name": "COMPANY_NAME",
+              "data_type": "STRING",
+              "nullable": false,
+              "description": "Company name as registered with D&B",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {
+                "sensitivity": "internal"
+              }
+            },
+            {
+              "name": "CREDIT_SCORE",
+              "data_type": "INT",
+              "nullable": true,
+              "description": "D&B composite credit score (1-100)",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {
+                "sensitivity": "confidential"
+              }
+            },
+            {
+              "name": "RISK_INDICATOR",
+              "data_type": "STRING",
+              "nullable": true,
+              "description": "LOW, MODERATE, HIGH, SEVERE",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {
+                "sensitivity": "confidential"
+              }
+            },
+            {
+              "name": "FINANCIAL_STRESS_SCORE",
+              "data_type": "DECIMAL(5,2)",
+              "nullable": true,
+              "description": "Probability of financial distress (0.00-1.00)",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {
+                "sensitivity": "confidential"
+              }
+            },
+            {
+              "name": "MAX_CREDIT_RECOMMENDATION",
+              "data_type": "DECIMAL(18,2)",
+              "nullable": true,
+              "description": "Recommended maximum credit exposure in USD",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {
+                "sensitivity": "confidential"
+              }
+            },
+            {
+              "name": "LAST_UPDATED",
+              "data_type": "STRING",
+              "nullable": false,
+              "description": "Date of last D&B assessment (ISO 8601)",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {}
+            },
+            {
+              "name": "_ingestion_timestamp",
+              "data_type": "TIMESTAMP",
+              "nullable": false,
+              "description": "ADLS ingestion timestamp",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {
+                "technical": "true"
+              }
+            }
+          ],
+          "expected_confidence": {
+            "status": "reuse",
+            "overall_confidence": 0.81,
+            "structural_score": 0.0,
+            "semantic_score": 0.0,
+            "matched_fields": [
+              "CREDIT_SCORE(semantic→credit_exposure), RISK_INDICATOR(exact), MAX_CREDIT_RECOMMENDATION(semantic→credit_exposure), FINANCIAL_STRESS_SCORE(exact)"
+            ],
+            "missing_information": [],
+            "suggested_names": [],
+            "close_call": true
+          }
+        }
+      ]
+    },
+    "foundry_iq_index": [
+      {
+        "query_term": "Vendor Invoice Reconciliation",
+        "candidate_table": "acn_consumption.procurement.fact_invoice_status",
+        "layer": "gold",
+        "embedding_similarity": 0.87,
+        "description_match_summary": "Table description references invoice processing and vendor dimensions; does not mention reconciliation or PO matching",
+        "alias_mappings": [
+          "amount ↔ invoice_amount (0.91)"
+        ],
+        "included": true
+      },
+      {
+        "query_term": "Vendor Invoice Reconciliation",
+        "candidate_table": "acn_aggregated.finance.ap_po_joined",
+        "layer": "silver",
+        "embedding_similarity": 0.92,
+        "description_match_summary": "Table description mentions AP and PO joined view, vendor details — strong alignment with reconciliation use case",
+        "alias_mappings": [
+          "po_id ↔ purchase_order_id (0.93)",
+          "amount ↔ invoice_amount (0.91)",
+          "cost_centre_id ↔ cost_centre (0.89)"
+        ],
+        "included": true
+      },
+      {
+        "query_term": "Vendor Invoice Reconciliation",
+        "candidate_table": "acn_source.sap.raw_ap_invoices",
+        "layer": "bronze",
+        "embedding_similarity": 0.88,
+        "description_match_summary": "Table description references accounts payable invoice feed from SAP — direct source system match",
+        "alias_mappings": [
+          "LIFNR ↔ vendor_id (0.86)",
+          "WRBTR ↔ invoice_amount (0.87)",
+          "EBELN ↔ purchase_order_id (0.88)"
+        ],
+        "included": true
+      },
+      {
+        "query_term": "Vendor Invoice Reconciliation",
+        "candidate_table": "acn_source.ariba.raw_purchase_orders",
+        "layer": "bronze",
+        "embedding_similarity": 0.91,
+        "description_match_summary": "Table description references purchase order feed from Ariba — matches PO source system requirement",
+        "alias_mappings": [
+          "SUPPLIER_ID ↔ vendor_id (0.86)",
+          "PO_NUMBER ↔ purchase_order_id (0.95)"
+        ],
+        "included": true
+      },
+      {
+        "query_term": "Vendor Invoice Reconciliation",
+        "candidate_table": "acn_source.sap.raw_gl_postings",
+        "layer": "bronze",
+        "embedding_similarity": 0.82,
+        "description_match_summary": "Table description references GL journal entries — related but not directly about invoice reconciliation",
+        "alias_mappings": [
+          "HKONT ↔ gl_code (0.90)",
+          "KOSTL ↔ cost_centre (0.87)"
+        ],
+        "included": false
+      },
+      {
+        "query_term": "invoice match rate",
+        "candidate_table": "acn_consumption.procurement.fact_invoice_status",
+        "layer": "gold",
+        "embedding_similarity": 0.79,
+        "description_match_summary": "Table tracks invoice status but does not compute match rates or reference PO matching",
+        "alias_mappings": [],
+        "included": false
+      },
+      {
+        "query_term": "dispute rate",
+        "candidate_table": "No candidates found",
+        "layer": null,
+        "embedding_similarity": 0.0,
+        "description_match_summary": "No table in the catalog references dispute tracking or exception management",
+        "alias_mappings": [],
+        "included": false
+      },
+      {
+        "query_term": "days to resolve",
+        "candidate_table": "No candidates found",
+        "layer": null,
+        "embedding_similarity": 0.0,
+        "description_match_summary": "No table references resolution time or dispute lifecycle",
+        "alias_mappings": [],
+        "included": false
+      },
+      {
+        "query_term": "reconciliation",
+        "candidate_table": "acn_aggregated.finance.ap_po_joined",
+        "layer": "silver",
+        "embedding_similarity": 0.89,
+        "description_match_summary": "AP-PO join is the foundational structure for reconciliation workflows",
+        "alias_mappings": [],
+        "included": true
+      },
+      {
+        "query_term": "B2B Corporate Customer 360",
+        "candidate_table": "acn_consumption.sales.dim_customer",
+        "layer": "gold",
+        "embedding_similarity": 0.86,
+        "description_match_summary": "Customer dimension exists but description explicitly states no credit risk, CLV, or churn data",
+        "alias_mappings": [
+          "customer_id(exact)",
+          "segment(exact)",
+          "region(exact)"
+        ],
+        "included": true
+      },
+      {
+        "query_term": "B2B Corporate Customer 360",
+        "candidate_table": "acn_consumption.sales.fact_sales_orders",
+        "layer": "gold",
+        "embedding_similarity": 0.78,
+        "description_match_summary": "Sales orders contain customer_id and revenue data but not a 360 view",
+        "alias_mappings": [
+          "customer_id(exact)",
+          "region_code↔region(0.87)"
+        ],
+        "included": false
+      },
+      {
+        "query_term": "B2B Corporate Customer 360",
+        "candidate_table": "acn_aggregated.sales.customer_master_conformed",
+        "layer": "silver",
+        "embedding_similarity": 0.91,
+        "description_match_summary": "Strong match — conformed customer master with demographics, segmentation, commercial profile. Missing credit risk and churn.",
+        "alias_mappings": [
+          "customer_id(exact)",
+          "segment(exact)",
+          "region(exact)",
+          "total_revenue_ltm↔customer_lifetime_value(0.72)"
+        ],
+        "included": true
+      },
+      {
+        "query_term": "customer lifetime value",
+        "candidate_table": "acn_aggregated.sales.customer_master_conformed",
+        "layer": "silver",
+        "embedding_similarity": 0.68,
+        "description_match_summary": "Has total_revenue_ltm which is related but not CLV — LTM revenue != projected lifetime value",
+        "alias_mappings": [
+          "total_revenue_ltm is related but not equivalent"
+        ],
+        "included": false
+      },
+      {
+        "query_term": "churn risk score",
+        "candidate_table": "No candidates found",
+        "layer": null,
+        "embedding_similarity": 0.0,
+        "description_match_summary": "No table in the catalog contains churn prediction scores or churn probability metrics",
+        "alias_mappings": [],
+        "included": false
+      },
+      {
+        "query_term": "credit exposure",
+        "candidate_table": "acn_source.dunnbradstreet.raw_credit_ratings",
+        "layer": "bronze",
+        "embedding_similarity": 0.87,
+        "description_match_summary": "D&B feed contains credit scores and risk indicators — raw form, not yet conformed",
+        "alias_mappings": [
+          "CREDIT_SCORE↔credit_exposure(0.78)",
+          "MAX_CREDIT_RECOMMENDATION↔credit_exposure(0.86)"
+        ],
+        "included": true
+      },
+      {
+        "query_term": "revenue concentration",
+        "candidate_table": "acn_aggregated.sales.sales_orders_conformed",
+        "layer": "silver",
+        "embedding_similarity": 0.86,
+        "description_match_summary": "Order-level revenue data that could be aggregated to compute concentration — but the metric itself doesn't exist",
+        "alias_mappings": [
+          "order_amount_usd is a building block, not the metric"
+        ],
+        "included": true
+      },
+      {
+        "query_term": "customer segmentation",
+        "candidate_table": "acn_aggregated.sales.customer_master_conformed",
+        "layer": "silver",
+        "embedding_similarity": 0.93,
+        "description_match_summary": "Has segment field with enterprise/mid_market/SMB classification",
+        "alias_mappings": [
+          "segment(exact)"
+        ],
+        "included": true
+      }
+    ],
+    "scoring_reference": {
+      "formula": "composite = (field_overlap x 0.30) + (source_compat x 0.15) + (granularity_align x 0.15) + (semantic_sim x 0.15) + (grain_compat x 0.15) + (freshness x 0.10)",
+      "weights": {
+        "field_overlap": 0.3,
+        "source_compatibility": 0.15,
+        "granularity_alignment": 0.15,
+        "semantic_similarity": 0.15,
+        "grain_compatibility": 0.15,
+        "freshness_sla": 0.1
+      },
+      "thresholds": {
+        "reuse_minimum": 0.8,
+        "extend_minimum": 0.5
+      },
+      "close_call_gap": 0.05
+    },
+    "test_scenarios": {
+      "s1": {
+        "scenario_id": "fin006-demo-001",
+        "name": "Vendor Invoice Reconciliation",
+        "domain": "Finance/Procurement",
+        "expected_output": [
+          {
+            "layer": "gold",
+            "name": "acn_consumption.procurement.fact_invoice_status",
+            "status": "extend",
+            "overall_confidence": 0.72,
+            "structural_score": 0.65,
+            "semantic_score": 0.87,
+            "matched_fields": [
+              "invoice_id | exact",
+              "vendor_id | exact",
+              "amount | semantic_alias | requirement_term: invoice_amount",
+              "cost_centre | semantic_alias | requirement_term: cost_centre_id"
+            ],
+            "missing_information": [
+              "Whether the invoice matched a purchase order",
+              "Current dispute or exception status",
+              "Time taken to resolve discrepancies"
+            ],
+            "suggested_names": [
+              "po_match_flag",
+              "dispute_status",
+              "resolution_days"
+            ],
+            "close_call": false
+          },
+          {
+            "layer": "silver",
+            "name": "acn_aggregated.finance.ap_po_joined",
+            "status": "reuse",
+            "overall_confidence": 0.85,
+            "structural_score": 0.88,
+            "semantic_score": 0.92,
+            "matched_fields": [
+              "invoice_id | exact",
+              "po_id | semantic_alias | requirement_term: purchase_order_id",
+              "vendor_id | exact",
+              "amount | semantic_alias | requirement_term: invoice_amount",
+              "gl_code | exact"
+            ],
+            "missing_information": [],
+            "suggested_names": [],
+            "close_call": false
+          },
+          {
+            "layer": "bronze",
+            "name": "acn_source.sap.raw_ap_invoices",
+            "status": "reuse",
+            "overall_confidence": 0.88,
+            "structural_score": 0.0,
+            "semantic_score": 0.0,
+            "matched_fields": [
+              "BELNR(exact→invoice_id), LIFNR(semantic→vendor_id), WRBTR(semantic→invoice_amount)"
+            ],
+            "missing_information": [],
+            "suggested_names": [],
+            "close_call": true
+          },
+          {
+            "layer": "bronze",
+            "name": "acn_source.ariba.raw_purchase_orders",
+            "status": "reuse",
+            "overall_confidence": 0.86,
+            "structural_score": 0.0,
+            "semantic_score": 0.0,
+            "matched_fields": [
+              "PO_NUMBER(exact→po_id), SUPPLIER_ID(semantic→vendor_id), APPROVAL_STATUS(exact)"
+            ],
+            "missing_information": [],
+            "suggested_names": [],
+            "close_call": true
+          },
+          {
+            "layer": "bronze",
+            "name": "acn_source.sap.raw_gl_postings",
+            "status": "reuse",
+            "overall_confidence": 0.81,
+            "structural_score": 0.0,
+            "semantic_score": 0.0,
+            "matched_fields": [
+              "HKONT(exact→gl_account), BUDAT(exact→posting_date), BELNR(exact→document_number)"
+            ],
+            "missing_information": [
+              "Cost centre to GL account mapping not available as a direct column"
+            ],
+            "suggested_names": [
+              "cost_centre_mapping"
+            ],
+            "close_call": false
+          }
+        ]
+      },
+      "s2": {
+        "scenario_id": "c360-demo-001",
+        "name": "B2B Corporate Customer 360",
+        "domain": "Commercial/Sales",
+        "expected_output": [
+          {
+            "layer": "gold",
+            "name": "acn_consumption.sales.dim_customer",
+            "status": "extend",
+            "overall_confidence": 0.58,
+            "structural_score": 0.45,
+            "semantic_score": 0.86,
+            "matched_fields": [
+              "customer_id | exact",
+              "segment | exact",
+              "region | exact",
+              "account_status | exact"
+            ],
+            "missing_information": [
+              "Projected lifetime value of each customer relationship",
+              "Likelihood of customer not renewing within 12 months",
+              "Total outstanding receivables and credit facilities per customer",
+              "Share of total portfolio revenue attributable to each customer",
+              "Product line breakdown of customer activity"
+            ],
+            "suggested_names": [
+              "customer_lifetime_value",
+              "churn_risk_score",
+              "credit_exposure_usd",
+              "revenue_concentration_pct",
+              "product_line"
+            ],
+            "close_call": false
+          },
+          {
+            "layer": "gold",
+            "name": "acn_consumption.sales.fact_sales_orders",
+            "status": "extend",
+            "overall_confidence": 0.52,
+            "structural_score": 0.0,
+            "semantic_score": 0.0,
+            "matched_fields": [
+              "customer_id(exact), product_id(exact), region_code(semantic→region), order_amount(semantic→revenue)"
+            ],
+            "missing_information": [
+              "Customer demographic and segmentation attributes",
+              "Credit risk and churn probability metrics"
+            ],
+            "suggested_names": [],
+            "close_call": true
+          },
+          {
+            "layer": "silver",
+            "name": "acn_aggregated.sales.customer_master_conformed",
+            "status": "extend",
+            "overall_confidence": 0.71,
+            "structural_score": 0.72,
+            "semantic_score": 0.91,
+            "matched_fields": [
+              "customer_id | exact",
+              "customer_name | exact",
+              "segment | exact",
+              "region | exact",
+              "country_code | exact",
+              "account_status | exact",
+              "total_revenue_ltm | partial | requirement_term: customer_lifetime_value"
+            ],
+            "missing_information": [
+              "Projected lifetime value model output (not the same as last-twelve-month revenue)",
+              "Churn risk probability score from predictive model",
+              "Credit risk assessment and exposure limits per customer",
+              "Revenue concentration metric as a percentage of total portfolio"
+            ],
+            "suggested_names": [
+              "customer_lifetime_value_usd",
+              "churn_risk_score",
+              "credit_exposure_usd",
+              "revenue_concentration_pct"
+            ],
+            "close_call": false
+          },
+          {
+            "layer": "silver",
+            "name": "acn_aggregated.sales.sales_orders_conformed",
+            "status": "extend",
+            "overall_confidence": 0.62,
+            "structural_score": 0.0,
+            "semantic_score": 0.0,
+            "matched_fields": [
+              "customer_id(exact), product_line(exact), region_code(exact), order_amount_usd(semantic→revenue), fiscal_quarter(exact)"
+            ],
+            "missing_information": [
+              "This is transaction-level data, not customer-level aggregated metrics"
+            ],
+            "suggested_names": [],
+            "close_call": false
+          },
+          {
+            "layer": "bronze",
+            "name": "acn_source.salesforce.raw_accounts",
+            "status": "reuse",
+            "overall_confidence": 0.83,
+            "structural_score": 0.0,
+            "semantic_score": 0.0,
+            "matched_fields": [
+              "ACCOUNT_ID(exact→customer_id), ACCOUNT_NAME(exact→customer_name), INDUSTRY(exact), BILLING_COUNTRY(semantic→region), ANNUAL_REVENUE(semantic→revenue)"
+            ],
+            "missing_information": [],
+            "suggested_names": [],
+            "close_call": false
+          },
+          {
+            "layer": "bronze",
+            "name": "acn_source.sap_sd.raw_customers",
+            "status": "reuse",
+            "overall_confidence": 0.8,
+            "structural_score": 0.0,
+            "semantic_score": 0.0,
+            "matched_fields": [
+              "KUNNR(semantic→customer_id), NAME1(semantic→customer_name), LAND1(semantic→country_code), VKORG(semantic→sales_org)"
+            ],
+            "missing_information": [],
+            "suggested_names": [],
+            "close_call": true
+          },
+          {
+            "layer": "bronze",
+            "name": "acn_source.dunnbradstreet.raw_credit_ratings",
+            "status": "reuse",
+            "overall_confidence": 0.81,
+            "structural_score": 0.0,
+            "semantic_score": 0.0,
+            "matched_fields": [
+              "CREDIT_SCORE(semantic→credit_exposure), RISK_INDICATOR(exact), MAX_CREDIT_RECOMMENDATION(semantic→credit_exposure), FINANCIAL_STRESS_SCORE(exact)"
+            ],
+            "missing_information": [],
+            "suggested_names": [],
+            "close_call": true
+          }
+        ]
+      }
+    }
+  }
+}

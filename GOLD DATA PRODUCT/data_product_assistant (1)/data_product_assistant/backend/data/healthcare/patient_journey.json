@@ -1,0 +1,105 @@
+{
+    "schema_version": "2.0",
+    "industry": "healthcare",
+    "domain": "patient_journey",
+    "display_name": "Patient Journey",
+    "description": "Canonical Silver Layer framework for healthcare patient journey data. Covers patients, providers, encounters, diagnoses, procedures, and clinical performance. Anchored to HL7 FHIR R4, ICD-10, and SNOMED CT standards.",
+    "standards": ["HL7_FHIR", "ICD_10", "SNOMED_CT"],
+    "detection_signals": ["patient", "encounter", "diagnosis", "procedure", "provider", "fhir", "icd", "admission", "readmission", "discharge", "clinical", "ehr", "emr", "snomed", "cpt", "npi"],
+    "hierarchy": [
+        "slv_provider",
+        "slv_patient",
+        "slv_encounter_event",
+        "slv_diagnosis_event",
+        "slv_procedure_event",
+        "slv_clinical_performance_daily"
+    ],
+    "entity_types": {
+        "dimensions": ["slv_provider", "slv_patient"],
+        "events": ["slv_encounter_event", "slv_diagnosis_event", "slv_procedure_event"],
+        "aggregates": ["slv_clinical_performance_daily"]
+    },
+    "entities": {
+        "slv_patient": {
+            "type": "dimension",
+            "grain": "one row per patient",
+            "columns": [
+                {"name": "patient_id",          "data_type": "STRING", "nullable": false, "is_pk": true,  "fk_ref": null,                          "description": "Unique patient identifier (de-identified)"},
+                {"name": "date_of_birth",       "data_type": "DATE",   "nullable": true,  "is_pk": false, "fk_ref": null,                          "description": "Patient date of birth"},
+                {"name": "gender",              "data_type": "STRING", "nullable": true,  "is_pk": false, "fk_ref": null,                          "description": "MALE, FEMALE, OTHER, UNKNOWN"},
+                {"name": "insurance_type",      "data_type": "STRING", "nullable": true,  "is_pk": false, "fk_ref": null,                          "description": "Insurance coverage type: PRIVATE, MEDICARE, MEDICAID, UNINSURED"},
+                {"name": "primary_provider_id", "data_type": "STRING", "nullable": true,  "is_pk": false, "fk_ref": "slv_provider.provider_id",    "description": "FK to primary care provider"}
+            ]
+        },
+        "slv_provider": {
+            "type": "dimension",
+            "grain": "one row per healthcare provider",
+            "columns": [
+                {"name": "provider_id",   "data_type": "STRING", "nullable": false, "is_pk": true,  "fk_ref": null, "description": "Unique provider identifier"},
+                {"name": "provider_type", "data_type": "STRING", "nullable": false, "is_pk": false, "fk_ref": null, "description": "GP, SPECIALIST, HOSPITAL, URGENT_CARE, VIRTUAL"},
+                {"name": "specialty",     "data_type": "STRING", "nullable": true,  "is_pk": false, "fk_ref": null, "description": "Medical specialty e.g. Cardiology, Oncology"},
+                {"name": "npi_number",    "data_type": "STRING", "nullable": true,  "is_pk": false, "fk_ref": null, "description": "National Provider Identifier (10-digit US NPI)"}
+            ]
+        },
+        "slv_encounter_event": {
+            "type": "event",
+            "grain": "one row per patient encounter",
+            "columns": [
+                {"name": "encounter_id",      "data_type": "STRING",    "nullable": false, "is_pk": true,  "fk_ref": null,                          "description": "Unique encounter identifier (FHIR Encounter.id)"},
+                {"name": "patient_id",        "data_type": "STRING",    "nullable": false, "is_pk": false, "fk_ref": "slv_patient.patient_id",      "description": "FK to patient"},
+                {"name": "provider_id",       "data_type": "STRING",    "nullable": false, "is_pk": false, "fk_ref": "slv_provider.provider_id",    "description": "FK to treating provider"},
+                {"name": "encounter_type",    "data_type": "STRING",    "nullable": false, "is_pk": false, "fk_ref": null,                          "description": "OUTPATIENT, INPATIENT, EMERGENCY, VIRTUAL, OBSERVATION"},
+                {"name": "admit_ts",          "data_type": "TIMESTAMP", "nullable": true,  "is_pk": false, "fk_ref": null,                          "description": "Admission timestamp"},
+                {"name": "discharge_ts",      "data_type": "TIMESTAMP", "nullable": true,  "is_pk": false, "fk_ref": null,                          "description": "Discharge timestamp"},
+                {"name": "icd10_primary_dx",  "data_type": "STRING",    "nullable": true,  "is_pk": false, "fk_ref": null,                          "description": "ICD-10 primary diagnosis code"}
+            ]
+        },
+        "slv_diagnosis_event": {
+            "type": "event",
+            "grain": "one row per diagnosis per encounter",
+            "columns": [
+                {"name": "diagnosis_id",    "data_type": "STRING", "nullable": false, "is_pk": true,  "fk_ref": null,                              "description": "Unique diagnosis record identifier"},
+                {"name": "encounter_id",    "data_type": "STRING", "nullable": false, "is_pk": false, "fk_ref": "slv_encounter_event.encounter_id","description": "FK to encounter"},
+                {"name": "icd10_code",      "data_type": "STRING", "nullable": false, "is_pk": false, "fk_ref": null,                              "description": "ICD-10-CM diagnosis code"},
+                {"name": "snomed_code",     "data_type": "STRING", "nullable": true,  "is_pk": false, "fk_ref": null,                              "description": "SNOMED CT concept code"},
+                {"name": "diagnosis_type",  "data_type": "STRING", "nullable": false, "is_pk": false, "fk_ref": null,                              "description": "PRIMARY, SECONDARY, ADMITTING, DISCHARGE"}
+            ]
+        },
+        "slv_procedure_event": {
+            "type": "event",
+            "grain": "one row per procedure performed",
+            "columns": [
+                {"name": "procedure_id",   "data_type": "STRING",    "nullable": false, "is_pk": true,  "fk_ref": null,                              "description": "Unique procedure record identifier"},
+                {"name": "encounter_id",   "data_type": "STRING",    "nullable": false, "is_pk": false, "fk_ref": "slv_encounter_event.encounter_id","description": "FK to encounter"},
+                {"name": "cpt_code",       "data_type": "STRING",    "nullable": true,  "is_pk": false, "fk_ref": null,                              "description": "CPT procedure code"},
+                {"name": "performed_ts",   "data_type": "TIMESTAMP", "nullable": true,  "is_pk": false, "fk_ref": null,                              "description": "Procedure performed timestamp"}
+            ]
+        },
+        "slv_clinical_performance_daily": {
+            "type": "aggregate",
+            "grain": "one row per provider per day",
+            "columns": [
+                {"name": "date",                   "data_type": "DATE",   "nullable": false, "is_pk": true,  "fk_ref": null,                          "description": "Reporting date (composite PK part 1)"},
+                {"name": "provider_id",            "data_type": "STRING", "nullable": false, "is_pk": true,  "fk_ref": "slv_provider.provider_id",    "description": "FK to provider (composite PK part 2)"},
+                {"name": "encounter_count",        "data_type": "LONG",   "nullable": false, "is_pk": false, "fk_ref": null,                          "description": "Total encounters for the day"},
+                {"name": "readmission_30d_count",  "data_type": "LONG",   "nullable": false, "is_pk": false, "fk_ref": null,                          "description": "Encounters that were 30-day readmissions"},
+                {"name": "avg_los_days",           "data_type": "DOUBLE", "nullable": true,  "is_pk": false, "fk_ref": null,                          "description": "Average length of stay in days (inpatient only)"}
+            ]
+        }
+    },
+    "derived_metrics": [
+        {"name": "Readmission_Rate", "formula": "readmission_30d_count / encounter_count",      "grain": "provider+period", "description": "30-day hospital readmission rate"},
+        {"name": "Bed_Occupancy",    "formula": "SUM(los_days) / (bed_count * reporting_days)", "grain": "facility+period", "description": "Inpatient bed occupancy rate"},
+        {"name": "ALOS",             "formula": "SUM(los_days) / COUNT(inpatient_encounters)",   "grain": "provider+period", "description": "Average length of stay"}
+    ],
+    "source_platform_mappings": {
+        "ehr_system": {
+            "description": "Electronic Health Record (Epic, Cerner, Meditech)",
+            "maps_to": ["slv_patient", "slv_provider", "slv_encounter_event", "slv_diagnosis_event", "slv_procedure_event"]
+        },
+        "claims_system": {
+            "description": "Insurance claims processing system",
+            "maps_to": ["slv_encounter_event", "slv_diagnosis_event", "slv_procedure_event"]
+        }
+    }
+}

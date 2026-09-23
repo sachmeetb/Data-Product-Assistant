@@ -1,0 +1,253 @@
+{
+  "data_catalog": {
+    "version": "1.0",
+    "source": "bronze_user_visit_events.xlsx",
+    "description": "Production-grade mock data catalog for Data Discovery Agent — Bronze-only test scenario for the Supply Chain domain. Contains a single raw outbound shipment events table for validating Discovery Agent behavior against unconformed source data.",
+    "layers": {
+      "gold": [],
+      "silver": [],
+      "bronze": [
+        {
+          "full_name": "acn_source.supply_chain.raw_shipment_events",
+          "catalog": "acn_source",
+          "schema_name": "supply_chain",
+          "table_name": "raw_shipment_events",
+          "layer": "bronze",
+          "format": "DELTA",
+          "description": "Raw outbound shipment and delivery event feed from the carrier/WMS integration layer. Append-only landing table. No deduplication, no type coercion, no case normalisation. Contains shipment-level grain with carrier, service level, origin/destination, timing, and package attributes. Known quality issues: inconsistent casing on carrier_name, service_level, shipment_status, destination_city; boolean flags stored as strings; numeric measures (weight, package_count) stored as strings; timestamps stored as strings without timezone; actual_delivery_ts may be blank for in-transit shipments.",
+          "tags": {
+            "domain": "supply_chain",
+            "layer": "bronze",
+            "refresh": "daily",
+            "source_system": "carrier-wms-integration",
+            "sensitivity": "internal"
+          },
+          "owner": "data_ingestion_team",
+          "refresh_cadence": "Daily (batch, T+0, files land hourly)",
+          "last_updated": "2025-01-02T15:00:00Z",
+          "upstream_lineage": [
+            "External: Carrier APIs + WMS Event Stream → ADLS raw zone"
+          ],
+          "columns": [
+            {
+              "name": "shipment_id",
+              "data_type": "STRING",
+              "nullable": false,
+              "description": "Raw shipment identifier — unique per outbound shipment",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {}
+            },
+            {
+              "name": "order_id",
+              "data_type": "STRING",
+              "nullable": false,
+              "description": "Raw order identifier — references the originating sales order",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {}
+            },
+            {
+              "name": "customer_id",
+              "data_type": "STRING",
+              "nullable": false,
+              "description": "Raw customer identifier — not deduplicated across regions",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {}
+            },
+            {
+              "name": "carrier_name",
+              "data_type": "STRING",
+              "nullable": false,
+              "description": "Raw carrier name — inconsistent casing (e.g. FedEx, fedex, FEDEX, UPS, ups, DHL, Bluedart)",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {}
+            },
+            {
+              "name": "service_level",
+              "data_type": "STRING",
+              "nullable": false,
+              "description": "Raw service level — inconsistent casing (Standard, standard, STANDARD, Express, express, Overnight)",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {}
+            },
+            {
+              "name": "shipment_status",
+              "data_type": "STRING",
+              "nullable": false,
+              "description": "Raw shipment status — inconsistent casing (Delivered, delivered, DELIVERED, in_transit, IN_TRANSIT, out_for_delivery, exception, returned)",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {}
+            },
+            {
+              "name": "origin_warehouse",
+              "data_type": "STRING",
+              "nullable": false,
+              "description": "Raw origin warehouse code (e.g. W001, W002) — codes only, no canonical name resolution",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {}
+            },
+            {
+              "name": "destination_city",
+              "data_type": "STRING",
+              "nullable": false,
+              "description": "Raw destination city name — inconsistent casing (e.g. Mumbai, mumbai, MUMBAI, Bengaluru, bengaluru)",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {}
+            },
+            {
+              "name": "destination_pincode",
+              "data_type": "STRING",
+              "nullable": false,
+              "description": "Raw destination 6-digit Indian pincode — stored as string, leading zeros preserved",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {}
+            },
+            {
+              "name": "ship_ts",
+              "data_type": "STRING",
+              "nullable": false,
+              "description": "Raw shipment dispatch timestamp from source system (format: YYYY-MM-DD HH:MM:SS, no timezone)",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {}
+            },
+            {
+              "name": "promised_delivery_ts",
+              "data_type": "STRING",
+              "nullable": false,
+              "description": "Raw promised delivery timestamp committed to the customer (format: YYYY-MM-DD HH:MM:SS, no timezone)",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {}
+            },
+            {
+              "name": "actual_delivery_ts",
+              "data_type": "STRING",
+              "nullable": true,
+              "description": "Raw actual delivery timestamp — blank/empty string for shipments not yet delivered (format: YYYY-MM-DD HH:MM:SS, no timezone)",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {}
+            },
+            {
+              "name": "weight_kg",
+              "data_type": "STRING",
+              "nullable": false,
+              "description": "Raw shipment weight in kilograms — stored as string with decimals, not numeric",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {}
+            },
+            {
+              "name": "package_count",
+              "data_type": "STRING",
+              "nullable": false,
+              "description": "Raw number of packages in the shipment — stored as string, not integer",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {}
+            },
+            {
+              "name": "is_priority",
+              "data_type": "STRING",
+              "nullable": false,
+              "description": "Raw priority shipment flag — stored as string (true/false), not boolean",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {}
+            },
+            {
+              "name": "source_file",
+              "data_type": "STRING",
+              "nullable": false,
+              "description": "Source CSV file name from ingestion batch",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {
+                "technical": "true"
+              }
+            },
+            {
+              "name": "ingestion_ts",
+              "data_type": "STRING",
+              "nullable": false,
+              "description": "Ingestion timestamp — stored as string, not typed timestamp",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {
+                "technical": "true"
+              }
+            }
+          ],
+          "sample_data": [
+            {
+              "shipment_id": "S001",
+              "order_id": "O1001",
+              "customer_id": "C001",
+              "carrier_name": "FedEx",
+              "service_level": "Express",
+              "shipment_status": "Delivered",
+              "origin_warehouse": "W001",
+              "destination_city": "Mumbai",
+              "destination_pincode": "400001",
+              "ship_ts": "2025-01-01 08:15:00",
+              "promised_delivery_ts": "2025-01-02 18:00:00",
+              "actual_delivery_ts": "2025-01-02 14:32:11",
+              "weight_kg": "2.40",
+              "package_count": "1",
+              "is_priority": "true",
+              "source_file": "shipments_20250101.csv",
+              "ingestion_ts": "2025-01-01 10:00:00"
+            },
+            {
+              "shipment_id": "S004",
+              "order_id": "O1004",
+              "customer_id": "C004",
+              "carrier_name": "FEDEX",
+              "service_level": "standard",
+              "shipment_status": "DELIVERED",
+              "origin_warehouse": "W002",
+              "destination_city": "bengaluru",
+              "destination_pincode": "560001",
+              "ship_ts": "2025-01-01 11:45:22",
+              "promised_delivery_ts": "2025-01-04 18:00:00",
+              "actual_delivery_ts": "2025-01-04 17:05:48",
+              "weight_kg": "5.10",
+              "package_count": "2",
+              "is_priority": "false",
+              "source_file": "shipments_20250101.csv",
+              "ingestion_ts": "2025-01-01 11:00:00"
+            },
+            {
+              "shipment_id": "S009",
+              "order_id": "O1009",
+              "customer_id": "C002",
+              "carrier_name": "ups",
+              "service_level": "EXPRESS",
+              "shipment_status": "in_transit",
+              "origin_warehouse": "W001",
+              "destination_city": "DELHI",
+              "destination_pincode": "110001",
+              "ship_ts": "2025-01-02 09:20:10",
+              "promised_delivery_ts": "2025-01-03 18:00:00",
+              "actual_delivery_ts": "",
+              "weight_kg": "12.75",
+              "package_count": "3",
+              "is_priority": "true",
+              "source_file": "shipments_20250102.csv",
+              "ingestion_ts": "2025-01-02 15:00:00"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

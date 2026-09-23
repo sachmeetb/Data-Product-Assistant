@@ -1,0 +1,1082 @@
+{
+    "data_catalog": {
+        "version": "1.0",
+        "source": "campaign_daily_impressions_clicks_mock_data.xlsx",
+        "description": "Production-grade mock data catalog for Data Discovery Agent POC. Contains one test scenario: Daily Campaign Impressions and Clicks. Conformed data exists in the silver layer, the raw unconformed event feed exists in the bronze layer, and no gold consumption table currently exists for this use case.",
+        "layers": {
+            "gold": [],
+            "silver": [
+                {
+                    "full_name": "acn_aggregated.marketing.campaign_impressions_conformed",
+                    "catalog": "acn_aggregated",
+                    "schema_name": "marketing",
+                    "table_name": "campaign_impressions_conformed",
+                    "layer": "silver",
+                    "format": "DELTA",
+                    "description": "Conformed campaign impression event table. One row per campaign impression event. Daily campaign impressions can be calculated by counting impression_id by campaign_id, campaign_name, and event date derived from timestamp.",
+                    "tags": {
+                        "domain": "marketing",
+                        "layer": "silver",
+                        "refresh": "daily",
+                        "quality": "validated",
+                        "sensitivity": "internal"
+                    },
+                    "owner": "marketing_data_engineering",
+                    "refresh_cadence": "Daily (03:00 UTC)",
+                    "last_updated": "2026-05-12T03:15:00Z",
+                    "upstream_lineage": [
+                        "External: Campaign platform impression feed"
+                    ],
+                    "columns": [
+                        {
+                            "name": "campaign_id",
+                            "data_type": "STRING",
+                            "nullable": false,
+                            "description": "Unique campaign identifier",
+                            "is_pk": false,
+                            "fk_ref": null,
+                            "tags": {}
+                        },
+                        {
+                            "name": "campaign_name",
+                            "data_type": "STRING",
+                            "nullable": false,
+                            "description": "Business-readable campaign name",
+                            "is_pk": false,
+                            "fk_ref": null,
+                            "tags": {}
+                        },
+                        {
+                            "name": "timestamp",
+                            "data_type": "TIMESTAMP",
+                            "nullable": false,
+                            "description": "Timestamp when the campaign impression event occurred",
+                            "is_pk": false,
+                            "fk_ref": null,
+                            "tags": {}
+                        },
+                        {
+                            "name": "impression_id",
+                            "data_type": "STRING",
+                            "nullable": false,
+                            "description": "Unique campaign impression event identifier. Count of impression_id gives impressions for a campaign at a date grain.",
+                            "is_pk": true,
+                            "fk_ref": null,
+                            "tags": {}
+                        }
+                    ],
+                    "expected_confidence": {
+                        "status": "reuse",
+                        "overall_confidence": 0.88,
+                        "structural_score": 0.9,
+                        "semantic_score": 0.91,
+                        "matched_fields": [
+                            "campaign_id | exact",
+                            "campaign_name | exact",
+                            "timestamp | date_grain | requirement_term: daily",
+                            "impression_id | count_source | requirement_term: impressions"
+                        ],
+                        "missing_information": [],
+                        "suggested_names": [],
+                        "close_call": false
+                    }
+                },
+                {
+                    "full_name": "acn_aggregated.marketing.campaign_clicks_conformed",
+                    "catalog": "acn_aggregated",
+                    "schema_name": "marketing",
+                    "table_name": "campaign_clicks_conformed",
+                    "layer": "silver",
+                    "format": "DELTA",
+                    "description": "Conformed campaign click event table. One row per campaign click event. Daily campaign clicks can be calculated by counting click_id by campaign_id, campaign_name, and event date derived from timestamp.",
+                    "tags": {
+                        "domain": "marketing",
+                        "layer": "silver",
+                        "refresh": "daily",
+                        "quality": "validated",
+                        "sensitivity": "internal"
+                    },
+                    "owner": "marketing_data_engineering",
+                    "refresh_cadence": "Daily (03:15 UTC)",
+                    "last_updated": "2026-05-12T03:30:00Z",
+                    "upstream_lineage": [
+                        "External: Campaign platform click feed"
+                    ],
+                    "columns": [
+                        {
+                            "name": "campaign_id",
+                            "data_type": "STRING",
+                            "nullable": false,
+                            "description": "Unique campaign identifier",
+                            "is_pk": false,
+                            "fk_ref": null,
+                            "tags": {}
+                        },
+                        {
+                            "name": "campaign_name",
+                            "data_type": "STRING",
+                            "nullable": false,
+                            "description": "Business-readable campaign name",
+                            "is_pk": false,
+                            "fk_ref": null,
+                            "tags": {}
+                        },
+                        {
+                            "name": "timestamp",
+                            "data_type": "TIMESTAMP",
+                            "nullable": false,
+                            "description": "Timestamp when the campaign click event occurred",
+                            "is_pk": false,
+                            "fk_ref": null,
+                            "tags": {}
+                        },
+                        {
+                            "name": "click_id",
+                            "data_type": "STRING",
+                            "nullable": false,
+                            "description": "Unique campaign click event identifier. Count of click_id gives clicks for a campaign at a date grain.",
+                            "is_pk": true,
+                            "fk_ref": null,
+                            "tags": {}
+                        }
+                    ],
+                    "expected_confidence": {
+                        "status": "reuse",
+                        "overall_confidence": 0.87,
+                        "structural_score": 0.9,
+                        "semantic_score": 0.9,
+                        "matched_fields": [
+                            "campaign_id | exact",
+                            "campaign_name | exact",
+                            "timestamp | date_grain | requirement_term: daily",
+                            "click_id | count_source | requirement_term: clicks"
+                        ],
+                        "missing_information": [],
+                        "suggested_names": [],
+                        "close_call": false
+                    }
+                },
+                {
+                    "full_name": "acn_aggregated.marketing.slv_campaign",
+                    "catalog": "acn_aggregated",
+                    "schema_name": "marketing",
+                    "table_name": "slv_campaign",
+                    "layer": "silver",
+                    "format": "DELTA",
+                    "description": "Canonical campaign dimension. One row per campaign. Conformed from Google Ads, Meta Ads, DV360, and email platform exports. Anchors the campaign spine: slv_campaign → slv_ad_group → slv_ad/slv_creative → slv_impression_event → slv_click_event → slv_conversion_event.",
+                    "tags": {
+                        "domain": "campaign",
+                        "layer": "silver",
+                        "refresh": "daily",
+                        "quality": "validated",
+                        "sensitivity": "internal",
+                        "source_system": "google_ads|meta_ads|dv360|email"
+                    },
+                    "owner": "marketing_data_engineering",
+                    "refresh_cadence": "Daily (02:00 UTC)",
+                    "last_updated": "2026-06-22T02:00:00Z",
+                    "upstream_lineage": [
+                        "External: Google Ads API",
+                        "External: Meta Ads API",
+                        "External: DV360 API",
+                        "External: Email platform export"
+                    ],
+                    "columns": [
+                        {"name": "campaign_id",   "data_type": "STRING", "nullable": false, "description": "Unique campaign identifier — PK", "is_pk": true,  "fk_ref": null, "tags": {}},
+                        {"name": "campaign_name", "data_type": "STRING", "nullable": false, "description": "Human-readable campaign name",     "is_pk": false, "fk_ref": null, "tags": {}},
+                        {"name": "objective",     "data_type": "STRING", "nullable": true,  "description": "Campaign objective: Awareness, Acquisition, or Retention", "is_pk": false, "fk_ref": null, "tags": {}},
+                        {"name": "start_date",    "data_type": "DATE",   "nullable": true,  "description": "Campaign start date",              "is_pk": false, "fk_ref": null, "tags": {}},
+                        {"name": "end_date",      "data_type": "DATE",   "nullable": true,  "description": "Campaign end date",                "is_pk": false, "fk_ref": null, "tags": {}},
+                        {"name": "budget_amount", "data_type": "DOUBLE", "nullable": true,  "description": "Planned budget in reporting currency", "is_pk": false, "fk_ref": null, "tags": {}},
+                        {"name": "business_unit", "data_type": "STRING", "nullable": true,  "description": "Owning business unit e.g. Retail, EV, Lubricants", "is_pk": false, "fk_ref": null, "tags": {}}
+                    ],
+                    "expected_confidence": {
+                        "status": "reuse",
+                        "overall_confidence": 0.90,
+                        "structural_score": 0.92,
+                        "semantic_score": 0.91,
+                        "matched_fields": [
+                            "campaign_id | exact",
+                            "campaign_name | exact",
+                            "objective | semantic | requirement_term: campaign objective",
+                            "budget_amount | semantic | requirement_term: campaign budget"
+                        ],
+                        "missing_information": [],
+                        "suggested_names": [],
+                        "close_call": false
+                    }
+                },
+                {
+                    "full_name": "acn_aggregated.marketing.slv_ad_group",
+                    "catalog": "acn_aggregated",
+                    "schema_name": "marketing",
+                    "table_name": "slv_ad_group",
+                    "layer": "silver",
+                    "format": "DELTA",
+                    "description": "Ad group / line item dimension. One row per ad group under a campaign. Conformed from Google Ads ad groups, Meta Ads ad sets, and DV360 line items.",
+                    "tags": {
+                        "domain": "campaign",
+                        "layer": "silver",
+                        "refresh": "daily",
+                        "quality": "validated",
+                        "sensitivity": "internal",
+                        "source_system": "google_ads|meta_ads|dv360"
+                    },
+                    "owner": "marketing_data_engineering",
+                    "refresh_cadence": "Daily (02:00 UTC)",
+                    "last_updated": "2026-06-22T02:00:00Z",
+                    "upstream_lineage": ["External: Google Ads API", "External: Meta Ads API", "External: DV360 API"],
+                    "columns": [
+                        {"name": "ad_group_id",   "data_type": "STRING", "nullable": false, "description": "Unique ad group identifier — PK", "is_pk": true,  "fk_ref": null,                      "tags": {}},
+                        {"name": "ad_group_name", "data_type": "STRING", "nullable": false, "description": "Human-readable ad group name",    "is_pk": false, "fk_ref": null,                      "tags": {}},
+                        {"name": "campaign_id",   "data_type": "STRING", "nullable": false, "description": "FK to slv_campaign",              "is_pk": false, "fk_ref": "slv_campaign.campaign_id","tags": {}}
+                    ],
+                    "expected_confidence": {
+                        "status": "reuse",
+                        "overall_confidence": 0.85,
+                        "structural_score": 0.87,
+                        "semantic_score": 0.86,
+                        "matched_fields": ["ad_group_id | exact", "campaign_id | exact"],
+                        "missing_information": [],
+                        "suggested_names": [],
+                        "close_call": false
+                    }
+                },
+                {
+                    "full_name": "acn_aggregated.marketing.slv_ad",
+                    "catalog": "acn_aggregated",
+                    "schema_name": "marketing",
+                    "table_name": "slv_ad",
+                    "layer": "silver",
+                    "format": "DELTA",
+                    "description": "Individual ad dimension. One row per ad served within an ad group. Conformed from Google Ads ads, Meta Ads ads, and DV360 ads.",
+                    "tags": {
+                        "domain": "campaign",
+                        "layer": "silver",
+                        "refresh": "daily",
+                        "quality": "validated",
+                        "sensitivity": "internal",
+                        "source_system": "google_ads|meta_ads|dv360"
+                    },
+                    "owner": "marketing_data_engineering",
+                    "refresh_cadence": "Daily (02:00 UTC)",
+                    "last_updated": "2026-06-22T02:00:00Z",
+                    "upstream_lineage": ["External: Google Ads API", "External: Meta Ads API", "External: DV360 API"],
+                    "columns": [
+                        {"name": "ad_id",       "data_type": "STRING", "nullable": false, "description": "Unique ad identifier — PK",           "is_pk": true,  "fk_ref": null,                          "tags": {}},
+                        {"name": "ad_name",     "data_type": "STRING", "nullable": false, "description": "Human-readable ad name",              "is_pk": false, "fk_ref": null,                          "tags": {}},
+                        {"name": "ad_group_id", "data_type": "STRING", "nullable": false, "description": "FK to slv_ad_group",                  "is_pk": false, "fk_ref": "slv_ad_group.ad_group_id",   "tags": {}},
+                        {"name": "campaign_id", "data_type": "STRING", "nullable": false, "description": "FK to slv_campaign (denormalised)",   "is_pk": false, "fk_ref": "slv_campaign.campaign_id",   "tags": {}}
+                    ],
+                    "expected_confidence": {
+                        "status": "reuse",
+                        "overall_confidence": 0.85,
+                        "structural_score": 0.87,
+                        "semantic_score": 0.85,
+                        "matched_fields": ["ad_id | exact", "campaign_id | exact"],
+                        "missing_information": [],
+                        "suggested_names": [],
+                        "close_call": false
+                    }
+                },
+                {
+                    "full_name": "acn_aggregated.marketing.slv_creative",
+                    "catalog": "acn_aggregated",
+                    "schema_name": "marketing",
+                    "table_name": "slv_creative",
+                    "layer": "silver",
+                    "format": "DELTA",
+                    "description": "Creative asset dimension. One row per creative. Conformed from DV360 creative_id, Google Ads creative, and Meta Ads creative. Referenced by slv_impression_event to identify which asset was rendered.",
+                    "tags": {
+                        "domain": "campaign",
+                        "layer": "silver",
+                        "refresh": "daily",
+                        "quality": "validated",
+                        "sensitivity": "internal",
+                        "source_system": "google_ads|meta_ads|dv360"
+                    },
+                    "owner": "marketing_data_engineering",
+                    "refresh_cadence": "Daily (02:00 UTC)",
+                    "last_updated": "2026-06-22T02:00:00Z",
+                    "upstream_lineage": ["External: Google Ads API", "External: Meta Ads API", "External: DV360 API"],
+                    "columns": [
+                        {"name": "creative_id",   "data_type": "STRING", "nullable": false, "description": "Unique creative asset identifier — PK", "is_pk": true,  "fk_ref": null,           "tags": {}},
+                        {"name": "creative_name", "data_type": "STRING", "nullable": false, "description": "Human-readable creative name",          "is_pk": false, "fk_ref": null,           "tags": {}},
+                        {"name": "creative_type", "data_type": "STRING", "nullable": true,  "description": "Creative format: Image, Video, HTML5, Text", "is_pk": false, "fk_ref": null,     "tags": {}},
+                        {"name": "ad_id",         "data_type": "STRING", "nullable": false, "description": "FK to slv_ad",                          "is_pk": false, "fk_ref": "slv_ad.ad_id","tags": {}}
+                    ],
+                    "expected_confidence": {
+                        "status": "reuse",
+                        "overall_confidence": 0.86,
+                        "structural_score": 0.88,
+                        "semantic_score": 0.86,
+                        "matched_fields": ["creative_id | exact", "creative_type | semantic | requirement_term: creative format"],
+                        "missing_information": [],
+                        "suggested_names": [],
+                        "close_call": false
+                    }
+                },
+                {
+                    "full_name": "acn_aggregated.marketing.slv_channel",
+                    "catalog": "acn_aggregated",
+                    "schema_name": "marketing",
+                    "table_name": "slv_channel",
+                    "layer": "silver",
+                    "format": "DELTA",
+                    "description": "Delivery channel dimension. One row per normalised channel. channel_name is upper-cased and conformed to the canonical enum {GOOGLE, META, DV360, EMAIL, PROGRAMMATIC}.",
+                    "tags": {
+                        "domain": "campaign",
+                        "layer": "silver",
+                        "refresh": "static",
+                        "quality": "validated",
+                        "sensitivity": "internal",
+                        "source_system": "conformed"
+                    },
+                    "owner": "marketing_data_engineering",
+                    "refresh_cadence": "On change",
+                    "last_updated": "2026-06-22T02:00:00Z",
+                    "upstream_lineage": ["Conformed: channel enum seed table"],
+                    "columns": [
+                        {"name": "channel_id",   "data_type": "STRING", "nullable": false, "description": "Unique channel identifier — PK",                                  "is_pk": true,  "fk_ref": null, "tags": {}},
+                        {"name": "channel_name", "data_type": "STRING", "nullable": false, "description": "Normalised channel: GOOGLE, META, DV360, EMAIL, PROGRAMMATIC",    "is_pk": false, "fk_ref": null, "tags": {}},
+                        {"name": "channel_type", "data_type": "STRING", "nullable": true,  "description": "Category: Paid Search, Paid Social, Programmatic, Email",         "is_pk": false, "fk_ref": null, "tags": {}}
+                    ],
+                    "expected_confidence": {
+                        "status": "reuse",
+                        "overall_confidence": 0.88,
+                        "structural_score": 0.90,
+                        "semantic_score": 0.88,
+                        "matched_fields": ["channel_name | semantic | requirement_term: channel", "channel_type | semantic | requirement_term: media type"],
+                        "missing_information": [],
+                        "suggested_names": [],
+                        "close_call": false
+                    }
+                },
+                {
+                    "full_name": "acn_aggregated.marketing.slv_placement",
+                    "catalog": "acn_aggregated",
+                    "schema_name": "marketing",
+                    "table_name": "slv_placement",
+                    "layer": "silver",
+                    "format": "DELTA",
+                    "description": "Placement dimension. One row per placement (specific site/app position where the ad appeared). FK to slv_channel.",
+                    "tags": {
+                        "domain": "campaign",
+                        "layer": "silver",
+                        "refresh": "daily",
+                        "quality": "validated",
+                        "sensitivity": "internal",
+                        "source_system": "google_ads|meta_ads|dv360"
+                    },
+                    "owner": "marketing_data_engineering",
+                    "refresh_cadence": "Daily (02:00 UTC)",
+                    "last_updated": "2026-06-22T02:00:00Z",
+                    "upstream_lineage": ["External: Google Ads API", "External: Meta Ads API", "External: DV360 API"],
+                    "columns": [
+                        {"name": "placement_id",   "data_type": "STRING", "nullable": false, "description": "Unique placement identifier — PK", "is_pk": true,  "fk_ref": null,                     "tags": {}},
+                        {"name": "placement_name", "data_type": "STRING", "nullable": false, "description": "Human-readable placement name",    "is_pk": false, "fk_ref": null,                     "tags": {}},
+                        {"name": "channel_id",     "data_type": "STRING", "nullable": false, "description": "FK to slv_channel",               "is_pk": false, "fk_ref": "slv_channel.channel_id", "tags": {}},
+                        {"name": "site_domain",    "data_type": "STRING", "nullable": true,  "description": "Domain where the ad appeared",    "is_pk": false, "fk_ref": null,                     "tags": {}}
+                    ],
+                    "expected_confidence": {
+                        "status": "reuse",
+                        "overall_confidence": 0.84,
+                        "structural_score": 0.86,
+                        "semantic_score": 0.84,
+                        "matched_fields": ["placement_id | exact", "site_domain | semantic | requirement_term: placement domain"],
+                        "missing_information": [],
+                        "suggested_names": [],
+                        "close_call": false
+                    }
+                },
+                {
+                    "full_name": "acn_aggregated.marketing.slv_audience",
+                    "catalog": "acn_aggregated",
+                    "schema_name": "marketing",
+                    "table_name": "slv_audience",
+                    "layer": "silver",
+                    "format": "DELTA",
+                    "description": "Audience / segment dimension. One row per audience segment associated with a campaign. Conformed from Google Ads audience lists, Meta custom audiences, and DV360 audience segments.",
+                    "tags": {
+                        "domain": "campaign",
+                        "layer": "silver",
+                        "refresh": "daily",
+                        "quality": "validated",
+                        "sensitivity": "internal",
+                        "source_system": "google_ads|meta_ads|dv360"
+                    },
+                    "owner": "marketing_data_engineering",
+                    "refresh_cadence": "Daily (02:00 UTC)",
+                    "last_updated": "2026-06-22T02:00:00Z",
+                    "upstream_lineage": ["External: Google Ads API", "External: Meta Ads API", "External: DV360 API"],
+                    "columns": [
+                        {"name": "audience_id",   "data_type": "STRING", "nullable": false, "description": "Unique audience segment identifier — PK",                 "is_pk": true,  "fk_ref": null,                      "tags": {}},
+                        {"name": "audience_name", "data_type": "STRING", "nullable": false, "description": "Human-readable audience/segment name",                    "is_pk": false, "fk_ref": null,                      "tags": {}},
+                        {"name": "audience_type", "data_type": "STRING", "nullable": true,  "description": "Segment type: Lookalike, Retargeting, Interest, Custom",  "is_pk": false, "fk_ref": null,                      "tags": {}},
+                        {"name": "campaign_id",   "data_type": "STRING", "nullable": false, "description": "FK to slv_campaign",                                     "is_pk": false, "fk_ref": "slv_campaign.campaign_id","tags": {}}
+                    ],
+                    "expected_confidence": {
+                        "status": "reuse",
+                        "overall_confidence": 0.85,
+                        "structural_score": 0.87,
+                        "semantic_score": 0.86,
+                        "matched_fields": ["audience_id | exact", "audience_type | semantic | requirement_term: audience segment"],
+                        "missing_information": [],
+                        "suggested_names": [],
+                        "close_call": false
+                    }
+                },
+                {
+                    "full_name": "acn_aggregated.marketing.slv_impression_event",
+                    "catalog": "acn_aggregated",
+                    "schema_name": "marketing",
+                    "table_name": "slv_impression_event",
+                    "layer": "silver",
+                    "format": "DELTA",
+                    "description": "Canonical impression event table. One row per ad view. Base of the campaign event spine. Conformed from Google Ads impressions, Meta Ads impressions, DV360 impression log, and email open events. channel is normalised to {GOOGLE, META, DV360, EMAIL, PROGRAMMATIC}; device_type normalised to {MOBILE, DESKTOP, TABLET}.",
+                    "tags": {
+                        "domain": "campaign",
+                        "layer": "silver",
+                        "refresh": "hourly",
+                        "quality": "validated",
+                        "sensitivity": "internal",
+                        "source_system": "google_ads|meta_ads|dv360|email"
+                    },
+                    "owner": "marketing_data_engineering",
+                    "refresh_cadence": "Hourly (T+0, files land every hour)",
+                    "last_updated": "2026-06-22T02:00:00Z",
+                    "upstream_lineage": [
+                        "External: Google Ads impression log",
+                        "External: Meta Ads Insights API",
+                        "External: DV360 impression log",
+                        "External: Email platform open events"
+                    ],
+                    "columns": [
+                        {"name": "impression_id", "data_type": "STRING",    "nullable": false, "description": "Unique ad-view identifier — PK. COUNT of impression_id gives impression volume.", "is_pk": true,  "fk_ref": null,                       "tags": {}},
+                        {"name": "campaign_id",   "data_type": "STRING",    "nullable": false, "description": "FK to slv_campaign",                                  "is_pk": false, "fk_ref": "slv_campaign.campaign_id", "tags": {}},
+                        {"name": "ad_id",         "data_type": "STRING",    "nullable": true,  "description": "FK to slv_ad — nullable when ad-level ID not provided by platform", "is_pk": false, "fk_ref": "slv_ad.ad_id",             "tags": {}},
+                        {"name": "creative_id",   "data_type": "STRING",    "nullable": true,  "description": "FK to slv_creative — nullable when creative not tracked",             "is_pk": false, "fk_ref": "slv_creative.creative_id", "tags": {}},
+                        {"name": "channel",       "data_type": "STRING",    "nullable": false, "description": "Normalised delivery channel: GOOGLE, META, DV360, EMAIL, PROGRAMMATIC", "is_pk": false, "fk_ref": null,                       "tags": {}},
+                        {"name": "user_id",       "data_type": "STRING",    "nullable": true,  "description": "Authenticated user identifier, where known",          "is_pk": false, "fk_ref": null,                       "tags": {}},
+                        {"name": "anonymous_id",  "data_type": "STRING",    "nullable": true,  "description": "Cookie / device anonymous identifier",                "is_pk": false, "fk_ref": null,                       "tags": {}},
+                        {"name": "timestamp",     "data_type": "TIMESTAMP", "nullable": false, "description": "UTC timestamp when the ad was shown",                 "is_pk": false, "fk_ref": null,                       "tags": {}},
+                        {"name": "device_type",   "data_type": "STRING",    "nullable": true,  "description": "Normalised device: MOBILE, DESKTOP, TABLET",          "is_pk": false, "fk_ref": null,                       "tags": {}},
+                        {"name": "geo",           "data_type": "STRING",    "nullable": true,  "description": "Geographic location of the impression (country/region code)", "is_pk": false, "fk_ref": null,                "tags": {}}
+                    ],
+                    "expected_confidence": {
+                        "status": "reuse",
+                        "overall_confidence": 0.92,
+                        "structural_score": 0.93,
+                        "semantic_score": 0.93,
+                        "matched_fields": [
+                            "impression_id | count_source | requirement_term: impressions",
+                            "campaign_id | exact",
+                            "timestamp | date_grain | requirement_term: daily",
+                            "channel | semantic | requirement_term: channel breakdown",
+                            "device_type | semantic | requirement_term: device breakdown"
+                        ],
+                        "missing_information": [],
+                        "suggested_names": [],
+                        "close_call": false
+                    }
+                },
+                {
+                    "full_name": "acn_aggregated.marketing.slv_click_event",
+                    "catalog": "acn_aggregated",
+                    "schema_name": "marketing",
+                    "table_name": "slv_click_event",
+                    "layer": "silver",
+                    "format": "DELTA",
+                    "description": "Canonical click event table. One row per click. Linked to slv_impression_event where available (cross-channel clicks may lack impression_id). cost carries CPC or allocated click cost. Conformed from Google Ads click reports, Meta inline_link_clicks, DV360 click log, and email click events.",
+                    "tags": {
+                        "domain": "campaign",
+                        "layer": "silver",
+                        "refresh": "hourly",
+                        "quality": "validated",
+                        "sensitivity": "internal",
+                        "source_system": "google_ads|meta_ads|dv360|email"
+                    },
+                    "owner": "marketing_data_engineering",
+                    "refresh_cadence": "Hourly (T+0, files land every hour)",
+                    "last_updated": "2026-06-22T02:00:00Z",
+                    "upstream_lineage": [
+                        "External: Google Ads click report",
+                        "External: Meta Ads Insights API (inline_link_clicks)",
+                        "External: DV360 click log",
+                        "External: Email platform click events"
+                    ],
+                    "columns": [
+                        {"name": "click_id",        "data_type": "STRING",    "nullable": false, "description": "Unique click identifier — PK. COUNT of click_id gives click volume.", "is_pk": true,  "fk_ref": null,                                 "tags": {}},
+                        {"name": "impression_id",   "data_type": "STRING",    "nullable": true,  "description": "FK to originating impression — nullable for cross-channel clicks",    "is_pk": false, "fk_ref": "slv_impression_event.impression_id", "tags": {}},
+                        {"name": "campaign_id",     "data_type": "STRING",    "nullable": false, "description": "FK to slv_campaign",                                                 "is_pk": false, "fk_ref": "slv_campaign.campaign_id",           "tags": {}},
+                        {"name": "ad_id",           "data_type": "STRING",    "nullable": true,  "description": "FK to slv_ad",                                                       "is_pk": false, "fk_ref": "slv_ad.ad_id",                       "tags": {}},
+                        {"name": "timestamp",       "data_type": "TIMESTAMP", "nullable": false, "description": "UTC timestamp of the click",                                         "is_pk": false, "fk_ref": null,                                 "tags": {}},
+                        {"name": "landing_page_url","data_type": "STRING",    "nullable": true,  "description": "Destination URL the user was sent to",                               "is_pk": false, "fk_ref": null,                                 "tags": {}},
+                        {"name": "cost",            "data_type": "DOUBLE",    "nullable": true,  "description": "CPC or allocated cost for this click in reporting currency",         "is_pk": false, "fk_ref": null,                                 "tags": {}}
+                    ],
+                    "expected_confidence": {
+                        "status": "reuse",
+                        "overall_confidence": 0.92,
+                        "structural_score": 0.93,
+                        "semantic_score": 0.92,
+                        "matched_fields": [
+                            "click_id | count_source | requirement_term: clicks",
+                            "campaign_id | exact",
+                            "timestamp | date_grain | requirement_term: daily",
+                            "cost | sum_source | requirement_term: spend"
+                        ],
+                        "missing_information": [],
+                        "suggested_names": [],
+                        "close_call": false
+                    }
+                },
+                {
+                    "full_name": "acn_aggregated.marketing.slv_conversion_event",
+                    "catalog": "acn_aggregated",
+                    "schema_name": "marketing",
+                    "table_name": "slv_conversion_event",
+                    "layer": "silver",
+                    "format": "DELTA",
+                    "description": "Canonical conversion event table. One row per conversion. Linked to slv_click_event where available (view-through conversions have no click_id). conversion_value carries revenue or 0.0 for non-revenue actions. Conformed from website purchase events, app install events, lead form submissions, and signup events.",
+                    "tags": {
+                        "domain": "campaign",
+                        "layer": "silver",
+                        "refresh": "daily",
+                        "quality": "validated",
+                        "sensitivity": "internal",
+                        "source_system": "website|app|crm"
+                    },
+                    "owner": "marketing_data_engineering",
+                    "refresh_cadence": "Daily (03:00 UTC)",
+                    "last_updated": "2026-06-22T02:00:00Z",
+                    "upstream_lineage": [
+                        "External: Website purchase event (Google Analytics / pixel)",
+                        "External: App install event (Firebase / AppsFlyer)",
+                        "External: CRM lead form submissions"
+                    ],
+                    "columns": [
+                        {"name": "conversion_id",    "data_type": "STRING",    "nullable": false, "description": "Unique conversion identifier — PK. COUNT gives conversion volume.", "is_pk": true,  "fk_ref": null,                         "tags": {}},
+                        {"name": "click_id",         "data_type": "STRING",    "nullable": true,  "description": "FK to originating click — nullable for view-through conversions",  "is_pk": false, "fk_ref": "slv_click_event.click_id",   "tags": {}},
+                        {"name": "campaign_id",      "data_type": "STRING",    "nullable": false, "description": "Campaign credited with the conversion",                           "is_pk": false, "fk_ref": "slv_campaign.campaign_id",   "tags": {}},
+                        {"name": "conversion_type",  "data_type": "STRING",    "nullable": false, "description": "Action type: Signup, Purchase, AppInstall, Lead",                "is_pk": false, "fk_ref": null,                         "tags": {}},
+                        {"name": "conversion_value", "data_type": "DOUBLE",    "nullable": true,  "description": "Revenue value of the conversion (0.0 for non-revenue actions)",  "is_pk": false, "fk_ref": null,                         "tags": {}},
+                        {"name": "timestamp",        "data_type": "TIMESTAMP", "nullable": false, "description": "UTC timestamp of the conversion",                                "is_pk": false, "fk_ref": null,                         "tags": {}}
+                    ],
+                    "expected_confidence": {
+                        "status": "reuse",
+                        "overall_confidence": 0.91,
+                        "structural_score": 0.92,
+                        "semantic_score": 0.92,
+                        "matched_fields": [
+                            "conversion_id | count_source | requirement_term: conversions",
+                            "campaign_id | exact",
+                            "conversion_value | sum_source | requirement_term: revenue",
+                            "timestamp | date_grain | requirement_term: daily"
+                        ],
+                        "missing_information": [],
+                        "suggested_names": [],
+                        "close_call": false
+                    }
+                },
+                {
+                    "full_name": "acn_aggregated.marketing.slv_campaign_performance_daily",
+                    "catalog": "acn_aggregated",
+                    "schema_name": "marketing",
+                    "table_name": "slv_campaign_performance_daily",
+                    "layer": "silver",
+                    "format": "DELTA",
+                    "description": "Reporting-friendly daily aggregate. One row per campaign + channel + day. Pre-aggregated from slv_impression_event, slv_click_event, and slv_conversion_event. CTR, CPC, CPA, and ROAS are derived at the gold layer — raw counts and sums are stored here. Composite PK: (date, campaign_id, channel).",
+                    "tags": {
+                        "domain": "campaign",
+                        "layer": "silver",
+                        "refresh": "daily",
+                        "quality": "validated",
+                        "sensitivity": "internal",
+                        "source_system": "derived"
+                    },
+                    "owner": "marketing_data_engineering",
+                    "refresh_cadence": "Daily (04:00 UTC, after event tables are loaded)",
+                    "last_updated": "2026-06-22T04:00:00Z",
+                    "upstream_lineage": [
+                        "Silver: acn_aggregated.marketing.slv_impression_event",
+                        "Silver: acn_aggregated.marketing.slv_click_event",
+                        "Silver: acn_aggregated.marketing.slv_conversion_event"
+                    ],
+                    "columns": [
+                        {"name": "date",        "data_type": "DATE",   "nullable": false, "description": "Reporting day (UTC) — composite PK",                                              "is_pk": true,  "fk_ref": null,                      "tags": {}},
+                        {"name": "campaign_id", "data_type": "STRING", "nullable": false, "description": "FK to slv_campaign — composite PK",                                              "is_pk": true,  "fk_ref": "slv_campaign.campaign_id","tags": {}},
+                        {"name": "channel",     "data_type": "STRING", "nullable": false, "description": "Delivery channel — composite PK (GOOGLE, META, DV360, EMAIL, PROGRAMMATIC)",    "is_pk": true,  "fk_ref": null,                      "tags": {}},
+                        {"name": "impressions", "data_type": "BIGINT", "nullable": false, "description": "COUNT of impression_id from slv_impression_event for this day+campaign+channel", "is_pk": false, "fk_ref": null,                      "tags": {}},
+                        {"name": "clicks",      "data_type": "BIGINT", "nullable": false, "description": "COUNT of click_id from slv_click_event for this day+campaign+channel",           "is_pk": false, "fk_ref": null,                      "tags": {}},
+                        {"name": "conversions", "data_type": "BIGINT", "nullable": false, "description": "COUNT of conversion_id from slv_conversion_event for this day+campaign",        "is_pk": false, "fk_ref": null,                      "tags": {}},
+                        {"name": "spend",       "data_type": "DOUBLE", "nullable": false, "description": "SUM of cost from slv_click_event for this day+campaign+channel",                "is_pk": false, "fk_ref": null,                      "tags": {}},
+                        {"name": "revenue",     "data_type": "DOUBLE", "nullable": true,  "description": "SUM of conversion_value from slv_conversion_event — null when not tracked",     "is_pk": false, "fk_ref": null,                      "tags": {}}
+                    ],
+                    "expected_confidence": {
+                        "status": "reuse",
+                        "overall_confidence": 0.93,
+                        "structural_score": 0.94,
+                        "semantic_score": 0.94,
+                        "matched_fields": [
+                            "impressions | count_source | requirement_term: impressions",
+                            "clicks | count_source | requirement_term: clicks",
+                            "conversions | count_source | requirement_term: conversions",
+                            "spend | sum_source | requirement_term: spend",
+                            "revenue | sum_source | requirement_term: revenue",
+                            "date | exact | requirement_term: daily",
+                            "campaign_id | exact",
+                            "channel | semantic | requirement_term: channel breakdown"
+                        ],
+                        "missing_information": [],
+                        "suggested_names": [],
+                        "close_call": false
+                    }
+                }
+            ],
+            "bronze": [
+                {
+                    "full_name": "acn_source.marketing.raw_ad_server_events",
+                    "catalog": "acn_source",
+                    "schema_name": "marketing",
+                    "table_name": "raw_ad_server_events",
+                    "layer": "bronze",
+                    "format": "DELTA",
+                    "description": "Raw ad-server event feed landing impression and click events on a single stream, keyed by event_type. Append-only landing table — unconformed: inconsistent casing on event_type / campaign_name / device_type, string-typed boolean (is_billable), untyped timestamp (event_ts, no timezone). Each event carries either an impression_id (impression events) or a click_id (click events). This raw feed is conformed and split into the silver tables campaign_impressions_conformed and campaign_clicks_conformed. Daily impressions/clicks can be derived by counting impression_id / click_id by campaign_id, campaign_name, and event date once conformed.",
+                    "tags": {
+                        "domain": "marketing",
+                        "layer": "bronze",
+                        "refresh": "daily",
+                        "source_system": "ad-server",
+                        "sensitivity": "internal"
+                    },
+                    "owner": "data_ingestion_team",
+                    "refresh_cadence": "Daily (batch, T+0, files land hourly)",
+                    "last_updated": "2026-05-12T01:00:00Z",
+                    "upstream_lineage": [
+                        "External: Ad Server event stream → ADLS raw zone"
+                    ],
+                    "columns": [
+                        {
+                            "name": "event_type",
+                            "data_type": "STRING",
+                            "nullable": false,
+                            "description": "Raw event type — routes the row to impressions or clicks. Inconsistent casing (e.g. impression, Impression, IMPRESSION, click, Click, CLICK).",
+                            "is_pk": false,
+                            "fk_ref": null,
+                            "tags": {}
+                        },
+                        {
+                            "name": "campaign_id",
+                            "data_type": "STRING",
+                            "nullable": false,
+                            "description": "Raw campaign identifier for attribution",
+                            "is_pk": false,
+                            "fk_ref": null,
+                            "tags": {}
+                        },
+                        {
+                            "name": "campaign_name",
+                            "data_type": "STRING",
+                            "nullable": false,
+                            "description": "Raw business-readable campaign name — inconsistent casing (e.g. Spring Sale 2026, spring sale 2026, SPRING SALE 2026)",
+                            "is_pk": false,
+                            "fk_ref": null,
+                            "tags": {}
+                        },
+                        {
+                            "name": "event_ts",
+                            "data_type": "STRING",
+                            "nullable": false,
+                            "description": "Raw event timestamp from source system (format: YYYY-MM-DD HH:MM:SS, no timezone). Conforms to the silver timestamp column.",
+                            "is_pk": false,
+                            "fk_ref": null,
+                            "tags": {}
+                        },
+                        {
+                            "name": "impression_id",
+                            "data_type": "STRING",
+                            "nullable": true,
+                            "description": "Raw impression event identifier — populated when event_type is an impression; blank for click events. Count of impression_id gives impressions for a campaign at a date grain.",
+                            "is_pk": false,
+                            "fk_ref": null,
+                            "tags": {}
+                        },
+                        {
+                            "name": "click_id",
+                            "data_type": "STRING",
+                            "nullable": true,
+                            "description": "Raw click event identifier — populated when event_type is a click; blank for impression events. Count of click_id gives clicks for a campaign at a date grain.",
+                            "is_pk": false,
+                            "fk_ref": null,
+                            "tags": {}
+                        },
+                        {
+                            "name": "device_type",
+                            "data_type": "STRING",
+                            "nullable": false,
+                            "description": "Raw device type — inconsistent casing (e.g. Mobile, mobile, DESKTOP, Tablet, tablet)",
+                            "is_pk": false,
+                            "fk_ref": null,
+                            "tags": {}
+                        },
+                        {
+                            "name": "is_billable",
+                            "data_type": "STRING",
+                            "nullable": false,
+                            "description": "Raw billable-event flag — stored as string (true/false), not boolean",
+                            "is_pk": false,
+                            "fk_ref": null,
+                            "tags": {}
+                        },
+                        {
+                            "name": "source_file",
+                            "data_type": "STRING",
+                            "nullable": false,
+                            "description": "Source CSV file name from ingestion batch",
+                            "is_pk": false,
+                            "fk_ref": null,
+                            "tags": {
+                                "technical": "true"
+                            }
+                        },
+                        {
+                            "name": "ingestion_ts",
+                            "data_type": "STRING",
+                            "nullable": false,
+                            "description": "Ingestion timestamp — stored as string, not typed timestamp",
+                            "is_pk": false,
+                            "fk_ref": null,
+                            "tags": {
+                                "technical": "true"
+                            }
+                        }
+                    ],
+                    "expected_confidence": {
+                        "status": "extend",
+                        "overall_confidence": 0.62,
+                        "structural_score": 0.6,
+                        "semantic_score": 0.72,
+                        "matched_fields": [
+                            "campaign_id | exact",
+                            "campaign_name | exact",
+                            "event_ts | date_grain | requirement_term: daily",
+                            "impression_id | count_source | requirement_term: impressions",
+                            "click_id | count_source | requirement_term: clicks"
+                        ],
+                        "missing_information": [
+                            "Raw event feed is unconformed — requires case normalisation (event_type, campaign_name, device_type), timestamp typing (event_ts), and boolean coercion (is_billable) before serving impressions/clicks reliably",
+                            "Impression and click events share one feed and must be split by event_type to populate the conformed silver tables"
+                        ],
+                        "suggested_names": [],
+                        "close_call": false
+                    }
+                }
+            ]
+        },
+        "foundry_iq_index": [
+            {
+                "query_term": "daily campaign impressions and clicks",
+                "candidate_table": "acn_aggregated.marketing.campaign_impressions_conformed",
+                "layer": "silver",
+                "embedding_similarity": 0.91,
+                "description_match_summary": "Table contains campaign_id, campaign_name, timestamp, and impression_id. Counting impression_id by campaign and date supports daily campaign impressions.",
+                "alias_mappings": [
+                    "impression_id ↔ impressions (0.92)",
+                    "timestamp ↔ date (0.88)"
+                ],
+                "included": true
+            },
+            {
+                "query_term": "daily campaign impressions and clicks",
+                "candidate_table": "acn_aggregated.marketing.campaign_clicks_conformed",
+                "layer": "silver",
+                "embedding_similarity": 0.9,
+                "description_match_summary": "Table contains campaign_id, campaign_name, timestamp, and click_id. Counting click_id by campaign and date supports daily campaign clicks.",
+                "alias_mappings": [
+                    "click_id ↔ clicks (0.92)",
+                    "timestamp ↔ date (0.88)"
+                ],
+                "included": true
+            },
+            {
+                "query_term": "campaign impressions",
+                "candidate_table": "acn_aggregated.marketing.campaign_impressions_conformed",
+                "layer": "silver",
+                "embedding_similarity": 0.93,
+                "description_match_summary": "Direct match for campaign impression events with impression_id available for counting.",
+                "alias_mappings": [
+                    "impression_id ↔ impression count source (0.94)"
+                ],
+                "included": true
+            },
+            {
+                "query_term": "campaign clicks",
+                "candidate_table": "acn_aggregated.marketing.campaign_clicks_conformed",
+                "layer": "silver",
+                "embedding_similarity": 0.93,
+                "description_match_summary": "Direct match for campaign click events with click_id available for counting.",
+                "alias_mappings": [
+                    "click_id ↔ click count source (0.94)"
+                ],
+                "included": true
+            },
+            {
+                "query_term": "raw ad-server impression and click events",
+                "candidate_table": "acn_source.marketing.raw_ad_server_events",
+                "layer": "bronze",
+                "embedding_similarity": 0.72,
+                "description_match_summary": "Raw landing feed for campaign impression and click events. Carries impression_id, click_id, campaign_id, campaign_name and an untyped event_ts; requires conforming before reuse. Feeds the campaign_impressions_conformed and campaign_clicks_conformed silver tables.",
+                "alias_mappings": [
+                    "impression_id ↔ impressions (0.90)",
+                    "click_id ↔ clicks (0.90)",
+                    "event_ts ↔ date (0.82)"
+                ],
+                "included": true
+            },
+            {
+                "query_term": "daily campaign performance",
+                "candidate_table": "No gold candidates found",
+                "layer": null,
+                "embedding_similarity": 0.0,
+                "description_match_summary": "No gold consumption table currently exists for daily campaign impressions and clicks.",
+                "alias_mappings": [],
+                "included": false
+            },
+            {
+                "query_term": "campaign performance with spend and conversions",
+                "candidate_table": "acn_aggregated.marketing.slv_campaign_performance_daily",
+                "layer": "silver",
+                "embedding_similarity": 0.94,
+                "description_match_summary": "Pre-aggregated daily performance table with impressions, clicks, conversions, spend, and revenue per campaign and channel. Supports CTR, CPC, CPA, and ROAS derivation at the gold layer.",
+                "alias_mappings": [
+                    "impressions ↔ impression count (0.95)",
+                    "clicks ↔ click count (0.95)",
+                    "conversions ↔ conversion count (0.94)",
+                    "spend ↔ cost / ad spend (0.93)",
+                    "revenue ↔ conversion value (0.91)",
+                    "date ↔ reporting day (0.93)",
+                    "channel ↔ media channel (0.92)"
+                ],
+                "included": true
+            },
+            {
+                "query_term": "impressions by channel and device",
+                "candidate_table": "acn_aggregated.marketing.slv_impression_event",
+                "layer": "silver",
+                "embedding_similarity": 0.93,
+                "description_match_summary": "One row per ad view with channel and device_type. COUNT(impression_id) by channel/device_type/date gives impression breakdown.",
+                "alias_mappings": [
+                    "impression_id ↔ impressions (0.94)",
+                    "channel ↔ media channel (0.92)",
+                    "device_type ↔ device (0.93)",
+                    "timestamp ↔ date (0.89)"
+                ],
+                "included": true
+            },
+            {
+                "query_term": "campaign spend and cost per click",
+                "candidate_table": "acn_aggregated.marketing.slv_click_event",
+                "layer": "silver",
+                "embedding_similarity": 0.91,
+                "description_match_summary": "One row per click with cost column (CPC or allocated cost). SUM(cost) gives total spend; SUM(cost)/COUNT(click_id) gives CPC.",
+                "alias_mappings": [
+                    "click_id ↔ clicks (0.94)",
+                    "cost ↔ spend / CPC (0.93)",
+                    "timestamp ↔ date (0.88)"
+                ],
+                "included": true
+            },
+            {
+                "query_term": "conversion rate and revenue attribution",
+                "candidate_table": "acn_aggregated.marketing.slv_conversion_event",
+                "layer": "silver",
+                "embedding_similarity": 0.92,
+                "description_match_summary": "One row per conversion with conversion_type and conversion_value. COUNT(conversion_id) gives conversions; SUM(conversion_value) gives revenue for ROAS calculation.",
+                "alias_mappings": [
+                    "conversion_id ↔ conversions (0.94)",
+                    "conversion_value ↔ revenue / conversion value (0.93)",
+                    "conversion_type ↔ action type (0.91)",
+                    "timestamp ↔ date (0.88)"
+                ],
+                "included": true
+            },
+            {
+                "query_term": "CTR CPC CPA ROAS campaign metrics",
+                "candidate_table": "acn_aggregated.marketing.slv_campaign_performance_daily",
+                "layer": "silver",
+                "embedding_similarity": 0.93,
+                "description_match_summary": "Daily aggregate with impressions, clicks, conversions, spend, revenue. All four campaign performance metrics (CTR=clicks/impressions, CPC=spend/clicks, CPA=spend/conversions, ROAS=revenue/spend) can be derived from this table.",
+                "alias_mappings": [
+                    "impressions ↔ CTR denominator (0.91)",
+                    "clicks ↔ CTR numerator / CPC denominator (0.93)",
+                    "spend ↔ CPC numerator / CPA numerator / ROAS denominator (0.93)",
+                    "conversions ↔ CPA denominator (0.92)",
+                    "revenue ↔ ROAS numerator (0.91)"
+                ],
+                "included": true
+            },
+            {
+                "query_term": "creative performance and ad breakdown",
+                "candidate_table": "acn_aggregated.marketing.slv_creative",
+                "layer": "silver",
+                "embedding_similarity": 0.88,
+                "description_match_summary": "Creative dimension with creative_type (Image/Video/HTML5/Text). Join to slv_impression_event on creative_id to get impression volume per creative.",
+                "alias_mappings": [
+                    "creative_id ↔ creative (0.93)",
+                    "creative_type ↔ ad format (0.90)"
+                ],
+                "included": true
+            }
+        ],
+        "scoring_reference": {
+            "formula": "composite = (field_overlap x 0.30) + (source_compat x 0.15) + (granularity_align x 0.15) + (semantic_sim x 0.15) + (grain_compat x 0.15) + (freshness x 0.10)",
+            "weights": {
+                "field_overlap": 0.3,
+                "source_compatibility": 0.15,
+                "granularity_alignment": 0.15,
+                "semantic_similarity": 0.15,
+                "grain_compatibility": 0.15,
+                "freshness_sla": 0.1
+            },
+            "thresholds": {
+                "reuse_minimum": 0.8,
+                "extend_minimum": 0.5
+            },
+            "close_call_gap": 0.05
+        },
+        "test_scenarios": {
+            "s2": {
+                "scenario_id": "mkt002-demo-001",
+                "name": "Campaign Performance with Spend, Conversions, and Channel Breakdown",
+                "domain": "Campaign",
+                "expected_output": [
+                    {
+                        "layer": "silver",
+                        "name": "acn_aggregated.marketing.slv_campaign_performance_daily",
+                        "status": "reuse",
+                        "overall_confidence": 0.93,
+                        "structural_score": 0.94,
+                        "semantic_score": 0.94,
+                        "matched_fields": [
+                            "impressions | count_source | requirement_term: impressions",
+                            "clicks | count_source | requirement_term: clicks",
+                            "conversions | count_source | requirement_term: conversions",
+                            "spend | sum_source | requirement_term: spend",
+                            "revenue | sum_source | requirement_term: revenue",
+                            "date | exact | requirement_term: daily",
+                            "campaign_id | exact",
+                            "channel | semantic | requirement_term: channel breakdown"
+                        ],
+                        "missing_information": [],
+                        "suggested_names": [],
+                        "close_call": false
+                    },
+                    {
+                        "layer": "silver",
+                        "name": "acn_aggregated.marketing.slv_impression_event",
+                        "status": "reuse",
+                        "overall_confidence": 0.92,
+                        "structural_score": 0.93,
+                        "semantic_score": 0.93,
+                        "matched_fields": [
+                            "impression_id | count_source | requirement_term: impressions",
+                            "campaign_id | exact",
+                            "timestamp | date_grain | requirement_term: daily",
+                            "channel | semantic | requirement_term: channel breakdown"
+                        ],
+                        "missing_information": [],
+                        "suggested_names": [],
+                        "close_call": false
+                    },
+                    {
+                        "layer": "silver",
+                        "name": "acn_aggregated.marketing.slv_click_event",
+                        "status": "reuse",
+                        "overall_confidence": 0.92,
+                        "structural_score": 0.93,
+                        "semantic_score": 0.92,
+                        "matched_fields": [
+                            "click_id | count_source | requirement_term: clicks",
+                            "campaign_id | exact",
+                            "cost | sum_source | requirement_term: spend",
+                            "timestamp | date_grain | requirement_term: daily"
+                        ],
+                        "missing_information": [],
+                        "suggested_names": [],
+                        "close_call": false
+                    },
+                    {
+                        "layer": "silver",
+                        "name": "acn_aggregated.marketing.slv_conversion_event",
+                        "status": "reuse",
+                        "overall_confidence": 0.91,
+                        "structural_score": 0.92,
+                        "semantic_score": 0.92,
+                        "matched_fields": [
+                            "conversion_id | count_source | requirement_term: conversions",
+                            "campaign_id | exact",
+                            "conversion_value | sum_source | requirement_term: revenue",
+                            "timestamp | date_grain | requirement_term: daily"
+                        ],
+                        "missing_information": [],
+                        "suggested_names": [],
+                        "close_call": false
+                    }
+                ],
+                "expected_gaps": [
+                    {
+                        "layer": "gold",
+                        "reason": "No gold consumption table currently exists for campaign performance with derived metrics (CTR, CPC, CPA, ROAS). DDI will design a star-schema gold layer from these silver sources."
+                    }
+                ]
+            },
+            "s1": {
+                "scenario_id": "mkt001-demo-001",
+                "name": "Daily Campaign Impressions and Clicks",
+                "domain": "Marketing",
+                "expected_output": [
+                    {
+                        "layer": "silver",
+                        "name": "acn_aggregated.marketing.campaign_impressions_conformed",
+                        "status": "reuse",
+                        "overall_confidence": 0.88,
+                        "structural_score": 0.9,
+                        "semantic_score": 0.91,
+                        "matched_fields": [
+                            "campaign_id | exact",
+                            "campaign_name | exact",
+                            "timestamp | date_grain | requirement_term: daily",
+                            "impression_id | count_source | requirement_term: impressions"
+                        ],
+                        "missing_information": [],
+                        "suggested_names": [],
+                        "close_call": false
+                    },
+                    {
+                        "layer": "silver",
+                        "name": "acn_aggregated.marketing.campaign_clicks_conformed",
+                        "status": "reuse",
+                        "overall_confidence": 0.87,
+                        "structural_score": 0.9,
+                        "semantic_score": 0.9,
+                        "matched_fields": [
+                            "campaign_id | exact",
+                            "campaign_name | exact",
+                            "timestamp | date_grain | requirement_term: daily",
+                            "click_id | count_source | requirement_term: clicks"
+                        ],
+                        "missing_information": [],
+                        "suggested_names": [],
+                        "close_call": false
+                    }
+                ],
+                "expected_gaps": [
+                    {
+                        "layer": "gold",
+                        "reason": "No gold consumption table currently exists for daily campaign impressions and clicks."
+                    }
+                ]
+            }
+        }
+    }
+}

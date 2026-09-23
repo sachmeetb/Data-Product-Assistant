@@ -1,0 +1,22 @@
+{
+  "name": "dpi-agent-frontend",
+  "type": "module",
+  "version": "0.1.0",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "html2pdf.js": "^0.14.0",
+    "mermaid": "^11.15.0",
+    "react": "^18",
+    "react-dom": "^18",
+    "react-markdown": "^8.0.7",
+    "remark-gfm": "^3.0.1"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4",
+    "vite": "^5"
+  }
+}

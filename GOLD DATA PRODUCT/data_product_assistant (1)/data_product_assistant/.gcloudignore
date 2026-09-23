@@ -1,0 +1,17 @@
+# Exclude secrets from gcloud builds submit source upload
+.env
+.env.*
+backend/.env
+backend/.env.*
+
+# Exclude large/unnecessary files
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+backend/output/
+backend/.pytest_cache/
+frontend/node_modules/
+frontend/dist/
+**/.DS_Store
+**/.venv/
+.git/

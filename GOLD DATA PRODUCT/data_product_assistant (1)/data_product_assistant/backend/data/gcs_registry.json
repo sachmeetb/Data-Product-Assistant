@@ -1,0 +1,88 @@
+{
+    "schema_version": "1.0",
+    "description": "Master registry of all Silver Layer domain frameworks across industries. Used by TemplateLoader to resolve detection signals to template paths. GCS path: gs://{GCS_TEMPLATES_BUCKET}/registry.json",
+    "industries": {
+        "cpg": {
+            "campaign": {
+                "template_path": "cpg/campaign.json",
+                "local_path": "campaign_silver_domain.json",
+                "detection_signals": ["campaign", "impression", "impressions", "click", "clicks", "spend", "ctr", "cpc", "cpa", "roas", "ad-tech", "adtech", "programmatic", "dv360", "google ads", "meta ads", "creative", "placement", "attribution", "ad spend"],
+                "standards": ["IAB_OpenRTB", "Google_CM", "Meta_Ads", "Adobe_XDM_ExperienceEvent"]
+            },
+            "sales": {
+                "template_path": "cpg/sales.json",
+                "local_path": "sales_silver_domain.json",
+                "detection_signals": ["sales", "order", "revenue", "customer", "crm", "erp", "asp", "account", "invoice", "sell-through", "sell-in", "product", "sku", "territory", "channel", "distributor"],
+                "standards": ["GS1", "Salesforce_CRM", "SAP_S4HANA"]
+            },
+            "loyalty": {
+                "template_path": "cpg/loyalty.json",
+                "local_path": "loyalty_silver_domain.json",
+                "detection_signals": ["loyalty", "member", "reward", "points", "redemption", "tier", "earn", "churn", "retention", "programme", "enrolment", "burn", "engagement"],
+                "standards": ["CRM_Loyalty", "Adobe_XDM_Loyalty", "Salesforce_Loyalty"]
+            },
+            "trade_promotions": {
+                "template_path": "cpg/trade_promotions.json",
+                "local_path": "trade_promotions_silver_domain.json",
+                "detection_signals": ["trade promotion", "tpm", "promotion", "retailer", "uplift", "promo roi", "trade spend", "promotional spend", "mechanic", "off-invoice", "scan-back", "sell-out"],
+                "standards": ["SAP_TPM", "Salesforce_CPG", "Nielsen_TPM"]
+            },
+            "pricing": {
+                "template_path": "cpg/pricing.json",
+                "local_path": "pricing_silver_domain.json",
+                "detection_signals": ["pricing", "price list", "margin", "competitor price", "price index", "price point", "price change", "srp", "edlp", "vendor price", "list price"],
+                "standards": ["SAP_Pricing", "Vendavo", "Zilliant"]
+            },
+            "digital_commerce": {
+                "template_path": "cpg/digital_commerce.json",
+                "local_path": "digital_commerce_silver_domain.json",
+                "detection_signals": ["ecommerce", "cart", "checkout", "aov", "bounce rate", "shopify", "session", "visitor", "product view", "add to cart", "purchase", "conversion rate", "ga4", "google analytics", "adobe analytics"],
+                "standards": ["Adobe_XDM_ExperienceEvent", "Google_Analytics_4", "Shopify_Commerce"]
+            }
+        },
+        "banking": {
+            "retail_banking": {
+                "template_path": "banking/retail_banking.json",
+                "local_path": "banking/retail_banking.json",
+                "detection_signals": ["account", "transaction", "deposit", "withdrawal", "card", "loan", "mortgage", "kyc", "iban", "swift", "bic", "overdraft", "credit", "debit", "balance", "statement", "bank"],
+                "standards": ["FIBO", "BIAN", "ISO_20022"]
+            },
+            "wealth_management": {
+                "template_path": "banking/wealth_management.json",
+                "local_path": "banking/wealth_management.json",
+                "detection_signals": ["portfolio", "holding", "trade", "aum", "nav", "client", "equity", "bond", "fund", "advisory", "asset", "wealth", "investment", "hnwi", "uhnwi", "securities", "isin"],
+                "standards": ["FIX_Protocol", "ISO_20022"]
+            }
+        },
+        "healthcare": {
+            "patient_journey": {
+                "template_path": "healthcare/patient_journey.json",
+                "local_path": "healthcare/patient_journey.json",
+                "detection_signals": ["patient", "encounter", "diagnosis", "procedure", "provider", "fhir", "icd", "admission", "readmission", "discharge", "clinical", "ehr", "emr", "snomed", "cpt", "npi"],
+                "standards": ["HL7_FHIR", "ICD_10", "SNOMED_CT"]
+            }
+        },
+        "retail": {
+            "merchandise_planning": {
+                "template_path": "retail/merchandise_planning.json",
+                "local_path": "retail/merchandise_planning.json",
+                "detection_signals": ["sku", "store", "inventory", "sell-through", "markdown", "pos", "shrinkage", "assortment", "planogram", "replenishment", "gtin", "merchandise", "stock", "on-hand"],
+                "standards": ["GS1", "NRF_Retail", "ARTS_Retail"]
+            }
+        },
+        "cross_industry": {
+            "supply_chain": {
+                "template_path": "cross_industry/supply_chain.json",
+                "local_path": "cross_industry/supply_chain.json",
+                "detection_signals": ["supplier", "warehouse", "shipment", "purchase order", "lead time", "otif", "procurement", "freight", "logistics", "epcis", "scor", "inbound", "outbound", "3pl"],
+                "standards": ["GS1_EPCIS", "SCOR", "ISO_28000"]
+            },
+            "finance": {
+                "template_path": "cross_industry/finance.json",
+                "local_path": "cross_industry/finance.json",
+                "detection_signals": ["journal", "gl", "general ledger", "cost centre", "budget", "actuals", "p&l", "legal entity", "ifrs", "xbrl", "trial balance", "chart of accounts", "cost center", "variance"],
+                "standards": ["XBRL", "IFRS", "US_GAAP"]
+            }
+        }
+    }
+}

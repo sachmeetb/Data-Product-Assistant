@@ -1,0 +1,280 @@
+{
+  "data_catalog": {
+    "version": "1.0",
+    "source": "DDI gold/silver agents (chained from Discovery output)",
+    "description": "Gold-layer catalog for the Daily Campaign Performance Analysis star schema, produced by DDI from the upstream Discovery output and existing gold tables in acn_consumption.marketing.",
+    "layers": {
+      "gold": [
+        {
+          "full_name": "acn_consumption.marketing.fact_campaign_performance",
+          "catalog": "acn_consumption",
+          "schema_name": "marketing",
+          "table_name": "fact_campaign_performance",
+          "layer": "gold",
+          "format": "DELTA",
+          "description": "Campaign performance fact table. One row per (campaign_id, date_id) capturing daily impression volume, click volume, and click-through rate for each campaign.",
+          "tags": {
+            "domain": "marketing",
+            "layer": "gold",
+            "refresh": "daily",
+            "quality": "validated",
+            "grain": "campaign+date",
+            "sensitivity": "internal"
+          },
+          "owner": "marketing_data_engineering",
+          "refresh_cadence": "Daily (04:00 UTC)",
+          "last_updated": "2026-05-14T04:12:00Z",
+          "upstream_lineage": [
+            "acn_consumption.marketing.fact_campaign_performance",
+            "acn_consumption.marketing.dim_campaign",
+            "acn_consumption.marketing.dim_date"
+          ],
+          "columns": [
+            {
+              "name": "campaign_id",
+              "data_type": "STRING",
+              "nullable": false,
+              "description": "Foreign key to dim_campaign identifying the campaign associated with this performance row.",
+              "is_pk": false,
+              "fk_ref": "dim_campaign",
+              "tags": {}
+            },
+            {
+              "name": "date_id",
+              "data_type": "DATE",
+              "nullable": false,
+              "description": "Foreign key to dim_date identifying the calendar date of the performance observation.",
+              "is_pk": false,
+              "fk_ref": "dim_date",
+              "tags": {}
+            },
+            {
+              "name": "impressions",
+              "data_type": "BIGINT",
+              "nullable": false,
+              "description": "Sum of impressions served for the campaign on the given date.",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {
+                "aggregation": "sum"
+              }
+            },
+            {
+              "name": "clicks",
+              "data_type": "BIGINT",
+              "nullable": false,
+              "description": "Sum of clicks recorded for the campaign on the given date.",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {
+                "aggregation": "sum"
+              }
+            },
+            {
+              "name": "ctr",
+              "data_type": "DECIMAL(18,2)",
+              "nullable": true,
+              "description": "Enrichment column: click-through rate computed as clicks / NULLIF(impressions, 0); no raw source column exists in any upstream layer.",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {
+                "enrichment": "true"
+              }
+            }
+          ],
+          "expected_confidence": {
+            "status": "extend",
+            "overall_confidence": 0.87,
+            "structural_score": 0.85,
+            "semantic_score": 0.92,
+            "matched_fields": [
+              "campaign_id | exact | source: acn_consumption.marketing.fact_campaign_performance.campaign_id | transform: DIRECT_MAP",
+              "date_id | description_alias | source: acn_consumption.marketing.fact_campaign_performance.date_id | transform: DIRECT_MAP",
+              "impressions | token_overlap | source: acn_consumption.marketing.fact_campaign_performance.impressions | transform: SUM_AGGREGATE",
+              "clicks | token_overlap | source: acn_consumption.marketing.fact_campaign_performance.clicks | transform: SUM_AGGREGATE",
+              "ctr | enrichment | source: null | transform: ENRICHMENT"
+            ],
+            "missing_information": [],
+            "suggested_names": [],
+            "close_call": false
+          }
+        },
+        {
+          "full_name": "acn_consumption.marketing.dim_campaign",
+          "catalog": "acn_consumption",
+          "schema_name": "marketing",
+          "table_name": "dim_campaign",
+          "layer": "gold",
+          "format": "DELTA",
+          "description": "Campaign dimension table. One row per distinct campaign_id carrying the human-readable campaign name for use in reporting and aggregation.",
+          "tags": {
+            "domain": "marketing",
+            "layer": "gold",
+            "refresh": "daily",
+            "quality": "validated",
+            "type": "dimension",
+            "sensitivity": "internal"
+          },
+          "owner": "marketing_analytics_team",
+          "refresh_cadence": "Daily (04:00 UTC)",
+          "last_updated": "2026-05-14T04:12:00Z",
+          "upstream_lineage": [
+            "acn_consumption.marketing.fact_campaign_performance",
+            "acn_consumption.marketing.dim_campaign",
+            "acn_consumption.marketing.dim_date"
+          ],
+          "columns": [
+            {
+              "name": "campaign_id",
+              "data_type": "STRING",
+              "nullable": false,
+              "description": "Primary key of dim_campaign; uniquely identifies each marketing campaign.",
+              "is_pk": true,
+              "fk_ref": null,
+              "tags": {}
+            },
+            {
+              "name": "campaign_name",
+              "data_type": "STRING",
+              "nullable": true,
+              "description": "Human-readable name of the campaign (e.g. 'Spring Promo 2026'); descriptive attribute sourced directly from the existing gold dim_campaign table.",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {}
+            }
+          ],
+          "expected_confidence": {
+            "status": "reuse",
+            "overall_confidence": 0.92,
+            "structural_score": 0.93,
+            "semantic_score": 0.91,
+            "matched_fields": [
+              "campaign_id | token_overlap | source: acn_consumption.marketing.dim_campaign.campaign_id | transform: DIRECT_MAP+DEDUPLICATE",
+              "campaign_name | token_overlap | source: acn_consumption.marketing.dim_campaign.campaign_name | transform: DIRECT_MAP"
+            ],
+            "missing_information": [],
+            "suggested_names": [],
+            "close_call": false
+          }
+        },
+        {
+          "full_name": "acn_consumption.marketing.dim_date",
+          "catalog": "acn_consumption",
+          "schema_name": "marketing",
+          "table_name": "dim_date",
+          "layer": "gold",
+          "format": "DELTA",
+          "description": "Date dimension table. One row per distinct calendar date, carrying derived temporal attributes (day of week, month, year) for slicing and dicing fact data.",
+          "tags": {
+            "domain": "marketing",
+            "layer": "gold",
+            "refresh": "daily",
+            "quality": "validated",
+            "type": "dimension",
+            "sensitivity": "internal"
+          },
+          "owner": "marketing_analytics_team",
+          "refresh_cadence": "Daily (04:00 UTC)",
+          "last_updated": "2026-05-14T04:12:00Z",
+          "upstream_lineage": [
+            "acn_consumption.marketing.fact_campaign_performance",
+            "acn_consumption.marketing.dim_campaign",
+            "acn_consumption.marketing.dim_date"
+          ],
+          "columns": [
+            {
+              "name": "date_id",
+              "data_type": "DATE",
+              "nullable": false,
+              "description": "Primary key of dim_date; uniquely identifies each calendar date stored as ISO DATE.",
+              "is_pk": true,
+              "fk_ref": null,
+              "tags": {}
+            },
+            {
+              "name": "day_of_week",
+              "data_type": "STRING",
+              "nullable": true,
+              "description": "Derived attribute: name or number of the day of the week computed from date_id at gold load time (e.g. DAYOFWEEK(date_id)).",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {
+                "derived": "true"
+              }
+            },
+            {
+              "name": "month",
+              "data_type": "INT",
+              "nullable": true,
+              "description": "Derived attribute: calendar month number (1–12) computed from date_id at gold load time (e.g. MONTH(date_id)).",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {
+                "derived": "true"
+              }
+            },
+            {
+              "name": "year",
+              "data_type": "INT",
+              "nullable": true,
+              "description": "Derived attribute: four-digit calendar year computed from date_id at gold load time (e.g. YEAR(date_id)).",
+              "is_pk": false,
+              "fk_ref": null,
+              "tags": {
+                "derived": "true"
+              }
+            }
+          ],
+          "expected_confidence": {
+            "status": "extend",
+            "overall_confidence": 0.88,
+            "structural_score": 0.87,
+            "semantic_score": 0.9,
+            "matched_fields": [
+              "date_id | count_source_alias | source: acn_consumption.marketing.dim_date.date_id | transform: DIRECT_MAP+DEDUPLICATE",
+              "day_of_week | derived | source: acn_consumption.marketing.dim_date.date_id | transform: DERIVE_FROM_DATE",
+              "month | derived | source: acn_consumption.marketing.dim_date.date_id | transform: DERIVE_FROM_DATE",
+              "year | derived | source: acn_consumption.marketing.dim_date.date_id | transform: DERIVE_FROM_DATE"
+            ],
+            "missing_information": [],
+            "suggested_names": [],
+            "close_call": false
+          }
+        }
+      ],
+      "silver": [
+        {
+          "full_name": "acn_consumption.marketing.fact_campaign_performance",
+          "layer": "silver"
+        },
+        {
+          "full_name": "acn_consumption.marketing.dim_campaign",
+          "layer": "silver"
+        },
+        {
+          "full_name": "acn_consumption.marketing.dim_date",
+          "layer": "silver"
+        }
+      ],
+      "bronze": []
+    },
+    "foundry_iq_index": [],
+    "scoring_reference": {
+      "formula": "composite = (field_overlap x 0.30) + (source_compat x 0.15) + (granularity_align x 0.15) + (semantic_sim x 0.15) + (grain_compat x 0.15) + (freshness x 0.10)",
+      "weights": {
+        "field_overlap": 0.3,
+        "source_compatibility": 0.15,
+        "granularity_alignment": 0.15,
+        "semantic_similarity": 0.15,
+        "grain_compatibility": 0.15,
+        "freshness_sla": 0.1
+      },
+      "thresholds": {
+        "reuse_minimum": 0.8,
+        "extend_minimum": 0.5
+      },
+      "close_call_gap": 0.05
+    },
+    "test_scenarios": {}
+  }
+}
