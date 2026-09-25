@@ -1,5 +1,5 @@
 """
-server.py — BFSI Silver Agent FastAPI REST server.
+server.py — BFSI Bronze Agent FastAPI REST server.
 
 Exposes the pipeline as a REST API with streaming-friendly design.
 Supports multi-turn agent conversations via session IDs.
@@ -35,16 +35,16 @@ from pydantic import BaseModel, Field
 
 from pipeline import (
     run_pipeline,
-    _run_domain_scoping,
-    _run_silver_product_engine,
+    _run_source_scoping,
+    _run_bronze_product_engine,
     _run_spec_generator_with_validation,
 )
 from session_store import SessionStore
 from agents import (
     bank_profile_agent,
     requirement_understanding_agent,
-    domain_scoping_agent,
-    silver_product_engine,
+    source_scoping_agent,
+    bronze_product_engine,
     spec_generator_agent,
     validator_agent,
 )
@@ -74,9 +74,9 @@ logging.basicConfig(
 # ── App ───────────────────────────────────────────────────────────────────────
 
 app = FastAPI(
-    title="BFSI Silver Agent API",
+    title="BFSI Bronze Agent API",
     description=(
-        "Agentic banking Silver-layer schema generator powered by "
+        "Agentic banking Bronze-layer schema generator powered by "
         "Google ADK + Vertex AI Gemini + BigQuery"
     ),
     version="1.0.0",
@@ -135,7 +135,7 @@ def _get_session(session_id: str) -> dict:
 async def health_check():
     return {
         "status": "ok",
-        "service": "BFSI-Silver-Agent",
+        "service": "BFSI-Bronze-Agent",
         "timestamp": datetime.utcnow().isoformat() + "Z",
         "gcp_project": os.environ.get("GCP_PROJECT_ID", "(not set)"),
         "gemini_model": os.environ.get("GEMINI_MODEL", "(not set)"),
@@ -373,63 +373,8 @@ async def get_domain_registry():
     domains_list = [
         {"name": "core_banking", "display_name": "Core Banking & Accounts", "status": "green", "color": "#0f766e", "entity_count": 8, "framework_file": "core_banking"},
         {"name": "payments", "display_name": "Payments & Transfers (ISO 20022)", "status": "green", "color": "#0891b2", "entity_count": 6, "framework_file": "payments"},
-        {"name": "cards", "display_name": "Credit & Debit Cards", "status": "green", "color": "#6366f1", "entity_count": 5, "framework_file": "cards"},
-        {"name": "lending", "display_name": "Mortgages & Consumer Loans", "status": "green", "color": "#d97706", "entity_count": 6, "framework_file": "lending"},
-        {"name": "customer_360", "display_name": "Customer 360 & KYC/AML", "status": "green", "color": "#059669", "entity_count": 5, "framework_file": "customer_360"},
-        {"name": "compliance_risk", "display_name": "Regulatory & Basel III Risk", "status": "green", "color": "#dc2626", "entity_count": 7, "framework_file": "compliance_risk"},
     ]
     return {"domains": domains_list, "amber_domains": []}
-
-
-@app.get("/catalog/domains/{domain_name}")
-async def get_domain_framework(domain_name: str):
-    return {
-        "name": domain_name,
-        "display_name": domain_name.replace("_", " ").title(),
-        "color": "#0f766e",
-        "description": "BIAN and FIBO aligned Silver Layer canonical data model for Banking.",
-        "standards": ["BIAN_v12", "ISO_20022", "FIBO", "Basel_III"],
-        "hierarchy": ["Raw Core Source", "Silver Conformed Entity"],
-        "entity_types": {
-            "dimensions": ["slv_customer", "slv_account", "slv_card", "slv_loan"],
-            "events": ["slv_transaction_event", "slv_payment_event"],
-            "aggregates": ["slv_account_balance_daily", "slv_customer_risk_monthly"],
-        },
-        "derived_metrics": {
-            "NIM": {"formula": "(interest_inc - interest_exp) / assets", "description": "Net Interest Margin"},
-            "LTV": {"formula": "loan_amount / collateral_val", "description": "Loan-to-Value Ratio"},
-            "DTI": {"formula": "monthly_debt / gross_income", "description": "Debt-to-Income Ratio"},
-            "DAB": {"formula": "sum(daily_balance) / days", "description": "Daily Average Balance"},
-        },
-        "entities": {
-            "slv_customer": {
-                "type": "dimension", "grain": "one row per customer",
-                "columns": [
-                    {"name": "customer_id", "data_type": "STRING", "is_pk": True, "nullable": False, "description": "Primary Customer Identifier"},
-                    {"name": "customer_name", "data_type": "STRING", "is_pk": False, "nullable": False, "description": "Legal Name"},
-                    {"name": "kyc_status", "data_type": "STRING", "is_pk": False, "nullable": True, "description": "KYC Status"},
-                ],
-            },
-            "slv_account": {
-                "type": "dimension", "grain": "one row per deposit account",
-                "columns": [
-                    {"name": "account_id", "data_type": "STRING", "is_pk": True, "nullable": False, "description": "Account Identifier"},
-                    {"name": "customer_id", "data_type": "STRING", "is_pk": False, "fk_ref": "slv_customer", "nullable": False, "description": "Customer FK"},
-                    {"name": "account_type_cd", "data_type": "STRING", "is_pk": False, "nullable": False, "description": "Account Type (CHECKING/SAVINGS)"},
-                    {"name": "current_balance", "data_type": "NUMERIC", "is_pk": False, "nullable": False, "description": "Ledger Balance"},
-                ],
-            },
-            "slv_transaction_event": {
-                "type": "event", "grain": "one row per transaction",
-                "columns": [
-                    {"name": "transaction_id", "data_type": "STRING", "is_pk": True, "nullable": False, "description": "Txn ID"},
-                    {"name": "account_id", "data_type": "STRING", "is_pk": False, "fk_ref": "slv_account", "nullable": False, "description": "Account FK"},
-                    {"name": "txn_amount", "data_type": "NUMERIC", "is_pk": False, "nullable": False, "description": "Txn Amount"},
-                    {"name": "txn_timestamp", "data_type": "TIMESTAMP", "is_pk": False, "nullable": False, "description": "Timestamp"},
-                ],
-            },
-        },
-    }
 
 
 @app.post("/chat")
@@ -447,35 +392,18 @@ async def chat_endpoint(body: ChatRequest):
     action = body.action
     session["turns"] = session.get("turns", 0) + 1
 
-    if body.file_ref_id and body.file_ref_id in FILE_STORE:
-        file_info = FILE_STORE[body.file_ref_id]
-        if file_info.get("preview"):
-            user_msg = f"Extracted from file '{file_info['name']}':\n{file_info['preview']}\n{user_msg}"
-
     current_step = session.get("step", "bank_profile")
 
-    # Allow user to restart or force step jumps
     if action == "edit":
         current_step = "requirement"
         session["step"] = "requirement"
 
-    # ── STAGE 1: BANK PROFILE AGENT ───────────────────────────────────────────
     if current_step == "bank_profile":
         if user_msg == "Use Default Retail Bank Profile":
             user_msg = "Global Retail & Commercial Bank with Core Banking, Cards, and Loan products adhering to BIAN, ISO 20022, and Basel III standards."
             session["chip_selected"] = True
-        elif user_msg == "US Commercial Bank (Flexcube)":
-            session["chip_selected"] = True
-        elif user_msg == "European Retail Bank (Temenos)":
-            session["chip_selected"] = True
 
         prof_out = await bank_profile_agent.run(user_msg, session_id=session_id)
-
-        # Map core banking system explicitly if chip was selected
-        if "Flexcube" in body.message or body.message == "US Commercial Bank (Flexcube)":
-            prof_out["core_banking_system"] = "Oracle FLEXCUBE"
-        elif "Temenos" in body.message or body.message == "European Retail Bank (Temenos)":
-            prof_out["core_banking_system"] = "Temenos T24"
 
         is_complete = bank_profile_agent.is_complete(prof_out)
         if body.message == "Use Default Retail Bank Profile" or action in ("confirm_req", "design_schema"):
@@ -490,26 +418,22 @@ async def chat_endpoint(body: ChatRequest):
             else:
                 missing_list = "\n".join([f"- **{m.replace('_', ' ').title()}**" for m in missing]) if missing else "- **Bank Name & Primary Region**\n- **Banking Type (Retail / Corporate)**"
                 agent_text = (
-                    f"Welcome to the **DATA DOMAIN SILVER AGENT**!\n\n"
-                    f"To design an accurate Silver Schema, please provide your **Bank Profile** details:\n\n"
+                    f"Welcome to the **DATA DOMAIN BRONZE AGENT**!\n\n"
+                    f"To design an accurate Bronze Schema, please provide your **Bank Profile** details:\n\n"
                     f"{missing_list}"
                 )
 
             session["bank_profile"] = prof_out
             store.set(session_id, session)
 
-            chips_to_send = [] if session.get("chip_selected") or session.get("turns", 1) > 1 else [
-                "Use Default Retail Bank Profile",
-                "US Commercial Bank (Flexcube)",
-                "European Retail Bank (Temenos)"
-            ]
+            chips_to_send = ["Use Default Retail Bank Profile"]
 
             return {
                 "session_id": session_id,
                 "current_step": "bank_profile_clarifying",
                 "messages": [
                     {
-                        "agent": "DATA DOMAIN SILVER AGENT",
+                        "agent": "DATA DOMAIN BRONZE AGENT",
                         "text": agent_text,
                         "chips": chips_to_send,
                     }
@@ -517,10 +441,9 @@ async def chat_endpoint(body: ChatRequest):
                 "chips": chips_to_send,
             }
 
-        # Profile is complete -> generate Bank Profile PDF and advance to requirement step
         bp_pdf_bytes = generate_bank_profile_pdf(prof_out)
         bp_file_id = str(uuid.uuid4())
-        bp_filename = f"slv_bank_profile_brief_{session_id[:6]}.pdf"
+        bp_filename = f"brz_bank_profile_brief_{session_id[:6]}.pdf"
         FILE_STORE[bp_file_id] = {
             "id": bp_file_id,
             "name": bp_filename,
@@ -542,15 +465,8 @@ async def chat_endpoint(body: ChatRequest):
         current_step = "requirement"
         user_msg = user_msg or "Account Balance and Financial Transactions Analytics"
 
-    # ── STAGE 2: REQUIREMENT UNDERSTANDING AGENT ─────────────────────────────
     if current_step == "requirement":
-        bank_profile = session.get("bank_profile", {
-            "bank_name": "Global BFSI Bank",
-            "bank_code": "BFSI_US",
-            "regulatory_frameworks": [],
-        })
-        print(f"Bank Profile for Requirement Understanding: {bank_profile}")
-
+        bank_profile = session.get("bank_profile", {})
         prior_req = session.get("requirement", {})
         context = {
             "bank_profile": bank_profile,
@@ -566,13 +482,12 @@ async def chat_endpoint(body: ChatRequest):
         )
 
         is_ready = requirement_understanding_agent.is_handoff_ready(req_out)
-        print(f"Requirement Understanding Output: {req_out}, is_ready: {is_ready}")
 
-        if action in ("confirm_req", "design_schema") or user_msg in ("Confirm Requirement", "Design Silver Schema"):
+        if action in ("confirm_req", "design_schema") or user_msg in ("Confirm Requirement", "Design Bronze Schema"):
             is_ready = True
 
         domain_name = req_out.get("domain") or req_out.get("banking_domain") or "Core Banking"
-        use_case_title = req_out.get("use_case_name") or f"{str(domain_name).replace('_', ' ').title()} Silver Data Model"
+        use_case_title = req_out.get("use_case_name") or f"{str(domain_name).replace('_', ' ').title()} Bronze Data Model"
         req_out["use_case_name"] = use_case_title
         if "domain" not in req_out:
             req_out["domain"] = domain_name
@@ -594,36 +509,35 @@ async def chat_endpoint(body: ChatRequest):
         glossary = {
             "column_count": len(req_data["data_points"]),
             "entries": [
-                {"name": dp["name"], "type_label": dp["kind"].upper(), "type_color": "green" if dp["kind"] == "kpi" else "blue", "sql_type": "NUMERIC" if dp["kind"] == "kpi" else "STRING", "description": f"Canonical Silver column for {dp['name']}."}
+                {"name": dp["name"], "type_label": dp["kind"].upper(), "type_color": "green" if dp["kind"] == "kpi" else "blue", "sql_type": "NUMERIC" if dp["kind"] == "kpi" else "STRING", "description": f"Raw Bronze column for {dp['name']}."}
                 for dp in req_data["data_points"]
             ],
         }
 
         if not is_ready:
             missing = requirement_understanding_agent.get_missing_fields(req_out)
-            print("Missing requirement fields:", missing)
             raw_text = req_out.get("raw_output", "")
 
             if raw_text and not raw_text.strip().startswith("{"):
                 agent_text = raw_text.strip()
                 msg_payload = {
-                    "agent": "DATA DOMAIN SILVER AGENT",
+                    "agent": "DATA DOMAIN BRONZE AGENT",
                     "text": agent_text,
-                    "chips": ["Confirm Requirement", "Edit", "Design Silver Schema"],
+                    "chips": ["Confirm Requirement", "Edit", "Design Bronze Schema"],
                     "files": session.get("all_generated_files", []),
                 }
             else:
                 missing_text = "\n".join([f"- **{m.replace('_', ' ').title()}**" for m in missing]) if missing else "- **Banking Domain**\n- **Key Data Points**"
                 agent_text = (
                     f"Understood draft requirement: **{req_data['use_case_name']}** (`{req_data['domain']}`).\n\n"
-                    f"To make the Silver Schema fully production-ready, please clarify the following missing details:\n\n"
+                    f"To make the Bronze Schema fully production-ready, please clarify the following missing details:\n\n"
                     f"{missing_text}\n\n"
                     f"You can respond in chat, click **Edit** to modify the requirement fields directly, or click **Confirm Requirement** to proceed with current defaults."
                 )
                 msg_payload = {
-                    "agent": "DATA DOMAIN SILVER AGENT",
+                    "agent": "DATA DOMAIN BRONZE AGENT",
                     "text": agent_text,
-                    "chips": ["Confirm Requirement", "Edit", "Design Silver Schema"],
+                    "chips": ["Confirm Requirement", "Edit", "Design Bronze Schema"],
                     "requirement_data": req_data,
                     "glossary": glossary,
                     "files": session.get("all_generated_files", []),
@@ -637,13 +551,12 @@ async def chat_endpoint(body: ChatRequest):
                 "session_id": session_id,
                 "current_step": "dpi_confirm_req",
                 "messages": [msg_payload],
-                "chips": ["Confirm Requirement", "Edit", "Design Silver Schema"],
+                "chips": ["Confirm Requirement", "Edit", "Design Bronze Schema"],
             }
 
-        # Requirement is complete -> generate Requirements Brief PDF & Data Availability PDF
         req_pdf_bytes = generate_requirements_brief_pdf(req_out, bank_profile)
         req_file_id = str(uuid.uuid4())
-        req_filename = f"slv_requirements_brief_{session_id[:6]}.pdf"
+        req_filename = f"brz_requirements_brief_{session_id[:6]}.pdf"
         FILE_STORE[req_file_id] = {
             "id": req_file_id,
             "name": req_filename,
@@ -653,7 +566,7 @@ async def chat_endpoint(body: ChatRequest):
 
         avail_pdf_bytes = generate_data_availability_pdf({}, req_out)
         avail_file_id = str(uuid.uuid4())
-        avail_filename = f"slv_data_availability_report_{session_id[:6]}.pdf"
+        avail_filename = f"brz_data_availability_report_{session_id[:6]}.pdf"
         FILE_STORE[avail_file_id] = {
             "id": avail_file_id,
             "name": avail_filename,
@@ -681,68 +594,32 @@ async def chat_endpoint(body: ChatRequest):
         session["requirement"] = req_out
         session["step"] = "scoping_and_building"
 
-    # ── STAGE 3: DOMAIN SCOPING, PRODUCT ENGINE, SPEC & VALIDATION ────────────
-    bank_profile = session.get("bank_profile", {
-        "bank_name": "Global BFSI Bank",
-        "bank_code": "BFSI_US",
-        "regulatory_frameworks": [],
-    })
-    structured_req = session.get("requirement", {
-        "use_case_name": "Core Banking Account Balance & Txn Analytics",
-        "banking_domain": "Core Banking",
-    })
+    bank_profile = session.get("bank_profile", {})
+    structured_req = session.get("requirement", {})
 
-    domain_scope = await _run_domain_scoping(structured_req, bank_profile, session_id)
-    product_plan = await _run_silver_product_engine(domain_scope, bank_profile, structured_req, session_id)
-    spec_result = await _run_spec_generator_with_validation(product_plan, bank_profile, domain_scope, session_id)
+    source_scope = await _run_source_scoping(structured_req, bank_profile, session_id)
+    product_plan = await _run_bronze_product_engine(source_scope, bank_profile, structured_req, session_id)
+    spec_result = await _run_spec_generator_with_validation(product_plan, bank_profile, source_scope, session_id)
 
     ddl = spec_generator_agent.get_ddl(spec_result.get("spec", {})) or (
-        "-- BFSI Silver Layer BigQuery DDL Script\n"
-        "CREATE OR REPLACE TABLE `banking_silver.slv_customer` (\n"
+        "-- BFSI Bronze Layer BigQuery DDL Script\n"
+        "CREATE OR REPLACE TABLE `banking_bronze.brz_customer` (\n"
         "  customer_id STRING OPTIONS(description='Primary Customer ID'),\n"
-        "  customer_name STRING OPTIONS(description='Full Legal Name'),\n"
-        "  party_type STRING OPTIONS(description='INDIVIDUAL or CORPORATE'),\n"
-        "  kyc_status STRING OPTIONS(description='KYC Verification Status'),\n"
-        "  created_date DATE OPTIONS(description='Customer Onboarding Date')\n"
-        ") PARTITION BY created_date CLUSTER BY customer_id;\n\n"
-        "CREATE OR REPLACE TABLE `banking_silver.slv_account` (\n"
-        "  account_id STRING OPTIONS(description='Account Primary Key'),\n"
-        "  customer_id STRING OPTIONS(description='FK to slv_customer'),\n"
-        "  account_number STRING OPTIONS(description='Masked Account Number'),\n"
-        "  account_type_cd STRING OPTIONS(description='CHECKING / SAVINGS'),\n"
-        "  currency_code STRING OPTIONS(description='ISO Currency Code'),\n"
-        "  current_balance NUMERIC OPTIONS(description='Current Ledger Balance')\n"
-        ") CLUSTER BY customer_id, account_id;\n\n"
-        "CREATE OR REPLACE TABLE `banking_silver.slv_transaction_event` (\n"
-        "  transaction_id STRING OPTIONS(description='Txn Primary Key'),\n"
-        "  account_id STRING OPTIONS(description='FK to slv_account'),\n"
-        "  customer_id STRING OPTIONS(description='FK to slv_customer'),\n"
-        "  txn_amount NUMERIC OPTIONS(description='Monetary Txn Amount'),\n"
-        "  currency_code STRING OPTIONS(description='ISO Currency'),\n"
-        "  txn_timestamp TIMESTAMP OPTIONS(description='Transaction Timestamp')\n"
-        ") PARTITION BY DATE(txn_timestamp) CLUSTER BY account_id;\n"
+        "  customer_name STRING OPTIONS(description='Full Legal Name')\n"
+        ") CLUSTER BY customer_id;\n\n"
+        "CREATE OR REPLACE TABLE `banking_bronze.brz_account` (\n"
+        "  account_id STRING OPTIONS(description='Account Primary Key')\n"
+        ") CLUSTER BY account_id;\n\n"
     )
 
-    mappings = [
-        {"source_column": "raw_core.cust_id", "transform": "CAST_TO_STRING", "target_column": "customer_id", "target_table": "banking_silver.slv_customer"},
-        {"source_column": "raw_core.cust_name", "transform": "UPPER(TRIM())", "target_column": "customer_name", "target_table": "banking_silver.slv_customer"},
-        {"source_column": "raw_core.acct_no", "transform": "CAST_TO_STRING", "target_column": "account_id", "target_table": "banking_silver.slv_account"},
-        {"source_column": "raw_core.cust_id", "transform": "CAST_TO_STRING", "target_column": "customer_id", "target_table": "banking_silver.slv_account"},
-        {"source_column": "raw_core.bal_amt", "transform": "CAST_TO_NUMERIC", "target_column": "current_balance", "target_table": "banking_silver.slv_account"},
-        {"source_column": "raw_core.txn_id", "transform": "CAST_TO_STRING", "target_column": "transaction_id", "target_table": "banking_silver.slv_transaction_event"},
-        {"source_column": "raw_core.acct_no", "transform": "CAST_TO_STRING", "target_column": "account_id", "target_table": "banking_silver.slv_transaction_event"},
-        {"source_column": "raw_core.amount", "transform": "CAST_TO_NUMERIC", "target_column": "txn_amount", "target_table": "banking_silver.slv_transaction_event"},
-        {"source_column": "raw_core.txn_time", "transform": "CAST_TO_TIMESTAMP", "target_column": "txn_timestamp", "target_table": "banking_silver.slv_transaction_event"},
-    ]
+    mappings = []
 
-    # Generate Data Contract & STTM CSV
     contract_dict = generate_data_contract_dict(product_plan, bank_profile, structured_req)
     contract_yaml = generate_data_contract_yaml(contract_dict)
     contract_dict["yaml_text"] = contract_yaml
 
-    # 1. SQL DDL File
     ddl_file_id = str(uuid.uuid4())
-    ddl_filename = f"slv_banking_schema_{session_id[:6]}.sql"
+    ddl_filename = f"brz_banking_schema_{session_id[:6]}.sql"
     FILE_STORE[ddl_file_id] = {
         "id": ddl_file_id,
         "name": ddl_filename,
@@ -750,9 +627,8 @@ async def chat_endpoint(body: ChatRequest):
         "type": "sql",
     }
 
-    # 2. YAML Data Contract File
     contract_file_id = str(uuid.uuid4())
-    contract_filename = f"slv_banking_contract_v1.0_{session_id[:6]}.yaml"
+    contract_filename = f"BC-banking_contract_v1.0_{session_id[:6]}.yaml"
     FILE_STORE[contract_file_id] = {
         "id": contract_file_id,
         "name": contract_filename,
@@ -760,10 +636,9 @@ async def chat_endpoint(body: ChatRequest):
         "type": "yaml",
     }
 
-    # 3. Excel STTM Mapping Workbook (.xlsx)
     sttm_xls_bytes = generate_sttm_excel(mappings, structured_req)
     sttm_xls_file_id = str(uuid.uuid4())
-    sttm_xls_filename = f"slv_sttm_mapping_v1_{session_id[:6]}.xlsx"
+    sttm_xls_filename = f"brz_sttm_mapping_v1_{session_id[:6]}.xlsx"
     FILE_STORE[sttm_xls_file_id] = {
         "id": sttm_xls_file_id,
         "name": sttm_xls_filename,
@@ -771,10 +646,9 @@ async def chat_endpoint(body: ChatRequest):
         "type": "xlsx",
     }
 
-    # 4. Excel Metadata Workbook (.xlsx - 2 Tabs)
-    meta_xls_bytes = generate_metadata_excel(product_plan, domain_scope, structured_req)
+    meta_xls_bytes = generate_metadata_excel(product_plan, source_scope, structured_req)
     meta_xls_file_id = str(uuid.uuid4())
-    meta_xls_filename = f"slv_metadata_v1_{session_id[:6]}.xlsx"
+    meta_xls_filename = f"brz_metadata_v1_{session_id[:6]}.xlsx"
     FILE_STORE[meta_xls_file_id] = {
         "id": meta_xls_file_id,
         "name": meta_xls_filename,
@@ -782,10 +656,9 @@ async def chat_endpoint(body: ChatRequest):
         "type": "xlsx",
     }
 
-    # 5. Excel Sample Run Audit Workbook (.xlsx - 3 Tabs)
     audit_xls_bytes = generate_sample_audit_excel(product_plan, mappings)
     audit_xls_file_id = str(uuid.uuid4())
-    audit_xls_filename = f"slv_sample_run_audit_{session_id[:6]}.xlsx"
+    audit_xls_filename = f"brz_sample_run_audit_{session_id[:6]}.xlsx"
     FILE_STORE[audit_xls_file_id] = {
         "id": audit_xls_file_id,
         "name": audit_xls_filename,
@@ -793,10 +666,9 @@ async def chat_endpoint(body: ChatRequest):
         "type": "xlsx",
     }
 
-    # 6. JSON GCP Dataplex Catalog Manifest (.json)
     dataplex_json_str = generate_dataplex_manifest_json(product_plan, bank_profile)
     dataplex_file_id = str(uuid.uuid4())
-    dataplex_filename = f"slv_dataplex_catalog_manifest_{session_id[:6]}.json"
+    dataplex_filename = f"brz_dataplex_catalog_manifest_{session_id[:6]}.json"
     FILE_STORE[dataplex_file_id] = {
         "id": dataplex_file_id,
         "name": dataplex_filename,
@@ -804,71 +676,30 @@ async def chat_endpoint(body: ChatRequest):
         "type": "json",
     }
 
-    # 7. Python GCP Airflow DAG Script (.py)
-    dag_code_str = generate_airflow_dag_code(product_plan, bank_profile)
-    dag_file_id = str(uuid.uuid4())
-    dag_filename = f"slv_pipeline_dag_{session_id[:6]}.py"
-    FILE_STORE[dag_file_id] = {
-        "id": dag_file_id,
-        "name": dag_filename,
-        "content": dag_code_str.encode("utf-8"),
-        "type": "py",
-    }
-
     all_files = session.get("all_generated_files", [])
     all_files.extend([
-        {"id": ddl_file_id, "name": ddl_filename, "label": "BigQuery Silver DDL Script (.sql)", "stage": "BUILDER"},
-        {"id": contract_file_id, "name": contract_filename, "label": "Silver Data Contract (.yaml)", "stage": "DESIGNER"},
-        {"id": sttm_xls_file_id, "name": sttm_xls_filename, "label": "STTM Mapping Workbook (.xlsx)", "stage": "DESIGNER"},
-        {"id": meta_xls_file_id, "name": meta_xls_filename, "label": "Governance Metadata Workbook (.xlsx)", "stage": "DESIGNER"},
-        {"id": audit_xls_file_id, "name": audit_xls_filename, "label": "Sample Transformation Audit (.xlsx)", "stage": "BUILDER"},
-        {"id": dataplex_file_id, "name": dataplex_filename, "label": "GCP Dataplex Catalog Manifest (.json)", "stage": "BUILDER"},
-        # Note: slv_pipeline_dag.py is generated in FILE_STORE but hidden from frontend display per user request.
+        {"id": ddl_file_id, "name": ddl_filename, "label": "BigQuery DDL Script (.sql)", "stage": "PRODUCT ENGINE"},
+        {"id": contract_file_id, "name": contract_filename, "label": "Data Contract Definition (.yaml)", "stage": "PRODUCT ENGINE"},
+        {"id": sttm_xls_file_id, "name": sttm_xls_filename, "label": "Source-to-Target Mapping (.xlsx)", "stage": "PRODUCT ENGINE"},
+        {"id": meta_xls_file_id, "name": meta_xls_filename, "label": "Business Glossary & Catalog (.xlsx)", "stage": "PRODUCT ENGINE"},
+        {"id": audit_xls_file_id, "name": audit_xls_filename, "label": "Sample Data Quality Audit (.xlsx)", "stage": "VALIDATION"},
+        {"id": dataplex_file_id, "name": dataplex_filename, "label": "Dataplex Tag Manifest (.json)", "stage": "VALIDATION"},
     ])
     session["all_generated_files"] = all_files
-
-    silver_view = {
-        "title": "Silver Schema & STTM Specification",
-        "step_label": "BIAN Conformed Silver Layer",
-        "summary": "Generated canonical Banking Silver schema with full BigQuery DDL script, Data Contract, and Excel STTM mappings.",
-        "narrative": "The Silver Product Engine generated conformed entities (`slv_customer`, `slv_account`, `slv_transaction_event`). All columns adhere to BIAN naming conventions, ISO standards, and BigQuery partitioning strategies.",
-        "silver_sources": ["raw_core.customer_master", "raw_core.account_ledger", "raw_core.transaction_feed"],
-        "silver_tables": ["banking_silver.slv_customer", "banking_silver.slv_account", "banking_silver.slv_transaction_event"],
-        "lineage_summary": [
-            "raw_core.customer_master → banking_silver.slv_customer (Conformed Customer 360)",
-            "raw_core.account_ledger → banking_silver.slv_account (Deposit Accounts)",
-            "raw_core.transaction_feed → banking_silver.slv_transaction_event (Financial Transactions)",
-        ],
-        "header": "Silver STTM Mappings",
-        "mappings": mappings,
-        "mapping_count": len(mappings),
-    }
-
+    session["status"] = "completed"
     session["ddl_script"] = ddl
     session["contract_yaml"] = contract_yaml
-    session["contract_dict"] = contract_dict
-    session["step"] = "complete"
     store.set(session_id, session)
-
-    agent_response_text = (
-        f"Generated enterprise-grade Banking Silver Schema, Data Contract, and STTM Workbooks.\n\n"
-        f"```sql\n{ddl}\n```\n\n"
-        f"You can review the **Data Contract** and **STTM Mappings** below, and download all generated pipeline artifacts (.pdf, .xlsx, .yaml, .sql, .json) from the right-hand panel."
-    )
 
     return {
         "session_id": session_id,
-        "current_step": "sttm_ready",
+        "current_step": "pipeline_complete",
         "messages": [
             {
-                "agent": "DATA DOMAIN SILVER AGENT",
-                "text": agent_response_text,
-                "chips": ["Publish to BigQuery", "Adjust the model", "Tweak the mapping", "Edit Contract"],
-                "data_contract_view": contract_dict,
-                "silver_transform_view": silver_view,
+                "agent": "DATA DOMAIN BRONZE AGENT",
+                "text": "The Bronze Data Product schema, pipeline DDL, and documentation artifacts have been successfully generated.",
                 "files": all_files,
+                "chips": ["Publish to BigQuery", "Download All Artifacts"],
             }
         ],
-        "chips": ["Publish to BigQuery", "Adjust the model", "Tweak the mapping", "Edit Contract"],
     }
-

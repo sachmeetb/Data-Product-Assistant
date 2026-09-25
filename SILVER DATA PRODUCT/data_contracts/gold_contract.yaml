@@ -1,0 +1,146 @@
+# ==============================================================================
+# BFSI DATA PRODUCT CONTRACT — GOLD LAYER PREDEFINED TEMPLATE
+# ==============================================================================
+# Specification Version: 1.0.0 (OpenDataContract Aligned)
+# Layer: Gold (Curated Business Consumption Marts, Metrics & Aggregations)
+# ==============================================================================
+
+contract:
+  contract_id: "GC-${DATA_PRODUCT_ID}-${VERSION}"
+  contract_name: "${DATA_PRODUCT_NAME} Consumption Contract"
+  version: "1.0.0"
+  status: "DRAFT"
+  created_at: "${CREATION_TIMESTAMP}"
+  updated_at: "${LAST_MODIFIED_TIMESTAMP}"
+  layer: "GOLD"
+  description: "Gold layer consumption contract governing analytical dimensional models, KPI calculations, metric reconciliation, and BI/ML SLAs."
+
+data_product:
+  product_id: "${DATA_PRODUCT_ID}"
+  product_name: "${DATA_PRODUCT_NAME}"
+  layer: "GOLD"
+  product_archetype: "${ARCHETYPE}"
+  business_domain: "${BUSINESS_DOMAIN}"
+  business_use_case: "${BUSINESS_USE_CASE}"
+  upstream_silver_products:
+    - product_id: "${UPSTREAM_SILVER_PRODUCT_ID}"
+      entity_type: "${UPSTREAM_SILVER_ENTITY}"
+  target_storage:
+    catalog: "banking_gold"
+    mart_name: "${GOLD_MART_NAME}"
+    physical_table: "${TARGET_GOLD_TABLE_OR_VIEW}"
+
+schema:
+  enforcement_mode: "STRICT_ANALYTICS_ENFORCED"
+  grain: "${TABLE_GRAIN_DESCRIPTION}"
+  primary_keys:
+    - "${DIMENSION_OR_FACT_PRIMARY_KEY}"
+  fields:
+    - name: "${DIMENSION_KEY}"
+      data_type: "${DATA_TYPE}"
+      nullable: false
+      description: "Conformed dimension foreign key referencing Silver layer dimension."
+    - name: "${METRIC_COLUMN}"
+      data_type: "NUMERIC(18,4)"
+      nullable: false
+      description: "Business aggregated metric / KPI."
+      business_metric_definition: "${FORMULA_AND_CALCULATION_LOGIC}"
+      classification:
+        pii: false
+        sensitive: false
+
+data_quality:
+  enforcement_engine: "DBT"
+  quality_gate: "BUSINESS_CONSUMPTION_GATE"
+
+  rules:
+    - rule_id: "GLD-DQ-001"
+      rule_name: "Consumption Primary Key Uniqueness"
+      type: "UNIQUENESS"
+      description: "Fact or Mart grain key must be unique and not null."
+      severity: "CRITICAL"
+      enabled: true
+      target_columns:
+        - "${DIMENSION_OR_FACT_PRIMARY_KEY}"
+      dbt_test:
+        test_type: "unique_and_not_null"
+
+    - rule_id: "GLD-DQ-002"
+      rule_name: "Source-to-Mart Metric Reconciliation"
+      type: "RECONCILIATION"
+      description: "Aggregated metric sum in Gold must reconcile with Silver underlying transactions within 0.01% tolerance."
+      severity: "CRITICAL"
+      enabled: true
+      dbt_test:
+        test_type: "custom_dbt_test"
+        test_name: "assert_gold_silver_reconciliation"
+        parameters:
+          tolerance_percentage: 0.01
+          silver_relation: "ref('${UPSTREAM_SILVER_TABLE}')"
+
+    - rule_id: "GLD-DQ-003"
+      rule_name: "Business Ratio Bounds & Validity"
+      type: "VALIDITY"
+      description: "Calculated ratios, scores, and percentage metrics must fall within statutory and financial boundaries."
+      severity: "HIGH"
+      enabled: true
+      target_columns:
+        - "${METRIC_COLUMN}"
+      dbt_test:
+        test_type: "dbt_expectations.expect_column_values_to_be_between"
+        parameters:
+          column: "${METRIC_COLUMN}"
+          min_value: "${MIN_ACCEPTABLE_VALUE}"
+          max_value: "${MAX_ACCEPTABLE_VALUE}"
+
+    - rule_id: "GLD-DQ-004"
+      rule_name: "Dimension Referential Integrity (No Orphan Facts)"
+      type: "REFERENTIAL_INTEGRITY"
+      description: "All dimension foreign keys in Gold marts must resolve to current dimension entities."
+      severity: "CRITICAL"
+      enabled: true
+      dbt_test:
+        test_type: "relationships"
+        parameters:
+          to: "ref('${TARGET_DIMENSION_TABLE}')"
+          field: "surrogate_key"
+
+sla:
+  freshness:
+    expected_frequency: "${BUSINESS_CADENCE}"
+    max_lag: "${MAX_REFRESH_LAG}"
+    cron_schedule: "${CRON_SCHEDULE}"
+  availability:
+    ready_by_business_time: "${TARGET_READINESS_TIME}"
+    query_p95_latency_seconds: 3.0
+    availability_sla_percentage: 99.95
+  processing:
+    max_run_duration_minutes: 30
+
+privacy:
+  classification: "INTERNAL"
+  pii:
+    present: false
+    anonymization_method: "AGGREGATION_K_ANONYMITY"
+    minimum_cohort_size: 10
+  access_policy:
+    rbac_roles_allowed:
+      - "ROLE_BUSINESS_CONSUMER"
+      - "ROLE_EXECUTIVE_DASHBOARD"
+      - "ROLE_REGULATORY_REPORTING"
+
+governance:
+  data_owner: "${BUSINESS_DOMAIN_LEAD_EMAIL}"
+  business_owner: "${EXECUTIVE_SPONSOR_EMAIL}"
+  analytics_engineer: "${LEAD_ANALYTICS_ENGINEER}"
+  business_domain: "${BUSINESS_DOMAIN}"
+  authorized_consumers:
+    - "EXECUTIVE_POWERBI_PORTAL"
+    - "REGULATORY_SUBMISSION_PIPELINE"
+  regulatory_mandates:
+    - "BASEL_III_PILLAR_3_MARKET_DISCIPLINE"
+    - "BCBS_239_RISK_REPORTING_TIMELINESS"
+    - "FINCEN_BANK_SECRECY_ACT_AML"
+  retention:
+    period: "10_YEARS"
+    statutory_mandate: "REGULATORY_REPORTING_RETENTION_STANDARD"

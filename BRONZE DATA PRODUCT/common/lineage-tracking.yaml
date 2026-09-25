@@ -1,0 +1,21 @@
+block_name: lineage-tracking
+title: Lineage Tracking
+usage_note: Lineage information for the ingestion pipeline
+standards_alignment: []
+columns:
+  - name: pipeline_run_id
+    bq_type: STRING
+    mode: REQUIRED
+    description: ID of the pipeline run
+  - name: dag_id
+    bq_type: STRING
+    mode: NULLABLE
+    description: ID of the DAG
+  - name: task_id
+    bq_type: STRING
+    mode: NULLABLE
+    description: ID of the task
+  - name: upstream_source_uri
+    bq_type: STRING
+    mode: NULLABLE
+    description: URI of the upstream source

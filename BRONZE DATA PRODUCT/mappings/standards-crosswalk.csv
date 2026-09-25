@@ -1,0 +1,8 @@
+bronze_component,type,iso_20022,fdx_open_finance,fibo,bian,cdm_finos,other_standards
+common/ingestion-metadata,block,,,,DataGovernance patterns,,DAMA-DMBOK; medallion Bronze
+common/source-identifier,block,GenericIdentification,Identifier,Identifier,Reference,Identifier,"ISO 17442 LEI; ISO 9362 BIC"
+common/file-metadata,block,,,,,,,
+common/raw-payload,block,,,,,,,
+common/quality-flags,block,,,,,,,
+common/lineage-tracking,block,,,,DataGovernance patterns,,
+common/temporal,block,DateTimePeriod,,hasDatePeriod,,Period,ISO 8601

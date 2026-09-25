@@ -1,0 +1,21 @@
+block_name: quality-flags
+title: Quality Flags
+usage_note: Data quality status flags
+standards_alignment: []
+columns:
+  - name: parse_status
+    bq_type: STRING
+    mode: REQUIRED
+    description: Status of parsing the record
+  - name: error_code
+    bq_type: STRING
+    mode: NULLABLE
+    description: Error code if parsing failed
+  - name: error_message
+    bq_type: STRING
+    mode: NULLABLE
+    description: Error message if parsing failed
+  - name: is_quarantined
+    bq_type: BOOLEAN
+    mode: REQUIRED
+    description: Flag indicating if the record is quarantined

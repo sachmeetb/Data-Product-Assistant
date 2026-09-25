@@ -1,0 +1,169 @@
+{
+  "version": "1.0.0",
+  "description": "Banking industry standards reference for Silver-layer schema compliance",
+  "standards": {
+    "iso_20022": {
+      "name": "ISO 20022",
+      "full_name": "Universal Financial Industry Message Scheme",
+      "governing_body": "ISO TC68",
+      "website": "https://www.iso20022.org",
+      "relevance": "Primary messaging standard for payments, securities, trade finance",
+      "key_concepts": [
+        "Business Application Header (BAH)",
+        "Message Definition Reports (MDR)",
+        "External Code Sets",
+        "CBPR+ migration (SWIFT)",
+        "Structured vs Unstructured address"
+      ],
+      "silver_layer_rules": [
+        "Use structured address fields: street_name, building_number, post_code, town_name, country",
+        "Prefer ISO 4217 three-letter currency codes over currency names",
+        "Store BIC (ISO 9362) for financial institutions",
+        "Store IBAN (ISO 13616) for account numbers",
+        "Use ISO 8601 date-time format for all timestamps",
+        "Preserve original message ID in lineage fields",
+        "debit_credit_indicator must be CRDT or DBIT"
+      ],
+      "message_families": {
+        "pain": "Payments Initiation",
+        "pacs": "Payments Clearing & Settlement",
+        "camt": "Cash Management",
+        "acmt": "Account Management",
+        "tsmt": "Trade Services Management",
+        "reda": "Reference Data",
+        "seev": "Securities Events",
+        "sese": "Securities Settlement",
+        "colr": "Collateral Management"
+      }
+    },
+    "fibo": {
+      "name": "FIBO",
+      "full_name": "Financial Industry Business Ontology",
+      "governing_body": "EDM Council / OMG",
+      "website": "https://spec.edmcouncil.org/fibo/",
+      "relevance": "Semantic definitions for banking entities and relationships",
+      "key_modules": [
+        "FND - Foundations (quantities, dates, identifiers)",
+        "BE - Business Entities (legal persons, organizations)",
+        "FBC - Financial Business & Commerce (accounts, contracts)",
+        "IND - Indices & Indicators (rates, indices)",
+        "SEC - Securities (instruments, pools)",
+        "LOAN - Loans & Mortgages"
+      ],
+      "silver_layer_rules": [
+        "Legal entities must have LEI (ISO 17442) as primary identifier",
+        "Party type must distinguish individual vs legal entity",
+        "Financial instruments must carry ISIN (ISO 6166) or FIGI",
+        "Monetary amounts must be stored as NUMERIC with separate currency field"
+      ]
+    },
+    "bian": {
+      "name": "BIAN",
+      "full_name": "Banking Industry Architecture Network",
+      "governing_body": "BIAN e.V.",
+      "website": "https://bian.org",
+      "relevance": "Service domain decomposition and capability model for banking",
+      "silver_layer_rules": [
+        "Align table boundaries to BIAN service domains where possible",
+        "Each Silver table should map to one primary BIAN service domain",
+        "Use BIAN action terms for status codes: Initiate, Update, Execute, Evaluate, Assess"
+      ]
+    },
+    "fdx": {
+      "name": "FDX",
+      "full_name": "Financial Data Exchange",
+      "governing_body": "Financial Data Exchange LLC",
+      "website": "https://financialdataexchange.org",
+      "relevance": "Open finance / open banking API standard (US & global)",
+      "silver_layer_rules": [
+        "Account types: CHECKING, SAVINGS, LOAN, LINEOFCREDIT, INVESTMENT, INSURANCE",
+        "Transaction types: DEBIT, CREDIT",
+        "Transaction status: PENDING, POSTED"
+      ]
+    },
+    "finos_cdm": {
+      "name": "FINOS CDM",
+      "full_name": "Common Domain Model",
+      "governing_body": "FINOS Foundation",
+      "website": "https://cdm.finos.org",
+      "relevance": "Capital markets trade and lifecycle events standard"
+    },
+    "bcbs_239": {
+      "name": "BCBS 239",
+      "full_name": "Principles for Effective Risk Data Aggregation and Risk Reporting",
+      "governing_body": "Basel Committee on Banking Supervision",
+      "relevance": "Data governance and lineage requirements for risk data",
+      "silver_layer_rules": [
+        "Every risk-related record must have data_source, load_ts, and record_hash",
+        "SCD Type-2 history must be maintained for risk-relevant dimensions",
+        "Data quality status must be captured per record (dq_status)",
+        "Full lineage from source system must be preserved in technical envelope"
+      ]
+    },
+    "gdpr": {
+      "name": "GDPR",
+      "full_name": "General Data Protection Regulation",
+      "governing_body": "European Data Protection Board",
+      "relevance": "Personal data handling for EU/UK banks",
+      "silver_layer_rules": [
+        "PII fields must be documented in column descriptions with pii=true",
+        "Consent status must be captured on the Party entity",
+        "Data retention expiry date must be set per entity",
+        "Right-to-erasure must be achievable via surrogate key nullification"
+      ]
+    },
+    "basel_iii": {
+      "name": "Basel III",
+      "full_name": "Basel III International Regulatory Framework",
+      "governing_body": "Basel Committee on Banking Supervision",
+      "relevance": "Capital adequacy, liquidity, and leverage requirements",
+      "silver_layer_rules": [
+        "Risk-weighted exposure amounts must be captured",
+        "Capital requirement fields must be present on credit/market risk entities",
+        "LCR and NSFR liquidity metrics require balance-level data"
+      ]
+    },
+    "psd2": {
+      "name": "PSD2",
+      "full_name": "Payment Services Directive 2",
+      "governing_body": "European Banking Authority",
+      "relevance": "Open banking access to accounts and payment initiation in EU/UK",
+      "silver_layer_rules": [
+        "Strong Customer Authentication (SCA) method must be captured on payment",
+        "TPP (Third-Party Provider) identifier must be stored on consent/access records",
+        "Consent ID must be linked to payment and account access events"
+      ]
+    }
+  },
+  "identifier_standards": {
+    "LEI":   {"iso": "ISO 17442", "length": 20,      "entity": "Legal Entity"},
+    "BIC":   {"iso": "ISO 9362",  "length": "8or11", "entity": "Financial Institution"},
+    "IBAN":  {"iso": "ISO 13616", "max_length": 34,  "entity": "Bank Account"},
+    "ISIN":  {"iso": "ISO 6166",  "length": 12,      "entity": "Securities Instrument"},
+    "FIGI":  {"length": 12, "entity": "Financial Instrument", "issuer": "Bloomberg"},
+    "UPI":   {"entity": "OTC Derivatives", "issuer": "ANNA DSB"},
+    "MIC":   {"iso": "ISO 10383", "entity": "Market / Exchange"},
+    "CUSIP": {"length": 9, "entity": "US/CA Securities"},
+    "SWIFT": {"entity": "Bank Identifier", "note": "Same as BIC"}
+  },
+  "bigquery_type_mappings": {
+    "money_amount":     "NUMERIC",
+    "money_currency":   "STRING",
+    "identifier_value": "STRING",
+    "date":             "DATE",
+    "datetime":         "DATETIME",
+    "timestamp":        "TIMESTAMP",
+    "boolean_flag":     "BOOL",
+    "code_value":       "STRING",
+    "rate":             "NUMERIC",
+    "quantity":         "NUMERIC",
+    "surrogate_key":    "STRING",
+    "foreign_key":      "STRING",
+    "json_blob":        "JSON",
+    "struct":           "STRUCT",
+    "array":            "ARRAY",
+    "free_text":        "STRING",
+    "count":            "INT64",
+    "percentage":       "NUMERIC"
+  }
+}

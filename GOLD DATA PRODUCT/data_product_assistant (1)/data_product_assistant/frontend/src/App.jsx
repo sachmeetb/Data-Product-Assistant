@@ -155,7 +155,7 @@ function Workspace({ user }) {
           challenger_view: msg.challenger_view ?? undefined,
           sttm_view: msg.sttm_view ?? undefined,
           silver_transform_view: msg.silver_transform_view ?? undefined,
-          data_contract_view: msg.data_contract_view ?? undefined,
+          data_contract_view: msg.data_contract_view ?? (idx === data.messages.length - 1 ? data.data_contract_view : undefined),
           loading: false,
           time: ts(),
         }))

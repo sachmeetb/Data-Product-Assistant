@@ -4,7 +4,7 @@ import ChatPane from './components/ChatPane'
 import RightPane from './components/RightPane'
 import TweakModal from './components/TweakModal'
 import { sendChatMessage, downloadFile, uploadFile } from './api/chat'
-import { DEFAULT_SILVER_CONTRACT } from './components/DataContractCard'
+import { DEFAULT_BRONZE_CONTRACT } from './components/DataContractCard'
 
 const DDI_CHIP_ADJUST_ER   = 'Adjust the model'
 const DDI_CHIP_TWEAK_STTM  = 'Tweak the mapping'
@@ -17,8 +17,8 @@ function ts() {
 
 export default function App() {
   const [messages, setMessages]           = useState([{
-    id: 0, role: 'agent', agent: 'DATA DOMAIN SILVER AGENT',
-    text: "Welcome to **DATA DOMAIN SILVER AGENT**! Please enter your data domain requirements, or upload a file with your requirements.",
+    id: 0, role: 'agent', agent: 'Bronze Agent',
+    text: "Welcome to **Bronze Agent**! Please enter your data domain requirements, or upload a file with your requirements.",
     chips: [], loading: false, time: ts(), startingPoint: false,
   }])
   const [sessionId, setSessionId]             = useState(null)
@@ -56,7 +56,7 @@ export default function App() {
         const newMsgs = data.messages.map((msg, idx) => ({
           id: thinkId + idx,
           role: 'agent',
-          agent: msg.agent || 'DATA DOMAIN SILVER AGENT',
+          agent: msg.agent || 'Bronze Agent',
           text: msg.text || '',
           chips: msg.chips?.length
             ? msg.chips
@@ -67,7 +67,7 @@ export default function App() {
           classification_view: msg.classification_view ?? undefined,
           challenger_view: msg.challenger_view ?? undefined,
           sttm_view: msg.sttm_view ?? undefined,
-          silver_transform_view: msg.silver_transform_view ?? undefined,
+          bronze_transform_view: msg.bronze_transform_view ?? undefined,
           data_contract_view: msg.data_contract_view ?? (idx === data.messages.length - 1 ? data.data_contract_view : undefined),
           loading: false,
           time: ts(),
@@ -118,7 +118,7 @@ export default function App() {
     setMessages(prev => [
       ...prev,
       { id: thinkId - 1, role: 'user', text: displayText, time: ts() },
-      { id: thinkId, role: 'agent', agent: 'DATA DOMAIN SILVER AGENT', loading: true, time: ts() },
+      { id: thinkId, role: 'agent', agent: 'Bronze Agent', loading: true, time: ts() },
     ])
 
     try {
@@ -189,7 +189,7 @@ export default function App() {
       setPendingFile({ refId: data.ref_id, fileName: data.file_name, fileType: data.file_type, preview: data.preview })
     } catch (err) {
       setMessages(prev => [...prev, {
-        id: Date.now(), role: 'agent', agent: 'DATA DOMAIN SILVER AGENT',
+        id: Date.now(), role: 'agent', agent: 'Bronze Agent',
         text: `Could not read the file: ${err.message}`, chips: [], loading: false, time: ts(),
       }])
     }

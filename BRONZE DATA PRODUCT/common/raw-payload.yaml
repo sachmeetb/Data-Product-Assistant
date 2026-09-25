@@ -1,0 +1,17 @@
+block_name: raw-payload
+title: Raw Payload
+usage_note: The raw payload content
+standards_alignment: []
+columns:
+  - name: raw_payload_json
+    bq_type: JSON
+    mode: NULLABLE
+    description: Raw payload in JSON format
+  - name: raw_record_bytes
+    bq_type: BYTES
+    mode: NULLABLE
+    description: Raw payload in bytes
+  - name: raw_csv_line
+    bq_type: STRING
+    mode: NULLABLE
+    description: Raw payload as a CSV line

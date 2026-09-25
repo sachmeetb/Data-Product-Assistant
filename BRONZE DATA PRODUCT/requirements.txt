@@ -1,0 +1,30 @@
+# ── Google Cloud & ADK ────────────────────────────────────────────────────────
+# google-adk already pulls in: vertexai, google-cloud-aiplatform,
+# google-auth, google-auth-oauthlib — do NOT re-declare them separately.
+google-adk>=0.5.0,<2.0.0
+google-cloud-bigquery>=3.25.0,<4.0.0
+# vertexai is a re-export of google-cloud-aiplatform — remove the duplicate.
+# Use aiplatform directly; google-adk manages the compatible version.
+google-cloud-aiplatform[agent_engines]>=1.60.0,<2.0.0
+google-cloud-trace>=1.11.0,<2.0.0
+
+# ── Web server ────────────────────────────────────────────────────────────────
+fastapi>=0.115.0,<1.0.0
+uvicorn[standard]>=0.30.0,<1.0.0
+python-multipart>=0.0.9,<1.0.0
+aiofiles>=23.2.0,<25.0.0
+
+# ── Utilities ─────────────────────────────────────────────────────────────────
+python-dotenv>=1.0.0,<3.0.0
+pyyaml>=6.0.0,<7.0.0
+jsonschema>=4.22.0,<5.0.0
+requests>=2.31.0,<3.0.0
+opentelemetry-api>=1.20.0,<3.0.0
+opentelemetry-sdk>=1.20.0,<3.0.0
+
+# ── Document & Artifact Generation (PDF & Excel) ─────────────────────────────
+fpdf2>=2.8.0,<3.0.0
+openpyxl>=3.1.0,<4.0.0
+
+# ── Optional: Redis session store ─────────────────────────────────────────────
+redis>=5.0.0,<6.0.0

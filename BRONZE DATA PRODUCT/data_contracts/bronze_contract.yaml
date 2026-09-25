@@ -1,0 +1,182 @@
+# ==============================================================================
+# BFSI DATA PRODUCT CONTRACT — BRONZE LAYER PREDEFINED TEMPLATE
+# ==============================================================================
+# Specification Version: 1.0.0 (OpenDataContract Aligned)
+# Layer: Bronze (Raw Ingestion / Landing)
+# ==============================================================================
+
+contract:
+  contract_id: "BC-${DATA_PRODUCT_ID}-${VERSION}"
+  contract_name: "${DATA_PRODUCT_NAME} Contract"
+  version: "1.0.0"
+  status: "DRAFT"
+  created_at: "${CREATION_TIMESTAMP}"
+  updated_at: "${LAST_MODIFIED_TIMESTAMP}"
+  layer: "BRONZE"
+  description: "Baseline Bronze contract governing raw data landing, file validation, ingestion completeness, and technical SLA."
+
+data_product:
+  product_id: "${DATA_PRODUCT_ID}"
+  product_name: "${DATA_PRODUCT_NAME}"
+  layer: "BRONZE"
+  domain: "${BUSINESS_DOMAIN}"
+  source_system: "${SOURCE_SYSTEM_NAME}"
+  source_type: "${SOURCE_TYPE}"
+  target_storage:
+    storage_type: "OBJECT_STORE_LAKEHOUSE"
+    raw_path_or_table: "${TARGET_RAW_TABLE_OR_PATH}"
+    file_format: "${INGESTION_FORMAT}"
+
+schema:
+  enforcement_mode: "PERMISSIVE_WITH_AUDIT"
+  primary_keys:
+    - "${SOURCE_PRIMARY_KEY}"
+  audit_columns:
+    - name: "ingest_batch_id"
+      data_type: "STRING"
+      nullable: false
+      description: "Unique ingestion job / batch identifier."
+    - name: "ingest_ts"
+      data_type: "TIMESTAMP"
+      nullable: false
+      description: "Timestamp when record was landed into the Bronze lakehouse."
+    - name: "source_file_name"
+      data_type: "STRING"
+      nullable: true
+      description: "Original source file or partition name."
+    - name: "raw_payload_hash"
+      data_type: "STRING"
+      nullable: false
+      description: "Hash of raw incoming payload for tamper/deduplication checks."
+  fields:
+    - name: "${PRIMARY_KEY_COLUMN}"
+      data_type: "${DATA_TYPE}"
+      nullable: false
+      description: "Primary key identifier from upstream source system."
+      classification:
+        pii: false
+        sensitive: false
+    - name: "${ATTRIBUTE_COLUMN}"
+      data_type: "${DATA_TYPE}"
+      nullable: true
+      description: "Source payload field."
+      classification:
+        pii: false
+        sensitive: false
+
+data_quality:
+  enforcement_engine: "DBT"
+  quality_gate: "PRE_SILVER_GATE"
+
+  rules:
+    - rule_id: "BRZ-DQ-001"
+      rule_name: "Source File Availability"
+      type: "FILE_VALIDATION"
+      description: "Scheduled ingestion source file/feed must be received within schedule window."
+      severity: "CRITICAL"
+      enabled: true
+      dbt_test:
+        test_type: "source_freshness"
+        parameters:
+          warn_after: { count: 12, period: "hour" }
+          error_after: { count: 24, period: "hour" }
+
+    - rule_id: "BRZ-DQ-002"
+      rule_name: "File Integrity & Non-Corruption"
+      type: "FILE_VALIDATION"
+      description: "Raw landing payload must be parseable without format/syntax corruption."
+      severity: "CRITICAL"
+      enabled: true
+      dbt_test:
+        test_type: "custom_expression"
+        expression: "raw_payload_hash IS NOT NULL"
+
+    - rule_id: "BRZ-DQ-003"
+      rule_name: "Mandatory Ingestion Keys Not Null"
+      type: "COMPLETENESS"
+      description: "Primary key from source system must not be null in landed records."
+      severity: "CRITICAL"
+      enabled: true
+      target_columns:
+        - "${PRIMARY_KEY_COLUMN}"
+      dbt_test:
+        test_type: "not_null"
+
+    - rule_id: "BRZ-DQ-004"
+      rule_name: "Raw Ingestion Volume Bounds"
+      type: "VOLUME_VALIDATION"
+      description: "Batch record count must fall within acceptable anomaly bounds."
+      severity: "HIGH"
+      enabled: true
+      threshold:
+        min_records: 1
+        max_records: 50000000
+      dbt_test:
+        test_type: "dbt_expectations.expect_table_row_count_to_be_between"
+        parameters:
+          min_value: 1
+          max_value: 50000000
+
+    - rule_id: "BRZ-DQ-005"
+      rule_name: "Schema Structural Drift Check"
+      type: "SCHEMA_VALIDATION"
+      description: "Incoming columns must match expected baseline schema attributes."
+      severity: "HIGH"
+      enabled: true
+      dbt_test:
+        test_type: "dbt_expectations.expect_table_columns_to_match_ordered_list"
+
+    - rule_id: "BRZ-DQ-006"
+      rule_name: "Duplicate Batch Ingestion Guard"
+      type: "UNIQUENESS"
+      description: "Raw payload hash within the same ingestion batch must not be duplicated."
+      severity: "HIGH"
+      enabled: true
+      dbt_test:
+        test_type: "unique"
+        target_columns:
+          - "raw_payload_hash"
+
+sla:
+  freshness:
+    expected_frequency: "${INGESTION_FREQUENCY}"
+    max_lag: "${MAX_INGESTION_LAG}"
+    cron_schedule: "${CRON_SCHEDULE}"
+  availability:
+    expected_landing_time: "${EXPECTED_LANDING_TIME}"
+    availability_sla_percentage: 99.5
+  processing:
+    max_pipeline_duration_minutes: 45
+    error_notification_channel: "${ALERT_SLACK_OR_EMAIL}"
+
+privacy:
+  classification: "RESTRICTED"
+  pii:
+    present: true
+    pii_columns:
+      - "${PII_COLUMN_NAME}"
+  data_protection:
+    encryption_at_rest: "AES-256-GCM (Customer-Managed Encryption Key)"
+    encryption_in_transit: "TLS 1.3"
+    masking_at_bronze: "RAW_INGEST_UNMASKED_ISOLATED"
+    tokenization_applied: false
+  access_policy:
+    role_required: "DATA_INGESTION_SYSTEM_USER"
+    quarantine_raw_pii: true
+
+governance:
+  data_owner: "${DATA_OWNER_EMAIL}"
+  technical_owner: "${TECH_OWNER_EMAIL}"
+  steward: "${DATA_STEWARD_EMAIL}"
+  business_domain: "${BUSINESS_DOMAIN}"
+  source_system_lead: "${SOURCE_APPLICATION_LEAD}"
+  retention:
+    period: "180_DAYS_HOT_7_YEARS_COLD"
+    archival_tier: "DEEP_ARCHIVE"
+    purge_policy: "STATUTORY_FINANCIAL_RETENTION"
+  regulatory_drivers:
+    - "BCBS_239_PRINCIPLE_3_ACCURACY_INTEGRITY"
+    - "SOX_SECTION_404_FINANCIAL_LINEAGE"
+    - "GDPR_ARTICLE_30_PROCESSING_RECORDS"
+  standards_alignment:
+    - "ENTERPRISE_INGESTION_METADATA_STANDARD_V2"

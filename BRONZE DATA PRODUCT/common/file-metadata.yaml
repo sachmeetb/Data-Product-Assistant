@@ -1,0 +1,25 @@
+block_name: file-metadata
+title: File Metadata
+usage_note: Metadata related to the file properties
+standards_alignment: []
+columns:
+  - name: file_name
+    bq_type: STRING
+    mode: NULLABLE
+    description: Name of the file
+  - name: file_size_bytes
+    bq_type: INT64
+    mode: NULLABLE
+    description: Size of the file in bytes
+  - name: file_format
+    bq_type: STRING
+    mode: NULLABLE
+    description: Format of the file
+  - name: compression_type
+    bq_type: STRING
+    mode: NULLABLE
+    description: Compression type of the file
+  - name: file_row_count
+    bq_type: INT64
+    mode: NULLABLE
+    description: Number of rows in the file

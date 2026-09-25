@@ -1,0 +1,15 @@
+# BFSI Bronze Layer — Naming Conventions
+version: "1.0.0"
+
+datasets:
+  bronze: "banking_bronze"
+
+tables:
+  prefix:
+    bronze: "raw_"   # e.g. raw_party, raw_account
+    bronze_alt: "brz_"
+  case: snake_case
+
+columns:
+  case: "preserve source column names where possible, snake_case for audit columns"
+  partition_column: "_ingest_date"

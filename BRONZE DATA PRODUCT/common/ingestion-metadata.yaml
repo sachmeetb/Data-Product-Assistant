@@ -1,0 +1,25 @@
+block_name: ingestion-metadata
+title: Ingestion Metadata
+usage_note: Standard metadata for tracking ingestion batches
+standards_alignment: []
+columns:
+  - name: ingest_batch_id
+    bq_type: STRING
+    mode: REQUIRED
+    description: Unique ingestion job / batch identifier
+  - name: ingest_ts
+    bq_type: TIMESTAMP
+    mode: REQUIRED
+    description: Timestamp when record was landed into the Bronze lakehouse
+  - name: source_file_name
+    bq_type: STRING
+    mode: NULLABLE
+    description: Original source file or partition name
+  - name: raw_payload_hash
+    bq_type: STRING
+    mode: REQUIRED
+    description: Hash of raw incoming payload for tamper/deduplication checks
+  - name: ingest_status
+    bq_type: STRING
+    mode: REQUIRED
+    description: Status of the ingestion

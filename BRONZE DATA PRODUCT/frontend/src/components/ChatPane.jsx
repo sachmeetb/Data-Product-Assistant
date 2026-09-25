@@ -3,7 +3,7 @@ import MessageRow from './MessageRow'
 import InputBar from './InputBar'
 import FilePreviewCard from './FilePreviewCard'
 import EditRequirementsForm from './EditRequirementsForm'
-import DataContractCard, { DEFAULT_SILVER_CONTRACT } from './DataContractCard'
+import DataContractCard, { DEFAULT_BRONZE_CONTRACT } from './DataContractCard'
 
 export default function ChatPane({
   messages, onSend, onChipClick, sending, inputLocked,
@@ -65,17 +65,17 @@ export default function ChatPane({
   const inputPlaceholder = hasChips
     ? 'Tap a chip above to respond…'
     : sending || !messages.find(m => m.startingPoint)
-      ? 'Message DATA DOMAIN SILVER AGENT...'
+      ? 'Message Bronze Agent...'
       : 'Pick a starting point above to begin…'
 
   return (
     <main className="chat">
       <header className="chat-header">
         <div className="chat-header-left">
-          <div className="da-avatar">DA</div>
+          <div className="da-avatar">BA</div>
           <div>
             <div className="chat-title">
-              DATA DOMAIN SILVER AGENT <span className="online-dot" />
+              Bronze Agent <span className="online-dot" />
             </div>
             <div className="chat-subtitle">Powered by Enterprise Data Domain Architecture &amp; BigQuery</div>
           </div>
@@ -85,7 +85,7 @@ export default function ChatPane({
             <button
               className="header-download-btn"
               onClick={() => setContractModalOpen(true)}
-              title="Open & Edit Silver Data Contract"
+              title="Open & Edit Bronze Data Contract"
               style={{
                 background: '#E6DCFF',
                 color: '#460073',
@@ -99,7 +99,7 @@ export default function ChatPane({
                 <path d="m10 13-2 2 2 2" />
                 <path d="m14 13 2 2-2 2" />
               </svg>
-              Silver Data Contract
+              Bronze Data Contract
             </button>
           )}
           <button className="header-download-btn" onClick={downloadPDF} disabled={downloading} title="Download conversation as PDF">
@@ -195,7 +195,7 @@ export default function ChatPane({
             boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.35)',
           }}>
             <DataContractCard
-              view={messages.slice().reverse().find(m => m.data_contract_view)?.data_contract_view || DEFAULT_SILVER_CONTRACT}
+              view={messages.slice().reverse().find(m => m.data_contract_view)?.data_contract_view || DEFAULT_BRONZE_CONTRACT}
               isModal={true}
               onClose={() => setContractModalOpen(false)}
             />

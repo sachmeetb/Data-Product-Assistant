@@ -1,0 +1,197 @@
+# ==============================================================================
+# BFSI DATA PRODUCT CONTRACT — SILVER LAYER PREDEFINED TEMPLATE
+# ==============================================================================
+# Specification Version: 1.0.0 (OpenDataContract Aligned)
+# Layer: Silver (Conformed, Cleansed, Canonical Domain Model)
+# ==============================================================================
+
+contract:
+  contract_id: "SC-${DATA_PRODUCT_ID}-${VERSION}"
+  contract_name: "${DATA_PRODUCT_NAME} Conformed Contract"
+  version: "1.0.0"
+  status: "DRAFT"
+  created_at: "${CREATION_TIMESTAMP}"
+  updated_at: "${LAST_MODIFIED_TIMESTAMP}"
+  layer: "SILVER"
+  description: "Silver layer canonical contract enforcing business schema conformity, referential integrity, PII pseudonymization, and deduplication."
+
+data_product:
+  product_id: "${DATA_PRODUCT_ID}"
+  product_name: "${DATA_PRODUCT_NAME}"
+  layer: "SILVER"
+  domain: "${BUSINESS_DOMAIN}"
+  sub_domain: "${BUSINESS_SUB_DOMAIN}"
+  entity_type: "${ENTITY_TYPE}"
+  upstream_sources:
+    - product_id: "${UPSTREAM_BRONZE_PRODUCT_ID}"
+      layer: "BRONZE"
+      system: "${SOURCE_SYSTEM_NAME}"
+  target_storage:
+    catalog: "banking_silver"
+    schema_name: "${TARGET_SCHEMA}"
+    table_name: "${TARGET_TABLE_NAME}"
+    storage_format: "DELTA_OR_BIGQUERY_NATIVE"
+
+schema:
+  enforcement_mode: "STRICT_CONTRACT_ENFORCED"
+  primary_keys:
+    - "surrogate_key"
+  business_keys:
+    - "${NATURAL_BUSINESS_KEY}"
+
+  technical_envelope:
+    surrogate_key:
+      data_type: "STRING"
+      nullable: false
+      description: "Deterministic SHA-256 hash or UUID surrogate primary key."
+    record_hash:
+      data_type: "STRING"
+      nullable: false
+      description: "Hash of all conformed payload attributes for change-data-capture."
+    effective_from_ts:
+      data_type: "TIMESTAMP"
+      nullable: false
+      description: "SCD Type-2 validity start timestamp."
+    effective_to_ts:
+      data_type: "TIMESTAMP"
+      nullable: true
+      description: "SCD Type-2 validity end timestamp (NULL if active)."
+    is_current:
+      data_type: "BOOLEAN"
+      nullable: false
+      description: "Flag indicating whether record represents current state."
+    source_system:
+      data_type: "STRING"
+      nullable: false
+      description: "Originating source platform code."
+    dq_status:
+      data_type: "STRING"
+      nullable: false
+      description: "Validation status: VALID | WARNING | QUARANTINE."
+
+  fields:
+    - name: "${FIELD_NAME}"
+      data_type: "${DATA_TYPE}"
+      nullable: false
+      description: "Conformed business attribute."
+      business_definition: "${BUSINESS_DEFINITION}"
+      standards_mapping:
+        standard_name: "ISO_20022"
+        element_tag: "${STANDARD_ELEMENT_XPATH_OR_TERM}"
+      classification:
+        pii: false
+        sensitive: false
+        masking_strategy: "NONE"
+
+data_quality:
+  enforcement_engine: "DBT"
+  quality_gate: "PRE_GOLD_CONSUMPTION_GATE"
+
+  rules:
+    - rule_id: "SLV-DQ-001"
+      rule_name: "Surrogate Key Non-Null & Unique"
+      type: "INTEGRITY"
+      description: "Surrogate primary key must be non-null and strictly unique across the entity."
+      severity: "CRITICAL"
+      enabled: true
+      target_columns:
+        - "surrogate_key"
+      dbt_test:
+        test_type: "unique_and_not_null"
+
+    - rule_id: "SLV-DQ-002"
+      rule_name: "Mandatory Business Attributes Completeness"
+      type: "COMPLETENESS"
+      description: "Core business attributes must have >= 99.9% completeness rate."
+      severity: "CRITICAL"
+      enabled: true
+      target_columns:
+        - "${MANDATORY_COLUMN}"
+      threshold:
+        minimum_percentage: 99.9
+      dbt_test:
+        test_type: "dbt_expectations.expect_column_values_to_not_be_null"
+
+    - rule_id: "SLV-DQ-003"
+      rule_name: "Foreign Key Referential Integrity"
+      type: "REFERENTIAL_INTEGRITY"
+      description: "Parent dimension surrogate key references must resolve to active Silver dimensions."
+      severity: "CRITICAL"
+      enabled: true
+      target_columns:
+        - "${FOREIGN_KEY_COLUMN}"
+      references:
+        table: "${PARENT_SILVER_DIMENSION}"
+        column: "surrogate_key"
+      dbt_test:
+        test_type: "relationships"
+        parameters:
+          to: "ref('${PARENT_SILVER_DIMENSION}')"
+          field: "surrogate_key"
+
+    - rule_id: "SLV-DQ-004"
+      rule_name: "Standard Code Set Validation (ISO 4217 / 3166)"
+      type: "CONFORMANCE"
+      description: "Currency and country codes must strictly conform to official ISO code lists."
+      severity: "HIGH"
+      enabled: true
+      target_columns:
+        - "currency_code"
+      dbt_test:
+        test_type: "dbt_expectations.expect_column_values_to_match_regex"
+        parameters:
+          regex: "^[A-Z]{3}$"
+
+    - rule_id: "SLV-DQ-005"
+      rule_name: "SCD Type-2 Temporal Consistency"
+      type: "TEMPORAL_VALIDITY"
+      description: "Effective to timestamp must be greater than effective from timestamp; active record must be current."
+      severity: "HIGH"
+      enabled: true
+      dbt_test:
+        test_type: "custom_expression"
+        expression: "effective_to_ts IS NULL OR effective_to_ts > effective_from_ts"
+
+sla:
+  freshness:
+    expected_frequency: "${REFRESH_FREQUENCY}"
+    max_lag: "${MAX_DATA_LAG}"
+    cron_schedule: "${CRON_SCHEDULE}"
+  availability:
+    expected_availability_time: "${DELIVERY_TIME_UTC}"
+    query_engine_uptime_percentage: 99.9
+  processing:
+    max_pipeline_duration_minutes: 60
+    alert_tier: "SEV-2"
+
+privacy:
+  classification: "CONFIDENTIAL"
+  pii:
+    present: true
+    pii_columns:
+      - name: "${PII_COLUMN}"
+        type: "${PII_TYPE}"
+        masking_strategy: "MASK_PARTIAL_LAST_4"
+  access_policy:
+    rbac_roles_allowed:
+      - "ROLE_BFSI_ANALYST"
+      - "ROLE_SILVER_ENGINEER"
+      - "ROLE_COMPLIANCE_OFFICER"
+    column_masking_enforced: true
+
+governance:
+  data_owner: "${DOMAIN_DATA_OWNER}"
+  business_owner: "${BUSINESS_SPONSOR}"
+  technical_steward: "${SILVER_LEAD_ENGINEER}"
+  business_domain: "${BUSINESS_DOMAIN}"
+  regulatory_drivers:
+    - "BCBS_239_RISK_DATA_AGGREGATION"
+    - "GDPR_ARTICLE_32_SECURITY_OF_PROCESSING"
+    - "PCI_DSS_REQUIREMENT_3_CARDHOLDER_DATA"
+  standards_alignment:
+    - "BIAN_V10_SERVICE_LANDSCAPE"
+    - "ISO_20022_UNIVERSAL_FINANCIAL_INDUSTRY_MESSAGE_SCHEME"
+    - "FIBO_FINANCIAL_INDUSTRY_BUSINESS_ONTOLOGY"
+  retention:
+    period: "7_YEARS"
+    statutory_mandate: "BANKING_COMPLIANCE_ARCHIVAL_ACT"

@@ -1,0 +1,17 @@
+block_name: temporal
+title: Temporal
+usage_note: Temporal information for the record
+standards_alignment: []
+columns:
+  - name: event_timestamp
+    bq_type: TIMESTAMP
+    mode: NULLABLE
+    description: Timestamp of the business event
+  - name: extraction_timestamp
+    bq_type: TIMESTAMP
+    mode: REQUIRED
+    description: Timestamp when the data was extracted
+  - name: landing_timestamp
+    bq_type: TIMESTAMP
+    mode: REQUIRED
+    description: Timestamp when the data landed in the bronze layer

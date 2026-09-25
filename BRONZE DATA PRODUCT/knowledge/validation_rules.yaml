@@ -1,0 +1,28 @@
+# BFSI Bronze Layer — Validation Rules & Guardrails
+version: "1.0.0"
+
+data_quality_rules:
+  - id: BRZ-DQ-001
+    name: Source File Availability
+    description: "Scheduled ingestion source file/feed must be received within schedule window."
+    severity: CRITICAL
+  - id: BRZ-DQ-002
+    name: File Integrity & Non-Corruption
+    description: "Raw landing payload must be parseable without format/syntax corruption."
+    severity: CRITICAL
+  - id: BRZ-DQ-003
+    name: Mandatory Ingestion Keys Not Null
+    description: "Primary key from source system must not be null in landed records."
+    severity: CRITICAL
+  - id: BRZ-DQ-004
+    name: Raw Ingestion Volume Bounds
+    description: "Batch record count must fall within acceptable anomaly bounds."
+    severity: HIGH
+  - id: BRZ-DQ-005
+    name: Schema Structural Drift Check
+    description: "Incoming columns must match expected baseline schema attributes."
+    severity: HIGH
+  - id: BRZ-DQ-006
+    name: Duplicate Batch Ingestion Guard
+    description: "Raw payload hash within the same ingestion batch must not be duplicated."
+    severity: HIGH

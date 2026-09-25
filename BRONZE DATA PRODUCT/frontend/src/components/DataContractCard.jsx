@@ -52,7 +52,7 @@ const DownloadIcon = () => (
   </svg>
 )
 
-export const DEFAULT_SILVER_CONTRACT = {
+export const DEFAULT_BRONZE_CONTRACT = {
   dataContractSpecification: '0.9.3',
   id: 'urn:datacontract:banking_silver:deposits_core',
   info: {
@@ -234,18 +234,18 @@ export default function DataContractCard({ view, onSave, isModal, onClose }) {
   const [contract, setContract] = useState(() => {
     const base = view && typeof view === 'object' && Object.keys(view).length > 0
       ? JSON.parse(JSON.stringify(view))
-      : JSON.parse(JSON.stringify(DEFAULT_SILVER_CONTRACT))
+      : JSON.parse(JSON.stringify(DEFAULT_BRONZE_CONTRACT))
 
     if (!base.info) base.info = {}
     if (!base.servicelevels) base.servicelevels = { freshness: {}, availability: {}, retention: {} }
-    if (!base.models || Object.keys(base.models).length === 0) base.models = DEFAULT_SILVER_CONTRACT.models
-    if (!base.quality || base.quality.length === 0) base.quality = DEFAULT_SILVER_CONTRACT.quality
+    if (!base.models || Object.keys(base.models).length === 0) base.models = DEFAULT_BRONZE_CONTRACT.models
+    if (!base.quality || base.quality.length === 0) base.quality = DEFAULT_BRONZE_CONTRACT.quality
 
     // Fill in default placeholders if any empty string exists
-    if (!base.info.title) base.info.title = DEFAULT_SILVER_CONTRACT.info.title
-    if (!base.info.owner) base.info.owner = DEFAULT_SILVER_CONTRACT.info.owner
-    if (!base.info.standards || base.info.standards.length === 0) base.info.standards = DEFAULT_SILVER_CONTRACT.info.standards
-    if (!base.info.target_dataset) base.info.target_dataset = DEFAULT_SILVER_CONTRACT.info.target_dataset
+    if (!base.info.title) base.info.title = DEFAULT_BRONZE_CONTRACT.info.title
+    if (!base.info.owner) base.info.owner = DEFAULT_BRONZE_CONTRACT.info.owner
+    if (!base.info.standards || base.info.standards.length === 0) base.info.standards = DEFAULT_BRONZE_CONTRACT.info.standards
+    if (!base.info.target_dataset) base.info.target_dataset = DEFAULT_BRONZE_CONTRACT.info.target_dataset
     if (!base.servicelevels.freshness.schedule) base.servicelevels.freshness.schedule = 'DAILY_BATCH'
     if (!base.servicelevels.freshness.maxLag) base.servicelevels.freshness.maxLag = '4h lag'
 
@@ -256,12 +256,12 @@ export default function DataContractCard({ view, onSave, isModal, onClose }) {
   useEffect(() => {
     if (view && typeof view === 'object' && Object.keys(view).length > 0) {
       setContract(prev => ({
-        ...DEFAULT_SILVER_CONTRACT,
+        ...DEFAULT_BRONZE_CONTRACT,
         ...view,
-        info: { ...DEFAULT_SILVER_CONTRACT.info, ...(view.info || {}) },
-        servicelevels: { ...DEFAULT_SILVER_CONTRACT.servicelevels, ...(view.servicelevels || {}) },
-        models: (view.models && Object.keys(view.models).length > 0) ? view.models : DEFAULT_SILVER_CONTRACT.models,
-        quality: (view.quality && view.quality.length > 0) ? view.quality : DEFAULT_SILVER_CONTRACT.quality,
+        info: { ...DEFAULT_BRONZE_CONTRACT.info, ...(view.info || {}) },
+        servicelevels: { ...DEFAULT_BRONZE_CONTRACT.servicelevels, ...(view.servicelevels || {}) },
+        models: (view.models && Object.keys(view.models).length > 0) ? view.models : DEFAULT_BRONZE_CONTRACT.models,
+        quality: (view.quality && view.quality.length > 0) ? view.quality : DEFAULT_BRONZE_CONTRACT.quality,
       }))
     }
   }, [view])
@@ -445,7 +445,7 @@ export default function DataContractCard({ view, onSave, isModal, onClose }) {
   }
 
   const handleReset = () => {
-    setContract(JSON.parse(JSON.stringify(DEFAULT_SILVER_CONTRACT)))
+    setContract(JSON.parse(JSON.stringify(DEFAULT_BRONZE_CONTRACT)))
     setSavedBadge(true)
     setTimeout(() => setSavedBadge(false), 2000)
   }
@@ -463,7 +463,7 @@ export default function DataContractCard({ view, onSave, isModal, onClose }) {
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = `${contract.info?.title?.toLowerCase().replace(/\s+/g, '_') || 'silver_contract'}.yaml`
+    a.download = `${contract.info?.title?.toLowerCase().replace(/\s+/g, '_') || 'bronze_contract'}.yaml`
     document.body.appendChild(a)
     a.click()
     document.body.removeChild(a)
