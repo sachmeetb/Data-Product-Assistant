@@ -247,6 +247,10 @@ def get_domain_block_map() -> dict[str, list[str]]:
     return _DOMAIN_BLOCK_MAP
 
 
+# Alias for Bronze layer source scoping and product engine
+get_source_block_map = get_domain_block_map
+
+
 # ── Public API ────────────────────────────────────────────────────────────────
 
 def _load_crosswalk_map() -> dict[str, dict]:

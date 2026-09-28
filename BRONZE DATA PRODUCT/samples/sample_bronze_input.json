@@ -1,0 +1,75 @@
+{
+  "bank_profile": {
+    "bank_name": "Apex International Bank",
+    "bank_code": "AIB",
+    "regions": [
+      "United Kingdom",
+      "European Union"
+    ],
+    "banking_type": "RETAIL_AND_COMMERCIAL",
+    "active_products": [
+      "Current Accounts",
+      "High-Yield Savings",
+      "Commercial Lending",
+      "Cross-Border Wire Transfers"
+    ],
+    "regulatory_frameworks": [
+      "BIAN v12",
+      "ISO 20022",
+      "Basel III",
+      "GDPR",
+      "FCA Operational Resilience"
+    ],
+    "data_standards": [
+      "ISO 20022",
+      "FIBO",
+      "Open Banking UK"
+    ],
+    "core_banking_system": "Temenos T24 Transact",
+    "source_systems": [
+      "Temenos T24",
+      "SWIFT Gateway",
+      "Salesforce CRM",
+      "Finastra Treasury"
+    ],
+    "ingestion_preferences": "Hybrid: Daily Batch SFTP for master tables + Kafka CDC streaming for transactions",
+    "target_use_cases": [
+      "Real-time Balance Aggregation",
+      "Regulatory Liquidity Reporting",
+      "Financial Crime Detection"
+    ]
+  },
+  "requirement": {
+    "use_case_name": "Core Banking Daily Ingestion & Raw Landing",
+    "domain": "Core Banking & Payments",
+    "description": "Ingest daily raw customer master feeds, account ledger snapshots, and real-time SWIFT transaction events into BigQuery Bronze layer with full technical metadata, raw payload envelopes, batch tracking, and idempotency checks.",
+    "source_systems": [
+      "Temenos T24",
+      "SWIFT Wire Service"
+    ],
+    "file_formats": [
+      "CSV Batch Extracts",
+      "JSON Stream Envelopes"
+    ],
+    "ingestion_frequency": "Daily Batch (Customer & Account) + Near Real-Time (Transactions)",
+    "expected_volume": "500,000 customers, 1.2M accounts, 4M transactions/day",
+    "data_points": [
+      "customer_id",
+      "legal_name",
+      "tax_identifier",
+      "kyc_status",
+      "account_number",
+      "account_type",
+      "currency_code",
+      "current_balance",
+      "transaction_id",
+      "debit_account",
+      "credit_account",
+      "transaction_amount",
+      "booking_timestamp",
+      "raw_payload_json",
+      "ingest_batch_id",
+      "ingest_timestamp"
+    ]
+  }
+}

@@ -1,7 +1,7 @@
 # ── Google Cloud & ADK ────────────────────────────────────────────────────────
 # google-adk already pulls in: vertexai, google-cloud-aiplatform,
 # google-auth, google-auth-oauthlib — do NOT re-declare them separately.
-google-adk>=0.5.0,<2.0.0
+google-adk
 google-cloud-bigquery>=3.25.0,<4.0.0
 # vertexai is a re-export of google-cloud-aiplatform — remove the duplicate.
 # Use aiplatform directly; google-adk manages the compatible version.

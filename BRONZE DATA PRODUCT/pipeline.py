@@ -11,7 +11,7 @@ End-to-end flow:
   7. BigQuery Publisher       — execute DDL in GCP (if valid)
 
 Usage (CLI):
-  cd BRONZE\ DATA\ PRODUCT
+  cd "BRONZE DATA PRODUCT"
   python pipeline.py                     # interactive mode
   python pipeline.py samples/sample.json # run from JSON spec file
 """

@@ -234,6 +234,10 @@ def generate_ingestion_specification_pdf(
     return bytes(pdf.output())
 
 
+# Backward-compatible alias for pipeline/server
+generate_data_availability_pdf = generate_ingestion_specification_pdf
+
+
 # ── Stage 3: Excel STTM & Metadata Generation ─────────────────────────────
 
 def _apply_excel_header_styles(ws, title_text: str, col_count: int):

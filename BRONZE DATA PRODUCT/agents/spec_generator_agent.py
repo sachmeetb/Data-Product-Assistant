@@ -102,7 +102,7 @@ def is_complete(output: dict) -> bool:
     ddl = output.get("ddl_script") or ""
     if not isinstance(ddl, str) or len(ddl.strip()) < 50:
         return False
-    spec = output.get("specification")
+    spec = output.get("specification") or output.get("data_contract")
     if not (isinstance(spec, (dict, list)) or (isinstance(spec, str) and len(spec.strip()) > 10)):
         return False
     return True

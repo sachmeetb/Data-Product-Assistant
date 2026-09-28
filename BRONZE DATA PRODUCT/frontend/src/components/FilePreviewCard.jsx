@@ -1,3 +1,5 @@
+import React from 'react'
+
 const COL_LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 
 function colLetter(i) {
@@ -5,6 +7,9 @@ function colLetter(i) {
 }
 
 function WordPreview({ preview, fileName }) {
+  const text = typeof preview === 'object' ? preview?.text_preview : String(preview || '')
+  const wordCount = typeof preview === 'object' && preview?.word_count ? preview.word_count : (text ? text.split(/\s+/).length : 0)
+
   return (
     <div className="fp-card">
       <div className="fp-header">
@@ -21,9 +26,9 @@ function WordPreview({ preview, fileName }) {
             <polyline points="10 9 9 9 8 9" />
           </svg>
         </div>
-        <p className="fp-word-preview">{preview.text_preview}</p>
+        <p className="fp-word-preview">{text || 'Document content read by agent.'}</p>
         <div className="fp-footer">
-          <span className="fp-parsed">✓ {preview.word_count?.toLocaleString()} words parsed</span>
+          <span className="fp-parsed">✓ {wordCount.toLocaleString()} words parsed</span>
           <span className="fp-read">Read by agent</span>
         </div>
       </div>
@@ -31,8 +36,38 @@ function WordPreview({ preview, fileName }) {
   )
 }
 
+function TextPreview({ preview, fileName, fileType }) {
+  const text = typeof preview === 'object' ? (preview?.text_preview || JSON.stringify(preview, null, 2)) : String(preview || '')
+
+  return (
+    <div className="fp-card">
+      <div className="fp-header">
+        <span className="fp-filename">{fileName}</span>
+        <span className="fp-badge">{String(fileType || 'file').toUpperCase()}</span>
+      </div>
+      <div className="fp-word-body">
+        <p className="fp-word-preview" style={{ fontFamily: 'monospace', whiteSpace: 'pre-wrap', fontSize: '12px' }}>
+          {text.slice(0, 1000) || 'File ready for agent processing.'}
+        </p>
+        <div className="fp-footer">
+          <span className="fp-parsed">✓ File attached successfully</span>
+          <span className="fp-read">Ready to process</span>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function TablePreview({ preview, fileName }) {
-  const { columns, rows, row_count, sheet_name } = preview
+  const columns = Array.isArray(preview?.columns) ? preview.columns : []
+  const rows = Array.isArray(preview?.rows) ? preview.rows : []
+  const rowCount = preview?.row_count ?? rows.length
+  const sheetName = preview?.sheet_name || 'Sheet1'
+
+  if (columns.length === 0) {
+    return <TextPreview preview={preview} fileName={fileName} fileType="Spreadsheet" />
+  }
+
   const displayCols = columns.slice(0, 6)
   const displayRows = rows.slice(0, 5)
 
@@ -40,7 +75,7 @@ function TablePreview({ preview, fileName }) {
     <div className="fp-card">
       <div className="fp-header">
         <span className="fp-filename">{fileName}</span>
-        {sheet_name && <span className="fp-badge">{sheet_name}</span>}
+        {sheetName && <span className="fp-badge">{sheetName}</span>}
       </div>
       <div className="fp-table-wrap">
         <table className="fp-table">
@@ -57,7 +92,7 @@ function TablePreview({ preview, fileName }) {
             <tr>
               <td className="fp-td fp-td-idx">1</td>
               {displayCols.map((col, i) => (
-                <td key={i} className="fp-td fp-td-header">{col}</td>
+                <td key={i} className="fp-td fp-td-header">{String(col ?? '')}</td>
               ))}
             </tr>
             {/* data rows */}
@@ -65,7 +100,7 @@ function TablePreview({ preview, fileName }) {
               <tr key={ri} className={ri % 2 === 0 ? 'fp-tr-even' : ''}>
                 <td className="fp-td fp-td-idx">{ri + 2}</td>
                 {displayCols.map((_, ci) => (
-                  <td key={ci} className="fp-td">{row[ci] ?? ''}</td>
+                  <td key={ci} className="fp-td">{Array.isArray(row) ? String(row[ci] ?? '') : ''}</td>
                 ))}
               </tr>
             ))}
@@ -73,7 +108,7 @@ function TablePreview({ preview, fileName }) {
         </table>
       </div>
       <div className="fp-footer">
-        <span className="fp-parsed">✓ {columns.length} columns parsed · {row_count?.toLocaleString()} rows</span>
+        <span className="fp-parsed">✓ {columns.length} columns parsed · {rowCount?.toLocaleString()} rows</span>
         <span className="fp-read">Read by agent</span>
       </div>
     </div>
@@ -81,12 +116,18 @@ function TablePreview({ preview, fileName }) {
 }
 
 export default function FilePreviewCard({ fileName, fileType, preview, refId, onUseFile, onDismiss }) {
+  const isTable = (fileType === 'xlsx' || fileType === 'xls' || fileType === 'csv') && Array.isArray(preview?.columns) && preview.columns.length > 0
+  const isWord = fileType === 'docx'
+
   return (
     <div className="fp-wrap">
-      {fileType === 'docx'
-        ? <WordPreview preview={preview} fileName={fileName} />
-        : <TablePreview preview={preview} fileName={fileName} />
-      }
+      {isWord ? (
+        <WordPreview preview={preview} fileName={fileName} />
+      ) : isTable ? (
+        <TablePreview preview={preview} fileName={fileName} />
+      ) : (
+        <TextPreview preview={preview} fileName={fileName} fileType={fileType} />
+      )}
       <div className="fp-actions">
         <button className="fp-use-btn" onClick={() => onUseFile(refId)}>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
