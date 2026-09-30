@@ -199,7 +199,7 @@ export default function App() {
   const handleUseFile = useCallback((refId) => {
     const pf = pendingFile
     if (!pf) return
-    sendMessage('', { action: 'use_file', fileRefId: refId, fileName: pf.fileName })
+    sendMessage(`Use uploaded file: ${pf.fileName}`, { action: 'use_file', fileRefId: refId, fileName: pf.fileName })
   }, [pendingFile, sendMessage])
 
   const handleDismissFile = useCallback(() => setPendingFile(null), [])

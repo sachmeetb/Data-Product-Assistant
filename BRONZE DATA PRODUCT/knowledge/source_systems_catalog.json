@@ -259,6 +259,82 @@
           ]
         }
       ]
+    },
+    "unstructured_docs": {
+      "name": "Enterprise Document Management & KYC Repository",
+      "system_type": "Unstructured Banking Document Store & Object Lake",
+      "technology_stack": "Google Cloud Storage Object Store, Google Cloud Document AI OCR",
+      "default_encoding": "BINARY / BASE64 / UTF-8",
+      "data_structure": "UNSTRUCTURED",
+      "ingestion_cadence": "BATCH_AND_EVENT_DRIVEN",
+      "file_format": "OBJECT_TABLE_PDF_TIFF",
+      "associated_standards": ["PDF/A ISO 19005", "TIFF 6.0", "GDPR Article 17 Right to Erasure"],
+      "default_retention_years": 7,
+      "regulatory_frameworks": ["PRA", "FCA", "GDPR", "AML 5AMLD", "KYC Mandates"],
+      "primary_entities": [
+        {
+          "table_name": "brz_unstr_kyc_documents",
+          "feed_name": "Customer KYC Scans (Passports, National IDs, Proof of Address)",
+          "description": "BigLake Object Table registering customer identity verification scans with metadata and extracted text.",
+          "sample_raw_columns": [
+            {"name": "file_uri", "type": "STRING", "is_pk": true, "description": "Google Cloud Storage object URI (gs://...)"},
+            {"name": "mime_type", "type": "STRING", "is_pk": false, "description": "MIME type (application/pdf, image/tiff)"},
+            {"name": "file_size_bytes", "type": "INT64", "is_pk": false, "description": "Raw object byte length"},
+            {"name": "sha256_hash", "type": "STRING", "is_pk": false, "description": "SHA-256 cryptographic payload hash"},
+            {"name": "document_type", "type": "STRING", "is_pk": false, "description": "Document classification (PASSPORT, UTILITY_BILL, NATIONAL_ID)"},
+            {"name": "customer_id_ref", "type": "STRING", "is_pk": false, "description": "Associated customer identification number"},
+            {"name": "classification", "type": "STRING", "is_pk": false, "description": "PII_CONFIDENTIAL"},
+            {"name": "extracted_text_payload", "type": "STRING", "is_pk": false, "is_pii": true, "description": "OCR extracted textual content"},
+            {"name": "ocr_confidence_score", "type": "NUMERIC", "is_pk": false, "description": "Document AI OCR confidence score (0-1)"}
+          ]
+        },
+        {
+          "table_name": "brz_unstr_loan_agreements",
+          "feed_name": "Commercial Loan Agreements & Mortgage Deeds",
+          "description": "Executed loan agreements, mortgage contracts, and legal covenants.",
+          "sample_raw_columns": [
+            {"name": "file_uri", "type": "STRING", "is_pk": true, "description": "Google Cloud Storage object URI"},
+            {"name": "mime_type", "type": "STRING", "is_pk": false, "description": "MIME type (application/pdf)"},
+            {"name": "file_size_bytes", "type": "INT64", "is_pk": false, "description": "File size in bytes"},
+            {"name": "sha256_hash", "type": "STRING", "is_pk": false, "description": "SHA-256 payload hash"},
+            {"name": "contract_id_ref", "type": "STRING", "is_pk": false, "description": "Loan Facility / Mortgage reference number"},
+            {"name": "counterparty_name", "type": "STRING", "is_pk": false, "is_pii": true, "description": "Borrower legal entity name"},
+            {"name": "execution_date", "type": "DATE", "is_pk": false, "description": "Contract signoff date"},
+            {"name": "raw_contract_text", "type": "STRING", "is_pk": false, "description": "Full extracted legal terms and covenants"}
+          ]
+        }
+      ]
+    },
+    "streaming_fraud": {
+      "name": "Payment Authorization & Fraud Event Stream",
+      "system_type": "Real-Time Payment Fraud Screening & Card Authorization",
+      "technology_stack": "Apache Kafka, Google Cloud Pub/Sub, BigQuery Storage Write API",
+      "default_encoding": "UTF-8 JSON / AVRO",
+      "data_structure": "STRUCTURED",
+      "ingestion_cadence": "STREAMING_REALTIME",
+      "file_format": "JSON_STREAM",
+      "associated_standards": ["ISO 8583 Card Auth", "ISO 20022 camt.056", "PCI-DSS 4.0"],
+      "default_retention_years": 7,
+      "regulatory_frameworks": ["PCI-DSS", "FCA", "PSR", "AML"],
+      "primary_entities": [
+        {
+          "table_name": "brz_stream_card_auth_events",
+          "feed_name": "Real-Time Card Authorization Stream",
+          "description": "Real-time card POS, ATM, and e-commerce authorizations landing via Kafka with sub-minute SLA.",
+          "sample_raw_columns": [
+            {"name": "auth_event_id", "type": "STRING", "is_pk": true, "description": "Unique transaction authorization UUID"},
+            {"name": "card_token", "type": "STRING", "is_pk": false, "is_pii": true, "description": "PCI-DSS tokenized card identifier"},
+            {"name": "merchant_name", "type": "STRING", "is_pk": false, "description": "Card acceptor / merchant commercial name"},
+            {"name": "mcc_code", "type": "STRING", "is_pk": false, "description": "Merchant Category Code (MCC)"},
+            {"name": "auth_amount", "type": "NUMERIC", "is_pk": false, "description": "Authorization request amount in settlement currency"},
+            {"name": "currency_code", "type": "STRING", "is_pk": false, "description": "ISO 4217 Currency Code"},
+            {"name": "auth_decision", "type": "STRING", "is_pk": false, "description": "Real-time decision (APPROVED, DECLINED, FRAUD_HOLD)"},
+            {"name": "fraud_score", "type": "INT64", "is_pk": false, "description": "ML inference risk score (0-999)"},
+            {"name": "source_topic", "type": "STRING", "is_pk": false, "description": "Kafka topic: payments.card.authorizations.v1"},
+            {"name": "source_offset", "type": "INT64", "is_pk": false, "description": "Kafka partition message offset"}
+          ]
+        }
+      ]
     }
   }
 }
