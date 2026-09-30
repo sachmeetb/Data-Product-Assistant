@@ -52,7 +52,7 @@ class BFSIPDFReport(FPDF):
     def header(self):
         self.set_font("Helvetica", "B", 10)
         self.set_text_color(115, 70, 0)  # Dark bronze/brown #734600
-        self.cell(0, 8, _clean_pdf_text("DATA DOMAIN BRONZE AGENT - BFSI RAW LANDING ZONE"), new_x="LMARGIN", new_y="NEXT", align="L")
+        self.cell(0, 8, _clean_pdf_text("BRONZE AGENT - RAW DATA LANDING ZONE & GOVERNANCE"), new_x="LMARGIN", new_y="NEXT", align="L")
         self.set_draw_color(255, 163, 102)  # Bronze accent
         self.set_line_width(0.5)
         self.line(10, 18, 200, 18)
@@ -392,34 +392,121 @@ def generate_sample_audit_excel(
     return buf.getvalue()
 
 
+def generate_iceberg_ddl(
+    product_plan: Dict[str, Any],
+    bank_profile: Dict[str, Any],
+) -> str:
+    """
+    Generate production BigLake Apache Iceberg external table DDL for Google Data Lake.
+    Enforces:
+      - format = 'ICEBERG'
+      - BigLake Metastore connection
+      - 7-year regulatory retention policy (table_retention_days = 2555)
+      - Ingestion date partitioning
+    """
+    bank_code = bank_profile.get("bank_code", "aib").lower()
+    region = bank_profile.get("region", "eu").lower()
+    gcs_bucket = f"{bank_code}-data-lake-bronze"
+    tables = product_plan.get("tables", [])
+
+    ddl_statements = [
+        f"-- ==============================================================================",
+        f"-- BigLake Apache Iceberg External Tables (Google Data Lake Ingestion)",
+        f"-- Institution: {bank_profile.get('bank_name', 'Apex International Bank')} ({bank_code.upper()})",
+        f"-- Target Metastore: BigLake Iceberg Connection ({region}.biglake-iceberg-connection)",
+        f"-- Retention: 7 Years (2555 Days) Regulatory Compliance (Basel III / PRA / FCA)",
+        f"-- ==============================================================================\n",
+        f"CREATE SCHEMA IF NOT EXISTS `banking_bronze`\nOPTIONS (location = '{region}');\n",
+    ]
+
+    for t in tables:
+        tname = t.get("table_name", "brz_raw_table")
+        src_sys = (t.get("source_system") or "core").lower()
+        storage_uri = f"gs://{gcs_bucket}/{src_sys}/{tname}/*"
+        
+        cols_sql = []
+        for c in t.get("columns", []):
+            cname = c.get("name", "col")
+            ctype = str(c.get("type", "STRING")).upper()
+            cmode = "NOT NULL" if (c.get("primary_key") or c.get("is_pk") or not c.get("nullable", True)) else ""
+            desc = c.get("description", "").replace("'", "\\'")
+            options = f" OPTIONS(description='{desc}')" if desc else ""
+            cols_sql.append(f"  `{cname}` {ctype} {cmode}{options}".strip())
+
+        col_str = ",\n".join(cols_sql)
+        ddl = f"""CREATE EXTERNAL TABLE IF NOT EXISTS `banking_bronze.{tname}` (
+{col_str}
+)
+WITH CONNECTION `{region}.biglake-iceberg-connection`
+OPTIONS (
+  format = 'ICEBERG',
+  uris = ['{storage_uri}'],
+  table_retention_days = 2555,
+  max_staleness = INTERVAL 1 DAY
+);
+"""
+        ddl_statements.append(ddl)
+
+    return "\n".join(ddl_statements)
+
+
 def generate_dataplex_manifest_json(
     product_plan: Dict[str, Any],
     bank_profile: Dict[str, Any],
 ) -> str:
-    """Generate brz_dataplex_catalog_manifest.json for Stage 4."""
-    bank_name = bank_profile.get("bank_name", "Global BFSI Bank")
+    """
+    Generate brz_dataplex_catalog_manifest.json for Google Cloud Dataplex & Knowledge Catalog.
+    Includes Tag Templates, PII Aspects, and Retention Policy aspects.
+    """
+    bank_name = bank_profile.get("bank_name", "Apex International Bank")
+    bank_code = bank_profile.get("bank_code", "AIB").lower()
     tables = product_plan.get("tables", [])
 
     entities = []
     for t in tables:
         tname = t.get("table_name", "brz_entity")
+        src = t.get("source_system", "CORE")
+        
+        pii_columns = [
+            c.get("name") for c in t.get("columns", [])
+            if c.get("is_pii") or any(kw in c.get("name", "").lower() for kw in ["name", "cust", "tax", "dob", "birth", "iban", "account_num"])
+        ]
+        
         entities.append({
             "entity_id": f"dataplex:banking_bronze:{tname}",
             "display_name": tname,
-            "asset_type": "BIGQUERY_TABLE",
+            "asset_type": "BIGLAKE_ICEBERG_TABLE",
             "schema_location": f"banking_bronze.{tname}",
+            "lakehouse_storage_uri": f"gs://{bank_code}-data-lake-bronze/{src.lower()}/{tname}/",
             "governance_aspects": {
-                "owner": f"{bank_name} Data Architecture Team",
-                "retention": "7_YEARS",
+                "owner": f"{bank_name} Enterprise Data Integration Team",
+                "source_system": src,
+                "retention_policy": {
+                    "retention_period": "7_YEARS",
+                    "retention_days": 2555,
+                    "regulatory_frameworks": bank_profile.get("regulatory_frameworks", ["PRA", "FCA", "Basel III"]),
+                    "archive_class": "COLDLINE",
+                },
+                "data_classification": {
+                    "confidentiality": "RESTRICTED" if pii_columns else "INTERNAL",
+                    "pii_fields_detected": pii_columns,
+                    "gdpr_article_6_lawful_basis": "LEGAL_OBLIGATION_FINANCIAL_REGULATION",
+                },
+                "sla_monitoring": {
+                    "freshness_max_lag": "24h",
+                    "payload_hash_sha256_audit": True,
+                    "volume_anomaly_threshold": "0.20",
+                },
             },
         })
 
     manifest = {
         "$schema": "https://cloud.google.com/dataplex/docs/reference/rest/v1/projects.locations.lakes.zones.entities",
-        "dataplex_lake": "bfsi-banking-bronze-lake",
-        "zone": "banking-bronze-zone",
+        "knowledge_catalog_system": "Google Cloud Dataplex & Knowledge Catalog",
+        "dataplex_lake": f"{bank_code}-banking-lake",
+        "zone": "bronze-raw-landing-zone",
         "project_id": bank_profile.get("project_id", "internal-data-mig"),
-        "registered_at": "2026-08-31T06:00:00Z",
+        "registered_at": "2026-09-28T09:30:00Z",
         "entities": entities,
     }
     return json.dumps(manifest, indent=2)

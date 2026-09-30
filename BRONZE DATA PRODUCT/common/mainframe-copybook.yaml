@@ -1,0 +1,30 @@
+# common/mainframe-copybook.yaml
+# Common block for Mainframe Fixed-Width & COBOL Copybook records (e.g. Hogan, System 390)
+$schema: "http://json-schema.org/draft-07/schema#"
+title: "Mainframe Copybook Ingestion Block"
+type: object
+required:
+  - copybook_name
+  - record_format
+  - raw_record_payload
+properties:
+  copybook_name:
+    type: string
+    description: "Name of the COBOL copybook defining this layout (e.g. DDBASIC.CPY, CIBASIC.CPY)."
+    example: "DDBASIC.CPY"
+  record_format:
+    type: string
+    description: "Physical record structure (FIXED_WIDTH or VARIABLE_BLOCKED)."
+    example: "FIXED_WIDTH"
+  encoding:
+    type: string
+    description: "Source mainframe character encoding (e.g. IBM-037 EBCDIC, US-ASCII)."
+    example: "IBM-037"
+  record_byte_length:
+    type: integer
+    description: "Total record byte length as defined in 01 level record specification."
+    example: 450
+  raw_record_payload:
+    type: string
+    description: "Raw unparsed fixed-width record payload before column-level unpack."
+    example: "01002349120000098234120120260901..."

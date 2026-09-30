@@ -62,6 +62,7 @@ from tools.artifact_generator import (
     generate_metadata_excel,
     generate_sample_audit_excel,
     generate_dataplex_manifest_json,
+    generate_iceberg_ddl,
     generate_airflow_dag_code,
 )
 
@@ -934,12 +935,37 @@ async def _handle_chat(body: ChatRequest, session_id: str):
     contract_yaml = generate_data_contract_yaml(contract_dict)
     contract_dict["yaml_text"] = contract_yaml
 
+    # Generate BigLake Apache Iceberg external table DDL
+    iceberg_ddl = generate_iceberg_ddl(product_plan, bank_profile)
+    iceberg_file_id = str(uuid.uuid4())
+    iceberg_filename = f"brz_iceberg_tables_{session_id[:6]}.sql"
+    FILE_STORE[iceberg_file_id] = {
+        "id": iceberg_file_id,
+        "name": iceberg_filename,
+        "content": iceberg_ddl.encode("utf-8"),
+        "type": "sql",
+    }
+
+    # Combined DDL for full multi-target preview
+    combined_ddl = (
+        f"-- ==============================================================================\n"
+        f"-- TARGET 1: BigLake Apache Iceberg External Tables (Google Data Lake Ingestion)\n"
+        f"-- Format: Apache Iceberg on Google Cloud Storage | Retention: 7 Years (2555 Days)\n"
+        f"-- ==============================================================================\n\n"
+        f"{iceberg_ddl}\n\n"
+        f"-- ==============================================================================\n"
+        f"-- TARGET 2: BigQuery Native Landing Tables (Standard Managed SQL)\n"
+        f"-- Partitioning: Daily by ingest_ts | Clustering: Source Keys\n"
+        f"-- ==============================================================================\n\n"
+        f"{ddl}"
+    )
+
     ddl_file_id = str(uuid.uuid4())
     ddl_filename = f"brz_banking_schema_{session_id[:6]}.sql"
     FILE_STORE[ddl_file_id] = {
         "id": ddl_file_id,
         "name": ddl_filename,
-        "content": ddl.encode("utf-8"),
+        "content": combined_ddl.encode("utf-8"),
         "type": "sql",
     }
 
@@ -994,16 +1020,17 @@ async def _handle_chat(body: ChatRequest, session_id: str):
 
     all_files = session.get("all_generated_files", [])
     all_files.extend([
-        {"id": ddl_file_id, "name": ddl_filename, "label": "BigQuery DDL Script (.sql)", "stage": "PRODUCT ENGINE"},
-        {"id": contract_file_id, "name": contract_filename, "label": "Data Contract Definition (.yaml)", "stage": "PRODUCT ENGINE"},
+        {"id": iceberg_file_id, "name": iceberg_filename, "label": "BigLake Iceberg Table DDL (.sql)", "stage": "PRODUCT ENGINE"},
+        {"id": ddl_file_id, "name": ddl_filename, "label": "BigQuery Standard DDL (.sql)", "stage": "PRODUCT ENGINE"},
+        {"id": contract_file_id, "name": contract_filename, "label": "ODCS v2.2 Data Contract (.yaml)", "stage": "PRODUCT ENGINE"},
         {"id": sttm_xls_file_id, "name": sttm_xls_filename, "label": "Source-to-Target Mapping (.xlsx)", "stage": "PRODUCT ENGINE"},
         {"id": meta_xls_file_id, "name": meta_xls_filename, "label": "Business Glossary & Catalog (.xlsx)", "stage": "PRODUCT ENGINE"},
         {"id": audit_xls_file_id, "name": audit_xls_filename, "label": "Sample Data Quality Audit (.xlsx)", "stage": "VALIDATION"},
-        {"id": dataplex_file_id, "name": dataplex_filename, "label": "Dataplex Tag Manifest (.json)", "stage": "VALIDATION"},
+        {"id": dataplex_file_id, "name": dataplex_filename, "label": "Dataplex & Knowledge Catalog Manifest (.json)", "stage": "VALIDATION"},
     ])
     session["all_generated_files"] = all_files
     session["status"] = "completed"
-    session["ddl_script"] = ddl
+    session["ddl_script"] = combined_ddl
     session["contract_yaml"] = contract_yaml
 
     # Build bronze_transform_view for UI rendering
@@ -1017,11 +1044,11 @@ async def _handle_chat(body: ChatRequest, session_id: str):
     bronze_view = {
         "title": "Bronze Schema & STTM Ingestion Specification",
         "step_label": "Raw Landing Zone & Ingestion Envelope",
-        "summary": f"Generated raw banking Bronze schema for {bank_profile.get('bank_name', 'Apex International Bank')} with BigQuery DDL script, OpenDataContract, and Source-to-Target Mappings.",
+        "summary": f"Generated raw banking Bronze schema for {bank_profile.get('bank_name', 'Apex International Bank')} with BigLake Iceberg DDL, OpenDataContract (ODCS v2.2), and Source-to-Target Mappings.",
         "narrative": (
-            f"The Bronze Product Engine generated conformed raw landing entities (`{', '.join([t.get('table_name', 'table') for t in tables])}`). "
-            f"All tables include the standardized ingestion envelope (`ingest_batch_id`, `ingest_ts`, `source_file_name`, `raw_payload_hash`) preserving 100% source fidelity. "
-            f"Landing tables are partitioned daily by `DATE(ingest_ts)` and clustered for high-performance BigQuery querying."
+            f"The Bronze Product Engine generated conformed raw landing entities (`{', '.join([t.get('table_name', 'table') for t in tables])}`) with 100% source fidelity. "
+            f"All tables include Tony D. Giordano's mandatory ingestion envelope (`ingest_batch_id`, `ingest_ts`, `source_file_name`, `raw_payload_hash`). "
+            f"Downstream targets include Google Data Lake (GCS), BigLake Apache Iceberg external tables with 7-year regulatory retention, and Google Cloud Dataplex / Knowledge Catalog metadata manifests."
         ),
         "silver_sources": sources_list,
         "silver_tables": bronze_tables,
@@ -1032,9 +1059,9 @@ async def _handle_chat(body: ChatRequest, session_id: str):
     }
 
     agent_response_text = (
-        f"Generated enterprise-grade Banking Bronze Schema, Data Contract, and Ingestion STTM Workbooks.\n\n"
-        f"```sql\n{ddl}\n```\n\n"
-        f"You can review and edit the **Data Contract** and **STTM Mappings** below, and download all generated pipeline artifacts (.pdf, .xlsx, .yaml, .sql, .json) from the right-hand panel."
+        f"Generated enterprise-grade Banking Bronze Schema, Apache Iceberg DDL, ODCS v2.2 Data Contract, and Ingestion STTM Workbooks.\n\n"
+        f"```sql\n{combined_ddl}\n```\n\n"
+        f"You can review and edit the **Data Contract** and **STTM Mappings** below, and download all generated pipeline artifacts (.sql, .yaml, .xlsx, .json, .pdf) from the right-hand panel."
     )
 
     chips = ["Publish to BigQuery", "Adjust the model", "Tweak the mapping", "Edit Contract"]

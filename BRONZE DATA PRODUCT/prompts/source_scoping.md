@@ -27,17 +27,31 @@ You select from the Bronze common blocks.
 | `quality-flags` | parse_error_flag, malformed_record_flag |
 | `lineage-tracking` | source_topic, source_offset, kafka_partition |
 | `temporal` | extraction_start_ts, extraction_end_ts |
+| `mainframe-copybook` | copybook_name, record_format, encoding, record_byte_length, raw_record_payload |
+| `swift-envelope` | message_format, message_type, sender_bic, receiver_bic, uetr, interbank_settlement_date |
+| `sap-idoc-metadata` | sap_client, sap_extractor_type, idoc_number, change_operation, sap_timestamp |
+| `api-crm-metadata` | api_source, sfdc_object_name, cdc_change_type, api_replay_id, api_version |
 
 ---
 
 ## Selection rules
 
-1. **`ingestion-metadata` is mandatory in every table without exception.**
-2. Select `raw-payload` for virtually all tables unless it's purely metadata or CDC flattened.
-3. Select `source-identifier` if records have clear source IDs.
-4. Select `quality-flags` if you are parsing formats like CSV or JSON and want to flag malformed rows.
-5. Select `lineage-tracking` for streaming/Kafka CDC sources.
-6. Select `file-metadata` for file feeds.
+1. **`ingestion-metadata` is mandatory in every Bronze table without exception.**
+2. **For Hogan Deposit System / Mainframe feeds**:
+   - Always select: `["ingestion-metadata", "mainframe-copybook", "quality-flags", "temporal"]`.
+   - Preserve COBOL picture clauses and raw byte offsets.
+3. **For SWIFT MT / MX and Faster Payments**:
+   - Always select: `["ingestion-metadata", "swift-envelope", "quality-flags", "temporal"]`.
+   - Capture UETR, BICs, and interbank settlement dates.
+4. **For SAP ERP / S/4HANA (FI-CO / General Ledger)**:
+   - Always select: `["ingestion-metadata", "sap-idoc-metadata", "quality-flags", "temporal"]`.
+5. **For Salesforce CRM / KYC events**:
+   - Always select: `["ingestion-metadata", "api-crm-metadata", "temporal", "quality-flags"]`.
+6. **For Temenos T24 / Standard Core Banking files**:
+   - Always select: `["ingestion-metadata", "source-identifier", "raw-payload", "file-metadata"]`.
+7. **For CSV / Delimited batch feeds**:
+   - Always select: `["ingestion-metadata", "file-metadata", "raw-payload", "quality-flags"]`.
+8. Retain 100% source fidelity: no business transforms, deduplication across entities, or surrogate key generation. Those belong exclusively in the Silver Layer.
 
 ---
 
