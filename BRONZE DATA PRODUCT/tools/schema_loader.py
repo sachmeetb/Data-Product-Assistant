@@ -254,6 +254,7 @@ def _usage_note(name: str) -> str:
         "swift-envelope": "Used for SWIFT MT (MT103/940), SWIFT MX (pacs.008/camt.053), and Faster Payments (FPS) streams.",
         "sap-idoc-metadata": "Used for SAP ERP, S/4HANA, FI-CO General Ledger, IDoc, and SLT replication.",
         "api-crm-metadata": "Used for Salesforce CRM REST API, Bulk API, and Change Data Capture (CDC) events.",
+        "unstructured-object-metadata": "Used for BigLake Object Tables landing PDFs, KYC scans, TIFFs, audio transcripts, and loan contracts.",
     }
     return notes.get(name, "")
 
@@ -273,15 +274,51 @@ _DOMAIN_BLOCK_MAP: dict[str, list[str]] = {
     "faster_payments":    ["ingestion-metadata", "swift-envelope", "lineage-tracking", "temporal"],
     "csv":                ["ingestion-metadata", "file-metadata", "raw-payload", "quality-flags"],
 
+    # Multi-modal ingestion categories
+    "unstructured":       ["ingestion-metadata", "unstructured-object-metadata", "quality-flags", "temporal"],
+    "unstructured_docs":  ["ingestion-metadata", "unstructured-object-metadata", "quality-flags", "temporal"],
+    "streaming":          ["ingestion-metadata", "lineage-tracking", "temporal", "quality-flags", "raw-payload"],
+    "streaming_fraud":    ["ingestion-metadata", "lineage-tracking", "temporal", "quality-flags", "raw-payload"],
+    "batch":              ["ingestion-metadata", "file-metadata", "raw-payload", "temporal"],
+
     # Generic technical source types
     "file":               ["ingestion-metadata", "file-metadata", "raw-payload", "quality-flags"],
     "api":                ["ingestion-metadata", "source-identifier", "raw-payload", "quality-flags"],
-    "streaming":          ["ingestion-metadata", "lineage-tracking", "temporal", "raw-payload"],
     "database_cdc":       ["ingestion-metadata", "source-identifier", "lineage-tracking", "raw-payload"],
     "core_banking":       ["ingestion-metadata", "source-identifier", "raw-payload", "lineage-tracking"],
     "payment_gateway":    ["ingestion-metadata", "source-identifier", "temporal", "raw-payload"],
     "crm":                ["ingestion-metadata", "api-crm-metadata", "temporal", "quality-flags"],
 }
+
+
+def classify_source_modality(source_name: str, hint: str = "") -> dict[str, str]:
+    """
+    Classify incoming requirement or feed into the 4-quadrant Lakehouse matrix:
+      Structure: STRUCTURED | UNSTRUCTURED | SEMI_STRUCTURED
+      Cadence: STREAMING_REALTIME | BATCH_SCHEDULED | MICRO_BATCH
+    """
+    s_lower = f"{source_name} {hint}".lower()
+    
+    # 1. Structure Detection
+    if any(k in s_lower for k in ["pdf", "tiff", "jpeg", "png", "document", "scan", "passport", "id card", "audio", "contract", "deed", "unstructured"]):
+        structure = "UNSTRUCTURED"
+    elif any(k in s_lower for k in ["xml", "json", "swift mx", "pacs", "camt", "pain", "semi-structured"]):
+        structure = "SEMI_STRUCTURED"
+    else:
+        structure = "STRUCTURED"
+        
+    # 2. Cadence Detection
+    if any(k in s_lower for k in ["kafka", "pubsub", "pub/sub", "streaming", "real-time", "realtime", "event-driven", "cdc", "fps", "faster payment", "sub-minute"]):
+        cadence = "STREAMING_REALTIME"
+    else:
+        cadence = "BATCH_SCHEDULED"
+        
+    return {
+        "structure": structure,
+        "cadence": cadence,
+        "modality_label": f"[{cadence.replace('_', ' ')} · {structure.replace('_', ' ')}]",
+    }
+
 
 
 def get_domain_block_map() -> dict[str, list[str]]:

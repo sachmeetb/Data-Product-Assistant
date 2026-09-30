@@ -18,6 +18,7 @@ Endpoints:
 from __future__ import annotations
 
 import asyncio
+import json
 import logging
 import os
 import uuid
@@ -27,7 +28,8 @@ from typing import Any, Optional
 
 from dotenv import load_dotenv
 
-load_dotenv(Path(__file__).parent / ".env")
+_ROOT = Path(__file__).resolve().parent
+load_dotenv(_ROOT / ".env")
 
 from fastapi import FastAPI, HTTPException, UploadFile, File, Response
 from fastapi.middleware.cors import CORSMiddleware
@@ -63,8 +65,10 @@ from tools.artifact_generator import (
     generate_sample_audit_excel,
     generate_dataplex_manifest_json,
     generate_iceberg_ddl,
+    generate_object_table_ddl,
     generate_airflow_dag_code,
 )
+from tools.schema_loader import classify_source_modality
 
 log = logging.getLogger(__name__)
 logging.basicConfig(
@@ -316,6 +320,59 @@ async def quick_run(body: QuickRunRequest):
 # ── Frontend Interactive Chat & Catalog Endpoints ─────────────────────────────
 
 FILE_STORE: dict[str, dict] = {}
+UPLOAD_DIR = _ROOT / "uploads"
+UPLOAD_DIR.mkdir(exist_ok=True)
+
+
+def _save_file_info(file_id: str, info: dict):
+    """Store file info in memory and persist metadata/binary to disk."""
+    FILE_STORE[file_id] = info
+    try:
+        meta_file = UPLOAD_DIR / f"{file_id}.json"
+        bin_file = UPLOAD_DIR / f"{file_id}.bin"
+        with open(bin_file, "wb") as f:
+            f.write(info.get("content", b""))
+        meta = {k: v for k, v in info.items() if k != "content"}
+        with open(meta_file, "w", encoding="utf-8") as f:
+            json.dump(meta, f)
+    except Exception as exc:
+        log.warning("Could not persist file %s to disk: %s", file_id, exc)
+
+
+def _get_file_info(file_id: str, filename_hint: str = "") -> Optional[dict]:
+    """Retrieve file info from memory, disk cache, or samples directory."""
+    if not file_id:
+        return None
+    if file_id in FILE_STORE:
+        return FILE_STORE[file_id]
+
+    # Try reading from UPLOAD_DIR
+    meta_file = UPLOAD_DIR / f"{file_id}.json"
+    bin_file = UPLOAD_DIR / f"{file_id}.bin"
+    if meta_file.is_file() and bin_file.is_file():
+        try:
+            with open(meta_file, "r", encoding="utf-8") as f:
+                info = json.load(f)
+            with open(bin_file, "rb") as f:
+                info["content"] = f.read()
+            FILE_STORE[file_id] = info
+            return info
+        except Exception as exc:
+            log.warning("Could not read file from disk %s: %s", file_id, exc)
+
+    # Search samples directory as fallback
+    for s_file in (_ROOT / "samples").glob("*.*"):
+        if s_file.name == file_id or (filename_hint and s_file.name.lower() == filename_hint.lower()):
+            info = {
+                "id": file_id,
+                "name": s_file.name,
+                "content": s_file.read_bytes(),
+                "type": s_file.suffix.lower().lstrip("."),
+            }
+            FILE_STORE[file_id] = info
+            return info
+
+    return None
 
 
 class ChatRequest(BaseModel):
@@ -384,13 +441,14 @@ async def upload_file(file: UploadFile = File(...)):
             "word_count": 0,
         }
 
-    FILE_STORE[file_id] = {
+    file_info = {
         "id": file_id,
         "name": filename,
         "content": content,
         "type": ext,
         "preview": preview,
     }
+    _save_file_info(file_id, file_info)
     return {
         "ref_id": file_id,
         "file_name": filename,
@@ -401,7 +459,7 @@ async def upload_file(file: UploadFile = File(...)):
 
 @app.get("/files/{file_id}")
 async def download_file(file_id: str):
-    file_info = FILE_STORE.get(file_id)
+    file_info = _get_file_info(file_id)
     if not file_info:
         raise HTTPException(status_code=404, detail="File not found")
     return Response(
@@ -496,14 +554,24 @@ async def _handle_chat(body: ChatRequest, session_id: str):
     action = body.action
     session["turns"] = session.get("turns", 0) + 1
 
-    # Ingest uploaded file if referenced
-    if body.file_ref_id and body.file_ref_id in FILE_STORE:
-        file_info = FILE_STORE[body.file_ref_id]
+    # Ingest uploaded file if referenced or mentioned
+    file_info = None
+    if body.file_ref_id:
+        file_info = _get_file_info(body.file_ref_id, filename_hint=session.get("uploaded_file_name", ""))
+
+    # If not found by ID, inspect user_msg for any sample filename
+    if not file_info and user_msg:
+        for s_file in (_ROOT / "samples").glob("*.*"):
+            if s_file.name.lower() in user_msg.lower():
+                file_info = _get_file_info(s_file.name, s_file.name)
+                break
+
+    if file_info:
         extracted_text = _extract_text_from_file_info(file_info)
-        session["uploaded_file_id"] = body.file_ref_id
+        session["uploaded_file_id"] = file_info.get("id") or body.file_ref_id
         session["uploaded_file_name"] = file_info.get("name", "uploaded_file")
         session["uploaded_file_text"] = extracted_text
-        if not user_msg:
+        if not user_msg or body.action == "use_file" or "use this file" in user_msg.lower():
             user_msg = f"User uploaded requirements file '{file_info.get('name')}':\n\n{extracted_text}"
         else:
             user_msg = f"{user_msg}\n\nDocument '{file_info.get('name')}':\n\n{extracted_text}"
@@ -946,6 +1014,17 @@ async def _handle_chat(body: ChatRequest, session_id: str):
         "type": "sql",
     }
 
+    # Generate BigLake Object Table external DDL for Unstructured Data Ingestion
+    object_table_ddl = generate_object_table_ddl(product_plan, bank_profile)
+    object_file_id = str(uuid.uuid4())
+    object_filename = f"brz_object_tables_{session_id[:6]}.sql"
+    FILE_STORE[object_file_id] = {
+        "id": object_file_id,
+        "name": object_filename,
+        "content": object_table_ddl.encode("utf-8"),
+        "type": "sql",
+    }
+
     # Combined DDL for full multi-target preview
     combined_ddl = (
         f"-- ==============================================================================\n"
@@ -954,7 +1033,12 @@ async def _handle_chat(body: ChatRequest, session_id: str):
         f"-- ==============================================================================\n\n"
         f"{iceberg_ddl}\n\n"
         f"-- ==============================================================================\n"
-        f"-- TARGET 2: BigQuery Native Landing Tables (Standard Managed SQL)\n"
+        f"-- TARGET 2: BigLake Object Tables (Unstructured Binary Storage: KYC PDFs, Scans)\n"
+        f"-- Pattern: BigLake Directory Object Table over Cloud Storage | Retention: 7 Years\n"
+        f"-- ==============================================================================\n\n"
+        f"{object_table_ddl}\n\n"
+        f"-- ==============================================================================\n"
+        f"-- TARGET 3: BigQuery Native Landing Tables (Standard Managed SQL)\n"
         f"-- Partitioning: Daily by ingest_ts | Clustering: Source Keys\n"
         f"-- ==============================================================================\n\n"
         f"{ddl}"
@@ -1021,6 +1105,7 @@ async def _handle_chat(body: ChatRequest, session_id: str):
     all_files = session.get("all_generated_files", [])
     all_files.extend([
         {"id": iceberg_file_id, "name": iceberg_filename, "label": "BigLake Iceberg Table DDL (.sql)", "stage": "PRODUCT ENGINE"},
+        {"id": object_file_id, "name": object_filename, "label": "BigLake Object Table DDL (.sql)", "stage": "PRODUCT ENGINE"},
         {"id": ddl_file_id, "name": ddl_filename, "label": "BigQuery Standard DDL (.sql)", "stage": "PRODUCT ENGINE"},
         {"id": contract_file_id, "name": contract_filename, "label": "ODCS v2.2 Data Contract (.yaml)", "stage": "PRODUCT ENGINE"},
         {"id": sttm_xls_file_id, "name": sttm_xls_filename, "label": "Source-to-Target Mapping (.xlsx)", "stage": "PRODUCT ENGINE"},
@@ -1036,19 +1121,38 @@ async def _handle_chat(body: ChatRequest, session_id: str):
     # Build bronze_transform_view for UI rendering
     sources_list = [f"{s.get('source_name', s)}" if isinstance(s, dict) else str(s) for s in (structured_req.get("data_sources") or bank_profile.get("source_systems") or ["Temenos T24 Transact", "SWIFT MT/MX Feeds"])]
     bronze_tables = [f"banking_bronze.{t.get('table_name', 'table')}" for t in tables]
-    lineage_items = [
-        f"{t.get('source_table', 'Source Feed')} → banking_bronze.{t.get('table_name', 'table')} (Raw Landing)"
-        for t in tables
+
+    req_context_str = f"{structured_req.get('use_case_name', '')} {structured_req.get('business_goal', '')} {' '.join(sources_list)}"
+    detected_modalities = [
+        classify_source_modality(str(s), req_context_str) for s in sources_list
     ]
+    primary_modality = detected_modalities[0] if detected_modalities else classify_source_modality("core_banking", req_context_str)
+    contract_dict["modality"] = primary_modality
+
+    lineage_items = []
+    for t in tables:
+        tname = t.get("table_name", "table")
+        src_tbl = t.get("source_table") or t.get("source_name") or f"SRC_{tname.upper().replace('BRZ_', '')}"
+        t_mod = classify_source_modality(tname, f"{t.get('source_system', '')} {req_context_str}")
+        if t_mod["structure"] == "UNSTRUCTURED":
+            m_tag = "Object Table Landing"
+        elif t_mod["cadence"] == "STREAMING_REALTIME":
+            m_tag = "Streaming Realtime Landing"
+        else:
+            m_tag = "Raw Iceberg Landing"
+        lineage_items.append(f"{src_tbl} → banking_bronze.{tname} ({m_tag})")
 
     bronze_view = {
         "title": "Bronze Schema & STTM Ingestion Specification",
         "step_label": "Raw Landing Zone & Ingestion Envelope",
-        "summary": f"Generated raw banking Bronze schema for {bank_profile.get('bank_name', 'Apex International Bank')} with BigLake Iceberg DDL, OpenDataContract (ODCS v2.2), and Source-to-Target Mappings.",
+        "modality": primary_modality,
+        "modalities": detected_modalities,
+        "summary": f"Generated raw banking Bronze schema for {bank_profile.get('bank_name', 'Apex International Bank')} with BigLake Iceberg & Object Table DDL, OpenDataContract (ODCS v2.2), and Source-to-Target Mappings.",
         "narrative": (
             f"The Bronze Product Engine generated conformed raw landing entities (`{', '.join([t.get('table_name', 'table') for t in tables])}`) with 100% source fidelity. "
+            f"Modality detected: {primary_modality['modality_label']}. "
             f"All tables include Tony D. Giordano's mandatory ingestion envelope (`ingest_batch_id`, `ingest_ts`, `source_file_name`, `raw_payload_hash`). "
-            f"Downstream targets include Google Data Lake (GCS), BigLake Apache Iceberg external tables with 7-year regulatory retention, and Google Cloud Dataplex / Knowledge Catalog metadata manifests."
+            f"Downstream targets include Google Data Lake (GCS), BigLake Apache Iceberg external tables with 7-year regulatory retention, BigLake Object Tables for binary KYC/document blobs, and Google Cloud Dataplex / Knowledge Catalog metadata manifests."
         ),
         "silver_sources": sources_list,
         "silver_tables": bronze_tables,
