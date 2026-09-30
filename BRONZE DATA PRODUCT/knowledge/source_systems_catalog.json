@@ -1,0 +1,264 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "version": "1.0.0",
+  "catalog_name": "Bronze Source Systems & Banking Standards Catalog",
+  "description": "Technical profiles, ingest characteristics, data standards, and sample schemas for Bronze layer landing.",
+  "source_systems": {
+    "hogan": {
+      "name": "Hogan Deposit System",
+      "system_type": "Mainframe Core Banking (Deposits & CIS)",
+      "technology_stack": "IBM z/OS Mainframe, COBOL, VSAM / DB2",
+      "default_encoding": "IBM EBCDIC (CP037) or ASCII Fixed-Width",
+      "ingestion_pattern": "BATCH_FILE_COPYBOOK",
+      "file_format": "FIXED_WIDTH",
+      "record_delimiter": "\\n",
+      "associated_standards": ["COBOL Copybooks", "BIAN Deposit Account v12", "Basel III LCR"],
+      "default_retention_years": 7,
+      "regulatory_frameworks": ["PRA", "FCA", "Basel III", "GDPR"],
+      "primary_entities": [
+        {
+          "table_name": "brz_hogan_dd_account",
+          "feed_name": "DD-REC (Demand Deposit Account Master)",
+          "copybook": "DDBASIC.CPY",
+          "record_length_bytes": 450,
+          "description": "Hogan DDA master record containing deposit account statuses, ledgers, and balances.",
+          "sample_raw_columns": [
+            {"name": "DD_ACCT_NUM", "type": "STRING", "pic_clause": "PIC X(10)", "start_byte": 1, "length": 10, "is_pk": true, "description": "Demand Deposit Account Number"},
+            {"name": "DD_CUST_NUM", "type": "STRING", "pic_clause": "PIC X(12)", "start_byte": 11, "length": 12, "is_pk": false, "description": "CIS Customer Reference Number"},
+            {"name": "DD_PROD_TYPE", "type": "STRING", "pic_clause": "PIC X(4)", "start_byte": 23, "length": 4, "is_pk": false, "description": "Deposit Product Code (e.g. CHKG, SAVG)"},
+            {"name": "DD_STATUS_CD", "type": "STRING", "pic_clause": "PIC X(2)", "start_byte": 27, "length": 2, "is_pk": false, "description": "Account Status Code (01=Active, 05=Dormant, 09=Closed)"},
+            {"name": "DD_OPEN_DT", "type": "STRING", "pic_clause": "PIC 9(8)", "start_byte": 29, "length": 8, "is_pk": false, "description": "Account Opening Date (YYYYMMDD)"},
+            {"name": "DD_CURR_BAL", "type": "STRING", "pic_clause": "PIC S9(11)V99 COMP-3", "start_byte": 37, "length": 7, "is_pk": false, "description": "Current Ledger Balance in Minor Units"},
+            {"name": "DD_AVAIL_BAL", "type": "STRING", "pic_clause": "PIC S9(11)V99 COMP-3", "start_byte": 44, "length": 7, "is_pk": false, "description": "Available Balance in Minor Units"},
+            {"name": "DD_BRANCH_NUM", "type": "STRING", "pic_clause": "PIC 9(4)", "start_byte": 51, "length": 4, "is_pk": false, "description": "Booking Branch Number"},
+            {"name": "DD_CURRENCY", "type": "STRING", "pic_clause": "PIC X(3)", "start_byte": 55, "length": 3, "is_pk": false, "description": "ISO Currency Code"}
+          ]
+        },
+        {
+          "table_name": "brz_hogan_ci_customer",
+          "feed_name": "CI-REC (Customer Information System Master)",
+          "copybook": "CIBASIC.CPY",
+          "record_length_bytes": 600,
+          "description": "Hogan CIS master customer demographic and tax classification records.",
+          "sample_raw_columns": [
+            {"name": "CI_CUST_NUM", "type": "STRING", "pic_clause": "PIC X(12)", "start_byte": 1, "length": 12, "is_pk": true, "description": "Unique CIS Customer Number"},
+            {"name": "CI_CUST_TYPE", "type": "STRING", "pic_clause": "PIC X(2)", "start_byte": 13, "length": 2, "is_pk": false, "description": "Customer Entity Type (IND=Individual, COR=Corporate)"},
+            {"name": "CI_LEGAL_NAME", "type": "STRING", "pic_clause": "PIC X(60)", "start_byte": 15, "length": 60, "is_pk": false, "is_pii": true, "description": "Full Legal Name"},
+            {"name": "CI_TAX_ID", "type": "STRING", "pic_clause": "PIC X(15)", "start_byte": 75, "length": 15, "is_pk": false, "is_pii": true, "description": "National Tax Identifier (SSN / NIN / CRN)"},
+            {"name": "CI_BIRTH_DT", "type": "STRING", "pic_clause": "PIC 9(8)", "start_byte": 90, "length": 8, "is_pk": false, "is_pii": true, "description": "Date of Birth (YYYYMMDD)"},
+            {"name": "CI_POST_CODE", "type": "STRING", "pic_clause": "PIC X(10)", "start_byte": 98, "length": 10, "is_pk": false, "is_pii": true, "description": "Residential Postcode / ZIP"},
+            {"name": "CI_RISK_RATING", "type": "STRING", "pic_clause": "PIC X(3)", "start_byte": 108, "length": 3, "is_pk": false, "description": "Internal AML/KYC Risk Rating"}
+          ]
+        }
+      ]
+    },
+    "sap": {
+      "name": "SAP ERP / S/4HANA",
+      "system_type": "Enterprise Resource Planning & General Ledger (FI-CO)",
+      "technology_stack": "SAP NetWeaver, SAP HANA, RFC / IDoc / SLT",
+      "default_encoding": "UTF-8",
+      "ingestion_pattern": "CDC_OR_BATCH_RFC",
+      "file_format": "PARQUET_OR_DELIMITED",
+      "associated_standards": ["SAP Data Dictionary", "GAAP / IFRS", "FIBO Accounting"],
+      "default_retention_years": 7,
+      "regulatory_frameworks": ["SOX", "HMRC", "Basel III", "IFRS 9"],
+      "primary_entities": [
+        {
+          "table_name": "brz_sap_bkpf",
+          "feed_name": "BKPF (Accounting Document Header)",
+          "description": "SAP General Ledger financial document header table.",
+          "sample_raw_columns": [
+            {"name": "MANDT", "type": "STRING", "is_pk": true, "description": "SAP Client ID"},
+            {"name": "BUKRS", "type": "STRING", "is_pk": true, "description": "Company Code"},
+            {"name": "BELNR", "type": "STRING", "is_pk": true, "description": "Accounting Document Number"},
+            {"name": "GJAHR", "type": "STRING", "is_pk": true, "description": "Fiscal Year (YYYY)"},
+            {"name": "BLART", "type": "STRING", "is_pk": false, "description": "Document Type (e.g. SA=GL, KZ=Vendor Payment)"},
+            {"name": "BLDAT", "type": "STRING", "is_pk": false, "description": "Document Date (YYYYMMDD)"},
+            {"name": "BUDAT", "type": "STRING", "is_pk": false, "description": "Posting Date in General Ledger (YYYYMMDD)"},
+            {"name": "MONAT", "type": "STRING", "is_pk": false, "description": "Fiscal Period (01-12)"},
+            {"name": "WAERS", "type": "STRING", "is_pk": false, "description": "Transaction Currency Key"}
+          ]
+        },
+        {
+          "table_name": "brz_sap_bseg",
+          "feed_name": "BSEG (Accounting Document Segment / Line Item)",
+          "description": "SAP General Ledger line items with debit/credit indicators and cost allocations.",
+          "sample_raw_columns": [
+            {"name": "MANDT", "type": "STRING", "is_pk": true, "description": "SAP Client ID"},
+            {"name": "BUKRS", "type": "STRING", "is_pk": true, "description": "Company Code"},
+            {"name": "BELNR", "type": "STRING", "is_pk": true, "description": "Accounting Document Number"},
+            {"name": "GJAHR", "type": "STRING", "is_pk": true, "description": "Fiscal Year"},
+            {"name": "BUZEI", "type": "INT64", "is_pk": true, "description": "Line Item Number"},
+            {"name": "BSCHL", "type": "STRING", "is_pk": false, "description": "Posting Key (40=Debit, 50=Credit)"},
+            {"name": "HKONT", "type": "STRING", "is_pk": false, "description": "General Ledger Account Number"},
+            {"name": "DMBTR", "type": "NUMERIC", "is_pk": false, "description": "Amount in Local Currency"},
+            {"name": "WRBTR", "type": "NUMERIC", "is_pk": false, "description": "Amount in Document Currency"},
+            {"name": "KOSTL", "type": "STRING", "is_pk": false, "description": "Cost Center ID"},
+            {"name": "PRCTR", "type": "STRING", "is_pk": false, "description": "Profit Center ID"}
+          ]
+        }
+      ]
+    },
+    "salesforce": {
+      "name": "Salesforce CRM",
+      "system_type": "Customer Relationship Management & Client Onboarding",
+      "technology_stack": "Salesforce Lightning Platform, Bulk API 2.0 / Change Data Capture (Pub/Sub)",
+      "default_encoding": "UTF-8",
+      "ingestion_pattern": "STREAMING_CDC_OR_BULK_API",
+      "file_format": "JSON_OR_PARQUET",
+      "associated_standards": ["Salesforce Standard Object Schema", "BIAN Party Management v12"],
+      "default_retention_years": 5,
+      "regulatory_frameworks": ["GDPR", "CCPA", "FCA", "PRA"],
+      "primary_entities": [
+        {
+          "table_name": "brz_sfdc_account",
+          "feed_name": "Account (Customer & Organization Records)",
+          "description": "Salesforce CRM customer organization and individual party records.",
+          "sample_raw_columns": [
+            {"name": "Id", "type": "STRING", "is_pk": true, "description": "Salesforce 18-character Case-Insensitive Account ID"},
+            {"name": "Name", "type": "STRING", "is_pk": false, "is_pii": true, "description": "Account Legal Name"},
+            {"name": "AccountNumber", "type": "STRING", "is_pk": false, "description": "Enterprise Core Banking Cross-Reference Number"},
+            {"name": "Type", "type": "STRING", "is_pk": false, "description": "Account Relationship Type (Customer, Partner, Prospect)"},
+            {"name": "Industry", "type": "STRING", "is_pk": false, "description": "SIC / Industry Sector Code"},
+            {"name": "AnnualRevenue", "type": "NUMERIC", "is_pk": false, "description": "Declared Annual Turnover / Revenue"},
+            {"name": "BillingCountry", "type": "STRING", "is_pk": false, "description": "Billing Country (ISO 3166-1 alpha-2)"},
+            {"name": "CreatedDate", "type": "TIMESTAMP", "is_pk": false, "description": "Salesforce Creation Audit Timestamp"},
+            {"name": "LastModifiedDate", "type": "TIMESTAMP", "is_pk": false, "description": "Salesforce Last Modification Timestamp"}
+          ]
+        },
+        {
+          "table_name": "brz_sfdc_kyc_verification",
+          "feed_name": "KYC_Verification__c (Custom Compliance Object)",
+          "description": "Salesforce customer onboarding KYC / AML screening events and document verification.",
+          "sample_raw_columns": [
+            {"name": "Id", "type": "STRING", "is_pk": true, "description": "KYC Record ID"},
+            {"name": "AccountId__c", "type": "STRING", "is_pk": false, "description": "Associated Salesforce Account ID"},
+            {"name": "VerificationStatus__c", "type": "STRING", "is_pk": false, "description": "Status (Approved, Pending Review, Rejected, Enhanced Due Diligence)"},
+            {"name": "PEP_Flag__c", "type": "BOOL", "is_pk": false, "description": "Politically Exposed Person Indicator"},
+            {"name": "Sanctions_Cleared__c", "type": "BOOL", "is_pk": false, "description": "OFAC / UN / EU Sanctions Clearance Indicator"},
+            {"name": "RiskScore__c", "type": "INT64", "is_pk": false, "description": "Composite Risk Score (1-100)"},
+            {"name": "VerifiedDate__c", "type": "TIMESTAMP", "is_pk": false, "description": "Compliance Officer Signoff Timestamp"}
+          ]
+        }
+      ]
+    },
+    "temenos": {
+      "name": "Temenos T24 Transact",
+      "system_type": "Universal Core Banking Platform",
+      "technology_stack": "Temenos Transact, jBASE / Oracle / PostgreSQL",
+      "default_encoding": "UTF-8",
+      "ingestion_pattern": "BATCH_EXTRACT_OR_EVENT_STREAM",
+      "file_format": "CSV_OR_PARQUET",
+      "associated_standards": ["BIAN Core Banking", "ISO 20022", "IFRS 9"],
+      "default_retention_years": 7,
+      "regulatory_frameworks": ["PRA", "FCA", "Basel III", "GDPR"],
+      "primary_entities": [
+        {
+          "table_name": "brz_t24_customer",
+          "feed_name": "CUSTOMER (Party Master Table)",
+          "description": "Temenos T24 master customer repository.",
+          "sample_raw_columns": [
+            {"name": "CUST_ID", "type": "STRING", "is_pk": true, "description": "T24 Unique Customer Number"},
+            {"name": "MNEMONIC", "type": "STRING", "is_pk": false, "description": "Short Mnemonic Identifier"},
+            {"name": "SHORT_NAME", "type": "STRING", "is_pk": false, "is_pii": true, "description": "Customer Display Name"},
+            {"name": "SECTOR", "type": "STRING", "is_pk": false, "description": "Economic Sector Code (1001=Retail, 2001=Corporate)"},
+            {"name": "NATIONALITY", "type": "STRING", "is_pk": false, "description": "ISO Country Code of Nationality"},
+            {"name": "RESIDENCE", "type": "STRING", "is_pk": false, "description": "ISO Country Code of Tax Residence"},
+            {"name": "DATE_OF_BIRTH", "type": "STRING", "is_pk": false, "is_pii": true, "description": "Date of Birth (YYYYMMDD)"}
+          ]
+        },
+        {
+          "table_name": "brz_t24_account",
+          "feed_name": "ACCOUNT (General Ledger & Customer Account)",
+          "description": "Temenos T24 deposit and loan accounts ledger.",
+          "sample_raw_columns": [
+            {"name": "ACCOUNT_NUMBER", "type": "STRING", "is_pk": true, "description": "T24 Account Identifier"},
+            {"name": "CUSTOMER", "type": "STRING", "is_pk": false, "description": "Owning Customer Number"},
+            {"name": "CATEGORY", "type": "STRING", "is_pk": false, "description": "T24 Account Category Code (1001=Current, 6001=Term Deposit)"},
+            {"name": "CURRENCY", "type": "STRING", "is_pk": false, "description": "ISO-4217 3-letter Currency Code"},
+            {"name": "WORKING_BALANCE", "type": "NUMERIC", "is_pk": false, "description": "Current Cleared Working Balance"},
+            {"name": "OPENING_DATE", "type": "STRING", "is_pk": false, "description": "Account Opening Date (YYYYMMDD)"},
+            {"name": "CO_CODE", "type": "STRING", "is_pk": false, "description": "Company / Branch Code"}
+          ]
+        }
+      ]
+    },
+    "faster_payments": {
+      "name": "Faster Payments (FPS)",
+      "system_type": "UK Real-Time Retail Payment Scheme",
+      "technology_stack": "Pay.UK Scheme, ISO 8583 / ISO 20022 Direct Settler Gateway",
+      "default_encoding": "UTF-8",
+      "ingestion_pattern": "STREAMING_REALTIME",
+      "file_format": "JSON_STREAM_OR_AVRO",
+      "associated_standards": ["ISO 20022 pacs.008", "ISO 8583 FPS Scheme Rules", "BIAN Payment Execution"],
+      "default_retention_years": 7,
+      "regulatory_frameworks": ["PSR (Payment Systems Regulator)", "Bank of England Real-Time Gross Settlement", "AML / OFAC"],
+      "primary_entities": [
+        {
+          "table_name": "brz_fps_payment_stream",
+          "feed_name": "FPS Inbound/Outbound Payment Stream",
+          "description": "Real-time Faster Payments transactions capturing scheme settlement, sort codes, and remittance info.",
+          "sample_raw_columns": [
+            {"name": "FPS_PAYMENT_ID", "type": "STRING", "is_pk": true, "description": "Scheme Payment ID / UETR"},
+            {"name": "SCHEME_STATUS", "type": "STRING", "is_pk": false, "description": "Scheme Status (SETTLED, REJECTED, SUSPENDED)"},
+            {"name": "SETTLEMENT_DATE", "type": "DATE", "is_pk": false, "description": "Central Scheme Clearing Cycle Date"},
+            {"name": "DEBTOR_SORT_CODE", "type": "STRING", "is_pk": false, "description": "Debtor Bank UK 6-digit Sort Code"},
+            {"name": "DEBTOR_ACCOUNT_NUM", "type": "STRING", "is_pk": false, "is_pii": true, "description": "Debtor 8-digit Account Number"},
+            {"name": "CREDITOR_SORT_CODE", "type": "STRING", "is_pk": false, "description": "Creditor Bank UK 6-digit Sort Code"},
+            {"name": "CREDITOR_ACCOUNT_NUM", "type": "STRING", "is_pk": false, "is_pii": true, "description": "Creditor 8-digit Account Number"},
+            {"name": "AMOUNT_GBP", "type": "NUMERIC", "is_pk": false, "description": "Payment Amount in GBP (Max £1,000,000)"},
+            {"name": "REMITTANCE_INFO", "type": "STRING", "is_pk": false, "description": "Customer Reference / Remittance Text (Max 18 chars)"}
+          ]
+        }
+      ]
+    },
+    "swift": {
+      "name": "SWIFT MT & MX Messages",
+      "system_type": "Cross-Border Interbank Financial Telecommunication",
+      "technology_stack": "SWIFT Alliance Gateway, FIN MT & ISO 20022 MX XML",
+      "default_encoding": "UTF-8 / EBCDIC FIN",
+      "ingestion_pattern": "STREAMING_OR_HOURLY_BATCH",
+      "file_format": "RAW_FIN_AND_XML",
+      "associated_standards": ["ISO 20022 pacs/camt/pain", "SWIFT MT FIN Standards Release 2026", "BIAN Interbank Clearing"],
+      "default_retention_years": 7,
+      "regulatory_frameworks": ["FATF Travel Rule", "OFAC Sanctions", "Wolfsberg Principles", "Basel III LCR"],
+      "primary_entities": [
+        {
+          "table_name": "brz_swift_mt103_transfer",
+          "feed_name": "SWIFT MT103 (Single Customer Credit Transfer)",
+          "description": "Raw SWIFT FIN MT103 inbound/outbound cross-border credit transfers.",
+          "sample_raw_columns": [
+            {"name": "MESSAGE_TYPE", "type": "STRING", "is_pk": false, "description": "FIN Message Type (MT103)"},
+            {"name": "UETR", "type": "STRING", "is_pk": true, "description": "Field 121: Unique End-to-End Transaction Reference (UUID)"},
+            {"name": "TAG_20_TRN", "type": "STRING", "is_pk": false, "description": "Field 20: Senders Reference Number"},
+            {"name": "TAG_32A_DATE", "type": "DATE", "is_pk": false, "description": "Field 32A: Value Date (YYMMDD)"},
+            {"name": "TAG_32A_CURRENCY", "type": "STRING", "is_pk": false, "description": "Field 32A: 3-letter Currency Code"},
+            {"name": "TAG_32A_AMOUNT", "type": "NUMERIC", "is_pk": false, "description": "Field 32A: Interbank Settlement Amount"},
+            {"name": "TAG_50K_ORDERING_CUST", "type": "STRING", "is_pk": false, "is_pii": true, "description": "Field 50K: Ordering Customer Name and Address"},
+            {"name": "TAG_59_BENEFICIARY", "type": "STRING", "is_pk": false, "is_pii": true, "description": "Field 59: Beneficiary Account (IBAN) and Name"},
+            {"name": "TAG_71A_DETAILS_OF_CHARGES", "type": "STRING", "is_pk": false, "description": "Field 71A: Details of Charges (OUR, BEN, SHA)"},
+            {"name": "RAW_FIN_PAYLOAD", "type": "STRING", "is_pk": false, "description": "Full unprocessed FIN block string {1:...}{2:...}{4:...}"}
+          ]
+        },
+        {
+          "table_name": "brz_swift_pacs008_mx",
+          "feed_name": "SWIFT MX pacs.008.001.08 (FI-to-FI Customer Credit Transfer)",
+          "description": "ISO 20022 XML customer credit transfers with rich remittance and regulatory data.",
+          "sample_raw_columns": [
+            {"name": "MSG_ID", "type": "STRING", "is_pk": false, "description": "GrpHdr/MsgId: Group Header Message Identifier"},
+            {"name": "CRE_DT_TM", "type": "TIMESTAMP", "is_pk": false, "description": "GrpHdr/CreDtTm: Creation Date and Time"},
+            {"name": "UETR", "type": "STRING", "is_pk": true, "description": "PmtId/UETR: ISO 20022 End-to-End Reference"},
+            {"name": "END_TO_END_ID", "type": "STRING", "is_pk": false, "description": "PmtId/EndToEndId: Client Instruction Reference"},
+            {"name": "INTR_BK_STTLM_AMT", "type": "NUMERIC", "is_pk": false, "description": "Interbank Settlement Amount"},
+            {"name": "STTLM_CURRENCY", "type": "STRING", "is_pk": false, "description": "Settlement Currency Code"},
+            {"name": "DBTR_NAME", "type": "STRING", "is_pk": false, "is_pii": true, "description": "Debtor Legal Entity / Individual Name"},
+            {"name": "DBTR_ACCT_IBAN", "type": "STRING", "is_pk": false, "is_pii": true, "description": "Debtor Account IBAN"},
+            {"name": "CDTR_NAME", "type": "STRING", "is_pk": false, "is_pii": true, "description": "Creditor Legal Entity / Individual Name"},
+            {"name": "CDTR_ACCT_IBAN", "type": "STRING", "is_pk": false, "is_pii": true, "description": "Creditor Account IBAN"},
+            {"name": "RAW_XML_PAYLOAD", "type": "JSON", "is_pk": false, "description": "Full ISO 20022 XML parsed document payload"}
+          ]
+        }
+      ]
+    }
+  }
+}

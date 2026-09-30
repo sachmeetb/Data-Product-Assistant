@@ -141,29 +141,58 @@ def _flatten_properties(
 
 def _flatten_ingestion_metadata(schema: dict) -> list[dict]:
     """
-    ingestion-metadata block flattening for Bronze layer.
+    Mandatory Ingestion Metadata Envelope for Bronze layer.
+    Directly aligns with Tony D. Giordano's 4-field core envelope:
+      - ingest_batch_id
+      - ingest_ts
+      - source_file_name
+      - raw_payload_hash (SHA-256)
+    Plus unique row landing key (bronze_id) and source_system.
     """
-    defs = schema.get("$defs", {})
-    columns = []
-
-    columns.append({
-        "name": "bronze_id",
-        "bq_type": "STRING",
-        "mode": "REQUIRED",
-        "description": "Unique identifier for this raw record ingestion.",
-        "block": "ingestion-metadata",
-    })
-
-    ingest_map = {
-        "ingest_ts": ("TIMESTAMP", "REQUIRED", "Timestamp when the record landed in Bronze."),
-        "source_system": ("STRING", "REQUIRED", "Name of the source system."),
-        "source_file_name": ("STRING", "NULLABLE", "Originating file name if applicable."),
-        "batch_id": ("STRING", "NULLABLE", "Batch identifier for the load."),
-    }
-    for col, (bq_t, mode, desc) in ingest_map.items():
-        columns.append({"name": col, "bq_type": bq_t, "mode": mode, "description": desc, "block": "ingestion-metadata"})
-
-    return columns
+    return [
+        {
+            "name": "bronze_id",
+            "bq_type": "STRING",
+            "mode": "REQUIRED",
+            "description": "Unique deterministic identifier (UUID) for this Bronze landing row.",
+            "block": "ingestion-metadata",
+        },
+        {
+            "name": "ingest_batch_id",
+            "bq_type": "STRING",
+            "mode": "REQUIRED",
+            "description": "Unique ingestion batch / job execution identifier.",
+            "block": "ingestion-metadata",
+        },
+        {
+            "name": "ingest_ts",
+            "bq_type": "TIMESTAMP",
+            "mode": "REQUIRED",
+            "description": "UTC timestamp when the record landed in Bronze storage.",
+            "block": "ingestion-metadata",
+        },
+        {
+            "name": "source_file_name",
+            "bq_type": "STRING",
+            "mode": "NULLABLE",
+            "description": "Originating source file name, GCS object URI, or Kafka topic.",
+            "block": "ingestion-metadata",
+        },
+        {
+            "name": "raw_payload_hash",
+            "bq_type": "STRING",
+            "mode": "REQUIRED",
+            "description": "SHA-256 cryptographic hash of the raw payload for audit and deduplication.",
+            "block": "ingestion-metadata",
+        },
+        {
+            "name": "source_system",
+            "bq_type": "STRING",
+            "mode": "REQUIRED",
+            "description": "Originating source system identifier (e.g. HOGAN, SAP, SFDC, T24, SWIFT, FPS).",
+            "block": "ingestion-metadata",
+        },
+    ]
 
 
 # ── Load common blocks ────────────────────────────────────────────────────────
@@ -181,6 +210,8 @@ def _load_common_block(yaml_file: Path, crosswalk_map: dict) -> dict:
 
     if block_name == "ingestion-metadata":
         columns = _flatten_ingestion_metadata(schema)
+    elif "columns" in schema and isinstance(schema["columns"], list):
+        columns = [dict(c) for c in schema["columns"]]
     else:
         props    = schema.get("properties", {})
         required = schema.get("required", [])
@@ -212,13 +243,17 @@ def _load_common_block(yaml_file: Path, crosswalk_map: dict) -> dict:
 
 def _usage_note(name: str) -> str:
     notes = {
-        "ingestion-metadata": "Embed in EVERY Bronze table. Tracks load time, batch ID, and source.",
-        "source-identifier": "Tracks natural keys from source systems.",
-        "file-metadata": "Used for file-based ingestion sources (e.g. CSV, JSON, XML).",
-        "raw-payload": "Stores the entire unprocessed raw message or record (e.g., JSON string).",
-        "quality-flags": "Basic DQ indicators at the Bronze level (e.g. schema validation passed).",
-        "lineage-tracking": "Traces back to upstream source paths or message offsets.",
-        "temporal": "Business or system time extracted directly from raw data.",
+        "ingestion-metadata": "Embed in EVERY Bronze table. Tracks ingest_batch_id, ingest_ts, source_file_name, and raw_payload_hash.",
+        "source-identifier": "Tracks natural keys, customer numbers, and entity IDs from source systems.",
+        "file-metadata": "Used for file-based ingestion sources (e.g. CSV, JSON, XML, Parquet).",
+        "raw-payload": "Stores the entire unprocessed raw message, row, or JSON string.",
+        "quality-flags": "Technical DQ indicators at Bronze level (parse_error_flag, malformed_record_flag).",
+        "lineage-tracking": "Traces back to upstream source paths, message offsets, or Kafka partitions.",
+        "temporal": "Business or extraction time extracted directly from raw data.",
+        "mainframe-copybook": "Used for Hogan and mainframe fixed-width/EBCDIC records with COBOL copybook layouts.",
+        "swift-envelope": "Used for SWIFT MT (MT103/940), SWIFT MX (pacs.008/camt.053), and Faster Payments (FPS) streams.",
+        "sap-idoc-metadata": "Used for SAP ERP, S/4HANA, FI-CO General Ledger, IDoc, and SLT replication.",
+        "api-crm-metadata": "Used for Salesforce CRM REST API, Bulk API, and Change Data Capture (CDC) events.",
     }
     return notes.get(name, "")
 
@@ -229,16 +264,23 @@ _DOMAIN_BLOCK_MAP: dict[str, list[str]] = {
     # Default: every table must start with ingestion-metadata and raw-payload
     "_all": ["ingestion-metadata", "raw-payload"],
 
-    # Source type recommendations
+    # Core source systems from Tony D. Giordano discussion
+    "hogan":              ["ingestion-metadata", "mainframe-copybook", "quality-flags", "temporal"],
+    "sap":                ["ingestion-metadata", "sap-idoc-metadata", "quality-flags", "temporal"],
+    "salesforce":         ["ingestion-metadata", "api-crm-metadata", "temporal", "quality-flags"],
+    "temenos":            ["ingestion-metadata", "source-identifier", "raw-payload", "file-metadata"],
+    "swift":              ["ingestion-metadata", "swift-envelope", "quality-flags", "temporal"],
+    "faster_payments":    ["ingestion-metadata", "swift-envelope", "lineage-tracking", "temporal"],
+    "csv":                ["ingestion-metadata", "file-metadata", "raw-payload", "quality-flags"],
+
+    # Generic technical source types
     "file":               ["ingestion-metadata", "file-metadata", "raw-payload", "quality-flags"],
     "api":                ["ingestion-metadata", "source-identifier", "raw-payload", "quality-flags"],
     "streaming":          ["ingestion-metadata", "lineage-tracking", "temporal", "raw-payload"],
     "database_cdc":       ["ingestion-metadata", "source-identifier", "lineage-tracking", "raw-payload"],
-    
-    # Banking specific raw sources
     "core_banking":       ["ingestion-metadata", "source-identifier", "raw-payload", "lineage-tracking"],
     "payment_gateway":    ["ingestion-metadata", "source-identifier", "temporal", "raw-payload"],
-    "crm":                ["ingestion-metadata", "source-identifier", "raw-payload"],
+    "crm":                ["ingestion-metadata", "api-crm-metadata", "temporal", "quality-flags"],
 }
 
 
@@ -315,6 +357,23 @@ def get_blocks_for_table(source_type: str) -> list[dict]:
     return [catalog[n] for n in block_names if n in catalog]
 
 
+def get_source_systems_catalog() -> dict:
+    """Return the source systems and banking standards catalog."""
+    if "source_systems_catalog" in _cache:
+        return _cache["source_systems_catalog"]
+    
+    path = _AGENT_ROOT / "knowledge" / "source_systems_catalog.json"
+    if path.is_file():
+        try:
+            with open(path, encoding="utf-8") as f:
+                data = json.load(f)
+                _cache["source_systems_catalog"] = data
+                return data
+        except Exception as exc:
+            log.warning("Could not load source_systems_catalog.json: %s", exc)
+    return {}
+
+
 def catalog_to_agent_context() -> str:
     """
     Compact but complete JSON string of the common block catalog for agent prompt injection.
@@ -325,6 +384,7 @@ def catalog_to_agent_context() -> str:
             "common_block_catalog": catalog,
             "domain_block_map": _DOMAIN_BLOCK_MAP,
             "standards_crosswalk": get_crosswalk(),
+            "source_systems_catalog": get_source_systems_catalog().get("source_systems", {}),
         },
         indent=2,
         default=str,
