@@ -1,0 +1,127 @@
+apiVersion: v3.1.0
+kind: DataContract
+id: template:hr:hr-analytics-dp
+name: HR Analytics Data Product
+version: 1.0.0
+status: draft
+domain: hr
+dataProduct: hr_analytics
+description: Consolidated HR analytics dataset combining employee, department, and
+  compensation data for workforce planning and reporting.
+purpose: Enable HR business partners to perform workforce planning, attrition analysis,
+  and compensation benchmarking without direct database access.
+limitations: PII fields are masked. Historical data limited to 5 years. Does not include
+  contractor records.
+owners:
+- name: HR Data Team
+  role: Data Product Owner
+  email: hr-data@example.com
+schema:
+- name: employee_summary
+  physicalName: employee_summary
+  physicalType: table
+  description: Denormalized employee summary combining core HR attributes
+  properties:
+  - name: employee_id
+    physicalName: employee_id
+    logicalName: Employee Identifier
+    logicalType: integer
+    physicalType: integer
+    description: Unique identifier for each employee
+    primaryKey: true
+    required: true
+    criticalDataElement: true
+    pii: false
+    classification: ''
+    examples: []
+    logicalTypeOptions: {}
+  - name: full_name
+    physicalName: full_name
+    logicalName: Employee Full Name
+    logicalType: string
+    physicalType: varchar
+    description: Employee first and last name concatenated
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: ''
+    examples: []
+    logicalTypeOptions: {}
+  - name: department_name
+    physicalName: department_name
+    logicalName: Department Name
+    logicalType: string
+    physicalType: varchar
+    description: Name of the department the employee belongs to
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: ''
+    examples: []
+    logicalTypeOptions: {}
+  - name: hire_date
+    physicalName: hire_date
+    logicalName: Hire Date
+    logicalType: date
+    physicalType: date
+    description: Date the employee was hired
+    primaryKey: false
+    required: true
+    criticalDataElement: true
+    pii: false
+    classification: ''
+    examples: []
+    logicalTypeOptions: {}
+  - name: current_salary
+    physicalName: current_salary
+    logicalName: Current Salary
+    logicalType: number
+    physicalType: numeric
+    description: Employee current annual salary amount
+    primaryKey: false
+    required: false
+    criticalDataElement: true
+    pii: false
+    classification: ''
+    examples: []
+    logicalTypeOptions: {}
+  foreignKeys: []
+quality:
+- rule: completeness
+  name: Employee ID completeness
+  description: employee_id must not be null
+  severity: error
+  dimension: completeness
+  businessImpact: Missing employee records lead to incorrect headcount reporting
+- rule: freshness
+  name: Data freshness
+  description: Data must be refreshed within 24 hours of source update
+  severity: warning
+  dimension: timeliness
+  businessImpact: Stale salary data affects compensation benchmarking
+- rule: validity
+  name: Hire date validity
+  description: hire_date must be a valid date not in the future
+  severity: warning
+  dimension: accuracy
+  businessImpact: Invalid hire dates break tenure calculations
+slaProperties:
+- property: availability
+  value: '99.5'
+  unit: percent
+- property: freshness
+  value: '24'
+  unit: hours
+- property: retention
+  value: '5'
+  unit: years
+terms:
+  usage: Internal analytics and reporting only. Not approved for external sharing.
+  limitations: PII fields are masked in non-production environments. Salary data restricted
+    to HR and Finance roles.
+  billing: No charge for internal consumers
+  noticePeriod: 30 days
+productKind: consumer
+sourceSpecId: hr_analytics_dp

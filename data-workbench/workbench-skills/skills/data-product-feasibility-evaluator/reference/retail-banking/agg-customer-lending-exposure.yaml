@@ -1,0 +1,137 @@
+spec_id: agg_customer_lending_exposure
+name: Customer Lending Exposure
+domain: Retail Banking
+product_kind: aggregate
+description: Per-customer lending exposure view — their loans, repayment behaviour and delinquency status, plus card credit limits — assembled from the party, lending and card source systems for credit-risk monitoring and collections.
+schema_version: '1.0'
+classification: confidential
+grain:
+  keys:
+  - customer_id
+  description: One row per customer, enriched with their loan and card-credit exposure.
+freshness:
+  history: scd2
+  cadence: daily
+  description: Refreshed daily; delinquency and repayment status change frequently.
+composition:
+  join_keys:
+  - customer_id
+  - loan_id
+  composed_of: []
+  description: Assembled by joining the party, lending and card source systems on the shared customer_id (and loan_id within lending).
+allowed_derivations:
+- rename
+- cast
+attributes:
+- name: customer_id
+  type: bigint
+  concept: Customer ID
+  required: true
+  is_key: true
+  classification: internal
+  description: Unique numeric identifier for a customer record, serving as the primary join key across all customer-related entities.
+- name: full_name
+  type: varchar
+  concept: Full Name
+  required: true
+  is_key: false
+  classification: pii
+  description: Full legal name of the borrowing customer.
+- name: customer_segment
+  type: varchar
+  concept: Customer Segment
+  required: true
+  is_key: false
+  classification: internal
+  description: Marketing/value segment of the customer such as mass, affluent, premium, private or business.
+- name: loan_id
+  type: bigint
+  concept: Loan ID
+  required: true
+  is_key: false
+  classification: internal
+  description: Unique identifier for a loan account held by the customer.
+- name: loan_type
+  type: varchar
+  concept: Loan Type
+  required: true
+  is_key: false
+  classification: internal
+  description: Loan product classification such as home, auto, personal, business or education.
+- name: principal_amount
+  type: numeric
+  concept: Principal Amount
+  required: true
+  is_key: false
+  classification: internal
+  description: Original sanctioned principal amount of the loan.
+- name: interest_rate
+  type: numeric
+  concept: Interest Rate
+  required: true
+  is_key: false
+  classification: internal
+  description: Annual interest rate applied to the loan, expressed as a percentage.
+- name: disbursal_date
+  type: date
+  concept: Disbursal Date
+  required: true
+  is_key: false
+  classification: internal
+  description: Date the loan principal was disbursed to the customer.
+- name: maturity_date
+  type: date
+  concept: Maturity Date
+  required: true
+  is_key: false
+  classification: internal
+  description: Contractual maturity date of the loan.
+- name: loan_status
+  type: varchar
+  concept: Loan Status
+  required: true
+  is_key: false
+  classification: internal
+  description: Servicing state of the loan such as active, closed, written_off or delinquent.
+- name: amount_due
+  type: numeric
+  concept: Amount Due
+  required: true
+  is_key: false
+  classification: internal
+  description: Scheduled instalment amount due for the loan.
+- name: amount_paid
+  type: numeric
+  concept: Amount Paid
+  required: true
+  is_key: false
+  classification: internal
+  description: Instalment amount actually paid by the customer.
+- name: dpd_bucket
+  type: varchar
+  concept: Days Past Due Bucket
+  required: true
+  is_key: false
+  classification: internal
+  description: Days-past-due delinquency bucket such as current, 1-30, 31-60, 61-90 or 90+.
+- name: overdue_amount
+  type: numeric
+  concept: Overdue Amount
+  required: true
+  is_key: false
+  classification: internal
+  description: Total overdue amount on the loan as of the reporting date.
+- name: credit_limit
+  type: numeric
+  concept: Credit Limit
+  required: true
+  is_key: false
+  classification: internal
+  description: Maximum credit amount available on the customer's card, contributing to total credit exposure.
+- name: kyc_status
+  type: varchar
+  concept: KYC Status
+  required: false
+  is_key: false
+  classification: internal
+  description: Current Know-Your-Customer verification state of the customer.

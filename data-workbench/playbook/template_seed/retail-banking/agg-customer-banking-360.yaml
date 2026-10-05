@@ -1,0 +1,335 @@
+apiVersion: v3.1.0
+kind: DataContract
+id: template:retail-banking:agg-customer-banking-360
+name: Customer Banking 360
+version: 1.0.0
+status: draft
+domain: Retail Banking
+description: Unified retail-banking view of a customer — identity and KYC, their deposit
+  accounts and balances, and their issued cards and limits — assembled from the party,
+  core-banking and card source systems for servicing, marketing and analytics.
+schema:
+- name: Customer Banking 360
+  physicalName: customer_banking_360
+  physicalType: table
+  description: Unified retail-banking view of a customer — identity and KYC, their
+    deposit accounts and balances, and their issued cards and limits — assembled from
+    the party, core-banking and card source systems for servicing, marketing and analytics.
+  properties:
+  - name: customer_id
+    physicalName: customer_id
+    logicalName: Customer ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique numeric identifier for a customer record, serving as the primary
+      join key across all customer-related entities.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: full_name
+    physicalName: full_name
+    logicalName: Full Name
+    logicalType: varchar
+    physicalType: varchar
+    description: Full legal name of the customer.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: pii
+    examples: []
+    logicalTypeOptions: {}
+  - name: date_of_birth
+    physicalName: date_of_birth
+    logicalName: Date Of Birth
+    logicalType: date
+    physicalType: date
+    description: Customer date of birth.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: pii
+    examples: []
+    logicalTypeOptions: {}
+  - name: gender
+    physicalName: gender
+    logicalName: Gender
+    logicalType: varchar
+    physicalType: varchar
+    description: Recorded gender of the customer.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: pii
+    examples: []
+    logicalTypeOptions: {}
+  - name: email
+    physicalName: email
+    logicalName: Email
+    logicalType: varchar
+    physicalType: varchar
+    description: Primary email address on file for the customer.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: pii
+    examples: []
+    logicalTypeOptions: {}
+  - name: mobile_number
+    physicalName: mobile_number
+    logicalName: Mobile Number
+    logicalType: varchar
+    physicalType: varchar
+    description: Primary mobile contact number for the customer.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: pii
+    examples: []
+    logicalTypeOptions: {}
+  - name: residential_address
+    physicalName: residential_address
+    logicalName: Residential Address
+    logicalType: varchar
+    physicalType: varchar
+    description: Registered residential or mailing address of the customer.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: pii
+    examples: []
+    logicalTypeOptions: {}
+  - name: customer_segment
+    physicalName: customer_segment
+    logicalName: Customer Segment
+    logicalType: varchar
+    physicalType: varchar
+    description: Marketing/value segment of the customer such as mass, affluent, premium,
+      private or business.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: kyc_status
+    physicalName: kyc_status
+    logicalName: KYC Status
+    logicalType: varchar
+    physicalType: varchar
+    description: Current Know-Your-Customer verification state such as verified, pending
+      or expired.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: account_id
+    physicalName: account_id
+    logicalName: Account ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for the customer's deposit account, used to join
+      to account-level balances and transactions.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: product_type
+    physicalName: product_type
+    logicalName: Product Type
+    logicalType: varchar
+    physicalType: varchar
+    description: Deposit-account product classification such as savings, current,
+      overdraft or salary.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: account_status
+    physicalName: account_status
+    logicalName: Account Status
+    logicalType: varchar
+    physicalType: varchar
+    description: Current operational state of the deposit account such as active,
+      dormant, closed or frozen.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: currency
+    physicalName: currency
+    logicalName: Currency
+    logicalType: varchar
+    physicalType: varchar
+    description: ISO currency code the deposit account is denominated in.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: ledger_balance
+    physicalName: ledger_balance
+    logicalName: Ledger Balance
+    logicalType: numeric
+    physicalType: numeric
+    description: Ledger (book) balance of the deposit account as of the reporting
+      date.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: available_balance
+    physicalName: available_balance
+    logicalName: Available Balance
+    logicalType: numeric
+    physicalType: numeric
+    description: Available (spendable) balance of the deposit account after holds
+      as of the reporting date.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: card_id
+    physicalName: card_id
+    logicalName: Card ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a payment card issued to the customer.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: card_type
+    physicalName: card_type
+    logicalName: Card Type
+    logicalType: varchar
+    physicalType: varchar
+    description: Card product tier such as classic, gold, platinum, corporate or debit.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: card_status
+    physicalName: card_status
+    logicalName: Card Status
+    logicalType: varchar
+    physicalType: varchar
+    description: Current state of the card such as active, blocked, expired or hotlisted.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: credit_limit
+    physicalName: credit_limit
+    logicalName: Credit Limit
+    logicalType: numeric
+    physicalType: numeric
+    description: Maximum credit amount available on the customer's card.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: onboarded_date
+    physicalName: onboarded_date
+    logicalName: Onboarded Date
+    logicalType: date
+    physicalType: date
+    description: Date the customer relationship was first established.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: relationship_tenure_years
+    physicalName: relationship_tenure_years
+    logicalName: Relationship Tenure Years
+    logicalType: numeric
+    physicalType: numeric
+    description: Number of years the customer has banked with the institution, computed
+      from the onboarding date. Derived — no single source column.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  foreignKeys: []
+  transform:
+    grouping_keys:
+    - customer_id
+    scd_policy:
+      type: scd2
+    grain_prose: One row per customer, enriched with their deposit-account and card
+      holdings.
+customProperties:
+  feasibility:
+    schema_version: '1.0'
+    spec_classification: confidential
+    cadence: daily
+    freshness_history: scd2
+    freshness_description: Refreshed daily; account balances and card status change
+      frequently.
+    grain_keys:
+    - customer_id
+    grain_description: One row per customer, enriched with their deposit-account and
+      card holdings.
+    allowed_derivations:
+    - rename
+    - cast
+    composition:
+      join_keys:
+      - customer_id
+      - account_id
+      composed_of: []
+      description: Assembled by joining the party, deposit-account and card source
+        systems on the shared customer_id (and account_id within core banking).
+    attr_derivations:
+      relationship_tenure_years:
+      - compute
+productKind: aggregate
+sourceSpecId: agg_customer_banking_360

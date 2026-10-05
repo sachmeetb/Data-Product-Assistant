@@ -1,0 +1,309 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 1040" width="1440" height="1040" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif">
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#94A3B8"/>
+    </marker>
+    <marker id="arr-grn" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#16A34A"/>
+    </marker>
+    <marker id="arr-pur" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#7C3AED"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1440" height="1040" fill="#F8FAFC"/>
+
+  <!-- ===================== TITLE BAR ===================== -->
+  <rect width="1440" height="52" fill="#0F172A"/>
+  <text x="720" y="28" text-anchor="middle" font-size="19" font-weight="700" fill="white">Data Workbench — Agent Skills Ecosystem</text>
+  <text x="720" y="44" text-anchor="middle" font-size="11" fill="#94A3B8">v2 of 3 · Skills Anatomy Detail · What the Workbench Uniquely Brings</text>
+
+  <!-- ===================== COMPRESSED STACK SUMMARY ===================== -->
+  <!-- Workbench -->
+  <rect x="28" y="62" width="680" height="52" rx="6" fill="#EFF6FF" stroke="#2563EB" stroke-width="1.5"/>
+  <text x="368" y="81" text-anchor="middle" font-size="11" font-weight="700" fill="#1D4ED8">Data Workbench</text>
+  <text x="368" y="96" text-anchor="middle" font-size="9" fill="#3B82F6">PO UI (contract wizard · marketplace) + Engineer UI (pipeline · reviews · CLI)</text>
+  <text x="368" y="107" text-anchor="middle" font-size="8" fill="#93C5FD">Python + React · ODCS Spec · Project Scoping · Role-Based Access</text>
+
+  <!-- Harness -->
+  <rect x="730" y="62" width="682" height="52" rx="6" fill="#FFFBF0" stroke="#D97706" stroke-width="1.5"/>
+  <text x="1071" y="81" text-anchor="middle" font-size="11" font-weight="700" fill="#92400E">Agent Harness</text>
+  <text x="1071" y="96" text-anchor="middle" font-size="9" fill="#B45309">Claude Code SDK (interim) → Anthropic Agent SDK (target) · Anthropic Models</text>
+  <text x="1071" y="107" text-anchor="middle" font-size="8" fill="#FCD34D">Goal → Loop until achieved · Built-in Core Tools · Unstructured Memory</text>
+
+  <!-- Arrow down -->
+  <line x1="720" y1="114" x2="720" y2="130" stroke="#16A34A" stroke-width="2.5" marker-end="url(#arr-grn)"/>
+
+  <!-- ===================== AGENT SKILLS HEADER ===================== -->
+  <rect x="20" y="132" width="1400" height="38" rx="8" fill="#16A34A"/>
+  <text x="460" y="156" text-anchor="middle" font-size="14" font-weight="700" fill="white">Agent Skills Ecosystem</text>
+  <text x="1000" y="154" text-anchor="middle" font-size="9.5" fill="rgba(255,255,255,0.92)">★  These skills are what the Data Workbench uniquely contributes — they are not provided by the agent harness out of the box</text>
+
+  <!-- Skill anatomy legend box -->
+  <rect x="1255" y="178" width="175" height="148" rx="6" fill="#F0FFF4" stroke="#16A34A" stroke-width="2"/>
+  <text x="1342" y="196" text-anchor="middle" font-size="10" font-weight="700" fill="#14532D">Skill Anatomy</text>
+  <text x="1342" y="210" text-anchor="middle" font-size="8.5" fill="#64748B">Every skill contains:</text>
+  <!-- anatomy items -->
+  <rect x="1268" y="216" width="152" height="20" rx="3" fill="#DCFCE7" stroke="#86EFAC" stroke-width="1"/>
+  <text x="1344" y="230" text-anchor="middle" font-size="8.5" fill="#14532D">① skill.md — capability spec</text>
+  <rect x="1268" y="241" width="152" height="20" rx="3" fill="#DCFCE7" stroke="#86EFAC" stroke-width="1"/>
+  <text x="1344" y="255" text-anchor="middle" font-size="8.5" fill="#14532D">② Scripts — tool executors</text>
+  <rect x="1268" y="266" width="152" height="20" rx="3" fill="#DCFCE7" stroke="#86EFAC" stroke-width="1"/>
+  <text x="1344" y="280" text-anchor="middle" font-size="8.5" fill="#14532D">③ Tools — executable actions</text>
+  <rect x="1268" y="291" width="152" height="20" rx="3" fill="#DCFCE7" stroke="#86EFAC" stroke-width="1"/>
+  <text x="1344" y="305" text-anchor="middle" font-size="8.5" fill="#14532D">④ Reference — domain knowledge</text>
+
+  <!-- Domain catalog legend -->
+  <rect x="1255" y="335" width="175" height="72" rx="6" fill="#DCFCE7" stroke="#16A34A" stroke-width="1.5"/>
+  <text x="1342" y="351" text-anchor="middle" font-size="9" font-weight="700" fill="#15803D">Domain Knowledge Catalog</text>
+  <text x="1342" y="366" text-anchor="middle" font-size="8" fill="#166534">Customer ontology</text>
+  <text x="1342" y="379" text-anchor="middle" font-size="8" fill="#166534">Orders ontology</text>
+  <text x="1342" y="394" text-anchor="middle" font-size="8" fill="#64748B">Growing catalog</text>
+
+  <!-- ===== ROW 1 OF SKILLS ===== -->
+  <!-- skill box dimensions: w=408, h=340, gap=17 -->
+  <!-- x: 28, 453, 878 -->
+
+  <!-- ========= SKILL: DISCOVERY ========= -->
+  <rect x="28" y="178" width="408" height="340" rx="8" fill="white" stroke="#16A34A" stroke-width="2"/>
+  <!-- skill header -->
+  <rect x="28" y="178" width="408" height="32" rx="8" fill="#16A34A"/>
+  <rect x="28" y="196" width="408" height="14" fill="#16A34A"/>
+  <text x="232" y="198" text-anchor="middle" font-size="12" font-weight="700" fill="white">Discovery</text>
+  <!-- Domain knowledge badge -->
+  <rect x="310" y="183" width="118" height="16" rx="8" fill="rgba(255,255,255,0.3)"/>
+  <text x="369" y="194" text-anchor="middle" font-size="8" fill="white">⊕ Domain Knowledge</text>
+  <!-- What it does -->
+  <text x="232" y="228" text-anchor="middle" font-size="9" font-weight="600" fill="#15803D">Purpose</text>
+  <text x="232" y="243" text-anchor="middle" font-size="9" fill="#374151">Extracts table + column metadata from source</text>
+  <text x="232" y="256" text-anchor="middle" font-size="9" fill="#374151">databases. Discovers FK relationships, infers</text>
+  <text x="232" y="269" text-anchor="middle" font-size="9" fill="#374151">schema structure, writes to Neo4j catalog.</text>
+  <!-- divider -->
+  <line x1="45" y1="278" x2="418" y2="278" stroke="#D1FAE5" stroke-width="1"/>
+  <!-- Anatomy boxes -->
+  <text x="232" y="293" text-anchor="middle" font-size="9" font-weight="600" fill="#15803D">Anatomy</text>
+  <rect x="40" y="300" width="180" height="34" rx="4" fill="#F0FFF4" stroke="#86EFAC" stroke-width="1"/>
+  <text x="130" y="314" text-anchor="middle" font-size="8" font-weight="600" fill="#14532D">① skill.md</text>
+  <text x="130" y="327" text-anchor="middle" font-size="7.5" fill="#166534">Scope, goals, DB dialects supported</text>
+  <rect x="230" y="300" width="188" height="34" rx="4" fill="#F0FFF4" stroke="#86EFAC" stroke-width="1"/>
+  <text x="324" y="314" text-anchor="middle" font-size="8" font-weight="600" fill="#14532D">② Scripts</text>
+  <text x="324" y="327" text-anchor="middle" font-size="7.5" fill="#166534">extract_schema.py · write_catalog.py</text>
+  <rect x="40" y="340" width="180" height="34" rx="4" fill="#F0FFF4" stroke="#86EFAC" stroke-width="1"/>
+  <text x="130" y="354" text-anchor="middle" font-size="8" font-weight="600" fill="#14532D">③ Tools</text>
+  <text x="130" y="367" text-anchor="middle" font-size="7.5" fill="#166534">Bash · run_cypher.py · DB connectors</text>
+  <rect x="230" y="340" width="188" height="34" rx="4" fill="#DCFCE7" stroke="#16A34A" stroke-width="1"/>
+  <text x="324" y="354" text-anchor="middle" font-size="8" font-weight="600" fill="#14532D">④ Domain Reference</text>
+  <text x="324" y="367" text-anchor="middle" font-size="7.5" fill="#15803D">Column naming conventions</text>
+  <!-- divider -->
+  <line x1="45" y1="381" x2="418" y2="381" stroke="#D1FAE5" stroke-width="1"/>
+  <!-- Neo4j I/O -->
+  <text x="232" y="396" text-anchor="middle" font-size="9" font-weight="600" fill="#7C3AED">Neo4j I/O</text>
+  <text x="130" y="413" text-anchor="middle" font-size="8.5" fill="#64748B">READS: Source DB (JDBC)</text>
+  <text x="130" y="427" text-anchor="middle" font-size="8.5" fill="#64748B">Project config from SQLite</text>
+  <text x="324" y="413" text-anchor="middle" font-size="8.5" fill="#7C3AED">WRITES: :Catalog · :Dataset</text>
+  <text x="324" y="427" text-anchor="middle" font-size="8.5" fill="#7C3AED">:Column · :REFERENCES edges</text>
+  <!-- skill IDs -->
+  <text x="232" y="505" text-anchor="middle" font-size="7.5" fill="#94A3B8">data-discovery · data-discovery-mysql · DCAT-2 export</text>
+
+  <!-- ========= SKILL: PROFILING ========= -->
+  <rect x="453" y="178" width="408" height="340" rx="8" fill="white" stroke="#16A34A" stroke-width="2"/>
+  <rect x="453" y="178" width="408" height="32" rx="8" fill="#16A34A"/>
+  <rect x="453" y="196" width="408" height="14" fill="#16A34A"/>
+  <text x="657" y="198" text-anchor="middle" font-size="12" font-weight="700" fill="white">Profiling</text>
+  <rect x="735" y="183" width="118" height="16" rx="8" fill="rgba(255,255,255,0.3)"/>
+  <text x="794" y="194" text-anchor="middle" font-size="8" fill="white">⊕ Domain Knowledge</text>
+  <text x="657" y="228" text-anchor="middle" font-size="9" font-weight="600" fill="#15803D">Purpose</text>
+  <text x="657" y="243" text-anchor="middle" font-size="9" fill="#374151">Statistical profiling per column: null rates,</text>
+  <text x="657" y="256" text-anchor="middle" font-size="9" fill="#374151">cardinality, value distributions, pattern detection.</text>
+  <text x="657" y="269" text-anchor="middle" font-size="9" fill="#374151">Feeds downstream DQ rule generation.</text>
+  <line x1="470" y1="278" x2="843" y2="278" stroke="#D1FAE5" stroke-width="1"/>
+  <text x="657" y="293" text-anchor="middle" font-size="9" font-weight="600" fill="#15803D">Anatomy</text>
+  <rect x="465" y="300" width="180" height="34" rx="4" fill="#F0FFF4" stroke="#86EFAC" stroke-width="1"/>
+  <text x="555" y="314" text-anchor="middle" font-size="8" font-weight="600" fill="#14532D">① skill.md</text>
+  <text x="555" y="327" text-anchor="middle" font-size="7.5" fill="#166534">Profile scope, sampling strategy, output</text>
+  <rect x="655" y="300" width="188" height="34" rx="4" fill="#F0FFF4" stroke="#86EFAC" stroke-width="1"/>
+  <text x="749" y="314" text-anchor="middle" font-size="8" font-weight="600" fill="#14532D">② Scripts</text>
+  <text x="749" y="327" text-anchor="middle" font-size="7.5" fill="#166534">profile_columns.py · write_profiles.py</text>
+  <rect x="465" y="340" width="180" height="34" rx="4" fill="#F0FFF4" stroke="#86EFAC" stroke-width="1"/>
+  <text x="555" y="354" text-anchor="middle" font-size="8" font-weight="600" fill="#14532D">③ Tools</text>
+  <text x="555" y="367" text-anchor="middle" font-size="7.5" fill="#166534">Bash · Pandas/SQL · run_cypher.py</text>
+  <rect x="655" y="340" width="188" height="34" rx="4" fill="#DCFCE7" stroke="#16A34A" stroke-width="1"/>
+  <text x="749" y="354" text-anchor="middle" font-size="8" font-weight="600" fill="#14532D">④ Domain Reference</text>
+  <text x="749" y="367" text-anchor="middle" font-size="7.5" fill="#15803D">Profiling heuristics + thresholds</text>
+  <line x1="470" y1="381" x2="843" y2="381" stroke="#D1FAE5" stroke-width="1"/>
+  <text x="657" y="396" text-anchor="middle" font-size="9" font-weight="600" fill="#7C3AED">Neo4j I/O</text>
+  <text x="555" y="413" text-anchor="middle" font-size="8.5" fill="#64748B">READS: :Dataset · :Column</text>
+  <text x="555" y="427" text-anchor="middle" font-size="8.5" fill="#64748B">Connection from SQLite</text>
+  <text x="749" y="413" text-anchor="middle" font-size="8.5" fill="#7C3AED">WRITES: :ProfilingRun</text>
+  <text x="749" y="427" text-anchor="middle" font-size="8.5" fill="#7C3AED">:ColumnProfile · stats</text>
+  <text x="657" y="505" text-anchor="middle" font-size="7.5" fill="#94A3B8">data-profiling · data-profiling-to-dqv-neo4j</text>
+
+  <!-- ========= SKILL: DATA QUALITY ========= -->
+  <rect x="878" y="178" width="368" height="340" rx="8" fill="white" stroke="#16A34A" stroke-width="2"/>
+  <rect x="878" y="178" width="368" height="32" rx="8" fill="#16A34A"/>
+  <rect x="878" y="196" width="368" height="14" fill="#16A34A"/>
+  <text x="1062" y="198" text-anchor="middle" font-size="12" font-weight="700" fill="white">Data Quality</text>
+  <text x="1062" y="228" text-anchor="middle" font-size="9" font-weight="600" fill="#15803D">Purpose</text>
+  <text x="1062" y="243" text-anchor="middle" font-size="9" fill="#374151">Rule generation from profiling. GX/Pandera</text>
+  <text x="1062" y="256" text-anchor="middle" font-size="9" fill="#374151">test execution. Scoring, failure analysis,</text>
+  <text x="1062" y="269" text-anchor="middle" font-size="9" fill="#374151">remediation + OSI readiness assessment.</text>
+  <line x1="895" y1="278" x2="1228" y2="278" stroke="#D1FAE5" stroke-width="1"/>
+  <text x="1062" y="293" text-anchor="middle" font-size="9" font-weight="600" fill="#15803D">Anatomy</text>
+  <rect x="890" y="300" width="163" height="34" rx="4" fill="#F0FFF4" stroke="#86EFAC" stroke-width="1"/>
+  <text x="971" y="314" text-anchor="middle" font-size="8" font-weight="600" fill="#14532D">① skill.md</text>
+  <text x="971" y="327" text-anchor="middle" font-size="7.5" fill="#166534">Rule types, test framework, scoring</text>
+  <rect x="1063" y="300" width="173" height="34" rx="4" fill="#F0FFF4" stroke="#86EFAC" stroke-width="1"/>
+  <text x="1149" y="314" text-anchor="middle" font-size="8" font-weight="600" fill="#14532D">② Scripts</text>
+  <text x="1149" y="327" text-anchor="middle" font-size="7.5" fill="#166534">generate_rules.py · run_tests.py</text>
+  <rect x="890" y="340" width="163" height="34" rx="4" fill="#F0FFF4" stroke="#86EFAC" stroke-width="1"/>
+  <text x="971" y="354" text-anchor="middle" font-size="8" font-weight="600" fill="#14532D">③ Tools</text>
+  <text x="971" y="367" text-anchor="middle" font-size="7.5" fill="#166534">GX · Pandera · run_cypher.py</text>
+  <rect x="1063" y="340" width="173" height="34" rx="4" fill="#F0FFF4" stroke="#86EFAC" stroke-width="1"/>
+  <text x="1149" y="354" text-anchor="middle" font-size="8" font-weight="600" fill="#14532D">④ Reference</text>
+  <text x="1149" y="367" text-anchor="middle" font-size="7.5" fill="#166534">Rule templates by column type</text>
+  <line x1="895" y1="381" x2="1228" y2="381" stroke="#D1FAE5" stroke-width="1"/>
+  <text x="1062" y="396" text-anchor="middle" font-size="9" font-weight="600" fill="#7C3AED">Neo4j I/O</text>
+  <text x="971" y="413" text-anchor="middle" font-size="8.5" fill="#64748B">READS: :Column :Profile</text>
+  <text x="971" y="427" text-anchor="middle" font-size="8.5" fill="#64748B">:DataContract (approved rules)</text>
+  <text x="1149" y="413" text-anchor="middle" font-size="8.5" fill="#7C3AED">WRITES: :PropertyShape</text>
+  <text x="1149" y="427" text-anchor="middle" font-size="8.5" fill="#7C3AED">:TestRun · :TestResult</text>
+  <text x="1062" y="505" text-anchor="middle" font-size="7.5" fill="#94A3B8">data-quality-rule-generation · testing-gx · testing-python · data-scoring · data-remediation</text>
+
+  <!-- ===== ROW 2 OF SKILLS ===== -->
+  <!-- y=530-870 -->
+
+  <!-- ========= SKILL: METADATA ENRICHMENT ========= -->
+  <rect x="28" y="530" width="408" height="340" rx="8" fill="white" stroke="#16A34A" stroke-width="2"/>
+  <rect x="28" y="530" width="408" height="32" rx="8" fill="#16A34A"/>
+  <rect x="28" y="548" width="408" height="14" fill="#16A34A"/>
+  <text x="232" y="550" text-anchor="middle" font-size="12" font-weight="700" fill="white">Metadata Enrichment</text>
+  <rect x="290" y="535" width="118" height="16" rx="8" fill="rgba(255,255,255,0.3)"/>
+  <text x="349" y="546" text-anchor="middle" font-size="8" fill="white">⊕ Domain Knowledge</text>
+  <text x="232" y="580" text-anchor="middle" font-size="9" font-weight="600" fill="#15803D">Purpose</text>
+  <text x="232" y="595" text-anchor="middle" font-size="9" fill="#374151">LLM-generated column + table descriptions.</text>
+  <text x="232" y="608" text-anchor="middle" font-size="9" fill="#374151">Column name standardization. Table relationship</text>
+  <text x="232" y="621" text-anchor="middle" font-size="9" fill="#374151">classification. Domain rule enhancement.</text>
+  <line x1="45" y1="630" x2="418" y2="630" stroke="#D1FAE5" stroke-width="1"/>
+  <text x="232" y="645" text-anchor="middle" font-size="9" font-weight="600" fill="#15803D">Anatomy</text>
+  <rect x="40" y="652" width="180" height="34" rx="4" fill="#F0FFF4" stroke="#86EFAC" stroke-width="1"/>
+  <text x="130" y="666" text-anchor="middle" font-size="8" font-weight="600" fill="#14532D">① skill.md</text>
+  <text x="130" y="679" text-anchor="middle" font-size="7.5" fill="#166534">Enrichment scope, naming rules</text>
+  <rect x="230" y="652" width="188" height="34" rx="4" fill="#F0FFF4" stroke="#86EFAC" stroke-width="1"/>
+  <text x="324" y="666" text-anchor="middle" font-size="8" font-weight="600" fill="#14532D">② Scripts</text>
+  <text x="324" y="679" text-anchor="middle" font-size="7.5" fill="#166534">write_descriptions.py · name_std.py</text>
+  <rect x="40" y="692" width="180" height="34" rx="4" fill="#F0FFF4" stroke="#86EFAC" stroke-width="1"/>
+  <text x="130" y="706" text-anchor="middle" font-size="8" font-weight="600" fill="#14532D">③ Tools</text>
+  <text x="130" y="719" text-anchor="middle" font-size="7.5" fill="#166534">Bash · run_cypher.py · LLM calls</text>
+  <rect x="230" y="692" width="188" height="34" rx="4" fill="#DCFCE7" stroke="#16A34A" stroke-width="1"/>
+  <text x="324" y="706" text-anchor="middle" font-size="8" font-weight="600" fill="#14532D">④ Domain Reference</text>
+  <text x="324" y="719" text-anchor="middle" font-size="7.5" fill="#15803D">Business glossary + naming catalog</text>
+  <line x1="45" y1="733" x2="418" y2="733" stroke="#D1FAE5" stroke-width="1"/>
+  <text x="232" y="748" text-anchor="middle" font-size="9" font-weight="600" fill="#7C3AED">Neo4j I/O</text>
+  <text x="130" y="765" text-anchor="middle" font-size="8.5" fill="#64748B">READS: :Dataset · :Column</text>
+  <text x="130" y="779" text-anchor="middle" font-size="8.5" fill="#64748B">:ProfilingRun (context)</text>
+  <text x="324" y="765" text-anchor="middle" font-size="8.5" fill="#7C3AED">WRITES: :ColumnDescription</text>
+  <text x="324" y="779" text-anchor="middle" font-size="8.5" fill="#7C3AED">:TableDescription</text>
+  <text x="232" y="856" text-anchor="middle" font-size="7.5" fill="#94A3B8">metadata-enrichment · column-name-standardizer · domain-rule-enhancement</text>
+
+  <!-- ========= SKILL: MATERIALIZATION ========= -->
+  <rect x="453" y="530" width="408" height="340" rx="8" fill="white" stroke="#16A34A" stroke-width="2"/>
+  <rect x="453" y="530" width="408" height="32" rx="8" fill="#16A34A"/>
+  <rect x="453" y="548" width="408" height="14" fill="#16A34A"/>
+  <text x="657" y="550" text-anchor="middle" font-size="12" font-weight="700" fill="white">Materialization of Views</text>
+  <text x="657" y="580" text-anchor="middle" font-size="9" font-weight="600" fill="#15803D">Purpose</text>
+  <text x="657" y="595" text-anchor="middle" font-size="9" fill="#374151">Translates approved ODCS specs into the dprod</text>
+  <text x="657" y="608" text-anchor="middle" font-size="9" fill="#374151">graph. AI-assisted column mapping (source → target).</text>
+  <text x="657" y="621" text-anchor="middle" font-size="9" fill="#374151">Generates virtual SQL views with FK inference.</text>
+  <line x1="470" y1="630" x2="843" y2="630" stroke="#D1FAE5" stroke-width="1"/>
+  <text x="657" y="645" text-anchor="middle" font-size="9" font-weight="600" fill="#15803D">Anatomy</text>
+  <rect x="465" y="652" width="180" height="34" rx="4" fill="#F0FFF4" stroke="#86EFAC" stroke-width="1"/>
+  <text x="555" y="666" text-anchor="middle" font-size="8" font-weight="600" fill="#14532D">① skill.md</text>
+  <text x="555" y="679" text-anchor="middle" font-size="7.5" fill="#166534">Mapping strategy, DDL logic, transforms</text>
+  <rect x="655" y="652" width="188" height="34" rx="4" fill="#F0FFF4" stroke="#86EFAC" stroke-width="1"/>
+  <text x="749" y="666" text-anchor="middle" font-size="8" font-weight="600" fill="#14532D">② Scripts</text>
+  <text x="749" y="679" text-anchor="middle" font-size="7.5" fill="#166534">write_mappings.py · generate_view_ddl.py</text>
+  <rect x="465" y="692" width="180" height="34" rx="4" fill="#F0FFF4" stroke="#86EFAC" stroke-width="1"/>
+  <text x="555" y="706" text-anchor="middle" font-size="8" font-weight="600" fill="#14532D">③ Tools</text>
+  <text x="555" y="719" text-anchor="middle" font-size="7.5" fill="#166534">Bash · run_cypher.py · Postgres</text>
+  <rect x="655" y="692" width="188" height="34" rx="4" fill="#F0FFF4" stroke="#86EFAC" stroke-width="1"/>
+  <text x="749" y="706" text-anchor="middle" font-size="8" font-weight="600" fill="#14532D">④ Reference</text>
+  <text x="749" y="719" text-anchor="middle" font-size="7.5" fill="#166534">Transform DSL · FK bridge rules</text>
+  <line x1="470" y1="733" x2="843" y2="733" stroke="#D1FAE5" stroke-width="1"/>
+  <text x="657" y="748" text-anchor="middle" font-size="9" font-weight="600" fill="#7C3AED">Neo4j I/O</text>
+  <text x="555" y="765" text-anchor="middle" font-size="8.5" fill="#64748B">READS: :DataContract</text>
+  <text x="555" y="779" text-anchor="middle" font-size="8.5" fill="#64748B">:Column · :DProdColumn</text>
+  <text x="749" y="765" text-anchor="middle" font-size="8.5" fill="#7C3AED">WRITES: :DProdDataProduct</text>
+  <text x="749" y="779" text-anchor="middle" font-size="8.5" fill="#7C3AED">:ColumnMapping · Views DDL</text>
+  <text x="657" y="856" text-anchor="middle" font-size="7.5" fill="#94A3B8">data-mapping-neo4j · data-serving-virtual-view · odcs-to-graph · data-product-spec-to-dprod-neo4j</text>
+
+  <!-- ========= SKILL: DATA ANALYSIS ========= -->
+  <rect x="878" y="530" width="368" height="340" rx="8" fill="white" stroke="#16A34A" stroke-width="2"/>
+  <rect x="878" y="530" width="368" height="32" rx="8" fill="#16A34A"/>
+  <rect x="878" y="548" width="368" height="14" fill="#16A34A"/>
+  <text x="1062" y="550" text-anchor="middle" font-size="12" font-weight="700" fill="white">Data Analysis</text>
+  <text x="1062" y="580" text-anchor="middle" font-size="9" font-weight="600" fill="#15803D">Purpose</text>
+  <text x="1062" y="595" text-anchor="middle" font-size="9" fill="#374151">Generates and executes questions against</text>
+  <text x="1062" y="608" text-anchor="middle" font-size="9" fill="#374151">data product views. OSI readiness scoring.</text>
+  <text x="1062" y="621" text-anchor="middle" font-size="9" fill="#374151">Playbook-driven self-improvement loop.</text>
+  <line x1="895" y1="630" x2="1228" y2="630" stroke="#D1FAE5" stroke-width="1"/>
+  <text x="1062" y="645" text-anchor="middle" font-size="9" font-weight="600" fill="#15803D">Anatomy</text>
+  <rect x="890" y="652" width="163" height="34" rx="4" fill="#F0FFF4" stroke="#86EFAC" stroke-width="1"/>
+  <text x="971" y="666" text-anchor="middle" font-size="8" font-weight="600" fill="#14532D">① skill.md</text>
+  <text x="971" y="679" text-anchor="middle" font-size="7.5" fill="#166534">QA eval framework, scoring model</text>
+  <rect x="1063" y="652" width="173" height="34" rx="4" fill="#F0FFF4" stroke="#86EFAC" stroke-width="1"/>
+  <text x="1149" y="666" text-anchor="middle" font-size="8" font-weight="600" fill="#14532D">② Scripts</text>
+  <text x="1149" y="679" text-anchor="middle" font-size="7.5" fill="#166534">generate_questions.py · score.py</text>
+  <rect x="890" y="692" width="163" height="34" rx="4" fill="#F0FFF4" stroke="#86EFAC" stroke-width="1"/>
+  <text x="971" y="706" text-anchor="middle" font-size="8" font-weight="600" fill="#14532D">③ Tools</text>
+  <text x="971" y="719" text-anchor="middle" font-size="7.5" fill="#166534">Bash · SQL executor · run_cypher</text>
+  <rect x="1063" y="692" width="173" height="34" rx="4" fill="#F0FFF4" stroke="#86EFAC" stroke-width="1"/>
+  <text x="1149" y="706" text-anchor="middle" font-size="8" font-weight="600" fill="#14532D">④ Reference</text>
+  <text x="1149" y="719" text-anchor="middle" font-size="7.5" fill="#166534">OSI dimensions · scoring rubric</text>
+  <line x1="895" y1="733" x2="1228" y2="733" stroke="#D1FAE5" stroke-width="1"/>
+  <text x="1062" y="748" text-anchor="middle" font-size="9" font-weight="600" fill="#7C3AED">Neo4j I/O</text>
+  <text x="971" y="765" text-anchor="middle" font-size="8.5" fill="#64748B">READS: :DProdColumn views</text>
+  <text x="971" y="779" text-anchor="middle" font-size="8.5" fill="#64748B">:DataContract metadata</text>
+  <text x="1149" y="765" text-anchor="middle" font-size="8.5" fill="#7C3AED">WRITES: :QAEvaluation</text>
+  <text x="1149" y="779" text-anchor="middle" font-size="8.5" fill="#7C3AED">:OSIScore · :ServingDefinition</text>
+  <text x="1062" y="856" text-anchor="middle" font-size="7.5" fill="#94A3B8">data-product-question-analyzer · data-product-question-executor · data-scoring</text>
+
+  <!-- ===== BIDIRECTIONAL ARROWS: Skills ↔ Data ===== -->
+  <line x1="712" y1="872" x2="712" y2="888" stroke="#7C3AED" stroke-width="2" marker-end="url(#arr-pur)"/>
+  <line x1="728" y1="888" x2="728" y2="872" stroke="#7C3AED" stroke-width="2" marker-end="url(#arr-pur)"/>
+  <text x="750" y="883" font-size="9" fill="#6D28D9">read / write</text>
+
+  <!-- ===================== DATA LAYER (compressed) ===================== -->
+  <rect x="28" y="890" width="1384" height="130" rx="7" fill="#FAF5FF" stroke="#7C3AED" stroke-width="1.5"/>
+  <rect x="28" y="890" width="1384" height="26" rx="7" fill="#7C3AED"/>
+  <rect x="28" y="904" width="1384" height="12" fill="#7C3AED"/>
+  <text x="260" y="906" text-anchor="middle" font-size="12" font-weight="700" fill="white">Data &amp; Memory Layer</text>
+
+  <!-- Neo4j -->
+  <rect x="45" y="924" width="560" height="86" rx="5" fill="white" stroke="#C4B5FD" stroke-width="1.5"/>
+  <text x="325" y="944" text-anchor="middle" font-size="11" font-weight="700" fill="#4C1D95">Neo4j Knowledge Graph  ·  System of Record</text>
+  <text x="325" y="960" text-anchor="middle" font-size="9" fill="#6D28D9">Discovery → Profiling → Enrichment → Products → Concepts</text>
+  <text x="325" y="974" text-anchor="middle" font-size="8.5" fill="#7C3AED">Light Domain Ontology · PROV-O provenance · Explainability &amp; traceability</text>
+  <text x="325" y="988" text-anchor="middle" font-size="8" fill="#8B5CF6">SHACL · PROV-O · DCAT-2 · W3C · Custom product graph ontologies</text>
+  <text x="325" y="1002" text-anchor="middle" font-size="7.5" fill="#94A3B8">Context graph — understands all artifacts and their interdependencies</text>
+
+  <!-- SQLite -->
+  <rect x="625" y="924" width="380" height="86" rx="5" fill="white" stroke="#C4B5FD" stroke-width="1.5"/>
+  <text x="815" y="944" text-anchor="middle" font-size="11" font-weight="700" fill="#4C1D95">SQLite  ·  Structured Memory</text>
+  <text x="815" y="960" text-anchor="middle" font-size="9" fill="#6D28D9">Project data + scoping · Workflow state</text>
+  <text x="815" y="974" text-anchor="middle" font-size="8.5" fill="#7C3AED">Chat sessions · Stage run records</text>
+  <text x="815" y="988" text-anchor="middle" font-size="8" fill="#8B5CF6">Guide-me history · Product requests</text>
+  <text x="815" y="1002" text-anchor="middle" font-size="7.5" fill="#94A3B8">CLI reads from here to scope all commands</text>
+
+  <!-- Harness Memory -->
+  <rect x="1025" y="924" width="367" height="86" rx="5" fill="white" stroke="#C4B5FD" stroke-width="1.5"/>
+  <text x="1208" y="944" text-anchor="middle" font-size="11" font-weight="700" fill="#4C1D95">Harness Memory  ·  Unstructured</text>
+  <text x="1208" y="960" text-anchor="middle" font-size="9" fill="#6D28D9">Agent SDK managed conversational state</text>
+  <text x="1208" y="974" text-anchor="middle" font-size="8.5" fill="#7C3AED">Per-session context + task memory</text>
+  <text x="1208" y="988" text-anchor="middle" font-size="8" fill="#8B5CF6">Distinct from SQLite structured memory</text>
+  <text x="1208" y="1002" text-anchor="middle" font-size="7.5" fill="#94A3B8">Managed transparently by the harness SDK</text>
+
+  <!-- Insight feedback loop -->
+  <path d="M 1420 960 C 1435 960 1435 640 1420 640" stroke="#16A34A" stroke-width="1.5" fill="none" stroke-dasharray="5,3" marker-end="url(#arr-grn)"/>
+  <text x="1440" y="800" font-size="8" fill="#15803D" text-anchor="middle" transform="rotate(90,1440,800)">Insight Extraction → Skill Improvement</text>
+</svg>

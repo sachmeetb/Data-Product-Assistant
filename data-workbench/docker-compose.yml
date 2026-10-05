@@ -1,0 +1,151 @@
+# Data Workbench local container stack.
+#
+#   backend   FastAPI + WebSocket + MCP (/mcp)   -> the "remote server" an
+#             engineer's Claude Code connects to; SQLite + projects on volumes
+#   neo4j     knowledge graph (volume-persisted)
+#   frontend  PO web UI (nginx-served Vite build)
+#
+# Postgres (the SOURCE data being profiled) is intentionally NOT here — set each
+# project's pg_connection to wherever the source DB lives.
+#
+# Host-port mapping avoids clashing with a dev stack already on 7687/8000/5173:
+# Neo4j is published on 7475/7688, but the backend reaches it INTERNALLY at
+# neo4j:7687 over the compose network. Running this stack expects host ports
+# 8000 + 5173 to be free (stop `uvicorn` / `npm run dev` first).
+#
+# LLM auth: three routes, all configured in a gitignored .env next to this
+# compose file (copy .env.example). Export ANTHROPIC_FOUNDRY_API_KEY *plus*
+# ANTHROPIC_FOUNDRY_RESOURCE to route through Azure AI Foundry, or
+# ANTHROPIC_API_KEY to go direct to Anthropic, or CLAUDE_CODE_OAUTH_TOKEN
+# (from `claude setup-token`) to bill a workstation's own Claude Code
+# subscription. Precedence: Foundry > ANTHROPIC_API_KEY > OAuth token. Every
+# one of those vars must be forwarded into the backend service below to reach
+# the container.
+
+services:
+  neo4j:
+    image: neo4j:5-community
+    environment:
+      NEO4J_AUTH: neo4j/workbenchpass
+    ports:
+      - "7475:7474"   # browser  (host 7475 -> container 7474)
+      - "7688:7687"   # bolt     (host 7688 -> container 7687)
+    volumes:
+      - neo4j_data:/data
+    # A real readiness probe so `backend` can wait on `service_healthy` and
+    # `dwb status` can trust the compose health state (bolt is up well AFTER the
+    # container process starts). cypher-shell ships in the image.
+    healthcheck:
+      test: ["CMD-SHELL", "cypher-shell -u neo4j -p workbenchpass 'RETURN 1' || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 20s
+
+  backend:
+    build: .
+    environment:
+      WB_NEO4J_HOST: neo4j
+      WB_NEO4J_PORT: "7687"
+      WB_NEO4J_USER: neo4j
+      WB_NEO4J_PASSWORD: workbenchpass
+      # Neo4j Browser link in the UI header — host port 7475 maps to the
+      # container's 7474 (see the neo4j service ports below).
+      WB_NEO4J_BROWSER_URL: http://localhost:7475
+      WB_DATABASE_URL: sqlite:////app/data/workbench.db
+      # Dev identity used when auth is DISABLED. Align these with the frontend's
+      # auth-off fallback (authStore.DEV_FALLBACK_EMAIL/NAME) so the backend stamps
+      # the SAME owner/submitter the PO web view queries with — otherwise
+      # intake-scaffolded products never surface to the PO. Set in a gitignored .env.
+      WB_DEV_USER_EMAIL: ${WB_DEV_USER_EMAIL:-}
+      WB_DEV_USER_NAME: ${WB_DEV_USER_NAME:-}
+      # Trusted backend origin baked into the served kit installers + bootstrap
+      # prompt. Unset = fall back to the request Host (fine for local dev); set
+      # this on any shared/remote deploy so a forged Host header can't redirect
+      # the installer's bundle fetch. This is the BACKEND origin (e.g. :8000).
+      WB_PUBLIC_BASE_URL: ${WB_PUBLIC_BASE_URL:-}
+      ANTHROPIC_FOUNDRY_API_KEY: ${ANTHROPIC_FOUNDRY_API_KEY:-}
+      # Direct-Anthropic route (used when no Foundry key is set). config.py leaves
+      # auth to the Agent SDK, which reads this from the process env.
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      # Foundry resource + deployed model name. MUST be forwarded or a .env value
+      # can never reach the container. RESOURCE has no default — see .env.example.
+      ANTHROPIC_FOUNDRY_RESOURCE: ${ANTHROPIC_FOUNDRY_RESOURCE:-}
+      ANTHROPIC_FOUNDRY_MODEL: ${ANTHROPIC_FOUNDRY_MODEL:-}
+      # Claude Code subscription route: a long-lived (1yr) token from
+      # `claude setup-token` on the workstation. Lets a developer who already has
+      # Claude Code run the container stack with no API key. Personal credential —
+      # laptop only, never a shared/remote deploy. See .env.example.
+      CLAUDE_CODE_OAUTH_TOKEN: ${CLAUDE_CODE_OAUTH_TOKEN:-}
+      # Bearer tokens for /mcp: "token", "token:principal", or
+      # "token:principal:proj1|proj2" to scope an engineer to specific projects
+      # (":*" or omitted = all). Comma-separated. REQUIRED for any shared/remote
+      # deployment (unset = open). Set via host env or a gitignored .env file.
+      WB_MCP_TOKENS: ${WB_MCP_TOKENS:-}
+      # Fail-closed: with no WB_MCP_TOKENS the MCP tools REFUSE requests. For
+      # local dev only, set WB_MCP_ALLOW_INSECURE=1 to run /mcp open (no token).
+      # NEVER set this on a shared/remote deployment.
+      WB_MCP_ALLOW_INSECURE: ${WB_MCP_ALLOW_INSECURE:-}
+      # Intake machine credential: "token:source_system" (comma-separated for
+      # multiple). REQUIRED for /api/intake/submit. For local dev only, set
+      # WB_INTAKE_ALLOW_INSECURE=1 to seed a dev-intake-token automatically.
+      WB_INTAKE_TOKENS: ${WB_INTAKE_TOKENS:-}
+      WB_INTAKE_ALLOW_INSECURE: ${WB_INTAKE_ALLOW_INSECURE:-}
+      # Quick-connect manifest the `dwb` CLI writes to repo-root .dwb/ (mounted
+      # read-only below). The dev router serves it to the connection forms so a
+      # launched sample DB is a one-click prefill.
+      WB_PROVISIONED_SOURCES: /app/.dwb/provisioned-sources.json
+      # ── Observability / OpenTelemetry (OPT-IN) ──────────────────────────────
+      # DW emits telemetry ONLY when OTEL_EXPORTER_OTLP_ENDPOINT is set (unset =>
+      # nothing emitted). Set it in .env (or the host env) to push OTLP telemetry
+      # from the Claude Code CLI + the backend to ANY OTLP backend (Honeycomb /
+      # Datadog / Grafana Cloud / self-hosted collector). `dwb up --with
+      # observability` auto-injects the bundled reference collector's endpoint
+      # here when you don't set your own. See docs/deployment-guide.md.
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-}
+      OTEL_EXPORTER_OTLP_PROTOCOL: ${OTEL_EXPORTER_OTLP_PROTOCOL:-}
+      OTEL_EXPORTER_OTLP_HEADERS: ${OTEL_EXPORTER_OTLP_HEADERS:-}
+      OTEL_RESOURCE_ATTRIBUTES: ${OTEL_RESOURCE_ATTRIBUTES:-}
+      OTEL_TRACES_EXPORTER: ${OTEL_TRACES_EXPORTER:-}
+      OTEL_METRICS_EXPORTER: ${OTEL_METRICS_EXPORTER:-}
+      OTEL_LOGS_EXPORTER: ${OTEL_LOGS_EXPORTER:-}
+      # Content capture — OFF unless the operator explicitly opts in (prompts can
+      # embed connection details). Passthrough only; DW never sets it.
+      OTEL_LOG_USER_PROMPTS: ${OTEL_LOG_USER_PROMPTS:-}
+      CLAUDE_CODE_ENABLE_TELEMETRY: ${CLAUDE_CODE_ENABLE_TELEMETRY:-}
+      CLAUDE_CODE_ENHANCED_TELEMETRY_BETA: ${CLAUDE_CODE_ENHANCED_TELEMETRY_BETA:-}
+    ports:
+      - "8000:8000"
+    # Reach services running on the host (e.g. a source Postgres) from inside
+    # the container via host.docker.internal — set each project's pg_connection
+    # host to host.docker.internal instead of localhost.
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      neo4j:
+        condition: service_healthy
+    volumes:
+      - wb_data:/app/data         # SQLite db (persisted)
+      - wb_projects:/app/projects  # per-project scratch (discovery YAML, etc.)
+      - ./.dwb:/app/.dwb:ro        # dwb CLI quick-connect manifest (read-only)
+    # Lets the frontend + `dwb status` wait on a real health signal rather than
+    # a bare "container started". python is always present (no curl in slim).
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8000/api/health').status==200 else 1)\" || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 15s
+
+  frontend:
+    build: ./workbench/frontend
+    ports:
+      - "5173:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+
+volumes:
+  neo4j_data:
+  wb_data:
+  wb_projects:

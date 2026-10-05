@@ -17,7 +17,7 @@ $REGISTRY     = "us-central1-docker.pkg.dev/$PROJECT_ID/bfsi-bronze"
 $BACKEND_IMG  = "$REGISTRY/backend:v1.2"
 $FRONTEND_IMG = "$REGISTRY/frontend:v1.2"
 
-Write-Host "=== BFSI Bronze Agent — Cloud Run Deployment (IAP+Proxy) ===" -ForegroundColor Cyan
+Write-Host "=== BFSI Bronze Agent - Cloud Run Deployment (IAP+Proxy) ===" -ForegroundColor Cyan
 Write-Host "Project : $PROJECT_ID"
 Write-Host "Region  : $REGION"
 Write-Host ""
@@ -42,7 +42,7 @@ gcloud run deploy $BACKEND_SVC `
     --min-instances=0 `
     --max-instances=5 `
     --timeout=900 `
-    --set-env-vars="GCP_PROJECT_ID=$PROJECT_ID,GOOGLE_CLOUD_PROJECT=$PROJECT_ID,GOOGLE_CLOUD_LOCATION=$REGION,GCP_LOCATION=$REGION,GOOGLE_GENAI_LOCATION=global,BQ_BRONZE_DATASET=banking_bronze,BQ_RAW_LANDING_PATH=gs://raw-landing-zone/,BQ_LOCATION=US,GEMINI_MODEL=gemini-2.5-flash,GEMINI_FLASH_MODEL=gemini-2.5-flash,GOOGLE_GENAI_USE_VERTEXAI=1,AGENT_APP_NAME=bfsi-bronze-agent,AGENT_MAX_CLARIFICATION_TURNS=3,AGENT_MAX_SPEC_ITERATIONS=3,AGENT_LOG_LEVEL=INFO,SESSION_BACKEND=memory,BQ_PUBLISHER_MODE=dry_run"
+    --set-env-vars="GCP_PROJECT_ID=$PROJECT_ID,GOOGLE_CLOUD_PROJECT=$PROJECT_ID,GOOGLE_CLOUD_LOCATION=$REGION,GCP_LOCATION=$REGION,GOOGLE_GENAI_LOCATION=global,BQ_BRONZE_DATASET=banking_bronze,BQ_RAW_LANDING_PATH=gs://raw-landing-zone/,BQ_LOCATION=US,GEMINI_MODEL=gemini-2.5-flash,GEMINI_FLASH_MODEL=gemini-2.5-flash,GOOGLE_GENAI_USE_VERTEXAI=1,AGENT_APP_NAME=bfsi-bronze-agent,AGENT_MAX_CLARIFICATION_TURNS=3,AGENT_MAX_SPEC_ITERATIONS=3,AGENT_LOG_LEVEL=INFO,SESSION_BACKEND=memory,BQ_PUBLISHER_MODE=live"
 if (-not $?) { Write-Error "Backend deploy failed"; exit 1 }
 
 $BACKEND_URL = (gcloud run services describe $BACKEND_SVC --region=$REGION --format="value(status.url)")
@@ -77,7 +77,7 @@ $FRONTEND_URL = (gcloud run services describe $FRONTEND_SVC --region=$REGION --f
 Write-Host "Frontend live (private): $FRONTEND_URL" -ForegroundColor Green
 
 # ── 5. Grant proxy SA invoker rights + update proxy envs ─────────────────────
-Write-Host "[5/5] Updating IAP proxy '$PROXY_SVC' — granting invoker & refreshing envs..." -ForegroundColor Yellow
+Write-Host "[5/5] Updating IAP proxy '$PROXY_SVC' - granting invoker and refreshing envs..." -ForegroundColor Yellow
 
 # Idempotent: grant auth-proxy-sa Cloud Run invoker on both private services
 gcloud run services add-iam-policy-binding $BACKEND_SVC `

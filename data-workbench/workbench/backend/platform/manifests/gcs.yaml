@@ -1,0 +1,41 @@
+apiVersion: workbench.platform/v1
+id: gcs
+displayName: Google Cloud Storage (object store)
+adapterVersion: "0.1.0"
+adapterKind: object_store
+supportedServerVersions: "google-cloud-storage>=2.0"
+
+driver:
+  package: google-cloud-storage
+  compatibility: ">=2.0"
+
+credentialSchema: schemas/gcs-credentials.json
+
+namespace:
+  parts: [bucket, prefix]
+  labels:
+    bucket: Bucket
+    prefix: Object Prefix
+
+capabilities:
+  connection: unsupported
+  discovery: unsupported
+  profiling: unsupported
+  read_query: unsupported
+  native_view: unsupported
+  dbt_materialized: unsupported
+  remediation: unsupported
+  semantic_qa: unsupported
+  transfer_source: unsupported
+  transfer_target: unsupported
+  lakehouse_export: unsupported
+  lakehouse_source: unsupported
+  volumetrics: unsupported
+  code_assets: unsupported
+
+notes: >
+  Phase 3 object-store platform — registered so the connection model and UI
+  can reference GCS before the provider is implemented.
+  Promotion to experimental requires: google-cloud-storage SessionProvider,
+  URI-scheme dispatcher in export_table.py (gs://), and ADR-14 decision.
+  Workload Identity Federation is the preferred credential vending path.

@@ -1,0 +1,1359 @@
+domain: products_sales
+label: Product Sales
+description: Products & Sales canonical schema — products, categories, suppliers, inventory, customers, orders, payments, shipments, returns, reviews, promotions, prices, segments, status history. Covers e-commerce / retail / direct-to-consumer / B2B order patterns.
+columns:
+
+  # --- category (hierarchical dimension) -----------------------------------
+  - name: category_id
+    logical_type: integer
+    physical_type: bigint
+    primary_key: true
+    description: Unique identifier for a product category node.
+    recommended_rules:
+      - { type: notNull }
+      - { type: unique }
+  - name: parent_category_id
+    logical_type: integer
+    physical_type: bigint
+    description: Self-FK to the parent category. Null for top-level categories.
+    recommended_rules: []
+  - name: category_name
+    logical_type: string
+    physical_type: text
+    description: Display name of the category.
+    recommended_rules:
+      - { type: notNull }
+      - { type: maxLength, value: 200 }
+  - name: category_slug
+    logical_type: string
+    physical_type: varchar(200)
+    description: URL-friendly slug for the category. Lowercase, hyphen-separated, unique per parent.
+    recommended_rules:
+      - { type: regex, pattern: "^[a-z0-9]+(-[a-z0-9]+)*$" }
+      - { type: maxLength, value: 200 }
+  - name: category_depth
+    logical_type: integer
+    physical_type: smallint
+    description: Depth in the category hierarchy (0 = top-level).
+    recommended_rules:
+      - { type: notNull }
+      - { type: range, min: 0, max: 5 }
+  - name: category_description
+    logical_type: string
+    physical_type: text
+    description: Long-form description of the category for storefront / catalog display.
+    recommended_rules: []
+  - name: category_active_flag
+    logical_type: boolean
+    physical_type: boolean
+    description: Whether the category is currently surfaced in storefront navigation.
+    recommended_rules:
+      - { type: notNull }
+  - name: category_sort_order
+    logical_type: integer
+    physical_type: smallint
+    description: Display position among siblings under the same parent_category_id (lower = earlier).
+    recommended_rules:
+      - { type: range, min: 0, severity: "sh:Warning" }
+
+  # --- supplier (dimension) -----------------------------------------------
+  - name: supplier_id
+    logical_type: integer
+    physical_type: bigint
+    primary_key: true
+    description: Unique identifier for a supplier / vendor.
+    recommended_rules:
+      - { type: notNull }
+      - { type: unique }
+  - name: supplier_name
+    logical_type: string
+    physical_type: varchar(255)
+    description: Legal / trading name of the supplier.
+    recommended_rules:
+      - { type: notNull }
+      - { type: maxLength, value: 255 }
+  - name: supplier_code
+    logical_type: string
+    physical_type: varchar(40)
+    description: Internal short code used in PO / receiving documents.
+    recommended_rules:
+      - { type: maxLength, value: 40 }
+  - name: supplier_country_code
+    logical_type: string
+    physical_type: char(2)
+    description: ISO 3166-1 alpha-2 country code of the supplier's registered address.
+    recommended_rules:
+      - { type: regex, pattern: "^[A-Z]{2}$" }
+  - name: supplier_contact_email
+    logical_type: string
+    physical_type: varchar(320)
+    description: Primary procurement contact email at the supplier.
+    recommended_rules:
+      - { type: regex, pattern: "^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$" }
+  - name: supplier_lead_time_days
+    logical_type: integer
+    physical_type: smallint
+    description: Typical lead time in days from PO to receipt.
+    recommended_rules:
+      - { type: range, min: 0, max: 365, severity: "sh:Warning" }
+  - name: supplier_active_flag
+    logical_type: boolean
+    physical_type: boolean
+    description: Whether the supplier is currently approved to receive new POs.
+    recommended_rules:
+      - { type: notNull }
+
+  # --- product (dimension) -------------------------------------------------
+  - name: product_id
+    logical_type: integer
+    physical_type: bigint
+    primary_key: true
+    description: Unique identifier for a product / SKU.
+    recommended_rules:
+      - { type: notNull }
+      - { type: unique }
+  - name: sku
+    logical_type: string
+    physical_type: varchar(32)
+    description: Stock-keeping unit. Domain-specific format (e.g. category-code + sequence).
+    recommended_rules:
+      - { type: notNull }
+      - { type: unique }
+      - { type: regex, pattern: "^[A-Z]{2,4}-[0-9]{3,6}$" }
+  - name: product_name
+    logical_type: string
+    physical_type: text
+    description: Human-readable product name shown to customers.
+    recommended_rules:
+      - { type: notNull }
+      - { type: maxLength, value: 300 }
+  - name: product_slug
+    logical_type: string
+    physical_type: varchar(300)
+    description: URL-friendly slug for the product detail page. Lowercase, hyphen-separated.
+    recommended_rules:
+      - { type: regex, pattern: "^[a-z0-9]+(-[a-z0-9]+)*$" }
+      - { type: maxLength, value: 300 }
+  - name: product_description
+    logical_type: string
+    physical_type: text
+    description: Long-form marketing description of the product.
+    recommended_rules: []
+  - name: short_description
+    logical_type: string
+    physical_type: varchar(500)
+    description: Brief tagline / summary used in listing tiles and search results.
+    recommended_rules:
+      - { type: maxLength, value: 500 }
+  - name: brand
+    logical_type: string
+    physical_type: text
+    description: Brand or manufacturer.
+    recommended_rules:
+      - { type: maxLength, value: 200 }
+  - name: manufacturer
+    logical_type: string
+    physical_type: varchar(200)
+    description: Manufacturer name (may differ from brand for private-label / white-label products).
+    recommended_rules:
+      - { type: maxLength, value: 200 }
+  - name: gtin
+    logical_type: string
+    physical_type: varchar(14)
+    description: Global Trade Item Number (8 / 12 / 13 / 14 digits). Encompasses UPC, EAN, JAN, ISBN.
+    recommended_rules:
+      - { type: regex, pattern: "^[0-9]{8}([0-9]{4}|[0-9]{5}|[0-9]{6})?$" }
+  - name: upc
+    logical_type: string
+    physical_type: varchar(12)
+    description: Universal Product Code (12 digits). North-American retail barcode.
+    recommended_rules:
+      - { type: regex, pattern: "^[0-9]{12}$" }
+  - name: ean
+    logical_type: string
+    physical_type: varchar(13)
+    description: European Article Number (13 digits). EU / international retail barcode.
+    recommended_rules:
+      - { type: regex, pattern: "^[0-9]{13}$" }
+  - name: isbn
+    logical_type: string
+    physical_type: varchar(13)
+    description: International Standard Book Number (10 or 13 digits, no hyphens).
+    recommended_rules:
+      - { type: regex, pattern: "^[0-9]{10}([0-9]{3})?$" }
+  - name: mpn
+    logical_type: string
+    physical_type: varchar(50)
+    description: Manufacturer Part Number — the manufacturer's own identifier for the product.
+    recommended_rules:
+      - { type: maxLength, value: 50 }
+  - name: list_price
+    logical_type: number
+    physical_type: numeric(10,2)
+    description: Manufacturer list price in the product's currency.
+    recommended_rules:
+      - { type: notNull }
+      - { type: range, min: 0, severity: "sh:Violation" }
+  - name: list_price_currency
+    logical_type: string
+    physical_type: char(3)
+    description: ISO 4217 currency code that list_price is denominated in.
+    recommended_rules:
+      - { type: regex, pattern: "^[A-Z]{3}$" }
+  - name: msrp
+    logical_type: number
+    physical_type: numeric(10,2)
+    description: Manufacturer's Suggested Retail Price. May differ from list_price for private-label or promo SKUs.
+    recommended_rules:
+      - { type: range, min: 0, severity: "sh:Violation" }
+  - name: map_price
+    logical_type: number
+    physical_type: numeric(10,2)
+    description: Minimum Advertised Price floor enforced by the manufacturer. Suppliers may not promote below this.
+    recommended_rules:
+      - { type: range, min: 0, severity: "sh:Violation" }
+  - name: cost
+    logical_type: number
+    physical_type: numeric(10,2)
+    description: Unit cost-of-goods-sold. Used for margin calculations.
+    recommended_rules:
+      - { type: range, min: 0, severity: "sh:Violation" }
+  - name: margin_pct
+    logical_type: number
+    physical_type: numeric(5,2)
+    description: Materialised (list_price - cost) / list_price * 100. Eligible for bucket banding.
+    recommended_rules:
+      - { type: range, min: -100, max: 100, severity: "sh:Warning" }
+  - name: weight_kg
+    logical_type: number
+    physical_type: numeric(8,3)
+    description: Shipping weight in kilograms.
+    recommended_rules:
+      - { type: range, min: 0, severity: "sh:Warning" }
+  - name: length_cm
+    logical_type: number
+    physical_type: numeric(8,2)
+    description: Packaged length in centimetres. Used for shipping rate calculation.
+    recommended_rules:
+      - { type: range, min: 0, severity: "sh:Warning" }
+  - name: width_cm
+    logical_type: number
+    physical_type: numeric(8,2)
+    description: Packaged width in centimetres.
+    recommended_rules:
+      - { type: range, min: 0, severity: "sh:Warning" }
+  - name: height_cm
+    logical_type: number
+    physical_type: numeric(8,2)
+    description: Packaged height in centimetres.
+    recommended_rules:
+      - { type: range, min: 0, severity: "sh:Warning" }
+  - name: volume_cm3
+    logical_type: number
+    physical_type: numeric(12,2)
+    description: Packaged volume in cubic centimetres. Materialised from length * width * height.
+    recommended_rules:
+      - { type: range, min: 0, severity: "sh:Warning" }
+  - name: color
+    logical_type: string
+    physical_type: varchar(30)
+    description: Primary product color (display purposes).
+    recommended_rules:
+      - { type: maxLength, value: 30 }
+  - name: size_code
+    logical_type: string
+    physical_type: varchar(10)
+    description: "Size designator. Domain-specific (apparel: XS/S/M/L; screens: 13in / 15in)."
+    recommended_rules:
+      - { type: maxLength, value: 10 }
+  - name: material
+    logical_type: string
+    physical_type: varchar(100)
+    description: Primary material composition (cotton, aluminium, ABS plastic, etc.). Free-form / display-only.
+    recommended_rules:
+      - { type: maxLength, value: 100 }
+  - name: country_of_origin
+    logical_type: string
+    physical_type: char(2)
+    description: ISO 3166-1 alpha-2 country code where the product was manufactured. Required for customs declarations.
+    recommended_rules:
+      - { type: regex, pattern: "^[A-Z]{2}$" }
+  - name: hs_code
+    logical_type: string
+    physical_type: varchar(12)
+    description: Harmonized System tariff classification code (6-10 digits). Drives customs duties.
+    recommended_rules:
+      - { type: regex, pattern: "^[0-9]{6}([0-9]{2,4})?$" }
+  - name: unit_of_measure
+    logical_type: string
+    physical_type: varchar(10)
+    description: Selling unit (each, pair, dozen, kg, litre). Drives quantity semantics on order_item.
+    recommended_rules:
+      - { type: allowedValues, values: ["each", "pair", "dozen", "case", "kg", "g", "lb", "oz", "litre", "ml", "metre", "cm"] }
+  - name: tax_class
+    logical_type: string
+    physical_type: varchar(30)
+    description: Tax classification code that determines applicable VAT / sales tax rate (standard, reduced, zero, exempt).
+    recommended_rules:
+      - { type: allowedValues, values: ["standard", "reduced", "super_reduced", "zero", "exempt"] }
+  - name: is_taxable
+    logical_type: boolean
+    physical_type: boolean
+    description: Whether sales tax / VAT applies to this product.
+    recommended_rules:
+      - { type: notNull }
+  - name: requires_shipping
+    logical_type: boolean
+    physical_type: boolean
+    description: False for digital / service products. Affects checkout flow.
+    recommended_rules:
+      - { type: notNull }
+  - name: warranty_months
+    logical_type: integer
+    physical_type: smallint
+    description: Manufacturer warranty period in months. 0 = no warranty.
+    recommended_rules:
+      - { type: range, min: 0, max: 1200, severity: "sh:Warning" }
+  - name: min_order_quantity
+    logical_type: integer
+    physical_type: integer
+    description: Minimum quantity per order line. Default 1.
+    recommended_rules:
+      - { type: range, min: 1, severity: "sh:Violation" }
+  - name: max_order_quantity
+    logical_type: integer
+    physical_type: integer
+    description: Maximum quantity per order line. Null = no cap.
+    recommended_rules:
+      - { type: range, min: 1, severity: "sh:Warning" }
+  - name: handling_days
+    logical_type: integer
+    physical_type: smallint
+    description: Internal handling time before shipment in business days.
+    recommended_rules:
+      - { type: range, min: 0, max: 90, severity: "sh:Warning" }
+  - name: image_url
+    logical_type: string
+    physical_type: varchar(500)
+    description: URL of the primary product image.
+    recommended_rules:
+      - { type: regex, pattern: "^https?://.+" }
+      - { type: maxLength, value: 500 }
+  - name: meta_title
+    logical_type: string
+    physical_type: varchar(255)
+    description: SEO title tag rendered in storefront product page HTML head.
+    recommended_rules:
+      - { type: maxLength, value: 255 }
+  - name: meta_description
+    logical_type: string
+    physical_type: varchar(500)
+    description: SEO meta description rendered in storefront product page HTML head.
+    recommended_rules:
+      - { type: maxLength, value: 500 }
+  - name: rating_avg
+    logical_type: number
+    physical_type: numeric(3,2)
+    description: Materialised average customer review rating on a 0-5 scale.
+    recommended_rules:
+      - { type: range, min: 0, max: 5, severity: "sh:Violation" }
+  - name: rating_count
+    logical_type: integer
+    physical_type: integer
+    description: Materialised count of customer reviews included in rating_avg.
+    recommended_rules:
+      - { type: range, min: 0, severity: "sh:Violation" }
+  - name: active_flag
+    logical_type: boolean
+    physical_type: boolean
+    description: Whether the product is currently sellable.
+    recommended_rules:
+      - { type: notNull }
+  - name: launched_at
+    logical_type: date
+    physical_type: date
+    description: Date the product was first made available.
+    recommended_rules:
+      - { type: notNull }
+      - { type: range, max: "today", severity: "sh:Violation" }
+  - name: discontinued_at
+    logical_type: date
+    physical_type: date
+    description: Date the product was withdrawn from sale. Null for active products.
+    recommended_rules:
+      - { type: range, max: "today", severity: "sh:Warning" }
+
+  # --- product_price_history (SCD-2) ---------------------------------------
+  - name: price
+    logical_type: number
+    physical_type: numeric(10,2)
+    description: Effective price at this point in the price history.
+    recommended_rules:
+      - { type: notNull }
+      - { type: range, min: 0, severity: "sh:Violation" }
+  - name: price_type
+    logical_type: string
+    physical_type: varchar(20)
+    description: Classifier for the price row — regular list price vs. promotional / sale / clearance price.
+    recommended_rules:
+      - { type: allowedValues, values: ["regular", "promotional", "sale", "clearance", "wholesale", "contract"] }
+  - name: effective_date
+    logical_type: date
+    physical_type: date
+    description: Date this row's value became active. SCD-2 boundary.
+    recommended_rules:
+      - { type: notNull }
+  - name: expiration_date
+    logical_type: date
+    physical_type: date
+    # SCD-2 boundary column — only recommended when scd_policy='scd2'.
+    requires_scd_policy: scd2
+    description: Date this row's value was superseded. Null marks the active row.
+    recommended_rules: []
+  - name: is_current
+    logical_type: boolean
+    physical_type: boolean
+    description: Convenience flag. True iff expiration_date is null. Exactly one current row per natural key.
+    recommended_rules:
+      - { type: notNull }
+
+  # --- inventory (per SKU per warehouse) -----------------------------------
+  - name: inventory_id
+    logical_type: integer
+    physical_type: bigint
+    primary_key: true
+    description: Unique identifier for an inventory snapshot row (per SKU per warehouse).
+    recommended_rules:
+      - { type: notNull }
+      - { type: unique }
+  - name: warehouse_id
+    logical_type: integer
+    physical_type: bigint
+    description: FK to the warehouse / fulfilment-centre holding this inventory.
+    recommended_rules:
+      - { type: notNull }
+  - name: warehouse_code
+    logical_type: string
+    physical_type: varchar(20)
+    description: Short code for the warehouse (e.g. WH-NYC-01). Often used as a join key.
+    recommended_rules:
+      - { type: maxLength, value: 20 }
+  - name: qty_on_hand
+    logical_type: integer
+    physical_type: integer
+    description: Total units physically present in the warehouse.
+    recommended_rules:
+      - { type: notNull }
+      - { type: range, min: 0, severity: "sh:Violation" }
+  - name: qty_reserved
+    logical_type: integer
+    physical_type: integer
+    description: Units allocated to in-flight orders not yet shipped.
+    recommended_rules:
+      - { type: range, min: 0, severity: "sh:Violation" }
+  - name: qty_available
+    logical_type: integer
+    physical_type: integer
+    description: qty_on_hand - qty_reserved. Materialised for fast availability lookups.
+    recommended_rules:
+      - { type: range, min: 0, severity: "sh:Violation" }
+  - name: reorder_point
+    logical_type: integer
+    physical_type: integer
+    description: Threshold quantity that triggers an automatic reorder. Drives low-stock alerts.
+    recommended_rules:
+      - { type: range, min: 0, severity: "sh:Warning" }
+  - name: reorder_quantity
+    logical_type: integer
+    physical_type: integer
+    description: Standard quantity to reorder once the reorder_point is hit.
+    recommended_rules:
+      - { type: range, min: 0, severity: "sh:Warning" }
+  - name: last_counted_at
+    logical_type: timestamp
+    physical_type: timestamp with time zone
+    description: UTC timestamp of the most recent physical inventory count.
+    recommended_rules:
+      - { type: range, max: "now", severity: "sh:Warning" }
+  - name: last_received_at
+    logical_type: timestamp
+    physical_type: timestamp with time zone
+    description: UTC timestamp of the most recent receiving event for this SKU/warehouse.
+    recommended_rules:
+      - { type: range, max: "now", severity: "sh:Warning" }
+
+  # --- customer (dimension; PII; see customer domain for full schema) -----
+  - name: customer_id
+    logical_type: integer
+    physical_type: bigint
+    primary_key: true
+    description: Unique identifier for a customer, stable across lifecycle events. See the customer domain catalog for the full attribute set.
+    recommended_rules:
+      - { type: notNull }
+      - { type: unique }
+  - name: email
+    logical_type: string
+    physical_type: varchar(320)
+    description: Customer email address. PII — mask in analytics surfaces.
+    recommended_rules:
+      - { type: notNull }
+      - { type: unique }
+      - { type: regex, pattern: "^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$" }
+  - name: first_name
+    logical_type: string
+    physical_type: varchar(100)
+    description: Customer's first / given name. PII.
+    recommended_rules:
+      - { type: notNull }
+      - { type: maxLength, value: 100 }
+  - name: last_name
+    logical_type: string
+    physical_type: varchar(100)
+    description: Customer's last / family name. PII.
+    recommended_rules:
+      - { type: notNull }
+      - { type: maxLength, value: 100 }
+  - name: signup_date
+    logical_type: date
+    physical_type: date
+    description: Date the customer first registered.
+    recommended_rules:
+      - { type: notNull }
+      - { type: range, max: "today", severity: "sh:Violation" }
+  - name: customer_status
+    logical_type: string
+    physical_type: varchar(20)
+    description: Account status. Banned accounts must be excluded from marketing.
+    recommended_rules:
+      - { type: notNull }
+      - { type: allowedValues, values: ["active", "inactive", "banned"] }
+  - name: country_code
+    logical_type: string
+    physical_type: char(2)
+    description: Customer's country (ISO 3166-1 alpha-2).
+    recommended_rules:
+      - { type: notNull }
+      - { type: regex, pattern: "^[A-Z]{2}$" }
+      - { type: allowedValues, values: ["US","CA","GB","DE","FR","ES","IT","NL","SE","NO","DK","FI","JP","KR","CN","IN","AU","NZ","BR","MX","AR","CL","ZA","AE","SG"] }
+  - name: postal_code
+    logical_type: string
+    physical_type: varchar(20)
+    description: Postal / ZIP code. Format varies by country.
+    recommended_rules:
+      - { type: maxLength, value: 20 }
+  - name: lifetime_value_usd
+    logical_type: number
+    physical_type: numeric(12,2)
+    description: Materialised aggregate of historical delivered-order totals in USD. Eligible for bucket banding.
+    recommended_rules:
+      - { type: notNull }
+      - { type: range, min: 0, severity: "sh:Violation" }
+  - name: date_of_birth
+    logical_type: date
+    physical_type: date
+    description: Customer's date of birth. PII. May be null for accounts that didn't provide it.
+    recommended_rules:
+      - { type: range, max: "today", severity: "sh:Violation" }
+  - name: gender
+    logical_type: string
+    physical_type: varchar(10)
+    description: Self-declared gender. Optional; nullable.
+    recommended_rules:
+      - { type: maxLength, value: 10 }
+
+  # --- customer_segment_assignment (SCD-2) ---------------------------------
+  - name: segment_code
+    logical_type: string
+    physical_type: varchar(20)
+    description: Customer segment classifier (lifecycle stage).
+    recommended_rules:
+      - { type: notNull }
+      - { type: allowedValues, values: ["new", "growing", "vip", "dormant", "churned"] }
+  - name: effective_from
+    logical_type: date
+    physical_type: date
+    description: Date this segment assignment became active.
+    recommended_rules:
+      - { type: notNull }
+  - name: effective_to
+    logical_type: date
+    physical_type: date
+    description: Date this segment assignment was superseded. Null marks the current row.
+    recommended_rules: []
+
+  # --- order_header (fact) -------------------------------------------------
+  - name: order_id
+    logical_type: integer
+    physical_type: bigint
+    primary_key: true
+    description: Unique identifier for an order.
+    recommended_rules:
+      - { type: notNull }
+      - { type: unique }
+  - name: order_number
+    logical_type: string
+    physical_type: varchar(40)
+    description: Customer-facing order reference (e.g. ORD-2026-000123). Distinct from internal order_id surrogate.
+    recommended_rules:
+      - { type: notNull }
+      - { type: unique }
+      - { type: maxLength, value: 40 }
+  - name: order_date
+    logical_type: date
+    physical_type: date
+    description: Calendar date the order was placed.
+    recommended_rules:
+      - { type: notNull }
+      - { type: range, max: "today", severity: "sh:Violation" }
+  - name: placed_at
+    logical_type: timestamp
+    physical_type: timestamp with time zone
+    description: UTC timestamp the order was submitted by the customer (finer-grained than order_date).
+    recommended_rules:
+      - { type: notNull }
+      - { type: range, max: "now", severity: "sh:Violation" }
+  - name: order_status
+    logical_type: string
+    physical_type: varchar(20)
+    description: Latest status of the order. Full timeline lives in order_status_history.
+    recommended_rules:
+      - { type: notNull }
+      - { type: allowedValues, values: ["pending", "processing", "shipped", "delivered", "cancelled", "returned"] }
+  - name: subtotal
+    logical_type: number
+    physical_type: numeric(12,2)
+    description: Sum of line_total across the order's items, before tax/shipping/discount, in the order's currency.
+    recommended_rules:
+      - { type: notNull }
+      - { type: range, min: 0, severity: "sh:Violation" }
+  - name: shipping_cost
+    logical_type: number
+    physical_type: numeric(10,2)
+    description: Shipping charges applied at the order level, in the order's currency.
+    recommended_rules:
+      - { type: range, min: 0, severity: "sh:Violation" }
+  - name: tax_amount
+    logical_type: number
+    physical_type: numeric(10,2)
+    description: Total sales tax / VAT applied at the order level, in the order's currency.
+    recommended_rules:
+      - { type: range, min: 0, severity: "sh:Violation" }
+  - name: discount_amount
+    logical_type: number
+    physical_type: numeric(10,2)
+    description: Total discount value applied at the order level (coupons, promos), in the order's currency.
+    recommended_rules:
+      - { type: range, min: 0, severity: "sh:Violation" }
+  - name: total_amount
+    logical_type: number
+    physical_type: numeric(12,2)
+    description: Final amount charged to the customer — subtotal + shipping_cost + tax_amount - discount_amount.
+    recommended_rules:
+      - { type: notNull }
+      - { type: range, min: 0, severity: "sh:Violation" }
+  - name: currency_code
+    logical_type: string
+    physical_type: char(3)
+    description: ISO 4217 currency code the order is denominated in.
+    recommended_rules:
+      - { type: notNull }
+      - { type: regex, pattern: "^[A-Z]{3}$" }
+  - name: exchange_rate_to_usd
+    logical_type: number
+    physical_type: numeric(12,6)
+    description: Exchange rate captured at order placement to convert currency_code amounts into USD for reporting.
+    recommended_rules:
+      - { type: range, min: 0, severity: "sh:Violation" }
+  - name: payment_method
+    logical_type: string
+    physical_type: varchar(20)
+    description: How the customer paid.
+    recommended_rules:
+      - { type: allowedValues, values: ["card", "paypal", "wire", "cash_on_delivery", "gift_card", "apple_pay", "google_pay", "buy_now_pay_later", "crypto"] }
+  - name: billing_country_code
+    logical_type: string
+    physical_type: char(2)
+    description: Country of the billing address (ISO 3166-1 alpha-2). Drives tax calculation.
+    recommended_rules:
+      - { type: regex, pattern: "^[A-Z]{2}$" }
+  - name: shipping_country_code
+    logical_type: string
+    physical_type: char(2)
+    description: Country the order shipped to (ISO 3166-1 alpha-2). Usually matches customer.country_code but can differ for gifts.
+    recommended_rules:
+      - { type: regex, pattern: "^[A-Z]{2}$" }
+  - name: shipping_method
+    logical_type: string
+    physical_type: varchar(20)
+    description: Service level selected by the customer (standard / express / overnight / pickup).
+    recommended_rules:
+      - { type: allowedValues, values: ["standard", "express", "overnight", "two_day", "economy", "pickup", "freight"] }
+  - name: channel
+    logical_type: string
+    physical_type: varchar(20)
+    description: Sales channel that originated the order.
+    recommended_rules:
+      - { type: notNull }
+      - { type: allowedValues, values: ["web", "mobile", "store", "partner", "marketplace", "phone", "b2b"] }
+  - name: device_type
+    logical_type: string
+    physical_type: varchar(20)
+    description: Device class detected at order placement for web/mobile channels.
+    recommended_rules:
+      - { type: allowedValues, values: ["desktop", "mobile", "tablet", "pos_terminal", "kiosk", "api"] }
+  - name: coupon_code
+    logical_type: string
+    physical_type: varchar(40)
+    description: Coupon / promo code applied to the order. Null if no coupon.
+    recommended_rules:
+      - { type: maxLength, value: 40 }
+  - name: salesperson_id
+    logical_type: integer
+    physical_type: bigint
+    description: FK to the internal sales rep credited with the order. Null for self-service channels.
+    recommended_rules: []
+  - name: gift_flag
+    logical_type: boolean
+    physical_type: boolean
+    description: Whether the customer flagged the order as a gift (drives gift-wrap and receipt suppression).
+    recommended_rules: []
+  - name: cancelled_at
+    logical_type: timestamp
+    physical_type: timestamp with time zone
+    description: UTC timestamp when the order was cancelled. Null for non-cancelled orders.
+    recommended_rules:
+      - { type: range, max: "now", severity: "sh:Warning" }
+  - name: cancellation_reason
+    logical_type: string
+    physical_type: varchar(50)
+    description: Coded reason for cancellation.
+    recommended_rules:
+      - { type: allowedValues, values: ["customer_request", "fraud_suspected", "out_of_stock", "payment_failed", "address_invalid", "duplicate_order", "other"] }
+  - name: estimated_delivery_date
+    logical_type: date
+    physical_type: date
+    description: Promised delivery date communicated to the customer at checkout.
+    recommended_rules: []
+
+  # --- order_item (junction) -----------------------------------------------
+  - name: order_item_id
+    logical_type: integer
+    physical_type: bigint
+    primary_key: true
+    description: Unique identifier for an order line.
+    recommended_rules:
+      - { type: notNull }
+      - { type: unique }
+  - name: line_number
+    logical_type: integer
+    physical_type: smallint
+    description: Sequential line number within the order (1-based).
+    recommended_rules:
+      - { type: range, min: 1, severity: "sh:Violation" }
+  - name: quantity
+    logical_type: integer
+    physical_type: integer
+    description: Number of units of the product in this line.
+    recommended_rules:
+      - { type: notNull }
+      - { type: range, min: 1, severity: "sh:Violation" }
+  - name: unit_price
+    logical_type: number
+    physical_type: numeric(10,2)
+    description: Per-unit price at the time of the order (may differ from current list_price).
+    recommended_rules:
+      - { type: notNull }
+      - { type: range, min: 0, severity: "sh:Violation" }
+  - name: discount_pct
+    logical_type: number
+    physical_type: numeric(5,2)
+    description: Discount applied to this line as a percentage (0 = full price, 100 = free).
+    recommended_rules:
+      - { type: notNull }
+      - { type: range, min: 0, max: 100, severity: "sh:Violation" }
+  - name: line_discount_amount
+    logical_type: number
+    physical_type: numeric(10,2)
+    description: Discount applied to this line in currency units. quantity * unit_price * discount_pct / 100.
+    recommended_rules:
+      - { type: range, min: 0, severity: "sh:Violation" }
+  - name: line_tax_pct
+    logical_type: number
+    physical_type: numeric(5,2)
+    description: Tax rate applied to this line as a percentage.
+    recommended_rules:
+      - { type: range, min: 0, max: 100, severity: "sh:Violation" }
+  - name: line_tax_amount
+    logical_type: number
+    physical_type: numeric(10,2)
+    description: Tax applied to this line in currency units.
+    recommended_rules:
+      - { type: range, min: 0, severity: "sh:Violation" }
+  - name: gross_amount
+    logical_type: number
+    physical_type: numeric(12,2)
+    description: quantity * unit_price — line value before discount and tax.
+    recommended_rules:
+      - { type: range, min: 0, severity: "sh:Violation" }
+  - name: line_total
+    logical_type: number
+    physical_type: numeric(12,2)
+    description: quantity * unit_price * (1 - discount_pct/100). Materialised at write time. Tax tracked separately.
+    recommended_rules:
+      - { type: notNull }
+      - { type: range, min: 0, severity: "sh:Violation" }
+  - name: return_quantity
+    logical_type: integer
+    physical_type: integer
+    description: Number of units from this line that have been returned. Materialised; updated on return processing.
+    recommended_rules:
+      - { type: range, min: 0, severity: "sh:Violation" }
+  - name: is_gift
+    logical_type: boolean
+    physical_type: boolean
+    description: Per-line gift flag (different items in an order may have different gift treatment).
+    recommended_rules: []
+
+  # --- order_status_history (temporal bridge) ------------------------------
+  - name: status_value
+    logical_type: string
+    physical_type: varchar(20)
+    description: Status the order entered at status_changed_at. Allowed set matches order_status.
+    recommended_rules:
+      - { type: notNull }
+      - { type: allowedValues, values: ["pending", "processing", "shipped", "delivered", "cancelled", "returned"] }
+  - name: status_changed_at
+    logical_type: timestamp
+    physical_type: timestamp
+    description: When the order entered this status. Latest row per order = current status.
+    recommended_rules:
+      - { type: notNull }
+  - name: actor
+    logical_type: string
+    physical_type: varchar(50)
+    description: Who or what triggered the status change (system / fulfillment / support / carrier).
+    recommended_rules:
+      - { type: maxLength, value: 50 }
+  - name: note
+    logical_type: string
+    physical_type: text
+    description: Optional free-text note attached to the status change.
+    recommended_rules: []
+
+  # --- payment (transaction) ----------------------------------------------
+  - name: payment_id
+    logical_type: integer
+    physical_type: bigint
+    primary_key: true
+    description: Unique identifier for a payment transaction.
+    recommended_rules:
+      - { type: notNull }
+      - { type: unique }
+  - name: payment_status
+    logical_type: string
+    physical_type: varchar(20)
+    description: Latest state of the payment.
+    recommended_rules:
+      - { type: notNull }
+      - { type: allowedValues, values: ["pending", "authorized", "captured", "settled", "failed", "refunded", "partially_refunded", "voided", "chargeback"] }
+  - name: payment_amount
+    logical_type: number
+    physical_type: numeric(12,2)
+    description: Transaction amount in the payment_currency.
+    recommended_rules:
+      - { type: notNull }
+      - { type: range, min: 0, severity: "sh:Violation" }
+  - name: payment_currency
+    logical_type: string
+    physical_type: char(3)
+    description: ISO 4217 currency code the payment was processed in.
+    recommended_rules:
+      - { type: regex, pattern: "^[A-Z]{3}$" }
+  - name: payment_at
+    logical_type: timestamp
+    physical_type: timestamp with time zone
+    description: UTC timestamp when the payment reached its current status.
+    recommended_rules:
+      - { type: notNull }
+      - { type: range, max: "now", severity: "sh:Violation" }
+  - name: payment_processor
+    logical_type: string
+    physical_type: varchar(40)
+    description: Name of the payment service provider (Stripe, Adyen, Braintree, PayPal, etc.).
+    recommended_rules:
+      - { type: maxLength, value: 40 }
+  - name: processor_transaction_id
+    logical_type: string
+    physical_type: varchar(100)
+    description: Reference ID from the payment processor for reconciliation.
+    recommended_rules:
+      - { type: maxLength, value: 100 }
+  - name: card_brand
+    logical_type: string
+    physical_type: varchar(20)
+    description: Card network for card payments (visa, mastercard, amex, discover). PCI-safe to store.
+    recommended_rules:
+      - { type: allowedValues, values: ["visa", "mastercard", "amex", "discover", "jcb", "diners", "unionpay", "maestro", "other"] }
+  - name: card_last4
+    logical_type: string
+    physical_type: char(4)
+    description: Last 4 digits of the card. Display-only; safe under PCI DSS SAQ-A.
+    recommended_rules:
+      - { type: regex, pattern: "^[0-9]{4}$" }
+  - name: card_expiry_month
+    logical_type: integer
+    physical_type: smallint
+    description: Expiry month (1-12) of the card used.
+    recommended_rules:
+      - { type: range, min: 1, max: 12, severity: "sh:Violation" }
+  - name: card_expiry_year
+    logical_type: integer
+    physical_type: smallint
+    description: Expiry year (4-digit) of the card used.
+    recommended_rules:
+      - { type: range, min: 2000, max: 2099, severity: "sh:Violation" }
+  - name: authorization_code
+    logical_type: string
+    physical_type: varchar(40)
+    description: Authorization code returned by the issuer.
+    recommended_rules:
+      - { type: maxLength, value: 40 }
+  - name: avs_result
+    logical_type: string
+    physical_type: varchar(10)
+    description: Address Verification Service response code.
+    recommended_rules:
+      - { type: maxLength, value: 10 }
+  - name: cvv_result
+    logical_type: string
+    physical_type: varchar(10)
+    description: Card Verification Value response code.
+    recommended_rules:
+      - { type: maxLength, value: 10 }
+
+  # --- shipment -----------------------------------------------------------
+  - name: shipment_id
+    logical_type: integer
+    physical_type: bigint
+    primary_key: true
+    description: Unique identifier for a shipment (an order may have multiple shipments).
+    recommended_rules:
+      - { type: notNull }
+      - { type: unique }
+  - name: shipment_status
+    logical_type: string
+    physical_type: varchar(20)
+    description: Latest state of the shipment.
+    recommended_rules:
+      - { type: notNull }
+      - { type: allowedValues, values: ["pending", "label_created", "picked_up", "in_transit", "out_for_delivery", "delivered", "delivery_failed", "returned_to_sender"] }
+  - name: carrier
+    logical_type: string
+    physical_type: varchar(40)
+    description: Shipping carrier handling the shipment (fedex, ups, dhl, royal_mail, etc.).
+    recommended_rules:
+      - { type: maxLength, value: 40 }
+  - name: tracking_number
+    logical_type: string
+    physical_type: varchar(100)
+    description: Carrier-issued tracking number. Format varies by carrier.
+    recommended_rules:
+      - { type: maxLength, value: 100 }
+  - name: tracking_url
+    logical_type: string
+    physical_type: varchar(500)
+    description: Deep-link URL to the carrier's tracking page for this shipment.
+    recommended_rules:
+      - { type: regex, pattern: "^https?://.+" }
+      - { type: maxLength, value: 500 }
+  - name: shipped_at
+    logical_type: timestamp
+    physical_type: timestamp with time zone
+    description: UTC timestamp when the carrier picked up / scanned the package.
+    recommended_rules:
+      - { type: range, max: "now", severity: "sh:Violation" }
+  - name: delivered_at
+    logical_type: timestamp
+    physical_type: timestamp with time zone
+    description: UTC timestamp when the carrier marked the shipment delivered.
+    recommended_rules:
+      - { type: range, max: "now", severity: "sh:Warning" }
+  - name: ship_cost
+    logical_type: number
+    physical_type: numeric(10,2)
+    description: Carrier charge for this shipment in the order's currency.
+    recommended_rules:
+      - { type: range, min: 0, severity: "sh:Violation" }
+  - name: shipment_weight_kg
+    logical_type: number
+    physical_type: numeric(8,3)
+    description: Total billed weight of the shipment in kilograms.
+    recommended_rules:
+      - { type: range, min: 0, severity: "sh:Warning" }
+  - name: package_count
+    logical_type: integer
+    physical_type: smallint
+    description: Number of physical packages in the shipment.
+    recommended_rules:
+      - { type: range, min: 1, severity: "sh:Violation" }
+  - name: ship_from_warehouse_id
+    logical_type: integer
+    physical_type: bigint
+    description: FK to the warehouse the shipment originated from.
+    recommended_rules: []
+  - name: ship_to_address_line1
+    logical_type: string
+    physical_type: varchar(255)
+    description: Destination street address line 1. PII.
+    recommended_rules:
+      - { type: maxLength, value: 255 }
+  - name: ship_to_address_line2
+    logical_type: string
+    physical_type: varchar(255)
+    description: Destination street address line 2 (apartment / suite / building). PII.
+    recommended_rules:
+      - { type: maxLength, value: 255 }
+  - name: ship_to_city
+    logical_type: string
+    physical_type: varchar(100)
+    description: Destination city. PII.
+    recommended_rules:
+      - { type: maxLength, value: 100 }
+  - name: ship_to_state_region
+    logical_type: string
+    physical_type: varchar(100)
+    description: Destination state / province / region. PII.
+    recommended_rules:
+      - { type: maxLength, value: 100 }
+  - name: ship_to_postal_code
+    logical_type: string
+    physical_type: varchar(20)
+    description: Destination postal / ZIP code. PII.
+    recommended_rules:
+      - { type: maxLength, value: 20 }
+
+  # --- return / refund ----------------------------------------------------
+  - name: return_id
+    logical_type: integer
+    physical_type: bigint
+    primary_key: true
+    description: Unique identifier for a return request.
+    recommended_rules:
+      - { type: notNull }
+      - { type: unique }
+  - name: return_number
+    logical_type: string
+    physical_type: varchar(40)
+    description: Customer-facing RMA / return reference (e.g. RMA-2026-000123).
+    recommended_rules:
+      - { type: unique }
+      - { type: maxLength, value: 40 }
+  - name: return_status
+    logical_type: string
+    physical_type: varchar(20)
+    description: Latest state of the return.
+    recommended_rules:
+      - { type: notNull }
+      - { type: allowedValues, values: ["requested", "approved", "rejected", "in_transit", "received", "inspected", "refunded", "exchanged", "cancelled"] }
+  - name: return_reason
+    logical_type: string
+    physical_type: varchar(40)
+    description: Coded reason category for the return.
+    recommended_rules:
+      - { type: allowedValues, values: ["defective", "damaged_in_transit", "wrong_item", "not_as_described", "no_longer_wanted", "size_fit", "duplicate", "late_delivery", "fraud", "other"] }
+  - name: return_requested_at
+    logical_type: timestamp
+    physical_type: timestamp with time zone
+    description: UTC timestamp when the customer initiated the return.
+    recommended_rules:
+      - { type: notNull }
+      - { type: range, max: "now", severity: "sh:Violation" }
+  - name: return_received_at
+    logical_type: timestamp
+    physical_type: timestamp with time zone
+    description: UTC timestamp when the warehouse scanned the returned items.
+    recommended_rules:
+      - { type: range, max: "now", severity: "sh:Warning" }
+  - name: refund_amount
+    logical_type: number
+    physical_type: numeric(12,2)
+    description: Refund issued to the customer in the order's currency.
+    recommended_rules:
+      - { type: range, min: 0, severity: "sh:Violation" }
+  - name: refund_currency
+    logical_type: string
+    physical_type: char(3)
+    description: ISO 4217 currency code of refund_amount. Usually matches the original order currency.
+    recommended_rules:
+      - { type: regex, pattern: "^[A-Z]{3}$" }
+  - name: refunded_at
+    logical_type: timestamp
+    physical_type: timestamp with time zone
+    description: UTC timestamp when the refund was issued to the customer's original payment method.
+    recommended_rules:
+      - { type: range, max: "now", severity: "sh:Warning" }
+  - name: restocking_fee
+    logical_type: number
+    physical_type: numeric(10,2)
+    description: Fee retained from the refund in the order's currency.
+    recommended_rules:
+      - { type: range, min: 0, severity: "sh:Violation" }
+
+  # --- product review -----------------------------------------------------
+  - name: review_id
+    logical_type: integer
+    physical_type: bigint
+    primary_key: true
+    description: Unique identifier for a customer review.
+    recommended_rules:
+      - { type: notNull }
+      - { type: unique }
+  - name: rating
+    logical_type: integer
+    physical_type: smallint
+    description: Star rating on a 1-5 scale.
+    recommended_rules:
+      - { type: notNull }
+      - { type: range, min: 1, max: 5, severity: "sh:Violation" }
+  - name: review_title
+    logical_type: string
+    physical_type: varchar(255)
+    description: Customer-supplied headline for the review.
+    recommended_rules:
+      - { type: maxLength, value: 255 }
+  - name: review_body
+    logical_type: string
+    physical_type: text
+    description: Free-form review text.
+    recommended_rules: []
+  - name: review_submitted_at
+    logical_type: timestamp
+    physical_type: timestamp with time zone
+    description: UTC timestamp when the review was submitted.
+    recommended_rules:
+      - { type: notNull }
+      - { type: range, max: "now", severity: "sh:Violation" }
+  - name: verified_purchase
+    logical_type: boolean
+    physical_type: boolean
+    description: True if the reviewer's customer_id has a delivered order containing the reviewed product.
+    recommended_rules:
+      - { type: notNull }
+  - name: helpful_count
+    logical_type: integer
+    physical_type: integer
+    description: Count of other customers who marked this review as helpful.
+    recommended_rules:
+      - { type: range, min: 0, severity: "sh:Violation" }
+  - name: review_status
+    logical_type: string
+    physical_type: varchar(20)
+    description: Moderation status of the review.
+    recommended_rules:
+      - { type: notNull }
+      - { type: allowedValues, values: ["pending", "approved", "rejected", "flagged", "removed"] }
+
+  # --- promotion / coupon -------------------------------------------------
+  - name: promotion_id
+    logical_type: integer
+    physical_type: bigint
+    primary_key: true
+    description: Unique identifier for a promotion / coupon campaign.
+    recommended_rules:
+      - { type: notNull }
+      - { type: unique }
+  - name: promotion_code
+    logical_type: string
+    physical_type: varchar(40)
+    description: Customer-facing code redeemable at checkout. Case-insensitive in most systems.
+    recommended_rules:
+      - { type: unique }
+      - { type: maxLength, value: 40 }
+  - name: promotion_name
+    logical_type: string
+    physical_type: varchar(200)
+    description: Internal display name for the promotion campaign.
+    recommended_rules:
+      - { type: notNull }
+      - { type: maxLength, value: 200 }
+  - name: promotion_type
+    logical_type: string
+    physical_type: varchar(20)
+    description: Mechanism by which the promotion applies a discount.
+    recommended_rules:
+      - { type: notNull }
+      - { type: allowedValues, values: ["percent_off", "amount_off", "free_shipping", "bogo", "tiered", "bundle", "loyalty_points"] }
+  - name: discount_value
+    logical_type: number
+    physical_type: numeric(10,2)
+    description: Numeric value of the discount — interpreted as percent (0-100) or fixed amount based on promotion_type.
+    recommended_rules:
+      - { type: range, min: 0, severity: "sh:Violation" }
+  - name: min_order_amount
+    logical_type: number
+    physical_type: numeric(10,2)
+    description: Minimum order subtotal required to redeem the promotion.
+    recommended_rules:
+      - { type: range, min: 0, severity: "sh:Violation" }
+  - name: valid_from
+    logical_type: timestamp
+    physical_type: timestamp with time zone
+    description: UTC timestamp when the promotion becomes redeemable.
+    recommended_rules:
+      - { type: notNull }
+  - name: valid_to
+    logical_type: timestamp
+    physical_type: timestamp with time zone
+    description: UTC timestamp when the promotion expires. Null = no expiry.
+    recommended_rules: []
+  - name: max_uses_total
+    logical_type: integer
+    physical_type: integer
+    description: Maximum number of times the promotion may be redeemed across all customers. Null = unlimited.
+    recommended_rules:
+      - { type: range, min: 1, severity: "sh:Warning" }
+  - name: max_uses_per_customer
+    logical_type: integer
+    physical_type: smallint
+    description: Maximum number of redemptions per customer.
+    recommended_rules:
+      - { type: range, min: 1, severity: "sh:Warning" }
+  - name: current_uses
+    logical_type: integer
+    physical_type: integer
+    description: Materialised count of redemptions to date.
+    recommended_rules:
+      - { type: range, min: 0, severity: "sh:Violation" }
+  - name: promotion_active_flag
+    logical_type: boolean
+    physical_type: boolean
+    description: Whether the promotion is currently active. False overrides valid_from/valid_to.
+    recommended_rules:
+      - { type: notNull }
+
+  # ── Derived patterns (consumer-aligned) ────────────────────────────────
+  #
+  # Domain-specific derivation templates for the products_sales domain.
+  # Tagged `source_category: derived` so the wizard's picker groups them
+  # apart from raw source columns. Common-domain time buckets (week_of /
+  # month_of / fiscal_quarter / fiscal_year / iso_week) and SCD-2 dating
+  # (effective_from / effective_to / is_current) live in common.yaml and
+  # apply here too.
+
+  # Per-period sales aggregates — declare with a time-bucket grouping key
+  # (week_of / month_of / fiscal_quarter / fiscal_year) on the dataset.
+  # Column-level aggregateFunction drives the grouped CTE's SQL emission.
+  - name: units_sold_weekly
+    logical_type: integer
+    physical_type: integer
+    source_category: derived
+    description: Units of a product sold during the bucket period. Derived as `SUM(order_item.quantity)` grouped by (product, week_of). Set column-level aggregateFunction=SUM on this column.
+    recommended_rules:
+      - { type: range, min: 0, severity: "sh:Violation" }
+  - name: units_sold_monthly
+    logical_type: integer
+    physical_type: integer
+    source_category: derived
+    description: Units of a product sold during the bucket period. Derived as `SUM(order_item.quantity)` grouped by (product, month_of). Set column-level aggregateFunction=SUM on this column.
+    recommended_rules:
+      - { type: range, min: 0, severity: "sh:Violation" }
+  - name: revenue_weekly
+    logical_type: decimal
+    physical_type: numeric(12,2)
+    source_category: derived
+    description: Gross revenue for a product during the bucket period. Derived as `SUM(order_item.line_total)` grouped by (product, week_of). Set column-level aggregateFunction=SUM on this column.
+    recommended_rules:
+      - { type: range, min: 0, severity: "sh:Warning" }
+  - name: revenue_monthly
+    logical_type: decimal
+    physical_type: numeric(12,2)
+    source_category: derived
+    description: Gross revenue for a product during the bucket period. Derived as `SUM(order_item.line_total)` grouped by (product, month_of). Set column-level aggregateFunction=SUM on this column.
+    recommended_rules:
+      - { type: range, min: 0, severity: "sh:Warning" }
+  - name: order_count_weekly
+    logical_type: integer
+    physical_type: integer
+    source_category: derived
+    description: Distinct orders that included this product during the bucket period. Derived as `COUNT(DISTINCT order_header.order_id)` grouped by (product, week_of). Set column-level aggregateFunction=COUNT_DISTINCT on this column.
+    recommended_rules:
+      - { type: range, min: 0 }
+  - name: unique_customers_weekly
+    logical_type: integer
+    physical_type: integer
+    source_category: derived
+    description: Distinct customers who bought this product during the bucket period. Derived as `COUNT(DISTINCT order_header.customer_id)` grouped by (product, week_of). Set column-level aggregateFunction=COUNT_DISTINCT on this column.
+    recommended_rules:
+      - { type: range, min: 0 }
+  - name: avg_basket_size
+    logical_type: decimal
+    physical_type: numeric(8,2)
+    source_category: derived
+    description: Average units of this product per order during the bucket period. Derived as `AVG(order_item.quantity)` grouped by (product, <period>). Set column-level aggregateFunction=AVG.
+    recommended_rules:
+      - { type: range, min: 0 }
+
+  # Intra-group rankings — declare a window_spec on the DatasetTransform
+  # naming the partition + ORDER BY, then set transformKind='window' on
+  # the mapping. View-DDL emits `<FN>(<arg>) OVER (PARTITION BY ... ORDER BY ...)`.
+  - name: intra_category_rank
+    logical_type: integer
+    physical_type: integer
+    source_category: derived
+    description: Rank of this product within its category for the bucket period, by a chosen metric. Derived as `ROW_NUMBER() OVER (PARTITION BY category_id, <period> ORDER BY <metric> DESC)`. Set transformKind=window and reference a window_spec on the DatasetTransform.
+    recommended_rules:
+      - { type: range, min: 1 }
+  - name: rank_within_period
+    logical_type: integer
+    physical_type: integer
+    source_category: derived
+    description: Rank of this product across all categories for the bucket period, by a chosen metric. Derived as `ROW_NUMBER() OVER (PARTITION BY <period> ORDER BY <metric> DESC)`. Set transformKind=window.
+    recommended_rules:
+      - { type: range, min: 1 }
+  - name: percentile_within_category
+    logical_type: decimal
+    physical_type: numeric(5,2)
+    source_category: derived
+    description: Percentile (0-100) of this product within its category for the bucket period, by a chosen metric. Derived as `100 * PERCENT_RANK() OVER (PARTITION BY category_id, <period> ORDER BY <metric>)`. Set transformKind=window.
+    recommended_rules:
+      - { type: range, min: 0, max: 100 }
+
+  # Derived ratios / calculations — column-level transformKind='arithmetic'
+  # with an explicit transformExpression that names the source columns.
+  # The view-DDL emits the expression verbatim (with column aliases) inside
+  # the base CTE.
+  - name: margin_pct
+    logical_type: decimal
+    physical_type: numeric(5,2)
+    source_category: derived
+    description: "Gross margin as a percentage of list price. Derived as `(list_price - cost) / list_price * 100`. Set transformKind=arithmetic with the expression and decorate with a cast to numeric(5,2) so the value rounds to the declared precision instead of returning 20-decimal output."
+    recommended_rules:
+      - { type: range, min: -100, max: 100 }
+  - name: discount_pct
+    logical_type: decimal
+    physical_type: numeric(5,2)
+    source_category: derived
+    description: Discount as a percentage of list price for this order line. Derived as `(list_price - unit_price) / list_price * 100`. Set transformKind=arithmetic + cast decorator. Negative values mean the line was sold above list (price increase / surcharge).
+    recommended_rules:
+      - { type: range, min: -100, max: 100 }
+  - name: growth_rate_weekly
+    logical_type: decimal
+    physical_type: numeric(8,4)
+    source_category: derived
+    description: Week-over-week growth in a chosen metric (typically revenue or units). Derived as `(metric / LAG(metric) OVER (PARTITION BY product_id ORDER BY week_of)) - 1`. Set transformKind=window referencing a wow window_spec. NULL for the first observed week per product.
+    recommended_rules:
+      - { type: range, min: -1.0, severity: "sh:Warning" }
+  - name: attach_rate
+    logical_type: decimal
+    physical_type: numeric(8,4)
+    source_category: derived
+    description: Cross-sell rate — fraction of orders containing a primary product that also contain this product. Derived as `COUNT(orders containing both) / COUNT(orders containing primary)` per (period, primary_product, this_product). Authoring requires a join + a self-reference to the primary product; use the chat assistant for the window_spec.
+    recommended_rules:
+      - { type: range, min: 0, max: 1 }
+  - name: refund_rate
+    logical_type: decimal
+    physical_type: numeric(8,4)
+    source_category: derived
+    description: Fraction of units sold during the period that were later refunded. Derived as `SUM(return.units) / SUM(order_item.quantity)` grouped by (product, period). Set column-level aggregateFunction=AVG and decorate with cast.
+    recommended_rules:
+      - { type: range, min: 0, max: 1 }

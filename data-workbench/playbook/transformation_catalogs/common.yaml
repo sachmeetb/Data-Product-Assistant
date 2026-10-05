@@ -1,0 +1,62 @@
+# Steward-curated transformation templates that apply across domains.
+#
+# The mapping skill (data-mapping-neo4j) loads this file plus any
+# {domain}.yaml that matches the project's domain. Templates are matched
+# against product columns by name pattern, logical type, and the presence
+# of required source columns; a match seeds the :ColumnMapping with
+# transform_kind / transform_expression / transform_inputs and tags it
+# transformAuthor='steward_catalog'. The engineer reviews/edits the result.
+#
+# Schema:
+#   templates[].match.target_name_patterns[]   case-insensitive substring match against the product column name
+#   templates[].match.target_logical_type      case-insensitive equality against logicalType
+#   templates[].match.source_columns_required  every name must exist in the source-column set
+#   templates[].match.source_data_type_pattern regex against the FIRST required source column's data_type
+#   templates[].transform                      the transformation recipe written verbatim onto :ColumnMapping
+#   templates[].confidence_floor               default transform_confidence on a match (0.0-1.0)
+
+domain: common
+templates:
+  - name: full_name_concat
+    match:
+      target_name_patterns: ["full_name", "fullname", "complete_name", "display_name"]
+      source_columns_required: ["first_name", "last_name"]
+    transform:
+      kind: concat
+      inputs: ["first_name", "last_name"]
+      separator: " "
+      decorators:
+        standardization: ["trim"]
+    confidence_floor: 0.85
+
+  - name: email_normalize
+    match:
+      target_name_patterns: ["email", "email_address"]
+      source_columns_required: ["email"]
+    transform:
+      kind: format
+      inputs: ["email"]
+      params:
+        case: "lower"
+      decorators:
+        standardization: ["trim"]
+    confidence_floor: 0.80
+
+  - name: trim_string
+    match:
+      target_logical_type: "string"
+    transform:
+      kind: format
+      decorators:
+        standardization: ["trim"]
+    confidence_floor: 0.50
+
+  - name: phone_digits_only
+    match:
+      target_name_patterns: ["phone", "phone_number", "mobile", "telephone"]
+    transform:
+      kind: expression
+      expression: "REGEXP_REPLACE(<phone>, '[^0-9]', '', 'g')"
+      decorators:
+        standardization: ["trim"]
+    confidence_floor: 0.65

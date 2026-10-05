@@ -1,0 +1,11 @@
+---
+description: List workflows available in the catalog (with readiness)
+---
+
+```bash
+curl -s "{{ backend_base_url }}/api/workflow-catalog?project_id={{ project.id }}"
+```
+
+For each workflow template, render: `workflow_id | name | stage count | all_deps_met (yes/no) | already_added (yes/no)`. If `deps_unmet` is non-empty, list the missing prerequisite stage_ids — those need to be `complete` somewhere in the project before this workflow can be added meaningfully.
+
+Read-only.

@@ -1,0 +1,9 @@
+{
+  "name": "hr-mysql",
+  "platform": "mysql",
+  "domain": "Human Resources",
+  "description": "MySQL port of the HR sample — hr_core and hr_comp schemas.",
+  "database": "hr_core",
+  "schemas": ["hr_core", "hr_comp"],
+  "primary_schema": "hr_core"
+}

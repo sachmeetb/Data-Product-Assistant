@@ -1,0 +1,131 @@
+apiVersion: v3.1.0
+kind: DataContract
+id: template:customer:customer-360-dp
+name: Customer 360 Data Product
+version: 1.0.0
+status: draft
+domain: customer
+dataProduct: customer_360
+description: Unified customer view combining CRM, transaction, and support data for
+  a holistic customer profile.
+purpose: Provide marketing, sales, and support teams with a single source of truth
+  for customer intelligence, segmentation, and lifetime value analysis.
+limitations: Does not include real-time transaction feeds. Refresh is batch-based.
+  GDPR-regulated fields require consent verification.
+owners:
+- name: Customer Data Team
+  role: Data Product Owner
+  email: customer-data@example.com
+schema:
+- name: customer_profile
+  physicalName: customer_profile
+  physicalType: table
+  description: Core customer attributes and demographics
+  properties:
+  - name: customer_id
+    physicalName: customer_id
+    logicalName: Customer Identifier
+    logicalType: integer
+    physicalType: integer
+    description: Unique customer identifier across all systems
+    primaryKey: true
+    required: true
+    criticalDataElement: true
+    pii: false
+    classification: ''
+    examples: []
+    logicalTypeOptions: {}
+  - name: email
+    physicalName: email
+    logicalName: Email Address
+    logicalType: string
+    physicalType: varchar
+    description: Primary email address for customer communications
+    primaryKey: false
+    required: false
+    criticalDataElement: true
+    pii: false
+    classification: ''
+    examples: []
+    logicalTypeOptions: {}
+  - name: segment
+    physicalName: segment
+    logicalName: Customer Segment
+    logicalType: string
+    physicalType: varchar
+    description: Marketing segment classification (e.g., Premium, Standard, New)
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: ''
+    examples: []
+    logicalTypeOptions: {}
+  - name: lifetime_value
+    physicalName: lifetime_value
+    logicalName: Customer Lifetime Value
+    logicalType: number
+    physicalType: numeric
+    description: Calculated total revenue attributed to this customer
+    primaryKey: false
+    required: false
+    criticalDataElement: true
+    pii: false
+    classification: ''
+    examples: []
+    logicalTypeOptions: {}
+  - name: first_purchase_date
+    physicalName: first_purchase_date
+    logicalName: First Purchase Date
+    logicalType: date
+    physicalType: date
+    description: Date of the customer's first transaction
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: ''
+    examples: []
+    logicalTypeOptions: {}
+  foreignKeys: []
+quality:
+- rule: uniqueness
+  name: Customer ID uniqueness
+  description: customer_id must be unique across all records
+  severity: error
+  dimension: uniqueness
+  businessImpact: Duplicate customer records lead to incorrect segmentation and double-counting
+    in reports
+- rule: completeness
+  name: Email completeness
+  description: email should not be null for active customers
+  severity: warning
+  dimension: completeness
+  businessImpact: Missing email addresses prevent marketing campaign delivery
+- rule: validity
+  name: Lifetime value non-negative
+  description: lifetime_value must be >= 0 when not null
+  severity: warning
+  dimension: accuracy
+  businessImpact: Negative lifetime values indicate calculation errors in the aggregation
+    pipeline
+slaProperties:
+- property: availability
+  value: '99.9'
+  unit: percent
+- property: freshness
+  value: '12'
+  unit: hours
+- property: retention
+  value: '7'
+  unit: years
+terms:
+  usage: Available to marketing, sales, and support teams. GDPR consent must be verified
+    before using email for outbound campaigns.
+  limitations: PII is masked in analytics environments. Raw PII access requires approval
+    from Data Protection Officer.
+  billing: No charge for Tier 1 consumers. API access for external partners subject
+    to rate limiting.
+  noticePeriod: 60 days
+productKind: consumer
+sourceSpecId: customer_360_dp

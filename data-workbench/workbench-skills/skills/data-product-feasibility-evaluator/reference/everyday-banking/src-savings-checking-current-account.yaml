@@ -1,0 +1,308 @@
+spec_id: src_savings_checking_current_account
+name: Savings/Checking/Current Account
+domain: Everyday Banking
+product_kind: source
+description: Deposit accounts for individuals and businesses, including both interest-bearing
+  (e.g., savings) and non-interest-bearing (e.g., current) variants. Features include
+  interest accrual (for applicable accounts), balance tracking, withdrawal limits,
+  and overdraft options (for business accounts). These accounts support high transaction
+  volumes and maintain detailed logs of all deposits and withdrawals—capturing amount,
+  channel, and denomination mix.
+schema_version: '1.0'
+classification: confidential
+grain:
+  keys:
+  - account_id
+  description: ''
+freshness:
+  history: snapshot
+  cadence: ''
+  description: ''
+allowed_derivations:
+- rename
+- cast
+attributes:
+- name: account_id
+  type: bigint
+  concept: Account ID
+  description: Unique internal identifier for the deposit account, used as the primary key across all account-related entities.
+  required: true
+  is_key: true
+  classification: internal
+- name: product_code
+  type: varchar
+  concept: Product Code
+  description: Code identifying the specific deposit product variant (e.g. savings, current, basic savings) as defined in the product catalog.
+  required: false
+  is_key: false
+  classification: internal
+- name: account_number
+  type: numeric
+  concept: Account Number
+  description: Customer-facing account number assigned to the deposit account; masked or tokenized for PII compliance.
+  required: false
+  is_key: false
+  classification: pii
+- name: opened_date
+  type: date
+  concept: Opened Date
+  description: Date on which the deposit account was opened and became active.
+  required: true
+  is_key: false
+  classification: internal
+- name: status
+  type: varchar
+  concept: Status
+  description: Current lifecycle status of the account (e.g. active, dormant, closed, frozen).
+  required: true
+  is_key: false
+  classification: internal
+- name: currency
+  type: varchar
+  concept: Currency
+  description: ISO currency code in which the account is denominated and balances are maintained.
+  required: true
+  is_key: false
+  classification: internal
+- name: interest_rate
+  type: numeric
+  concept: Interest Rate
+  description: Annual interest rate applied to the account balance for eligible interest-bearing accounts such as savings.
+  required: true
+  is_key: false
+  classification: internal
+- name: min_balance
+  type: numeric
+  concept: Min Balance
+  description: Minimum ledger balance required to maintain the account in good standing and avoid charges.
+  required: true
+  is_key: false
+  classification: internal
+  derivations:
+  - currency_normalize
+- name: overdraft_limit
+  type: numeric
+  concept: Overdraft Limit
+  description: Maximum negative balance the account holder is permitted to carry; applies primarily to current and business accounts.
+  required: true
+  is_key: false
+  classification: internal
+  derivations:
+  - currency_normalize
+- name: lien_flag
+  type: boolean
+  concept: Lien Flag
+  description: Boolean indicator that a lien or hold has been placed on the account, restricting full withdrawal of funds.
+  required: false
+  is_key: false
+  classification: internal
+- name: snapshot_date
+  type: date
+  concept: Snapshot Date
+  description: Date for which the account balance and attribute values in this row are captured, used for point-in-time reporting.
+  required: true
+  is_key: false
+  classification: internal
+- name: ledger_balance
+  type: numeric
+  concept: Ledger Balance
+  description: Total book balance of the account including all posted transactions and accrued items as of the snapshot date.
+  required: true
+  is_key: false
+  classification: internal
+  derivations:
+  - currency_normalize
+- name: available_balance
+  type: numeric
+  concept: Available Balance
+  description: Funds immediately accessible for withdrawal, calculated as ledger balance minus holds, liens, and uncollected items.
+  required: true
+  is_key: false
+  classification: internal
+  derivations:
+  - currency_normalize
+- name: float_amount
+  type: numeric
+  concept: Float Amount
+  description: Amount in transit or pending clearing that has been credited to the account but not yet collected from the payer bank.
+  required: true
+  is_key: false
+  classification: internal
+  derivations:
+  - currency_normalize
+- name: uncollected_funds
+  type: varchar
+  concept: Uncollected Funds
+  description: Deposits or items credited to the account that have not yet been collected and are therefore unavailable for withdrawal.
+  required: false
+  is_key: false
+  classification: internal
+- name: txn_id
+  type: bigint
+  concept: Txn ID
+  description: Unique identifier for an individual debit or credit transaction posted to the account.
+  required: true
+  is_key: true
+  classification: internal
+- name: txn_date
+  type: date
+  concept: Txn Date
+  description: Date on which the customer-initiated transaction occurred or was authorized.
+  required: true
+  is_key: false
+  classification: internal
+- name: post_date
+  type: date
+  concept: Post Date
+  description: Date on which the transaction was posted to the account's ledger and reflected in the ledger balance.
+  required: true
+  is_key: false
+  classification: internal
+- name: amount
+  type: numeric
+  concept: Amount
+  description: Monetary value of the transaction in the account's denomination currency.
+  required: true
+  is_key: false
+  classification: internal
+  derivations:
+  - currency_normalize
+- name: txn_type
+  type: varchar
+  concept: Txn Type
+  description: Classification of the transaction type, such as debit, credit, ATM withdrawal, NEFT, UPI, or standing instruction.
+  required: true
+  is_key: false
+  classification: internal
+- name: channel
+  type: varchar
+  concept: Channel
+  description: Delivery channel through which the transaction was initiated, such as branch, ATM, internet banking, or mobile app.
+  required: false
+  is_key: false
+  classification: internal
+- name: counterparty_info
+  type: numeric
+  concept: Counterparty Info
+  description: Identifier or reference for the other party involved in the transaction, such as the remitter or beneficiary.
+  required: false
+  is_key: false
+  classification: internal
+- name: narration
+  type: numeric
+  concept: Narration
+  description: Free-text description or payment reference attached to the transaction for reconciliation purposes.
+  required: false
+  is_key: false
+  classification: internal
+- name: fee_id
+  type: bigint
+  concept: Fee ID
+  description: Unique identifier for a fee or charge record levied on the account.
+  required: true
+  is_key: true
+  classification: internal
+- name: fee_type
+  type: numeric
+  concept: Fee Type
+  description: Category and amount of a fee or charge applied to the account, such as maintenance fee, below-minimum-balance penalty, or SMS alert charge.
+  required: true
+  is_key: false
+  classification: internal
+  derivations:
+  - currency_normalize
+- name: accrual_ts
+  type: timestamp
+  concept: Accrual Ts
+  description: Timestamp at which interest was accrued or a fee was computed for the account.
+  required: false
+  is_key: false
+  classification: internal
+- name: mandate_id
+  type: bigint
+  concept: Mandate ID
+  description: Unique identifier for a standing instruction or auto-debit mandate registered on the account.
+  required: true
+  is_key: true
+  classification: internal
+- name: type
+  type: varchar
+  concept: Type
+  description: Classification of the mandate or standing instruction, such as ECS, NACH, or periodic transfer.
+  required: true
+  is_key: false
+  classification: internal
+- name: beneficiary_id
+  type: bigint
+  concept: Beneficiary ID
+  description: Unique identifier for the registered payee or beneficiary linked to a mandate or standing instruction on this account.
+  required: true
+  is_key: true
+  classification: internal
+- name: frequency
+  type: varchar
+  concept: Frequency
+  description: Payment frequency of the mandate or standing instruction (e.g. monthly, quarterly, weekly).
+  required: false
+  is_key: false
+  classification: internal
+- name: cheque_number_masked
+  type: varchar
+  concept: Cheque Number Masked
+  description: Masked cheque leaf number associated with a cheque transaction, with sensitive digits redacted.
+  required: false
+  is_key: false
+  classification: internal
+- name: issue_date
+  type: date
+  concept: Issue Date
+  description: Date on which a cheque was issued by the account holder.
+  required: true
+  is_key: false
+  classification: internal
+- name: clear_date
+  type: date
+  concept: Clear Date
+  description: Date on which a cheque was presented and cleared through the clearing system.
+  required: true
+  is_key: false
+  classification: internal
+- name: stop_payment_flag
+  type: boolean
+  concept: Stop Payment Flag
+  description: Boolean indicator that the account holder has issued a stop-payment instruction on a specific cheque.
+  required: false
+  is_key: false
+  classification: internal
+- name: statement_id
+  type: bigint
+  concept: Statement ID
+  description: Unique identifier for a periodic account statement generated for the account.
+  required: true
+  is_key: true
+  classification: internal
+- name: period_start_end
+  type: varchar
+  concept: Period Start End
+  description: Date range string defining the start and end dates of an account statement period.
+  required: false
+  is_key: false
+  classification: internal
+- name: opening_balance
+  type: numeric
+  concept: Opening Balance
+  description: Ledger balance at the beginning of a statement period before any transactions in that period.
+  required: true
+  is_key: false
+  classification: internal
+  derivations:
+  - currency_normalize
+- name: closing_balance
+  type: numeric
+  concept: Closing Balance
+  description: Ledger balance at the end of a statement period after all transactions in that period have been applied.
+  required: true
+  is_key: false
+  classification: internal
+  derivations:
+  - currency_normalize

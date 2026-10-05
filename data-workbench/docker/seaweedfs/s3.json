@@ -1,0 +1,12 @@
+{
+  "_comment": "SeaweedFS S3 identities for the LOCAL DEV object-store fixture only (docker compose --profile storage). Dev credentials, committed on purpose in the spirit of the neo4j/gitea dev passwords. Production uses real credentials vended via a PlatformConnection secret_ref (never this file). See docs/architecture/object-store.md (ADR-14 D4).",
+  "identities": [
+    {
+      "name": "workbench",
+      "credentials": [
+        { "accessKey": "workbench", "secretKey": "workbenchsecret" }
+      ],
+      "actions": ["Admin", "Read", "Write", "List", "Tagging"]
+    }
+  ]
+}

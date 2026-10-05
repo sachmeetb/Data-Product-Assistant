@@ -1,0 +1,516 @@
+apiVersion: v3.1.0
+kind: DataContract
+id: template:marketing-sales:src-market-research-data
+name: Market Research Data
+version: 1.0.0
+status: draft
+domain: Marketing & Sales
+description: Normalized feed of competitor deposit product rates and offer terms (savings/current/term
+  deposits) plus key benchmarks (policy/overnight). Used by the Deposit Pricing Engine
+  and product teams to monitor market levels, detect changes, and set rates/offers
+  by segment and region
+schema:
+- name: Market Research Data
+  physicalName: market_research_data
+  physicalType: table
+  description: Normalized feed of competitor deposit product rates and offer terms
+    (savings/current/term deposits) plus key benchmarks (policy/overnight). Used by
+    the Deposit Pricing Engine and product teams to monitor market levels, detect
+    changes, and set rates/offers by segment and region
+  properties:
+  - name: study_id
+    physicalName: study_id
+    logicalName: Study ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a market research study or syndicated report
+      covering competitor deposit rates and product terms.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: provider
+    physicalName: provider
+    logicalName: Provider
+    logicalType: varchar
+    physicalType: varchar
+    description: Name of the external research firm or data provider that conducted
+      or supplied the market research study.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: topic
+    physicalName: topic
+    logicalName: Topic
+    logicalType: varchar
+    physicalType: varchar
+    description: Subject or thematic focus of the research study, such as deposit
+      pricing, customer satisfaction, or product awareness.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: date
+    physicalName: date
+    logicalName: Date
+    logicalType: date
+    physicalType: date
+    description: Publication or delivery date of the market research study.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: markets
+    physicalName: markets
+    logicalName: Markets
+    logicalType: varchar
+    physicalType: varchar
+    description: Geographic markets or countries covered by the research study.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: fieldwork_start_end
+    physicalName: fieldwork_start_end
+    logicalName: Fieldwork Start End
+    logicalType: varchar
+    physicalType: varchar
+    description: Date range during which primary data collection or fieldwork was
+      conducted for the study.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: methodology
+    physicalName: methodology
+    logicalName: Methodology
+    logicalType: varchar
+    physicalType: varchar
+    description: Data collection methodology used in the study, such as telephone
+      interview, online panel, or desk research.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: sample_size
+    physicalName: sample_size
+    logicalName: Sample Size
+    logicalType: numeric
+    physicalType: numeric
+    description: Number of respondents or observations included in the research study.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: vendor
+    physicalName: vendor
+    logicalName: Vendor
+    logicalType: varchar
+    physicalType: varchar
+    description: External research vendor contracted to deliver fieldwork or data
+      collection for the study.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: segment_id
+    physicalName: segment_id
+    logicalName: Segment ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a customer segment or respondent cohort defined
+      within the research study.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: name
+    physicalName: name
+    logicalName: Name
+    logicalType: varchar
+    physicalType: varchar
+    description: Name or label of the customer segment, such as mass affluent, SME,
+      or first-time savers.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: criteria
+    physicalName: criteria
+    logicalName: Criteria
+    logicalType: varchar
+    physicalType: varchar
+    description: Defining attributes or filters used to classify respondents into
+      this market research segment.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: survey_id
+    physicalName: survey_id
+    logicalName: Survey ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for an individual survey instrument or questionnaire
+      administered within the research study.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: method
+    physicalName: method
+    logicalName: Method
+    logicalType: varchar
+    physicalType: varchar
+    description: Mode of survey administration, such as CATI (computer-assisted telephone
+      interviewing), CAWI (online), or face-to-face.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: field_date
+    physicalName: field_date
+    logicalName: Field Date
+    logicalType: date
+    physicalType: date
+    description: Date on which a particular survey wave or fieldwork batch was conducted.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: question_id
+    physicalName: question_id
+    logicalName: Question ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a specific survey question within the questionnaire.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: response_id
+    physicalName: response_id
+    logicalName: Response ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for an individual respondent's answer record for
+      a specific survey question.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: scale
+    physicalName: scale
+    logicalName: Scale
+    logicalType: varchar
+    physicalType: varchar
+    description: Measurement scale used for the survey question, such as Likert 1-5,
+      NPS 0-10, or binary yes/no.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: coded_values
+    physicalName: coded_values
+    logicalName: Coded Values
+    logicalType: numeric
+    physicalType: numeric
+    description: Numerically coded response values for a survey question, used for
+      quantitative analysis and cross-tabulation.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: weights
+    physicalName: weights
+    logicalName: Weights
+    logicalType: varchar
+    physicalType: varchar
+    description: Statistical weighting factor applied to a respondent's data to make
+      the sample representative of the target population.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: ms_id
+    physicalName: ms_id
+    logicalName: Ms ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a competitor market share or deposit rate observation
+      record in the market sizing dataset.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: geography
+    physicalName: geography
+    logicalName: Geography
+    logicalType: varchar
+    physicalType: varchar
+    description: Geographic market or region to which a competitor rate or market
+      share observation applies.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: product
+    physicalName: product
+    logicalName: Product
+    logicalType: varchar
+    physicalType: varchar
+    description: Deposit product type for which a competitor rate or feature is being
+      tracked (e.g. savings account, term deposit, current account).
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: value
+    physicalName: value
+    logicalName: Value
+    logicalType: numeric
+    physicalType: numeric
+    description: Numeric rate, market share, or metric value for the competitor product
+      observed in this market research record.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: period
+    physicalName: period
+    logicalName: Period
+    logicalType: varchar
+    physicalType: varchar
+    description: Reporting period (e.g. month, quarter) to which the competitor rate
+      or market share observation relates.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: provenance_source_reference
+    physicalName: provenance_source_reference
+    logicalName: Provenance Source Reference
+    logicalType: varchar
+    physicalType: varchar
+    description: Reference or citation for the original source from which competitor
+      rate or market data was collected.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: last_collected_timestamp
+    physicalName: last_collected_timestamp
+    logicalName: Last Collected Timestamp
+    logicalType: timestamp
+    physicalType: timestamp
+    description: Timestamp at which the competitor rate or market data was most recently
+      collected or refreshed.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: competitor_id
+    physicalName: competitor_id
+    logicalName: Competitor ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a competing financial institution tracked in
+      the market research dataset.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: metric
+    physicalName: metric
+    logicalName: Metric
+    logicalType: varchar
+    physicalType: varchar
+    description: Name of the brand or perception metric being measured for the competitor
+      (e.g. awareness, NPS, consideration, preference).
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: awareness
+    physicalName: awareness
+    logicalName: Awareness
+    logicalType: varchar
+    physicalType: varchar
+    description: Unaided or aided brand awareness score indicating the proportion
+      of respondents familiar with the competitor.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: consideration
+    physicalName: consideration
+    logicalName: Consideration
+    logicalType: numeric
+    physicalType: numeric
+    description: Proportion of respondents actively considering the competitor when
+      selecting a deposit or financial product.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: preference
+    physicalName: preference
+    logicalName: Preference
+    logicalType: varchar
+    physicalType: varchar
+    description: Proportion of respondents preferring the competitor's product or
+      brand over alternatives.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: nps
+    physicalName: nps
+    logicalName: Nps
+    logicalType: varchar
+    physicalType: varchar
+    description: Net Promoter Score for the competitor, measuring customer loyalty
+      and likelihood to recommend.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: purchase_intent
+    physicalName: purchase_intent
+    logicalName: Purchase Intent
+    logicalType: varchar
+    physicalType: varchar
+    description: Proportion of respondents expressing intent to purchase or apply
+      for a product from the competitor.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  foreignKeys: []
+  transform:
+    grouping_keys:
+    - study_id
+    scd_policy:
+      type: snapshot
+customProperties:
+  feasibility:
+    schema_version: '1.0'
+    spec_classification: internal
+    cadence: ''
+    freshness_history: snapshot
+    freshness_description: ''
+    grain_keys:
+    - study_id
+    grain_description: ''
+    allowed_derivations:
+    - rename
+    - cast
+    composition:
+      join_keys: []
+      composed_of: []
+      description: ''
+productKind: source
+sourceSpecId: src_market_research_data

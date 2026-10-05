@@ -1,0 +1,1474 @@
+manifest_version: '1'
+kind: estate
+platform: postgres
+catalog: products_sales
+generated_at: '2026-08-27T18:56:27.681681+00:00'
+tool_version: '1'
+extraction:
+  metadata: true
+  volumetrics: true
+  profiling: true
+  values_included: true
+  code_assets: false
+  redaction:
+    pii_redacted: 1
+    cardinality_capped: 15
+relations:
+- schema: products_sales
+  table: category
+  relation_kind: table
+  row_count_is_estimate: false
+  size_bytes: 32768
+  comment: 'Hierarchical product taxonomy. Demo: self-FK joins, hierarchical roll-up.'
+  columns:
+  - name: id
+    data_type: integer
+    nullable: false
+    ordinal: 1
+    primary_key: true
+    profile:
+      null_count: 0
+      null_rate: 0.0
+      distinct_count: 20
+      min: 1.0
+      max: 20.0
+      mean: 10.5
+      top_values:
+      - value: '19'
+        count: 1
+        frequency: 0.05
+      - value: '10'
+        count: 1
+        frequency: 0.05
+      - value: '13'
+        count: 1
+        frequency: 0.05
+      - value: '2'
+        count: 1
+        frequency: 0.05
+      - value: '18'
+        count: 1
+        frequency: 0.05
+      - value: '3'
+        count: 1
+        frequency: 0.05
+      - value: '12'
+        count: 1
+        frequency: 0.05
+      - value: '5'
+        count: 1
+        frequency: 0.05
+      - value: '8'
+        count: 1
+        frequency: 0.05
+      - value: '4'
+        count: 1
+        frequency: 0.05
+      redacted: false
+  - name: parent_id
+    data_type: integer
+    nullable: true
+    ordinal: 2
+    comment: Null for top-level categories. Self-FK to category.id.
+    profile:
+      null_count: 4
+      null_rate: 0.2
+      distinct_count: 7
+      min: 1.0
+      max: 17.0
+      mean: 7.8125
+      top_values:
+      - value: '2'
+        count: 3
+        frequency: 0.15
+      - value: '1'
+        count: 3
+        frequency: 0.15
+      - value: '10'
+        count: 2
+        frequency: 0.1
+      - value: '11'
+        count: 2
+        frequency: 0.1
+      - value: '14'
+        count: 2
+        frequency: 0.1
+      - value: '6'
+        count: 2
+        frequency: 0.1
+      - value: '17'
+        count: 2
+        frequency: 0.1
+      redacted: false
+  - name: name
+    data_type: text
+    nullable: false
+    ordinal: 3
+    profile:
+      null_count: 0
+      null_rate: 0.0
+      distinct_count: 20
+      min_length: 4
+      max_length: 11
+      avg_length: 6.9
+      top_values:
+      - value: Furniture
+        count: 1
+        frequency: 0.05
+      - value: Audio
+        count: 1
+        frequency: 0.05
+      - value: Speakers
+        count: 1
+        frequency: 0.05
+      - value: Shirts
+        count: 1
+        frequency: 0.05
+      - value: Tops
+        count: 1
+        frequency: 0.05
+      - value: Kitchen
+        count: 1
+        frequency: 0.05
+      - value: Electronics
+        count: 1
+        frequency: 0.05
+      - value: Desktops
+        count: 1
+        frequency: 0.05
+      - value: Tablets
+        count: 1
+        frequency: 0.05
+      - value: Computers
+        count: 1
+        frequency: 0.05
+      redacted: false
+  - name: depth
+    data_type: smallint
+    nullable: false
+    ordinal: 4
+    comment: Depth in the hierarchy (0 = top-level).
+    profile:
+      null_count: 0
+      null_rate: 0.0
+      distinct_count: 3
+      min: 0.0
+      max: 2.0
+      mean: 1.25
+      top_values:
+      - value: '2'
+        count: 9
+        frequency: 0.45
+      - value: '1'
+        count: 7
+        frequency: 0.35
+      - value: '0'
+        count: 4
+        frequency: 0.2
+      redacted: false
+  - name: is_active
+    data_type: boolean
+    nullable: false
+    ordinal: 5
+    profile:
+      null_count: 0
+      null_rate: 0.0
+      distinct_count: 1
+      top_values:
+      - value: 'true'
+        count: 20
+        frequency: 1.0
+      redacted: false
+  foreign_keys:
+  - from_column: parent_id
+    to_schema: products_sales
+    to_table: category
+    to_column: id
+- schema: products_sales
+  table: customer
+  relation_kind: table
+  row_count: 30
+  row_count_is_estimate: true
+  size_bytes: 49152
+  comment: 'Customer dimension. PII: email, first_name, last_name. Demo: mask, hash,
+    bucket.'
+  columns:
+  - name: id
+    data_type: integer
+    nullable: false
+    ordinal: 1
+    primary_key: true
+    profile:
+      null_count: 0
+      null_rate: 0.0
+      distinct_count: 30
+      min: 1.0
+      max: 30.0
+      mean: 15.5
+      redacted: false
+  - name: email
+    data_type: character varying
+    nullable: false
+    ordinal: 2
+    profile:
+      null_count: 0
+      null_rate: 0.0
+      distinct_count: 30
+      min_length: 20
+      max_length: 26
+      avg_length: 23.466666666666665
+      min: null
+      max: null
+      redacted: true
+      redaction_reason: pii
+  - name: first_name
+    data_type: character varying
+    nullable: false
+    ordinal: 3
+    profile:
+      null_count: 0
+      null_rate: 0.0
+      distinct_count: 30
+      min_length: 3
+      max_length: 8
+      avg_length: 4.9
+      top_values:
+      - value: Junko
+        count: 1
+        frequency: 0.033333
+      - value: Victor
+        count: 1
+        frequency: 0.033333
+      - value: Amy
+        count: 1
+        frequency: 0.033333
+      - value: Oscar
+        count: 1
+        frequency: 0.033333
+      - value: Mark
+        count: 1
+        frequency: 0.033333
+      - value: Yasmin
+        count: 1
+        frequency: 0.033333
+      - value: Tom
+        count: 1
+        frequency: 0.033333
+      - value: Alice
+        count: 1
+        frequency: 0.033333
+      - value: Helene
+        count: 1
+        frequency: 0.033333
+      - value: David
+        count: 1
+        frequency: 0.033333
+      redacted: false
+  - name: last_name
+    data_type: character varying
+    nullable: false
+    ordinal: 4
+    profile:
+      null_count: 0
+      null_rate: 0.0
+      distinct_count: 29
+      min_length: 2
+      max_length: 9
+      avg_length: 5.566666666666666
+      top_values:
+      - value: Account
+        count: 2
+        frequency: 0.066667
+      - value: Bennett
+        count: 1
+        frequency: 0.033333
+      - value: Albright
+        count: 1
+        frequency: 0.033333
+      - value: Collins
+        count: 1
+        frequency: 0.033333
+      - value: Gruber
+        count: 1
+        frequency: 0.033333
+      - value: Taylor
+        count: 1
+        frequency: 0.033333
+      - value: Silva
+        count: 1
+        frequency: 0.033333
+      - value: Icard
+        count: 1
+        frequency: 0.033333
+      - value: Henri
+        count: 1
+        frequency: 0.033333
+      - value: Briggs
+        count: 1
+        frequency: 0.033333
+      redacted: false
+  - name: signup_date
+    data_type: date
+    nullable: false
+    ordinal: 5
+    profile:
+      null_count: 0
+      null_rate: 0.0
+      distinct_count: 30
+      min: '2020-01-05'
+      max: '2024-04-22'
+      redacted: false
+  - name: status
+    data_type: character varying
+    nullable: false
+    ordinal: 6
+    profile:
+      null_count: 0
+      null_rate: 0.0
+      distinct_count: 3
+      min_length: 6
+      max_length: 8
+      avg_length: 6.133333333333333
+      top_values:
+      - value: active
+        count: 27
+        frequency: 0.9
+      - value: inactive
+        count: 2
+        frequency: 0.066667
+      - value: banned
+        count: 1
+        frequency: 0.033333
+      redacted: false
+  - name: country_code
+    data_type: character
+    nullable: false
+    ordinal: 7
+    comment: ISO 3166-1 alpha-2.
+    profile:
+      null_count: 0
+      null_rate: 0.0
+      distinct_count: 11
+      min_length: 2
+      max_length: 2
+      avg_length: 2.0
+      top_values:
+      - value: US
+        count: 10
+        frequency: 0.333333
+      - value: GB
+        count: 4
+        frequency: 0.133333
+      - value: CA
+        count: 3
+        frequency: 0.1
+      - value: FR
+        count: 3
+        frequency: 0.1
+      - value: DE
+        count: 2
+        frequency: 0.066667
+      - value: JP
+        count: 2
+        frequency: 0.066667
+      - value: AU
+        count: 2
+        frequency: 0.066667
+      - value: ES
+        count: 1
+        frequency: 0.033333
+      - value: MX
+        count: 1
+        frequency: 0.033333
+      - value: IN
+        count: 1
+        frequency: 0.033333
+      redacted: false
+  - name: postal_code
+    data_type: character varying
+    nullable: true
+    ordinal: 8
+    profile:
+      null_count: 0
+      null_rate: 0.0
+      distinct_count: 30
+      min_length: 4
+      max_length: 9
+      avg_length: 5.766666666666667
+      top_values:
+      - value: '06600'
+        count: 1
+        frequency: 0.033333
+      - value: M5V 3A8
+        count: 1
+        frequency: 0.033333
+      - value: 100-0001
+        count: 1
+        frequency: 0.033333
+      - value: '69001'
+        count: 1
+        frequency: 0.033333
+      - value: 02108
+        count: 1
+        frequency: 0.033333
+      - value: EC1A 1BB
+        count: 1
+        frequency: 0.033333
+      - value: '00000'
+        count: 1
+        frequency: 0.033333
+      - value: H2Y 1C6
+        count: 1
+        frequency: 0.033333
+      - value: SW1A 1AA
+        count: 1
+        frequency: 0.033333
+      - value: B1 1AA
+        count: 1
+        frequency: 0.033333
+      redacted: false
+  - name: lifetime_value_usd
+    data_type: numeric
+    nullable: false
+    ordinal: 9
+    comment: 'Materialised aggregate of order_header.total_amount over time. Demo:
+      bucket bands.'
+    profile:
+      null_count: 0
+      null_rate: 0.0
+      distinct_count: 30
+      min: 1253.0
+      max: 23684.25
+      mean: 10752.603333333333
+      redacted: false
+  - name: date_of_birth
+    data_type: date
+    nullable: true
+    ordinal: 10
+    profile:
+      null_count: 1
+      null_rate: 0.033333
+      distinct_count: 29
+      min: '1970-01-01'
+      max: '1997-02-19'
+      redacted: false
+  - name: gender
+    data_type: character varying
+    nullable: true
+    ordinal: 11
+    profile:
+      null_count: 1
+      null_rate: 0.033333
+      distinct_count: 2
+      min_length: 4
+      max_length: 6
+      avg_length: 4.9655172413793105
+      top_values:
+      - value: male
+        count: 15
+        frequency: 0.5
+      - value: female
+        count: 14
+        frequency: 0.466667
+      redacted: false
+- schema: products_sales
+  table: customer_segment_assignment
+  relation_kind: table
+  row_count: 61
+  row_count_is_estimate: true
+  size_bytes: 57344
+  comment: SCD-2 segment history. effective_to=NULL marks the current segment per
+    customer.
+  columns:
+  - name: id
+    data_type: bigint
+    nullable: false
+    ordinal: 1
+    primary_key: true
+    profile:
+      null_count: 0
+      null_rate: 0.0
+      distinct_count: 61
+      min: null
+      max: null
+      mean: 31.0
+      redacted: true
+      redaction_reason: cardinality_capped
+  - name: customer_id
+    data_type: integer
+    nullable: false
+    ordinal: 2
+    profile:
+      null_count: 0
+      null_rate: 0.0
+      distinct_count: 30
+      min: 1.0
+      max: 30.0
+      mean: 12.459016393442623
+      redacted: false
+  - name: segment_code
+    data_type: character varying
+    nullable: false
+    ordinal: 3
+    profile:
+      null_count: 0
+      null_rate: 0.0
+      distinct_count: 5
+      min_length: 3
+      max_length: 7
+      avg_length: 4.639344262295082
+      top_values:
+      - value: new
+        count: 30
+        frequency: 0.491803
+      - value: growing
+        count: 20
+        frequency: 0.327869
+      - value: vip
+        count: 6
+        frequency: 0.098361
+      - value: dormant
+        count: 4
+        frequency: 0.065574
+      - value: churned
+        count: 1
+        frequency: 0.016393
+      redacted: false
+  - name: effective_from
+    data_type: date
+    nullable: false
+    ordinal: 4
+    profile:
+      null_count: 0
+      null_rate: 0.0
+      distinct_count: 58
+      min: null
+      max: null
+      redacted: true
+      redaction_reason: cardinality_capped
+  - name: effective_to
+    data_type: date
+    nullable: true
+    ordinal: 5
+    profile:
+      null_count: 30
+      null_rate: 0.491803
+      distinct_count: 31
+      min: '2020-08-14'
+      max: '2023-09-10'
+      redacted: false
+  foreign_keys:
+  - from_column: customer_id
+    to_schema: products_sales
+    to_table: customer
+    to_column: id
+- schema: products_sales
+  table: order_header
+  relation_kind: table
+  row_count: 150
+  row_count_is_estimate: true
+  size_bytes: 114688
+  comment: Order fact. status is the latest status (see order_status_history for full
+    timeline).
+  columns:
+  - name: id
+    data_type: integer
+    nullable: false
+    ordinal: 1
+    primary_key: true
+    profile:
+      null_count: 0
+      null_rate: 0.0
+      distinct_count: 150
+      min: null
+      max: null
+      mean: 75.5
+      redacted: true
+      redaction_reason: cardinality_capped
+  - name: customer_id
+    data_type: integer
+    nullable: false
+    ordinal: 2
+    profile:
+      null_count: 0
+      null_rate: 0.0
+      distinct_count: 30
+      min: 1.0
+      max: 30.0
+      mean: 15.5
+      redacted: false
+  - name: order_date
+    data_type: date
+    nullable: false
+    ordinal: 3
+    profile:
+      null_count: 0
+      null_rate: 0.0
+      distinct_count: 150
+      min: null
+      max: null
+      redacted: true
+      redaction_reason: cardinality_capped
+  - name: status
+    data_type: character varying
+    nullable: false
+    ordinal: 4
+    profile:
+      null_count: 0
+      null_rate: 0.0
+      distinct_count: 6
+      min_length: 7
+      max_length: 10
+      avg_length: 8.833333333333334
+      top_values:
+      - value: delivered
+        count: 108
+        frequency: 0.72
+      - value: processing
+        count: 12
+        frequency: 0.08
+      - value: shipped
+        count: 11
+        frequency: 0.073333
+      - value: cancelled
+        count: 8
+        frequency: 0.053333
+      - value: returned
+        count: 7
+        frequency: 0.046667
+      - value: pending
+        count: 4
+        frequency: 0.026667
+      redacted: false
+  - name: total_amount
+    data_type: numeric
+    nullable: false
+    ordinal: 5
+    profile:
+      null_count: 0
+      null_rate: 0.0
+      distinct_count: 140
+      min: null
+      max: null
+      mean: 2803.507666666667
+      redacted: true
+      redaction_reason: cardinality_capped
+  - name: payment_method
+    data_type: character varying
+    nullable: true
+    ordinal: 6
+    profile:
+      null_count: 0
+      null_rate: 0.0
+      distinct_count: 5
+      min_length: 4
+      max_length: 16
+      avg_length: 5.9
+      top_values:
+      - value: card
+        count: 90
+        frequency: 0.6
+      - value: cash_on_delivery
+        count: 15
+        frequency: 0.1
+      - value: wire
+        count: 15
+        frequency: 0.1
+      - value: paypal
+        count: 15
+        frequency: 0.1
+      - value: gift_card
+        count: 15
+        frequency: 0.1
+      redacted: false
+  - name: shipping_country_code
+    data_type: character
+    nullable: true
+    ordinal: 7
+    profile:
+      null_count: 0
+      null_rate: 0.0
+      distinct_count: 11
+      min_length: 2
+      max_length: 2
+      avg_length: 2.0
+      top_values:
+      - value: US
+        count: 50
+        frequency: 0.333333
+      - value: GB
+        count: 20
+        frequency: 0.133333
+      - value: FR
+        count: 15
+        frequency: 0.1
+      - value: CA
+        count: 15
+        frequency: 0.1
+      - value: AU
+        count: 10
+        frequency: 0.066667
+      - value: JP
+        count: 10
+        frequency: 0.066667
+      - value: DE
+        count: 10
+        frequency: 0.066667
+      - value: MX
+        count: 5
+        frequency: 0.033333
+      - value: BR
+        count: 5
+        frequency: 0.033333
+      - value: ES
+        count: 5
+        frequency: 0.033333
+      redacted: false
+  - name: channel
+    data_type: character varying
+    nullable: false
+    ordinal: 8
+    profile:
+      null_count: 0
+      null_rate: 0.0
+      distinct_count: 4
+      min_length: 3
+      max_length: 7
+      avg_length: 4.7
+      top_values:
+      - value: web
+        count: 60
+        frequency: 0.4
+      - value: mobile
+        count: 45
+        frequency: 0.3
+      - value: store
+        count: 30
+        frequency: 0.2
+      - value: partner
+        count: 15
+        frequency: 0.1
+      redacted: false
+  foreign_keys:
+  - from_column: customer_id
+    to_schema: products_sales
+    to_table: customer
+    to_column: id
+- schema: products_sales
+  table: order_item
+  relation_kind: table
+  row_count: 375
+  row_count_is_estimate: true
+  size_bytes: 163840
+  comment: Order line. line_total = quantity * unit_price * (1 - discount_pct/100).
+  columns:
+  - name: id
+    data_type: bigint
+    nullable: false
+    ordinal: 1
+    primary_key: true
+    profile:
+      null_count: 0
+      null_rate: 0.0
+      distinct_count: 375
+      min: null
+      max: null
+      mean: 188.0
+      redacted: true
+      redaction_reason: cardinality_capped
+  - name: order_id
+    data_type: integer
+    nullable: false
+    ordinal: 2
+    profile:
+      null_count: 0
+      null_rate: 0.0
+      distinct_count: 150
+      min: null
+      max: null
+      mean: 75.40266666666666
+      redacted: true
+      redaction_reason: cardinality_capped
+  - name: product_id
+    data_type: integer
+    nullable: false
+    ordinal: 3
+    profile:
+      null_count: 0
+      null_rate: 0.0
+      distinct_count: 50
+      min: 1.0
+      max: 50.0
+      mean: 25.728
+      redacted: false
+  - name: quantity
+    data_type: integer
+    nullable: false
+    ordinal: 4
+    profile:
+      null_count: 0
+      null_rate: 0.0
+      distinct_count: 4
+      min: 1.0
+      max: 4.0
+      mean: 2.602666666666667
+      top_values:
+      - value: '4'
+        count: 113
+        frequency: 0.301333
+      - value: '2'
+        count: 112
+        frequency: 0.298667
+      - value: '1'
+        count: 75
+        frequency: 0.2
+      - value: '3'
+        count: 75
+        frequency: 0.2
+      redacted: false
+  - name: unit_price
+    data_type: numeric
+    nullable: false
+    ordinal: 5
+    profile:
+      null_count: 0
+      null_rate: 0.0
+      distinct_count: 30
+      min: 29.0
+      max: 2499.0
+      mean: 457.9866666666667
+      redacted: false
+  - name: discount_pct
+    data_type: numeric
+    nullable: false
+    ordinal: 6
+    profile:
+      null_count: 0
+      null_rate: 0.0
+      distinct_count: 5
+      min: 0.0
+      max: 20.0
+      mean: 5.226666666666667
+      top_values:
+      - value: '0.00'
+        count: 208
+        frequency: 0.554667
+      - value: '5.00'
+        count: 55
+        frequency: 0.146667
+      - value: '20.00'
+        count: 38
+        frequency: 0.101333
+      - value: '10.00'
+        count: 37
+        frequency: 0.098667
+      - value: '15.00'
+        count: 37
+        frequency: 0.098667
+      redacted: false
+  - name: line_total
+    data_type: numeric
+    nullable: false
+    ordinal: 7
+    profile:
+      null_count: 0
+      null_rate: 0.0
+      distinct_count: 127
+      min: null
+      max: null
+      mean: 1121.4030666666667
+      redacted: true
+      redaction_reason: cardinality_capped
+  foreign_keys:
+  - from_column: order_id
+    to_schema: products_sales
+    to_table: order_header
+    to_column: id
+  - from_column: product_id
+    to_schema: products_sales
+    to_table: product
+    to_column: id
+- schema: products_sales
+  table: order_status_history
+  relation_kind: table
+  row_count: 552
+  row_count_is_estimate: true
+  size_bytes: 204800
+  comment: Status timeline per order. Bridges order_header to itself; latest row per
+    order_id is the current status.
+  columns:
+  - name: id
+    data_type: bigint
+    nullable: false
+    ordinal: 1
+    primary_key: true
+    profile:
+      null_count: 0
+      null_rate: 0.0
+      distinct_count: 552
+      min: null
+      max: null
+      mean: 276.5
+      redacted: true
+      redaction_reason: cardinality_capped
+  - name: order_id
+    data_type: integer
+    nullable: false
+    ordinal: 2
+    profile:
+      null_count: 0
+      null_rate: 0.0
+      distinct_count: 150
+      min: null
+      max: null
+      mean: 75.6231884057971
+      redacted: true
+      redaction_reason: cardinality_capped
+  - name: status
+    data_type: character varying
+    nullable: false
+    ordinal: 3
+    profile:
+      null_count: 0
+      null_rate: 0.0
+      distinct_count: 6
+      min_length: 7
+      max_length: 10
+      avg_length: 8.251811594202898
+      top_values:
+      - value: pending
+        count: 150
+        frequency: 0.271739
+      - value: processing
+        count: 146
+        frequency: 0.264493
+      - value: shipped
+        count: 126
+        frequency: 0.228261
+      - value: delivered
+        count: 115
+        frequency: 0.208333
+      - value: cancelled
+        count: 8
+        frequency: 0.014493
+      - value: returned
+        count: 7
+        frequency: 0.012681
+      redacted: false
+  - name: status_changed_at
+    data_type: timestamp without time zone
+    nullable: false
+    ordinal: 4
+    profile:
+      null_count: 0
+      null_rate: 0.0
+      distinct_count: 435
+      min: null
+      max: null
+      redacted: true
+      redaction_reason: cardinality_capped
+  - name: actor
+    data_type: character varying
+    nullable: true
+    ordinal: 5
+    profile:
+      null_count: 0
+      null_rate: 0.0
+      distinct_count: 4
+      min_length: 6
+      max_length: 11
+      avg_length: 8.69927536231884
+      top_values:
+      - value: fulfillment
+        count: 272
+        frequency: 0.492754
+      - value: system
+        count: 150
+        frequency: 0.271739
+      - value: carrier
+        count: 115
+        frequency: 0.208333
+      - value: support
+        count: 15
+        frequency: 0.027174
+      redacted: false
+  - name: note
+    data_type: text
+    nullable: true
+    ordinal: 6
+    profile:
+      null_count: 0
+      null_rate: 0.0
+      distinct_count: 6
+      min_length: 12
+      max_length: 31
+      avg_length: 19.40036231884058
+      top_values:
+      - value: Order placed
+        count: 150
+        frequency: 0.271739
+      - value: Payment cleared, picking
+        count: 146
+        frequency: 0.264493
+      - value: Handed to carrier
+        count: 126
+        frequency: 0.228261
+      - value: Signed for at destination
+        count: 115
+        frequency: 0.208333
+      - value: Customer requested cancellation
+        count: 8
+        frequency: 0.014493
+      - value: Return RMA processed
+        count: 7
+        frequency: 0.012681
+      redacted: false
+  foreign_keys:
+  - from_column: order_id
+    to_schema: products_sales
+    to_table: order_header
+    to_column: id
+- schema: products_sales
+  table: product
+  relation_kind: table
+  row_count_is_estimate: false
+  size_bytes: 65536
+  comment: 'Product master dimension. Demo: lookup-equi to category, arithmetic margin
+    = list_price-cost.'
+  columns:
+  - name: id
+    data_type: integer
+    nullable: false
+    ordinal: 1
+    primary_key: true
+    profile:
+      null_count: 0
+      null_rate: 0.0
+      distinct_count: 50
+      min: 1.0
+      max: 50.0
+      mean: 25.5
+      redacted: false
+  - name: sku
+    data_type: character varying
+    nullable: false
+    ordinal: 2
+    comment: 'Stock-keeping unit. Format: <3-letter category code>-<3-digit sequence>.'
+    profile:
+      null_count: 0
+      null_rate: 0.0
+      distinct_count: 50
+      min_length: 7
+      max_length: 7
+      avg_length: 7.0
+      top_values:
+      - value: AUD-004
+        count: 1
+        frequency: 0.02
+      - value: WTP-002
+        count: 1
+        frequency: 0.02
+      - value: LPT-002
+        count: 1
+        frequency: 0.02
+      - value: BOK-004
+        count: 1
+        frequency: 0.02
+      - value: WRB-003
+        count: 1
+        frequency: 0.02
+      - value: WDR-003
+        count: 1
+        frequency: 0.02
+      - value: WDR-002
+        count: 1
+        frequency: 0.02
+      - value: DSK-001
+        count: 1
+        frequency: 0.02
+      - value: FRN-002
+        count: 1
+        frequency: 0.02
+      - value: MPT-001
+        count: 1
+        frequency: 0.02
+      redacted: false
+  - name: name
+    data_type: text
+    nullable: false
+    ordinal: 3
+    profile:
+      null_count: 0
+      null_rate: 0.0
+      distinct_count: 50
+      min_length: 10
+      max_length: 26
+      avg_length: 17.6
+      top_values:
+      - value: Pulse Smartwatch 3
+        count: 1
+        frequency: 0.02
+      - value: Pulse Smartwatch 4
+        count: 1
+        frequency: 0.02
+      - value: Data Engineering Handbook
+        count: 1
+        frequency: 0.02
+      - value: Tower Workstation X1
+        count: 1
+        frequency: 0.02
+      - value: Chef Knife 8in
+        count: 1
+        frequency: 0.02
+      - value: Classic Oxford Shirt
+        count: 1
+        frequency: 0.02
+      - value: Solid Oak Dining Table
+        count: 1
+        frequency: 0.02
+      - value: Slim Fit Jeans
+        count: 1
+        frequency: 0.02
+      - value: Bookshelf 5-Tier
+        count: 1
+        frequency: 0.02
+      - value: Evening Gown
+        count: 1
+        frequency: 0.02
+      redacted: false
+  - name: category_id
+    data_type: integer
+    nullable: false
+    ordinal: 4
+    profile:
+      null_count: 0
+      null_rate: 0.0
+      distinct_count: 13
+      min: 3.0
+      max: 20.0
+      mean: 12.08
+      top_values:
+      - value: '18'
+        count: 6
+        frequency: 0.12
+      - value: '7'
+        count: 5
+        frequency: 0.1
+      - value: '12'
+        count: 5
+        frequency: 0.1
+      - value: '3'
+        count: 5
+        frequency: 0.1
+      - value: '20'
+        count: 5
+        frequency: 0.1
+      - value: '9'
+        count: 4
+        frequency: 0.08
+      - value: '19'
+        count: 4
+        frequency: 0.08
+      - value: '8'
+        count: 3
+        frequency: 0.06
+      - value: '15'
+        count: 3
+        frequency: 0.06
+      - value: '13'
+        count: 3
+        frequency: 0.06
+      redacted: false
+  - name: brand
+    data_type: text
+    nullable: true
+    ordinal: 5
+    profile:
+      null_count: 0
+      null_rate: 0.0
+      distinct_count: 14
+      min_length: 4
+      max_length: 8
+      avg_length: 5.52
+      top_values:
+      - value: Atelier
+        count: 6
+        frequency: 0.12
+      - value: Hearth
+        count: 6
+        frequency: 0.12
+      - value: Echo
+        count: 5
+        frequency: 0.1
+      - value: Aero
+        count: 5
+        frequency: 0.1
+      - value: Press
+        count: 5
+        frequency: 0.1
+      - value: Tailor
+        count: 5
+        frequency: 0.1
+      - value: Acme
+        count: 4
+        frequency: 0.08
+      - value: Pulse
+        count: 4
+        frequency: 0.08
+      - value: Heritage
+        count: 3
+        frequency: 0.06
+      - value: Forge
+        count: 2
+        frequency: 0.04
+      redacted: false
+  - name: list_price
+    data_type: numeric
+    nullable: false
+    ordinal: 6
+    profile:
+      null_count: 0
+      null_rate: 0.0
+      distinct_count: 30
+      min: 29.0
+      max: 2499.0
+      mean: 457.3
+      redacted: false
+  - name: cost
+    data_type: numeric
+    nullable: true
+    ordinal: 7
+    profile:
+      null_count: 0
+      null_rate: 0.0
+      distinct_count: 40
+      min: 11.0
+      max: 1620.0
+      mean: 248.94
+      redacted: false
+  - name: weight_kg
+    data_type: numeric
+    nullable: true
+    ordinal: 8
+    profile:
+      null_count: 0
+      null_rate: 0.0
+      distinct_count: 37
+      min: 0.03
+      max: 58.0
+      mean: 4.3257
+      redacted: false
+  - name: color
+    data_type: character varying
+    nullable: true
+    ordinal: 9
+    profile:
+      null_count: 7
+      null_rate: 0.14
+      distinct_count: 18
+      min_length: 3
+      max_length: 10
+      avg_length: 5.3023255813953485
+      top_values:
+      - value: Black
+        count: 13
+        frequency: 0.26
+      - value: Silver
+        count: 4
+        frequency: 0.08
+      - value: Red
+        count: 3
+        frequency: 0.06
+      - value: White
+        count: 3
+        frequency: 0.06
+      - value: Gray
+        count: 2
+        frequency: 0.04
+      - value: Beige
+        count: 2
+        frequency: 0.04
+      - value: Navy
+        count: 2
+        frequency: 0.04
+      - value: Walnut
+        count: 2
+        frequency: 0.04
+      - value: Stainless
+        count: 2
+        frequency: 0.04
+      - value: Space Gray
+        count: 2
+        frequency: 0.04
+      redacted: false
+  - name: size_code
+    data_type: character varying
+    nullable: true
+    ordinal: 10
+    profile:
+      null_count: 26
+      null_rate: 0.52
+      distinct_count: 11
+      min_length: 1
+      max_length: 4
+      avg_length: 2.3333333333333335
+      top_values:
+      - value: M
+        count: 8
+        frequency: 0.16
+      - value: 42mm
+        count: 3
+        frequency: 0.06
+      - value: L
+        count: 2
+        frequency: 0.04
+      - value: '32'
+        count: 2
+        frequency: 0.04
+      - value: 13in
+        count: 2
+        frequency: 0.04
+      - value: S
+        count: 2
+        frequency: 0.04
+      - value: 11in
+        count: 1
+        frequency: 0.02
+      - value: 17in
+        count: 1
+        frequency: 0.02
+      - value: 12in
+        count: 1
+        frequency: 0.02
+      - value: 15in
+        count: 1
+        frequency: 0.02
+      redacted: false
+  - name: active_flag
+    data_type: boolean
+    nullable: false
+    ordinal: 11
+    profile:
+      null_count: 0
+      null_rate: 0.0
+      distinct_count: 2
+      top_values:
+      - value: 'true'
+        count: 46
+        frequency: 0.92
+      - value: 'false'
+        count: 4
+        frequency: 0.08
+      redacted: false
+  - name: launched_at
+    data_type: date
+    nullable: false
+    ordinal: 12
+    profile:
+      null_count: 0
+      null_rate: 0.0
+      distinct_count: 50
+      min: '2018-11-15'
+      max: '2024-01-10'
+      redacted: false
+  foreign_keys:
+  - from_column: category_id
+    to_schema: products_sales
+    to_table: category
+    to_column: id
+- schema: products_sales
+  table: product_price_history
+  relation_kind: table
+  row_count: 135
+  row_count_is_estimate: true
+  size_bytes: 73728
+  comment: SCD-2 price history. is_current=true marks the active row per product.
+  columns:
+  - name: id
+    data_type: bigint
+    nullable: false
+    ordinal: 1
+    primary_key: true
+    profile:
+      null_count: 0
+      null_rate: 0.0
+      distinct_count: 135
+      min: null
+      max: null
+      mean: 68.0
+      redacted: true
+      redaction_reason: cardinality_capped
+  - name: product_id
+    data_type: integer
+    nullable: false
+    ordinal: 2
+    profile:
+      null_count: 0
+      null_rate: 0.0
+      distinct_count: 50
+      min: 1.0
+      max: 50.0
+      mean: 25.62962962962963
+      redacted: false
+  - name: price
+    data_type: numeric
+    nullable: false
+    ordinal: 3
+    profile:
+      null_count: 0
+      null_rate: 0.0
+      distinct_count: 89
+      min: null
+      max: null
+      mean: 402.5577777777778
+      redacted: true
+      redaction_reason: cardinality_capped
+  - name: effective_date
+    data_type: date
+    nullable: false
+    ordinal: 4
+    comment: Date this price became active.
+    profile:
+      null_count: 0
+      null_rate: 0.0
+      distinct_count: 123
+      min: null
+      max: null
+      redacted: true
+      redaction_reason: cardinality_capped
+  - name: expiration_date
+    data_type: date
+    nullable: true
+    ordinal: 5
+    comment: Date this price was superseded. Null for the current row.
+    profile:
+      null_count: 50
+      null_rate: 0.37037
+      distinct_count: 82
+      min: null
+      max: null
+      redacted: true
+      redaction_reason: cardinality_capped
+  - name: is_current
+    data_type: boolean
+    nullable: false
+    ordinal: 6
+    comment: Convenience flag. Equivalent to expiration_date IS NULL.
+    profile:
+      null_count: 0
+      null_rate: 0.0
+      distinct_count: 2
+      top_values:
+      - value: 'false'
+        count: 85
+        frequency: 0.62963
+      - value: 'true'
+        count: 50
+        frequency: 0.37037
+      redacted: false
+  foreign_keys:
+  - from_column: product_id
+    to_schema: products_sales
+    to_table: product
+    to_column: id
+code_assets: []

@@ -1,0 +1,236 @@
+apiVersion: v3.1.0
+kind: DataContract
+id: template:products-sales:products-sales-customer-360
+name: Customer 360 (Products & Sales)
+version: 1.0.0
+status: draft
+domain: products_sales
+dataProduct: customer_360
+description: One row per customer, joining demographics, current segment, lifetime
+  spend rollups, and behavioural flags. Safe-for-analytics columns only (PII masked
+  or hashed).
+purpose: Power retention, segmentation, and lifetime-value modelling. Single canonical
+  customer view for marketing analytics and CRM-facing dashboards.
+limitations: Banned accounts are filtered out. Excludes carts and abandoned orders
+  (orders only count if delivered). PII columns are masked or suppressed.
+owners:
+- name: Customer Intelligence Team
+  role: Data Product Owner
+  email: customer-intel@example.com
+schema:
+- name: customer_360
+  physicalName: customer_360
+  physicalType: view
+  description: Customer-grain analytics view.
+  properties:
+  - name: customer_id
+    physicalName: customer_id
+    logicalName: Customer Identifier
+    logicalType: integer
+    physicalType: bigint
+    description: Stable customer identifier from source.
+    primaryKey: true
+    required: true
+    criticalDataElement: true
+    pii: false
+    classification: ''
+    examples: []
+    logicalTypeOptions: {}
+  - name: full_name
+    physicalName: full_name
+    logicalName: Full Name
+    logicalType: string
+    physicalType: text
+    description: Concatenated first and last name. PII — restrict to authorised audiences.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: ''
+    examples: []
+    logicalTypeOptions: {}
+  - name: email_masked
+    physicalName: email_masked
+    logicalName: Email (masked)
+    logicalType: string
+    physicalType: varchar
+    description: Format-preserving redaction of email. Last 4 alphanumerics retained,
+      rest replaced with X.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: ''
+    examples: []
+    logicalTypeOptions: {}
+  - name: signup_date
+    physicalName: signup_date
+    logicalName: Signup Date
+    logicalType: date
+    physicalType: date
+    description: Date the customer registered.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: ''
+    examples: []
+    logicalTypeOptions: {}
+  - name: country_code
+    physicalName: country_code
+    logicalName: Country (ISO)
+    logicalType: string
+    physicalType: char
+    description: ISO 3166-1 alpha-2 country code.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: ''
+    examples: []
+    logicalTypeOptions: {}
+  - name: tenure_years
+    physicalName: tenure_years
+    logicalName: Tenure (years)
+    logicalType: integer
+    physicalType: integer
+    description: Whole years since signup.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: ''
+    examples: []
+    logicalTypeOptions: {}
+  - name: current_segment
+    physicalName: current_segment
+    logicalName: Current Segment
+    logicalType: string
+    physicalType: varchar
+    description: Most-recent lifecycle segment from customer_segment_assignment (latest_only
+      SCD).
+    primaryKey: false
+    required: true
+    criticalDataElement: true
+    pii: false
+    classification: ''
+    examples: []
+    logicalTypeOptions: {}
+  - name: total_orders
+    physicalName: total_orders
+    logicalName: Total Orders
+    logicalType: integer
+    physicalType: integer
+    description: Number of delivered orders to date (aggregate lookup).
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: ''
+    examples: []
+    logicalTypeOptions: {}
+  - name: total_spend_usd
+    physicalName: total_spend_usd
+    logicalName: Total Spend (USD)
+    logicalType: number
+    physicalType: numeric
+    description: Sum of delivered-order totals (aggregate lookup).
+    primaryKey: false
+    required: true
+    criticalDataElement: true
+    pii: false
+    classification: ''
+    examples: []
+    logicalTypeOptions: {}
+  - name: clv_band
+    physicalName: clv_band
+    logicalName: Customer Value Band
+    logicalType: string
+    physicalType: varchar
+    description: 'Bucketed lifetime value: low (< 500) / mid (< 5000) / high (< 50000)
+      / vip (else).'
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: ''
+    examples: []
+    logicalTypeOptions: {}
+  - name: has_returned_order
+    physicalName: has_returned_order
+    logicalName: Has Returned Order
+    logicalType: boolean
+    physicalType: boolean
+    description: True if any order has status='returned' (lookup exists).
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: ''
+    examples: []
+    logicalTypeOptions: {}
+  - name: signup_rank_in_country
+    physicalName: signup_rank_in_country
+    logicalName: Signup Rank within Country
+    logicalType: integer
+    physicalType: integer
+    description: RANK() OVER (PARTITION BY country_code ORDER BY signup_date).
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: ''
+    examples: []
+    logicalTypeOptions: {}
+  foreignKeys: []
+quality:
+- rule: uniqueness
+  name: customer_id uniqueness
+  description: customer_id must be unique.
+  severity: error
+  dimension: uniqueness
+  businessImpact: Duplicate customer rows cause double-counting in segmentation and
+    LTV reports.
+- rule: completeness
+  name: country_code completeness
+  description: country_code must not be null.
+  severity: error
+  dimension: completeness
+  businessImpact: Missing country breaks geo-segmented analyses and tax-aware modelling.
+- rule: validity
+  name: total_spend non-negative
+  description: total_spend_usd >= 0.
+  severity: error
+  dimension: accuracy
+  businessImpact: Negative spend indicates aggregation or upstream data issues.
+- rule: validity
+  name: clv_band allowedValues
+  description: 'clv_band must be one of: low / mid / high / vip.'
+  severity: error
+  dimension: validity
+  businessImpact: Unknown bands break dashboards filtered by tier.
+- rule: completeness
+  name: full_name completeness
+  description: full_name must not be null for active customers.
+  severity: warning
+  dimension: completeness
+  businessImpact: Missing display name affects CRM personalization.
+slaProperties:
+- property: availability
+  value: '99.5'
+  unit: percent
+- property: freshness
+  value: '24'
+  unit: hours
+- property: retention
+  value: '7'
+  unit: years
+terms:
+  usage: Available to marketing, analytics, and CRM teams. Banned customers are filtered
+    out at view time.
+  limitations: PII columns are masked or suppressed; raw PII access requires DPO approval
+    and a separate operational view.
+  billing: No charge for internal consumers.
+  noticePeriod: 60 days
+productKind: consumer
+sourceSpecId: products_sales_customer_360

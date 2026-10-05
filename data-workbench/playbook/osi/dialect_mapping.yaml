@@ -1,0 +1,16 @@
+# Maps :ServingDefinition.targetPlatform values (lowercase) to OSI dialect
+# enum values. Used by the translator (workbench/backend/osi.py) to tag
+# field expressions with the right dialect when emitting OSI YAML.
+# Anything not listed falls back to ANSI_SQL.
+
+postgres: ANSI_SQL
+postgresql: ANSI_SQL
+mysql: ANSI_SQL
+oracle: ANSI_SQL
+sqlserver: ANSI_SQL
+mssql: ANSI_SQL
+snowflake: SNOWFLAKE
+databricks: DATABRICKS
+tableau: TABLEAU
+mdx: MDX
+ssas: MDX

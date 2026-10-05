@@ -1,0 +1,365 @@
+apiVersion: v3.1.0
+kind: DataContract
+id: template:credit-registry:src-external-claims-liabilities
+name: External Claims/Liabilities
+version: 1.0.0
+status: draft
+domain: Credit registry
+description: Bank-reported cross-border positions and flows by instrument, sector
+  and currency for BoP/IIP (ITRS/BPM6/BPM7 aligned). Supports capital-flow monitoring,
+  EWI indicators, and residency/sector breakdowns.
+schema:
+- name: External Claims/Liabilities
+  physicalName: external_claims_liabilities
+  physicalType: table
+  description: Bank-reported cross-border positions and flows by instrument, sector
+    and currency for BoP/IIP (ITRS/BPM6/BPM7 aligned). Supports capital-flow monitoring,
+    EWI indicators, and residency/sector breakdowns.
+  properties:
+  - name: bank_id
+    physicalName: bank_id
+    logicalName: Bank ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for the reporting bank, serving as the primary
+      key for all positions and flows submitted in this regulatory report.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: lei
+    physicalName: lei
+    logicalName: LEI
+    logicalType: varchar
+    physicalType: varchar
+    description: The Legal Entity Identifier of the reporting bank, a globally standardised
+      20-character code used in regulatory and cross-border reporting.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: reporting_period
+    physicalName: reporting_period
+    logicalName: Reporting Period
+    logicalType: varchar
+    physicalType: varchar
+    description: The calendar period (e.g. quarter or month) to which the reported
+      positions and flow data relate.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: version
+    physicalName: version
+    logicalName: Version
+    logicalType: varchar
+    physicalType: varchar
+    description: The submission version or revision number, distinguishing original
+      reports from amended or restated submissions.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: country
+    physicalName: country
+    logicalName: Country
+    logicalType: numeric
+    physicalType: numeric
+    description: The numeric country code of the counterparty's country of residence,
+      used to break down cross-border claims and liabilities by jurisdiction.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: sector
+    physicalName: sector
+    logicalName: Sector
+    logicalType: varchar
+    physicalType: varchar
+    description: The institutional sector classification of the counterparty (e.g.
+      banks, non-bank financial, non-financial corporates) per BPM6/BPM7.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: residency
+    physicalName: residency
+    logicalName: Residency
+    logicalType: varchar
+    physicalType: varchar
+    description: The residency status of the counterparty, distinguishing resident
+      from non-resident positions for BoP/IIP classification.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: loan_deposit_security_derivative
+    physicalName: loan_deposit_security_derivative
+    logicalName: Loan Deposit Security Derivative
+    logicalType: varchar
+    physicalType: varchar
+    description: The instrument category of the cross-border position, classifying
+      it as a loan, deposit, debt security, or derivative.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: original_maturity
+    physicalName: original_maturity
+    logicalName: Original Maturity
+    logicalType: varchar
+    physicalType: varchar
+    description: The maturity bucket of the instrument at origination, such as short-term
+      (under one year) or long-term.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: residual_maturity
+    physicalName: residual_maturity
+    logicalName: Residual Maturity
+    logicalType: varchar
+    physicalType: varchar
+    description: The remaining time to maturity of the instrument as at the reporting
+      date, used for liquidity and capital analysis.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: currency
+    physicalName: currency
+    logicalName: Currency
+    logicalType: varchar
+    physicalType: varchar
+    description: The ISO currency code in which the cross-border position or flow
+      is denominated.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: fx_rate_source
+    physicalName: fx_rate_source
+    logicalName: FX Rate Source
+    logicalType: numeric
+    physicalType: numeric
+    description: The reference exchange rate source or identifier used to convert
+      foreign-currency positions to the reporting currency.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: valuation_method
+    physicalName: valuation_method
+    logicalName: Valuation Method
+    logicalType: varchar
+    physicalType: varchar
+    description: The accounting basis used to value the position, such as fair_value,
+      amortised_cost, or nominal_value.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: opening_position
+    physicalName: opening_position
+    logicalName: Opening Position
+    logicalType: numeric
+    physicalType: numeric
+    description: The stock value of the cross-border claim or liability at the start
+      of the reporting period.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: transactions
+    physicalName: transactions
+    logicalName: Transactions
+    logicalType: varchar
+    physicalType: varchar
+    description: The net value of new transactions (flows) in the instrument category
+      during the reporting period.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: price_changes
+    physicalName: price_changes
+    logicalName: Price Changes
+    logicalType: numeric
+    physicalType: numeric
+    description: The valuation change attributable to market price movements during
+      the reporting period, excluding transactions.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: fx_changes
+    physicalName: fx_changes
+    logicalName: FX Changes
+    logicalType: varchar
+    physicalType: varchar
+    description: The valuation change attributable to exchange rate movements during
+      the reporting period.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: other_adjustments
+    physicalName: other_adjustments
+    logicalName: Other Adjustments
+    logicalType: varchar
+    physicalType: varchar
+    description: Miscellaneous statistical adjustments to the position not captured
+      by transactions, price changes, or FX effects.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: closing_position
+    physicalName: closing_position
+    logicalName: Closing Position
+    logicalType: numeric
+    physicalType: numeric
+    description: The stock value of the cross-border claim or liability at the end
+      of the reporting period, incorporating all flows and adjustments.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: npl_flag
+    physicalName: npl_flag
+    logicalName: NPL Flag
+    logicalType: boolean
+    physicalType: boolean
+    description: Boolean indicator marking whether the reported claim is classified
+      as a non-performing loan under applicable credit quality criteria.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: consolidation_basis
+    physicalName: consolidation_basis
+    logicalName: Consolidation Basis
+    logicalType: varchar
+    physicalType: varchar
+    description: The accounting consolidation scope of the reported data, such as
+      solo, sub-consolidated, or fully_consolidated.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: submission_status
+    physicalName: submission_status
+    logicalName: Submission Status
+    logicalType: varchar
+    physicalType: varchar
+    description: The current processing state of the regulatory submission, such as
+      pending, accepted, or queried.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: audit_trail
+    physicalName: audit_trail
+    logicalName: Audit Trail
+    logicalType: varchar
+    physicalType: varchar
+    description: A log or reference string tracking the submission, review, and amendment
+      history of the reported record.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  foreignKeys: []
+  transform:
+    grouping_keys:
+    - bank_id
+    scd_policy:
+      type: snapshot
+customProperties:
+  feasibility:
+    schema_version: '1.0'
+    spec_classification: internal
+    cadence: ''
+    freshness_history: snapshot
+    freshness_description: ''
+    grain_keys:
+    - bank_id
+    grain_description: ''
+    allowed_derivations:
+    - rename
+    - cast
+    composition:
+      join_keys: []
+      composed_of: []
+      description: ''
+productKind: source
+sourceSpecId: src_external_claims_liabilities

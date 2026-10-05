@@ -1,0 +1,279 @@
+apiVersion: v3.1.0
+kind: DataContract
+id: template:master-reference:src-branch-master
+name: Branch Master
+version: 1.0.0
+status: draft
+domain: Master Reference
+description: Core Identity and Operational Information, Geographical and Contact details,
+  timings and operational constraints, services offered, channels assigned to physical
+  branches, branch status history. Cash Inventory
+schema:
+- name: Branch Master
+  physicalName: branch_master
+  physicalType: table
+  description: Core Identity and Operational Information, Geographical and Contact
+    details, timings and operational constraints, services offered, channels assigned
+    to physical branches, branch status history. Cash Inventory
+  properties:
+  - name: branch_id
+    physicalName: branch_id
+    logicalName: Branch ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique internal identifier for a physical bank branch, used as the
+      primary key across all branch-related entities.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: branch_name
+    physicalName: branch_name
+    logicalName: Branch Name
+    logicalType: varchar
+    physicalType: varchar
+    description: Official name of the bank branch as used in customer communications
+      and regulatory filings.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: ifsc_code
+    physicalName: ifsc_code
+    logicalName: IFSC Code
+    logicalType: varchar
+    physicalType: varchar
+    description: Indian Financial System Code uniquely identifying the branch for
+      domestic payment routing (NEFT, RTGS, IMPS).
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: branch_type
+    physicalName: branch_type
+    logicalName: Branch Type
+    logicalType: varchar
+    physicalType: varchar
+    description: Classification of the branch format, such as full-service branch,
+      micro-branch, extension counter, or digital branch.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: branch_status
+    physicalName: branch_status
+    logicalName: Branch Status
+    logicalType: varchar
+    physicalType: varchar
+    description: Current operational status of the branch (e.g. active, under renovation,
+      permanently closed, temporarily closed).
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: address
+    physicalName: address
+    logicalName: Address
+    logicalType: varchar
+    physicalType: varchar
+    description: Physical street address of the branch location, classified as PII
+      due to its role in identifying specific premises.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: pii
+    examples: []
+    logicalTypeOptions: {}
+  - name: pincode
+    physicalName: pincode
+    logicalName: Pincode
+    logicalType: varchar
+    physicalType: varchar
+    description: Postal code of the branch location, used for geographic segmentation
+      and service-area mapping.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: circle_name
+    physicalName: circle_name
+    logicalName: Circle Name
+    logicalType: varchar
+    physicalType: varchar
+    description: Name of the administrative circle or cluster grouping the branch
+      within the bank's internal geographic hierarchy.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: region_name
+    physicalName: region_name
+    logicalName: Region Name
+    logicalType: varchar
+    physicalType: varchar
+    description: Name of the region within which the branch operates, a mid-tier level
+      in the bank's distribution hierarchy.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: zone_name
+    physicalName: zone_name
+    logicalName: Zone Name
+    logicalType: varchar
+    physicalType: varchar
+    description: Name of the zone at the highest tier of the bank's geographic distribution
+      hierarchy, grouping multiple regions.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: employee_id
+    physicalName: employee_id
+    logicalName: Employee ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for an employee assigned to or managing the branch.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: employee_name
+    physicalName: employee_name
+    logicalName: Employee Name
+    logicalType: varchar
+    physicalType: varchar
+    description: Full name of the branch employee, classified as PII.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: pii
+    examples: []
+    logicalTypeOptions: {}
+  - name: employee_role
+    physicalName: employee_role
+    logicalName: Employee Role
+    logicalType: varchar
+    physicalType: varchar
+    description: Job title or functional role of the employee within the branch (e.g.
+      Branch Manager, Teller, Relationship Officer).
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: contact
+    physicalName: contact
+    logicalName: Contact
+    logicalType: varchar
+    physicalType: varchar
+    description: Contact phone number or email address of the branch employee, classified
+      as PII.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: pii
+    examples: []
+    logicalTypeOptions: {}
+  - name: assigned_since
+    physicalName: assigned_since
+    logicalName: Assigned Since
+    logicalType: varchar
+    physicalType: varchar
+    description: Date from which the employee has been assigned to this branch in
+      their current role.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: services
+    physicalName: services
+    logicalName: Services
+    logicalType: varchar
+    physicalType: varchar
+    description: List of banking services available at the branch, such as account
+      opening, loan processing, locker facilities, or foreign exchange.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: status
+    physicalName: status
+    logicalName: Status
+    logicalType: varchar
+    physicalType: varchar
+    description: Current operational status of the branch's service availability (e.g.
+      open, closed, limited services).
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  foreignKeys: []
+  transform:
+    grouping_keys:
+    - branch_id
+    scd_policy:
+      type: latest_only
+customProperties:
+  feasibility:
+    schema_version: '1.0'
+    spec_classification: confidential
+    cadence: ''
+    freshness_history: current
+    freshness_description: ''
+    grain_keys:
+    - branch_id
+    grain_description: ''
+    allowed_derivations:
+    - rename
+    - cast
+    composition:
+      join_keys: []
+      composed_of: []
+      description: ''
+productKind: source
+sourceSpecId: src_branch_master

@@ -1,0 +1,68 @@
+apiVersion: workbench.platform/v1
+id: snowflake
+displayName: Snowflake
+adapterVersion: "0.1.0"
+adapterKind: jdbc
+supportedServerVersions: "current"
+
+driver:
+  package: snowflake-connector-python
+  compatibility: ">=3.0"
+
+credentialSchema: schemas/snowflake-credentials.json
+
+namespace:
+  parts: [catalog, schema, relation]
+  labels:
+    catalog: Database
+    schema: Schema
+    relation: Table / View
+  # Unqualified `schema.table` refs in a view body resolve against the session
+  # default database. The native-view deploy sets it to the SOURCE database so
+  # cross-database view bodies bind correctly at creation time. `{catalog}` is
+  # filled with the quoted source database (Snowflake's catalog level is DATABASE).
+  sessionCatalogStatement: "USE DATABASE {catalog}"
+
+capabilities:
+  connection: preview
+  discovery: preview
+  profiling: preview
+  read_query: preview
+  native_view: preview
+  dbt_materialized: preview
+  remediation: unsupported
+  semantic_qa: unsupported
+  # transfer_source: the Phase-2.1 dlt engine now reads a Snowflake source via
+  # snowflake-sqlalchemy (run_transfer.py / run_migration.py _source_sqlalchemy_url).
+  # preview until a live source→target transfer is certified.
+  transfer_source: preview
+  # transfer_target: the Phase-2.1 dlt engine loads a product into Snowflake
+  # (DuckDB extracts the shaped result; dlt loads it). Requires dlt[snowflake] +
+  # credentials in the backend environment — a deploy concern surfaced at run time.
+  transfer_target: preview
+  lakehouse_export: unsupported
+  lakehouse_source: unsupported
+  volumetrics: preview
+  code_assets: preview
+
+notes: >
+  Snowflake is a first-class source AND target at `preview`: registered
+  connections + live probe, single-DB discovery + profiling (PUBLIC included,
+  views enumerated, exact identifier case preserved), native-view deploy
+  (3-part `database.schema.relation` namespace via the shared _NamespaceOps
+  mechanism, COPY GRANTS to preserve grants), dbt materialization into a
+  registered Snowflake target, cross-platform dlt transfer as source and
+  target, and an expanded transform-capability set (IFF/NVL/ZEROIFNULL/DECODE/
+  DATEADD/CONVERT_TIMEZONE/TO_DATE/TRY_CAST/PARSE_JSON/LISTAGG, keyed on the
+  sqlglot canonical AST names). A Snowflake PAT authenticates as a plain
+  password (no `authenticator` needed). Capabilities stay at `preview` until a
+  live end-to-end run against a real account is certified (promote to
+  `certified` per-slice after live verification).
+  Snowflake-specific notes for Gate 1:
+  - Information Schema is role-scoped and database-scoped; queries must
+    filter by INFORMATION_SCHEMA.COLUMNS with explicit database prefix.
+  - Unquoted identifiers are folded to uppercase.
+  - Constraints are generally informational, not enforced.
+  - CREATE OR REPLACE VIEW is DDL-atomic but cannot be rolled back in a
+    multi-statement transaction.
+  - COPY GRANTS must be specified to preserve grants on view replacement.

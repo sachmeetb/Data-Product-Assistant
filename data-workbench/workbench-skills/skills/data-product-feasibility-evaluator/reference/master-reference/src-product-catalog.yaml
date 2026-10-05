@@ -1,0 +1,155 @@
+spec_id: src_product_catalog
+name: Product Catalog
+domain: Master Reference
+product_kind: source
+description: Master list of all active and retired products listing - type, features,
+  terms and conditions, product Fees and charges, eligibility criteria, lifecycle
+  status. Also mapping which products are offered through which channels, and the
+  status of products - launched, modified, sunset, regulatory phase-out
+schema_version: '1.0'
+classification: internal
+grain:
+  keys:
+  - product_id
+  description: ''
+freshness:
+  history: current
+  cadence: ''
+  description: ''
+allowed_derivations:
+- rename
+- cast
+attributes:
+- name: product_id
+  type: bigint
+  concept: Product ID
+  description: Unique identifier for a bank product record in the master product catalog.
+  required: true
+  is_key: true
+  classification: internal
+- name: name
+  type: varchar
+  concept: Name
+  description: Official name of the bank product as presented to customers and used in regulatory reporting.
+  required: true
+  is_key: false
+  classification: internal
+- name: category
+  type: varchar
+  concept: Category
+  description: Product category classifying the offering, such as deposits, loans, cards, investments, or insurance.
+  required: false
+  is_key: false
+  classification: internal
+- name: status
+  type: varchar
+  concept: Status
+  description: Current availability status of the product (e.g. active, sunset, regulatory phase-out, archived).
+  required: true
+  is_key: false
+  classification: internal
+- name: lifecycle_state
+  type: varchar
+  concept: Lifecycle State
+  description: Detailed lifecycle stage of the product (e.g. launched, modified, sunset) tracking its market history.
+  required: false
+  is_key: false
+  classification: internal
+- name: channel_availability
+  type: varchar
+  concept: Channel Availability
+  description: List of channels through which the product is offered to customers, such as branch, mobile app, internet banking, or partner.
+  required: false
+  is_key: false
+  classification: internal
+- name: feature_id
+  type: bigint
+  concept: Feature ID
+  description: Unique identifier for a specific feature or attribute associated with a bank product.
+  required: true
+  is_key: true
+  classification: internal
+- name: description
+  type: varchar
+  concept: Description
+  description: Human-readable description of a product feature, detailing its functionality and customer benefit.
+  required: false
+  is_key: false
+  classification: internal
+- name: pricing_id
+  type: bigint
+  concept: Pricing ID
+  description: Unique identifier for a pricing record defining the rate, fee, or charge applicable to a bank product.
+  required: true
+  is_key: true
+  classification: internal
+- name: rate
+  type: varchar
+  concept: Rate
+  description: Interest rate, return rate, or other applicable rate for the product, expressed as a percentage or formula.
+  required: true
+  is_key: false
+  classification: internal
+- name: fee
+  type: numeric
+  concept: Fee
+  description: Monetary fee or charge levied for the product or a specific transaction, such as an annual fee or processing charge.
+  required: false
+  is_key: false
+  classification: internal
+- name: tier
+  type: varchar
+  concept: Tier
+  description: Customer tier, balance band, or product variant to which a particular pricing rate or fee applies.
+  required: false
+  is_key: false
+  classification: internal
+- name: rule_id
+  type: bigint
+  concept: Rule ID
+  description: Unique identifier for an eligibility or product bundling rule defined in the product catalog.
+  required: true
+  is_key: true
+  classification: internal
+- name: criterion
+  type: varchar
+  concept: Criterion
+  description: Specific condition or requirement a customer must meet to be eligible for the product (e.g. minimum age, income threshold).
+  required: false
+  is_key: false
+  classification: internal
+- name: threshold
+  type: varchar
+  concept: Threshold
+  description: Numeric or qualitative limit associated with an eligibility criterion, such as a minimum income amount or credit score cutoff.
+  required: false
+  is_key: false
+  classification: internal
+- name: bundle_id
+  type: bigint
+  concept: Bundle ID
+  description: Unique identifier for a product bundle grouping multiple bank products sold together with shared pricing or features.
+  required: true
+  is_key: true
+  classification: internal
+- name: product_ids
+  type: bigint
+  concept: Product Ids
+  description: Identifiers of the individual products included in a bundle offering.
+  required: false
+  is_key: false
+  classification: internal
+- name: discounts
+  type: numeric
+  concept: Discounts
+  description: Discount amount or percentage applied to bundled products when purchased together.
+  required: false
+  is_key: false
+  classification: internal
+- name: conditions
+  type: varchar
+  concept: Conditions
+  description: Qualifying conditions or terms that must be met to receive the bundled product discount or benefit.
+  required: false
+  is_key: false
+  classification: internal

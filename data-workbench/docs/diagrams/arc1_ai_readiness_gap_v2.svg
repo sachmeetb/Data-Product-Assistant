@@ -1,0 +1,132 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 810" width="1440" height="810" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif">
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#94A3B8"/>
+    </marker>
+    <marker id="arr_rev" viewBox="0 0 10 10" refX="1" refY="5"
+            markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 10 0 L 0 5 L 10 10 z" fill="#94A3B8"/>
+    </marker>
+  </defs>
+  <rect width="1440" height="810" fill="#F8FAFC"/>
+  <rect x="0" y="0" width="1440" height="82" rx="0" ry="0" fill="#0F172A" stroke="none" stroke-width="1.5"/>
+  <text x="720" y="26" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="21" font-weight="700" fill="#FFFFFF" text-anchor="middle">We use AI to build the data foundation. So AI can build on it.</text>
+  <text x="720" y="56" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="10" font-weight="normal" fill="#94A3B8" text-anchor="middle">AI agent innovation applied to the domain of data engineering — building the certified foundation that enterprise AI depends on.</text>
+  <rect x="650" y="78" width="140" height="3" rx="1" ry="1" fill="#16A34A" stroke="none" stroke-width="1.5"/>
+  <rect x="40" y="92" width="500" height="554" rx="10" ry="10" fill="#F0FFF4" stroke="#86EFAC" stroke-width="2"/>
+  <rect x="40" y="92" width="500" height="36" rx="10" ry="10" fill="#16A34A"/>
+  <text x="54" y="110" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="13" font-weight="700" fill="#FFFFFF" dominant-baseline="middle">AI APPLIED TO DATA ENGINEERING</text>
+  <text x="56" y="144" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="10" font-weight="normal" fill="#475569" text-anchor="start">Data Workbench applies AI agent innovation to the domain of data.</text>
+  <text x="56" y="159" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="10" font-weight="normal" fill="#475569" text-anchor="start">Purpose-built agent skills that do the data engineering work.</text>
+  <rect x="56" y="184" width="3" height="46" rx="1" ry="1" fill="#16A34A" stroke="none" stroke-width="1.5"/>
+  <text x="70" y="198" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="11" font-weight="700" fill="#0F172A" text-anchor="start">Schema Discovery</text>
+  <text x="70" y="214" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="9" font-weight="normal" fill="#475569" text-anchor="start">Agents scan every table, column, FK, index · hours not weeks</text>
+  <line x1="58" y1="240" x2="522" y2="240" stroke="#DCFCE7" stroke-width="1"/>
+  <rect x="56" y="256" width="3" height="46" rx="1" ry="1" fill="#16A34A" stroke="none" stroke-width="1.5"/>
+  <text x="70" y="270" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="11" font-weight="700" fill="#0F172A" text-anchor="start">Data Profiling</text>
+  <text x="70" y="286" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="9" font-weight="normal" fill="#475569" text-anchor="start">Statistical patterns, nulls, cardinality, anomaly detection</text>
+  <line x1="58" y1="312" x2="522" y2="312" stroke="#DCFCE7" stroke-width="1"/>
+  <rect x="56" y="328" width="3" height="46" rx="1" ry="1" fill="#16A34A" stroke="none" stroke-width="1.5"/>
+  <text x="70" y="342" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="11" font-weight="700" fill="#0F172A" text-anchor="start">Metadata Enrichment</text>
+  <text x="70" y="358" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="9" font-weight="normal" fill="#475569" text-anchor="start">AI writes business descriptions · human approves or corrects</text>
+  <line x1="58" y1="384" x2="522" y2="384" stroke="#DCFCE7" stroke-width="1"/>
+  <rect x="56" y="400" width="3" height="46" rx="1" ry="1" fill="#16A34A" stroke="none" stroke-width="1.5"/>
+  <text x="70" y="414" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="11" font-weight="700" fill="#0F172A" text-anchor="start">Intelligent Mapping</text>
+  <text x="70" y="430" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="9" font-weight="normal" fill="#475569" text-anchor="start">Source→target column mapping with full lineage · human reviews</text>
+  <line x1="58" y1="456" x2="522" y2="456" stroke="#DCFCE7" stroke-width="1"/>
+  <rect x="56" y="472" width="3" height="46" rx="1" ry="1" fill="#16A34A" stroke="none" stroke-width="1.5"/>
+  <text x="70" y="486" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="11" font-weight="700" fill="#0F172A" text-anchor="start">Quality Assurance</text>
+  <text x="70" y="502" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="9" font-weight="normal" fill="#475569" text-anchor="start">Domain rules from catalogs · observation rules from profiling</text>
+  <line x1="58" y1="528" x2="522" y2="528" stroke="#DCFCE7" stroke-width="1"/>
+  <rect x="56" y="544" width="3" height="46" rx="1" ry="1" fill="#16A34A" stroke="none" stroke-width="1.5"/>
+  <text x="70" y="558" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="11" font-weight="700" fill="#0F172A" text-anchor="start">Serve &amp; Publish</text>
+  <text x="70" y="574" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="9" font-weight="normal" fill="#475569" text-anchor="start">Virtual views + ODCS contract + marketplace listing in days</text>
+  <line x1="58" y1="600" x2="522" y2="600" stroke="#DCFCE7" stroke-width="1"/>
+  <rect x="54" y="590" width="472" height="44" rx="6" ry="6" fill="#DCFCE7" stroke="#86EFAC" stroke-width="1.5"/>
+  <text x="68" y="606" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="9" font-weight="700" fill="#14532D" text-anchor="start">Human-in-the-loop at every step  ·  Active Learning  ·  PROV-O Provenance</text>
+  <text x="68" y="622" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="9" font-weight="normal" fill="#16A34A" text-anchor="start">Every approval improves future runs.  Every rejection trains the system.</text>
+  <line x1="544" y1="369" x2="564" y2="369" stroke="#16A34A" stroke-width="2.5" marker-end="url(#arr)"/>
+  <text x="554" y="357" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="9" font-weight="700" fill="#16A34A" text-anchor="middle">builds</text>
+  <line x1="876" y1="369" x2="896" y2="369" stroke="#2563EB" stroke-width="2.5" marker-end="url(#arr)"/>
+  <text x="886" y="357" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="9" font-weight="700" fill="#2563EB" text-anchor="middle">enables</text>
+  <rect x="568" y="92" width="304" height="554" rx="10" ry="10" fill="#FFFBF0" stroke="#D97706" stroke-width="2.5"/>
+  <rect x="568" y="92" width="304" height="36" rx="10" ry="10" fill="#D97706"/>
+  <text x="582" y="110" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="14" font-weight="700" fill="#FFFFFF" dominant-baseline="middle">DATA PRODUCTS</text>
+  <text x="720" y="145" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="9" font-weight="normal" fill="#78350F" text-anchor="middle">Output of agent work on data.</text>
+  <text x="720" y="160" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="9" font-weight="normal" fill="#78350F" text-anchor="middle">Foundation enterprise AI depends on.</text>
+  <rect x="584" y="176" width="132" height="108" rx="6" ry="6" fill="#DCFCE7" stroke="#86EFAC" stroke-width="1.5"/>
+  <text x="650" y="194" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="9" font-weight="700" fill="#14532D" text-anchor="middle">SOURCE-ALIGNED</text>
+  <text x="650" y="209" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="8" font-weight="normal" fill="#16A34A" text-anchor="middle">Certify what you have</text>
+  <text x="594" y="224" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="8" font-weight="normal" fill="#14532D" text-anchor="start">· Existing databases</text>
+  <text x="594" y="240" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="8" font-weight="normal" fill="#14532D" text-anchor="start">· Profiled &amp; governed</text>
+  <text x="594" y="256" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="8" font-weight="normal" fill="#14532D" text-anchor="start">· Contract synthesized</text>
+  <rect x="724" y="176" width="132" height="108" rx="6" ry="6" fill="#DCFCE7" stroke="#86EFAC" stroke-width="1.5"/>
+  <text x="790" y="194" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="9" font-weight="700" fill="#14532D" text-anchor="middle">CONSUMER-ALIGNED</text>
+  <text x="790" y="209" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="8" font-weight="normal" fill="#16A34A" text-anchor="middle">Build what you need</text>
+  <text x="734" y="224" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="8" font-weight="normal" fill="#14532D" text-anchor="start">· Contract-first schema</text>
+  <text x="734" y="240" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="8" font-weight="normal" fill="#14532D" text-anchor="start">· Agent-mapped</text>
+  <text x="734" y="256" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="8" font-weight="normal" fill="#14532D" text-anchor="start">· Marketplace-published</text>
+  <rect x="584" y="294" width="86" height="22" rx="11" ry="11" fill="#FEF3C7" stroke="#FCD34D" stroke-width="1.5"/>
+  <text x="627" y="305" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="8" font-weight="700" fill="#92400E" text-anchor="middle">Contracted</text>
+  <rect x="676" y="294" width="86" height="22" rx="11" ry="11" fill="#FEF3C7" stroke="#FCD34D" stroke-width="1.5"/>
+  <text x="719" y="305" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="8" font-weight="700" fill="#92400E" text-anchor="middle">Governed</text>
+  <rect x="768" y="294" width="86" height="22" rx="11" ry="11" fill="#FEF3C7" stroke="#FCD34D" stroke-width="1.5"/>
+  <text x="811" y="305" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="8" font-weight="700" fill="#92400E" text-anchor="middle">AI-Ready</text>
+  <rect x="584" y="328" width="272" height="38" rx="6" ry="6" fill="#F5F3FF" stroke="#DDD6FE" stroke-width="1.5"/>
+  <text x="720" y="345" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="10" font-weight="700" fill="#5B21B6" text-anchor="middle">Neo4j Knowledge Graph</text>
+  <text x="720" y="360" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="8" font-weight="normal" fill="#7C3AED" text-anchor="middle">System of record for all data assets</text>
+  <rect x="584" y="378" width="272" height="64" rx="6" ry="6" fill="#FFF8F2" stroke="#FED7AA" stroke-width="1.5"/>
+  <text x="720" y="396" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="9" font-weight="700" fill="#92400E" text-anchor="middle">AI applied to every domain.</text>
+  <text x="720" y="412" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="9" font-weight="normal" fill="#78350F" text-anchor="middle">Data Workbench applies it to</text>
+  <text x="720" y="428" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="9" font-weight="normal" fill="#78350F" text-anchor="middle">the domain of data.</text>
+  <rect x="584" y="446" width="272" height="116" rx="6" ry="6" fill="#FEF9F0" stroke="#FED7AA" stroke-width="1.5"/>
+  <text x="720" y="464" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="30" font-weight="700" fill="#F97316" text-anchor="middle">83%</text>
+  <text x="720" y="498" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="8" font-weight="normal" fill="#78350F" text-anchor="middle">of organizations don&#x27;t build</text>
+  <text x="720" y="512" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="8" font-weight="normal" fill="#78350F" text-anchor="middle">data products aligned to</text>
+  <text x="720" y="526" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="8" font-weight="normal" fill="#78350F" text-anchor="middle">business objectives.</text>
+  <text x="720" y="546" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="7" font-weight="normal" fill="#D97706" text-anchor="middle">— Gartner 2024 Survey</text>
+  <rect x="584" y="576" width="86" height="28" rx="4" ry="4" fill="#F1F5F9" stroke="#CBD5E1" stroke-width="1.5"/>
+  <text x="627" y="590" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="8" font-weight="normal" fill="#475569" text-anchor="middle">Source Data</text>
+  <text x="673" y="590" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="9" font-weight="normal" fill="#94A3B8" text-anchor="middle">→</text>
+  <rect x="676" y="576" width="86" height="28" rx="4" ry="4" fill="#DCFCE7" stroke="#86EFAC" stroke-width="1.5"/>
+  <text x="719" y="590" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="8" font-weight="normal" fill="#14532D" text-anchor="middle">Data Products</text>
+  <text x="765" y="590" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="9" font-weight="normal" fill="#94A3B8" text-anchor="middle">→</text>
+  <rect x="768" y="576" width="86" height="28" rx="4" ry="4" fill="#DBEAFE" stroke="#93C5FD" stroke-width="1.5"/>
+  <text x="811" y="590" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="8" font-weight="normal" fill="#1E3A8A" text-anchor="middle">AI Agents</text>
+  <rect x="900" y="92" width="500" height="554" rx="10" ry="10" fill="#EFF6FF" stroke="#2563EB" stroke-width="2"/>
+  <rect x="900" y="92" width="500" height="36" rx="10" ry="10" fill="#2563EB"/>
+  <text x="914" y="110" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="13" font-weight="700" fill="#FFFFFF" dominant-baseline="middle">AI THAT RUNS ON YOUR DATA</text>
+  <text x="916" y="144" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="10" font-weight="normal" fill="#475569" text-anchor="start">Enterprise AI needs certified, governed, semantically-rich data</text>
+  <text x="916" y="159" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="10" font-weight="normal" fill="#475569" text-anchor="start">to reason correctly and return trusted answers at scale.</text>
+  <rect x="916" y="184" width="3" height="58" rx="1" ry="1" fill="#2563EB" stroke="none" stroke-width="1.5"/>
+  <text x="930" y="198" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="11" font-weight="700" fill="#0F172A" text-anchor="start">Natural Language Data Access</text>
+  <text x="930" y="214" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="9" font-weight="normal" fill="#475569" text-anchor="start">Ask in business terms. Agent routes to the certified</text>
+  <text x="930" y="226.6" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="9" font-weight="normal" fill="#475569" text-anchor="start">data product. Returns a governed, trusted answer.</text>
+  <line x1="918" y1="250" x2="1382" y2="250" stroke="#DBEAFE" stroke-width="1"/>
+  <rect x="916" y="266" width="3" height="58" rx="1" ry="1" fill="#2563EB" stroke="none" stroke-width="1.5"/>
+  <text x="930" y="280" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="11" font-weight="700" fill="#0F172A" text-anchor="start">Agentic Workflows</text>
+  <text x="930" y="296" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="9" font-weight="normal" fill="#475569" text-anchor="start">Multi-step AI processes grounded in certified data.</text>
+  <text x="930" y="308.6" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="9" font-weight="normal" fill="#475569" text-anchor="start">No hallucination — agents access governed sources.</text>
+  <line x1="918" y1="332" x2="1382" y2="332" stroke="#DBEAFE" stroke-width="1"/>
+  <rect x="916" y="348" width="3" height="58" rx="1" ry="1" fill="#2563EB" stroke="none" stroke-width="1.5"/>
+  <text x="930" y="362" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="11" font-weight="700" fill="#0F172A" text-anchor="start">Automated Analytics &amp; Insights</text>
+  <text x="930" y="378" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="9" font-weight="normal" fill="#475569" text-anchor="start">Agents reason directly over data products.</text>
+  <text x="930" y="390.6" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="9" font-weight="normal" fill="#475569" text-anchor="start">Consistent KPIs, no conflicting definitions.</text>
+  <line x1="918" y1="414" x2="1382" y2="414" stroke="#DBEAFE" stroke-width="1"/>
+  <rect x="916" y="430" width="3" height="58" rx="1" ry="1" fill="#2563EB" stroke="none" stroke-width="1.5"/>
+  <text x="930" y="444" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="11" font-weight="700" fill="#0F172A" text-anchor="start">AI-Powered Business Applications</text>
+  <text x="930" y="460" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="9" font-weight="normal" fill="#475569" text-anchor="start">Apps built on a foundation of certified data.</text>
+  <text x="930" y="472.6" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="9" font-weight="normal" fill="#475569" text-anchor="start">Semantic context baked in — not retrofitted.</text>
+  <line x1="918" y1="496" x2="1382" y2="496" stroke="#DBEAFE" stroke-width="1"/>
+  <rect x="914" y="554" width="472" height="80" rx="6" ry="6" fill="#DBEAFE" stroke="#93C5FD" stroke-width="1.5"/>
+  <text x="928" y="572" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="9" font-weight="600" fill="#1E3A8A" text-anchor="start">&quot;By 2027, organizations prioritizing semantics</text>
+  <text x="928" y="588" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="9" font-weight="600" fill="#1E3A8A" text-anchor="start">will achieve 80% higher AI accuracy and</text>
+  <text x="928" y="604" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="9" font-weight="600" fill="#1E3A8A" text-anchor="start">60% lower cost.&quot;</text>
+  <text x="928" y="620" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="8" font-weight="normal" fill="#2563EB" text-anchor="start">Gartner  ·  May 2026  ·  ID G00852605</text>
+  <rect x="0" y="662" width="1440" height="148" rx="0" ry="0" fill="#0F172A" stroke="none" stroke-width="1.5"/>
+  <text x="720" y="694" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="17" font-weight="700" fill="#F1F5F9" text-anchor="middle">The agents building the foundation.  The foundation enabling the agents.</text>
+  <text x="720" y="722" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="11" font-weight="normal" fill="#94A3B8" text-anchor="middle">AI innovation applied to the domain of data — so data can power everything else.</text>
+  <line x1="420" y1="738" x2="1020" y2="738" stroke="#1E293B" stroke-width="1"/>
+  <text x="720" y="760" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="11" font-weight="600" fill="#64748B" text-anchor="middle">What would it look like if your data engineering practice moved at the speed of AI?</text>
+</svg>

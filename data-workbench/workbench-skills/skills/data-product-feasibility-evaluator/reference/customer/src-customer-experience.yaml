@@ -1,0 +1,210 @@
+spec_id: src_customer_experience
+name: Customer Experience
+domain: Customer
+product_kind: source
+description: Captured customer interactions such as feedback, service complaints,
+  resolution status, root cause, follow-up actions (e.g., callbacks, compensations
+  etc.)
+schema_version: '1.0'
+classification: internal
+grain:
+  keys:
+  - customer_id
+  description: ''
+freshness:
+  history: current
+  cadence: ''
+  description: ''
+allowed_derivations:
+- rename
+- cast
+attributes:
+- name: survey_id
+  type: bigint
+  concept: Survey ID
+  description: Unique identifier for a customer satisfaction survey, used to group response scores and verbatim comments linked to a customer interaction.
+  required: true
+  is_key: true
+  classification: internal
+- name: name
+  type: varchar
+  concept: Name
+  description: The name or title of the customer satisfaction survey programme, such as NPS or post-transaction feedback.
+  required: true
+  is_key: false
+  classification: internal
+- name: channel
+  type: varchar
+  concept: Channel
+  description: The delivery channel through which the survey was administered, such as email, SMS, in-app, or post-call IVR.
+  required: false
+  is_key: false
+  classification: internal
+- name: launch_date
+  type: date
+  concept: Launch Date
+  description: The date on which the survey was launched and made available to customers for response.
+  required: true
+  is_key: false
+  classification: internal
+- name: journey_id
+  type: bigint
+  concept: Journey ID
+  description: Unique identifier for a customer journey instance, grouping all touchpoints and events that form a single end-to-end experience.
+  required: true
+  is_key: true
+  classification: internal
+- name: journey_status
+  type: varchar
+  concept: Journey Status
+  description: The current state of the customer journey, such as in_progress, completed, or abandoned.
+  required: true
+  is_key: false
+  classification: internal
+- name: customer_id
+  type: bigint
+  concept: Customer ID
+  description: Unique identifier linking all experience events and feedback records to the bank customer whose journey is being tracked.
+  required: true
+  is_key: true
+  classification: internal
+- name: start_time
+  type: varchar
+  concept: Start Time
+  description: The timestamp marking the beginning of the customer journey or touchpoint interaction.
+  required: false
+  is_key: false
+  classification: internal
+- name: end_time
+  type: varchar
+  concept: End Time
+  description: The timestamp marking when the customer journey or touchpoint interaction concluded.
+  required: false
+  is_key: false
+  classification: internal
+- name: cx_event_id
+  type: bigint
+  concept: Cx Event ID
+  description: Unique identifier for a discrete customer experience event within a journey, such as a service interaction, feedback submission, or complaint.
+  required: true
+  is_key: true
+  classification: internal
+- name: event_type
+  type: varchar
+  concept: Event Type
+  description: The category of the customer experience event, such as complaint_raised, feedback_submitted, or escalation_triggered.
+  required: true
+  is_key: false
+  classification: internal
+- name: status
+  type: varchar
+  concept: Status
+  description: The current processing status of the customer experience event, such as open, in_progress, resolved, or closed.
+  required: true
+  is_key: false
+  classification: internal
+- name: txn_id
+  type: bigint
+  concept: Txn ID
+  description: The unique identifier of the underlying financial transaction that triggered or is associated with this customer experience event.
+  required: true
+  is_key: true
+  classification: internal
+- name: created_at
+  type: varchar
+  concept: Created At
+  description: The timestamp at which the customer experience event record was first created in the system.
+  required: false
+  is_key: false
+  classification: internal
+- name: resolved_at
+  type: varchar
+  concept: Resolved At
+  description: The timestamp at which the customer experience event was resolved and the case closed.
+  required: false
+  is_key: false
+  classification: internal
+- name: feedback_id
+  type: bigint
+  concept: Feedback ID
+  description: Unique identifier for a customer feedback submission, linking survey scores and verbatim comments to the experience event record.
+  required: true
+  is_key: true
+  classification: internal
+- name: score
+  type: numeric
+  concept: Score
+  description: The numeric customer satisfaction or effort score provided in the feedback submission, typically rated on a standard scale.
+  required: true
+  is_key: false
+  classification: internal
+- name: comment
+  type: varchar
+  concept: Comment
+  description: The free-text qualitative comment provided by the customer alongside their numeric feedback score.
+  required: false
+  is_key: false
+  classification: internal
+- name: complaint_id
+  type: bigint
+  concept: Complaint ID
+  description: Unique identifier for a formal customer complaint raised against the bank's products or services.
+  required: true
+  is_key: true
+  classification: internal
+- name: category
+  type: varchar
+  concept: Category
+  description: The functional classification of the complaint, such as fees_dispute, service_failure, product_issue, or regulatory_breach.
+  required: false
+  is_key: false
+  classification: internal
+- name: priority_level
+  type: varchar
+  concept: Priority Level
+  description: The urgency classification of the complaint, determining the response SLA and escalation path.
+  required: false
+  is_key: false
+  classification: internal
+- name: resolved_by
+  type: varchar
+  concept: Resolved By
+  description: The name or identifier of the agent, team, or system that resolved the complaint.
+  required: false
+  is_key: false
+  classification: internal
+- name: resolved_timestamp
+  type: timestamp
+  concept: Resolved Timestamp
+  description: The exact date and time at which the complaint was formally resolved and closed.
+  required: false
+  is_key: false
+  classification: internal
+- name: sla_hours
+  type: varchar
+  concept: Sla Hours
+  description: The maximum number of hours within which the complaint must be resolved under the applicable service-level agreement.
+  required: false
+  is_key: false
+  classification: internal
+- name: resolution_id
+  type: bigint
+  concept: Resolution ID
+  description: Unique identifier for the resolution record documenting the outcome and action taken to close the complaint.
+  required: true
+  is_key: true
+  classification: internal
+- name: action_taken
+  type: varchar
+  concept: Action Taken
+  description: A description of the corrective action, compensation, or process change applied to resolve the customer complaint.
+  required: false
+  is_key: false
+  classification: internal
+- name: resolution_type
+  type: varchar
+  concept: Resolution Type
+  description: The classification of how the complaint was resolved, such as full_refund, partial_refund, explanation_given, or escalated_to_regulator.
+  required: true
+  is_key: false
+  classification: internal

@@ -387,10 +387,15 @@ async def commit_data_contract(body: ContractCommitRequest):
             f"{api_root}/projects/{project_id}/locations/{location}"
             f"/dataProducts?data_product_id={kc_id}"
         )
+        # owner_emails is required by the Dataplex API — use contract owner, fall back to runtime SA
+        runtime_sa = os.environ.get("RUNTIME_SA_EMAIL", f"dp-assistant-sa@{project_id}.iam.gserviceaccount.com")
+        owner_email = info.get("owner_email") or info.get("owner") or runtime_sa
+        # Accept plain email strings; SA emails are valid owner_emails in Dataplex
+        owner_emails = [owner_email] if isinstance(owner_email, str) else list(owner_email)
         product_body = {
             "display_name": info.get("title", "Bronze Data Contract"),
             "description": info.get("description", ""),
-            "owner_emails": [],
+            "owner_emails": owner_emails,
         }
         create_resp = await asyncio.to_thread(
             lambda: _http.post(create_url, json=product_body, headers=headers, timeout=30)

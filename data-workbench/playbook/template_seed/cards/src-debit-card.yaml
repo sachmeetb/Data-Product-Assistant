@@ -1,0 +1,372 @@
+apiVersion: v3.1.0
+kind: DataContract
+id: template:cards:src-debit-card
+name: Debit Card
+version: 1.0.0
+status: draft
+domain: Cards
+description: Data on issued debit cards-linked accounts, usage limits, PIN status,
+  transaction history, disputes, and chargebacks and card lifecycle with disputes
+  and chargebacks
+schema:
+- name: Debit Card
+  physicalName: debit_card
+  physicalType: table
+  description: Data on issued debit cards-linked accounts, usage limits, PIN status,
+    transaction history, disputes, and chargebacks and card lifecycle with disputes
+    and chargebacks
+  properties:
+  - name: card_id
+    physicalName: card_id
+    logicalName: Card ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a payment card issued to a customer, serving
+      as the primary key for all card-related records.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: card_type
+    physicalName: card_type
+    logicalName: Card Type
+    logicalType: varchar
+    physicalType: varchar
+    description: Category of payment card by product tier or type, such as classic,
+      gold, platinum, or corporate.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: card_status
+    physicalName: card_status
+    logicalName: Card Status
+    logicalType: varchar
+    physicalType: varchar
+    description: Current status of the card, such as active, blocked, expired, or
+      hotlisted.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: issue_date
+    physicalName: issue_date
+    logicalName: Issue Date
+    logicalType: date
+    physicalType: date
+    description: Date on which a card, bond, or document was issued.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: expiry_date
+    physicalName: expiry_date
+    logicalName: Expiry Date
+    logicalType: date
+    physicalType: date
+    description: Date on which a card, offer, consent, or financial instrument expires
+      and becomes invalid.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: usage_limit
+    physicalName: usage_limit
+    logicalName: Usage Limit
+    logicalType: numeric
+    physicalType: numeric
+    description: Transactional usage limit set on a card, which may differ from the
+      credit limit.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: account_id
+    physicalName: account_id
+    logicalName: Account ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for the bank account linked to a product or transaction,
+      used as a join key to account-level records.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: account_type
+    physicalName: account_type
+    logicalName: Account Type
+    logicalType: numeric
+    physicalType: numeric
+    description: Classification of the bank account by product category, such as savings,
+      current, overdraft, or loan account.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: customer_id
+    physicalName: customer_id
+    logicalName: Customer ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique numeric identifier for a customer record, serving as the primary
+      join key across all customer-related entities.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: account_status
+    physicalName: account_status
+    logicalName: Account Status
+    logicalType: numeric
+    physicalType: numeric
+    description: Current operational state of the bank account, such as active, dormant,
+      closed, or frozen.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: account_balance
+    physicalName: account_balance
+    logicalName: Account Balance
+    logicalType: numeric
+    physicalType: numeric
+    description: Current net balance of the bank account, reflecting all posted credits
+      and debits as of the reporting timestamp.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: txn_id
+    physicalName: txn_id
+    logicalName: Txn ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a payment card transaction.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: txn_date
+    physicalName: txn_date
+    logicalName: Txn Date
+    logicalType: date
+    physicalType: date
+    description: Date on which a payment card transaction was processed.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: merchant
+    physicalName: merchant
+    logicalName: Merchant
+    logicalType: varchar
+    physicalType: varchar
+    description: Name or identifier of the merchant at which a card transaction was
+      made.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: amount
+    physicalName: amount
+    logicalName: Amount
+    logicalType: numeric
+    physicalType: numeric
+    description: Monetary value associated with a transaction, payment, or financial
+      event, denominated in the account's base currency.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: txn_type
+    physicalName: txn_type
+    logicalName: Txn Type
+    logicalType: varchar
+    physicalType: varchar
+    description: Type of card transaction, such as purchase, cash advance, or balance
+      transfer.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: service_id
+    physicalName: service_id
+    logicalName: Service ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a banking service or product feature.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: activity_type
+    physicalName: activity_type
+    logicalName: Activity Type
+    logicalType: varchar
+    physicalType: varchar
+    description: Classification of the activity, such as login, transaction, complaint,
+      or inquiry.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: activity_date
+    physicalName: activity_date
+    logicalName: Activity Date
+    logicalType: date
+    physicalType: date
+    description: Calendar date on which a customer activity, transaction, or system
+      event occurred.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: activity_desc
+    physicalName: activity_desc
+    logicalName: Activity Desc
+    logicalType: varchar
+    physicalType: varchar
+    description: Free-text or coded description of the customer activity or interaction
+      event.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: resolution_date
+    physicalName: resolution_date
+    logicalName: Resolution Date
+    logicalType: date
+    physicalType: date
+    description: Date on which a complaint, dispute, or exception was resolved.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: charge_id
+    physicalName: charge_id
+    logicalName: Charge ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a fee or charge applied to an account.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: charge_type
+    physicalName: charge_type
+    logicalName: Charge Type
+    logicalType: varchar
+    physicalType: varchar
+    description: Classification of the charge by type, such as annual fee, late payment
+      fee, or service charge.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: date
+    physicalName: date
+    logicalName: Date
+    logicalType: date
+    physicalType: date
+    description: Calendar date associated with a record, event, or observation.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  foreignKeys: []
+  transform:
+    grouping_keys:
+    - card_id
+    scd_policy:
+      type: latest_only
+customProperties:
+  feasibility:
+    schema_version: '1.0'
+    spec_classification: internal
+    cadence: ''
+    freshness_history: current
+    freshness_description: ''
+    grain_keys:
+    - card_id
+    grain_description: ''
+    allowed_derivations:
+    - rename
+    - cast
+    composition:
+      join_keys: []
+      composed_of: []
+      description: ''
+productKind: source
+sourceSpecId: src_debit_card

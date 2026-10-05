@@ -1,0 +1,7 @@
+# Frontend build context (build: ./workbench/frontend). The Dockerfile runs its
+# own `npm ci` (musl/alpine), so the host node_modules (glibc) must NOT be copied
+# over it — that would ship mismatched native binaries into `vite build`.
+node_modules/
+dist/
+.git/
+*.log

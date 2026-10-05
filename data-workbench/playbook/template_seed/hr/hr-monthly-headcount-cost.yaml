@@ -1,0 +1,180 @@
+apiVersion: v3.1.0
+kind: DataContract
+id: template:hr:hr-monthly-headcount-cost
+name: Monthly Headcount & Cost (HR)
+version: 1.0.0
+status: draft
+domain: hr
+dataProduct: monthly_headcount_cost
+description: 'A periodic snapshot — one row per department per month — of headcount,
+  total compensation cost, average tenure, hires, and terminations, derived by evaluating
+  the HRIS and payroll histories as-of each month-end. This is a SECOND, different
+  shape of consumer-owned history: a time series the product accumulates, not an effective-dated
+  dimension.'
+purpose: Give finance and HR business partners a stable monthly heartbeat of workforce
+  size and cost per department for headcount planning, budget vs. actual, and trend
+  analysis — without re-deriving as-of-month logic each time.
+limitations: Materialized via dbt (aggregated + accumulating monthly history). CONSUMES
+  workforce_core (Core HRIS) and compensation_payroll, joined on employee_id (engineer-authored
+  cross-product join). Cost reflects base salary only (no bonus/equity/benefits).
+owners:
+- name: Workforce Planning Team
+  role: Data Product Owner
+  email: workforce-planning@example.com
+schema:
+- name: monthly_headcount_cost
+  physicalName: monthly_headcount_cost
+  physicalType: table
+  description: 'Department × month grain. Grouping keys: department_id + month_of.
+    Measures evaluate the source histories as-of each month.'
+  properties:
+  - name: department_id
+    physicalName: department_id
+    logicalName: Department Identifier
+    logicalType: integer
+    physicalType: bigint
+    description: Department the snapshot row rolls up to (grouping key).
+    primaryKey: true
+    required: true
+    criticalDataElement: true
+    pii: false
+    classification: ''
+    examples: []
+    logicalTypeOptions: {}
+  - name: month_of
+    physicalName: month_of
+    logicalName: Month
+    logicalType: date
+    physicalType: date
+    description: First-of-month date the measures cover (grouping key; date_trunc('month',
+      as-of date)).
+    primaryKey: true
+    required: true
+    criticalDataElement: true
+    pii: false
+    classification: ''
+    examples: []
+    logicalTypeOptions: {}
+  - name: department_name
+    physicalName: department_name
+    logicalName: Department Name
+    logicalType: string
+    physicalType: varchar
+    description: Department name (lookup-equi).
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: ''
+    examples: []
+    logicalTypeOptions: {}
+  - name: headcount
+    physicalName: headcount
+    logicalName: Headcount
+    logicalType: integer
+    physicalType: integer
+    description: Count of employees with employment_status = 'active' as-of month-end
+      (aggregate).
+    primaryKey: false
+    required: true
+    criticalDataElement: true
+    pii: false
+    classification: ''
+    examples: []
+    logicalTypeOptions: {}
+  - name: total_compensation
+    physicalName: total_compensation
+    logicalName: Total Compensation
+    logicalType: number
+    physicalType: numeric
+    description: Sum of current base salary across active employees as-of month-end
+      (aggregate over the salary history).
+    primaryKey: false
+    required: true
+    criticalDataElement: true
+    pii: false
+    classification: ''
+    examples: []
+    logicalTypeOptions: {}
+  - name: avg_tenure_years
+    physicalName: avg_tenure_years
+    logicalName: Average Tenure (years)
+    logicalType: number
+    physicalType: numeric
+    description: Average tenure in years across active employees as-of month-end (aggregate).
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: ''
+    examples: []
+    logicalTypeOptions: {}
+  - name: new_hires
+    physicalName: new_hires
+    logicalName: New Hires
+    logicalType: integer
+    physicalType: integer
+    description: Count of employees hired during the month (aggregate).
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: ''
+    examples: []
+    logicalTypeOptions: {}
+  - name: terminations
+    physicalName: terminations
+    logicalName: Terminations
+    logicalType: integer
+    physicalType: integer
+    description: Count of employees terminated during the month (aggregate).
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: ''
+    examples: []
+    logicalTypeOptions: {}
+  foreignKeys: []
+quality:
+- rule: completeness
+  name: month_of completeness
+  description: month_of must not be null.
+  severity: error
+  dimension: completeness
+  businessImpact: A null period breaks every time-series chart and the month-over-month
+    join.
+- rule: validity
+  name: headcount non-negative
+  description: headcount >= 0.
+  severity: error
+  dimension: accuracy
+  businessImpact: Negative headcount indicates an as-of aggregation error.
+- rule: validity
+  name: cost requires people
+  description: When headcount = 0, total_compensation must also be 0.
+  severity: warning
+  dimension: consistency
+  businessImpact: Cost attributed to a department with no active employees signals
+    a join or as-of bug.
+- rule: validity
+  name: cost non-negative
+  description: total_compensation >= 0.
+  severity: error
+  dimension: accuracy
+  businessImpact: Negative cost indicates an upstream salary error.
+slaProperties:
+- property: freshness
+  value: '24'
+  unit: hours
+- property: retention
+  value: '10'
+  unit: years
+terms:
+  usage: Available to finance and HR business partners for planning and budget vs.
+    actual.
+  limitations: Base-salary cost only; derived from two source products joined on employee_id.
+  billing: No charge for internal consumers.
+  noticePeriod: 60 days
+productKind: consumer
+sourceSpecId: hr_monthly_headcount_cost

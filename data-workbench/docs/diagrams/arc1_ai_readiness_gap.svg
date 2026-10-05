@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 810" width="1440" height="810" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif">
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#94A3B8"/>
+    </marker>
+    <marker id="arr_rev" viewBox="0 0 10 10" refX="1" refY="5"
+            markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 10 0 L 0 5 L 10 10 z" fill="#94A3B8"/>
+    </marker>
+  </defs>
+  <rect width="1440" height="810" fill="#F8FAFC"/>
+  <rect x="0" y="0" width="1440" height="82" rx="0" ry="0" fill="#0F172A" stroke="none" stroke-width="1.5"/>
+  <text x="48" y="28" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="22" font-weight="700" fill="#FFFFFF" text-anchor="start">Algorithms are off the shelf. Differentiation is in the data.</text>
+  <text x="48" y="57" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="10" font-weight="normal" fill="#94A3B8" text-anchor="start">77% of D&amp;A leaders cite AI-ready data as a top-5 investment priority.  Only 9% have a functioning data readiness assessment.</text>
+  <rect x="48" y="78" width="120" height="3" rx="1" ry="1" fill="#16A34A" stroke="none" stroke-width="1.5"/>
+  <text x="40" y="82" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="9" font-weight="700" fill="#F97316" text-anchor="start">THE AI READINESS GAP</text>
+  <text x="740" y="82" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="9" font-weight="700" fill="#16A34A" text-anchor="start">HOW DATA WORKBENCH CLOSES IT</text>
+  <line x1="722" y1="86" x2="722" y2="682" stroke="#E2E8F0" stroke-width="1"/>
+  <rect x="40" y="92" width="672" height="52" rx="6" ry="6" fill="#1E293B" stroke="none" stroke-width="1.5"/>
+  <text x="58" y="110" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="14" font-weight="700" fill="#F1F5F9" text-anchor="start">&quot;You have a database, not a data product.&quot;</text>
+  <text x="58" y="132" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="9" font-weight="normal" fill="#64748B" text-anchor="start">— Tony Giordano, Data Workbench Practice Lead</text>
+  <rect x="40" y="154" width="672" height="110" rx="8" ry="8" fill="#FFF8F2" stroke="#FED7AA" stroke-width="1.5"/>
+  <rect x="40" y="154" width="4" height="110" rx="2" ry="2" fill="#F97316" stroke="none" stroke-width="1.5"/>
+  <text x="60" y="182" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="26" font-weight="700" fill="#F97316" text-anchor="start">83%</text>
+  <text x="60" y="208" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="11" font-weight="700" fill="#92400E" text-anchor="start">of organizations don&#x27;t develop business-aligned data products</text>
+  <text x="60" y="226" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="10" font-weight="normal" fill="#78350F" text-anchor="start">Most enterprise data exists as raw, undocumented tables — invisible to AI,</text>
+  <text x="60" y="240" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="10" font-weight="normal" fill="#78350F" text-anchor="start">lacking business context, and unfit for governed consumption.</text>
+  <rect x="40" y="278" width="672" height="110" rx="8" ry="8" fill="#FFF8F2" stroke="#FED7AA" stroke-width="1.5"/>
+  <rect x="40" y="278" width="4" height="110" rx="2" ry="2" fill="#F97316" stroke="none" stroke-width="1.5"/>
+  <text x="60" y="306" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="26" font-weight="700" fill="#F97316" text-anchor="start">9%</text>
+  <text x="60" y="332" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="11" font-weight="700" fill="#92400E" text-anchor="start">have a functioning AI data readiness assessment</text>
+  <text x="60" y="350" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="10" font-weight="normal" fill="#78350F" text-anchor="start">Organizations are planning AI initiatives without knowing which data assets</text>
+  <text x="60" y="364" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="10" font-weight="normal" fill="#78350F" text-anchor="start">are ready to support them. The gap between ambition and readiness stalls AI.</text>
+  <rect x="40" y="402" width="672" height="110" rx="8" ry="8" fill="#FFF8F2" stroke="#FED7AA" stroke-width="1.5"/>
+  <rect x="40" y="402" width="4" height="110" rx="2" ry="2" fill="#F97316" stroke="none" stroke-width="1.5"/>
+  <text x="60" y="430" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="13" font-weight="700" fill="#92400E" text-anchor="start">Semantic fragmentation causes AI to reason incorrectly</text>
+  <text x="60" y="456" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="10" font-weight="normal" fill="#78350F" text-anchor="start">&quot;Customer&quot;, &quot;Client&quot;, &quot;Account&quot; — conflicting definitions across</text>
+  <text x="60" y="470" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="10" font-weight="normal" fill="#78350F" text-anchor="start">teams cause AI to hallucinate business answers in production.</text>
+  <rect x="740" y="92" width="660" height="158" rx="8" ry="8" fill="#F0FFF4" stroke="#86EFAC" stroke-width="2"/>
+  <rect x="740" y="92" width="660" height="30" rx="8" ry="8" fill="#16A34A"/>
+  <text x="754" y="107" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="12" font-weight="700" fill="#FFFFFF" dominant-baseline="middle">DISCOVER &amp; UNDERSTAND AUTOMATICALLY</text>
+  <text x="758" y="138" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="11" font-weight="normal" fill="#475569" text-anchor="start">Agent skills scan every schema, profile every column,</text>
+  <text x="758" y="153.4" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="11" font-weight="normal" fill="#475569" text-anchor="start">and write business descriptions from data patterns.</text>
+  <text x="758" y="168.8" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="11" font-weight="normal" fill="#475569" text-anchor="start">Hours to a complete, governed semantic knowledge graph.</text>
+  <line x1="754" y1="220" x2="1386" y2="220" stroke="#E2E8F0" stroke-width="1"/>
+  <text x="758" y="232" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="8" font-weight="normal" fill="#94A3B8" text-anchor="start">Skills: data-discovery  ·  data-profiling  ·  metadata-enrichment</text>
+  <rect x="740" y="268" width="660" height="158" rx="8" ry="8" fill="#F0FFF4" stroke="#86EFAC" stroke-width="2"/>
+  <rect x="740" y="268" width="660" height="30" rx="8" ry="8" fill="#16A34A"/>
+  <text x="754" y="283" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="12" font-weight="700" fill="#FFFFFF" dominant-baseline="middle">CONTRACT, GOVERN &amp; QUALIFY</text>
+  <text x="758" y="314" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="11" font-weight="normal" fill="#475569" text-anchor="start">ODCS data contracts encode business rules, quality thresholds,</text>
+  <text x="758" y="329.4" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="11" font-weight="normal" fill="#475569" text-anchor="start">and lineage for every data asset.</text>
+  <text x="758" y="344.8" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="11" font-weight="normal" fill="#475569" text-anchor="start">Domain knowledge catalogs pre-load governance rules per domain.</text>
+  <line x1="754" y1="396" x2="1386" y2="396" stroke="#E2E8F0" stroke-width="1"/>
+  <text x="758" y="408" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="8" font-weight="normal" fill="#94A3B8" text-anchor="start">Skills: domain-rule-enhancement  ·  data-quality-rule-generation</text>
+  <rect x="740" y="444" width="660" height="158" rx="8" ry="8" fill="#F0FFF4" stroke="#86EFAC" stroke-width="2"/>
+  <rect x="740" y="444" width="660" height="30" rx="8" ry="8" fill="#16A34A"/>
+  <text x="754" y="459" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="12" font-weight="700" fill="#FFFFFF" dominant-baseline="middle">MAP, SERVE &amp; PUBLISH</text>
+  <text x="758" y="490" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="11" font-weight="normal" fill="#475569" text-anchor="start">AI maps source columns to target schemas with full lineage.</text>
+  <text x="758" y="505.4" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="11" font-weight="normal" fill="#475569" text-anchor="start">Virtual serving views generated, tested, and deployed.</text>
+  <text x="758" y="520.8" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="11" font-weight="normal" fill="#475569" text-anchor="start">Published to a searchable data marketplace — days, not months.</text>
+  <line x1="754" y1="572" x2="1386" y2="572" stroke="#E2E8F0" stroke-width="1"/>
+  <text x="758" y="584" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="8" font-weight="normal" fill="#94A3B8" text-anchor="start">Skills: data-mapping-neo4j  ·  data-serving-virtual-view  ·  data-scoring</text>
+  <rect x="0" y="692" width="1440" height="118" rx="0" ry="0" fill="#1E293B" stroke="none" stroke-width="1.5"/>
+  <text x="720" y="718" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="12" font-weight="600" fill="#F1F5F9" text-anchor="middle">&quot;By 2027, organizations prioritizing semantics in AI-ready data will achieve 80% higher agentic AI accuracy and 60% lower cost.&quot;</text>
+  <text x="720" y="744" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="9" font-weight="normal" fill="#64748B" text-anchor="middle">Gartner  ·  Prioritize Semantics to Overcome the Agentic Contextualization Gap  ·  May 2026  ·  ID G00852605</text>
+  <line x1="400" y1="758" x2="1040" y2="758" stroke="#334155" stroke-width="1"/>
+  <text x="720" y="780" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="11" font-weight="600" fill="#94A3B8" text-anchor="middle">The question isn&#x27;t whether to build data products. It&#x27;s whether you can do it fast enough.</text>
+</svg>

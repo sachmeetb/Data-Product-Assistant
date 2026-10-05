@@ -1,0 +1,43 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# --- Virtual environments ---
+env/
+venv/
+.venv/
+
+# --- Local secrets / env files (docker-compose substitution; never commit) ---
+.env
+.env.*
+!.env.example
+
+# --- Local databases / runtime state ---
+*.db
+*.sqlite
+*.sqlite3
+
+# --- Runtime / generated work dirs (per-project data, connector scratch) ---
+projects/
+.datahub_work/
+.dd_mysql/
+*.log
+
+# --- Node / frontend build ---
+node_modules/
+dist/
+build/
+.vite/
+
+# --- OS / editor cruft ---
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# --- Local-only playbook scratch (unreferenced fixtures + hand-run test CSVs) ---
+playbook/_local/

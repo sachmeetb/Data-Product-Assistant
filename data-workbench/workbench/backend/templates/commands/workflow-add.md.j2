@@ -1,0 +1,14 @@
+---
+description: Add a workflow from the catalog to this project
+argument-hint: <workflow_id>
+---
+
+Add workflow `$ARGUMENTS` to this project. First confirm with the user that the workflow exists and dependencies are met — run `/workflow-list` mentally and check `all_deps_met=true` for the requested id.
+
+```bash
+curl -s -X POST "{{ backend_base_url }}/api/projects/{{ project.id }}/workflows" \
+  -H 'Content-Type: application/json' \
+  -d '{"workflow_id": "<workflow_id>"}'
+```
+
+On success, the new workflow's stages are seeded as `pending` StageRun rows. Run `/refresh-context` to regenerate this CLAUDE.md with the new state.

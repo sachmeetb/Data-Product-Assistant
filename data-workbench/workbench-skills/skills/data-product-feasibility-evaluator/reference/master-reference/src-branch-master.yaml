@@ -1,0 +1,140 @@
+spec_id: src_branch_master
+name: Branch Master
+domain: Master Reference
+product_kind: source
+description: Core Identity and Operational Information, Geographical and Contact details,
+  timings and operational constraints, services offered, channels assigned to physical
+  branches, branch status history. Cash Inventory
+schema_version: '1.0'
+classification: confidential
+grain:
+  keys:
+  - branch_id
+  description: ''
+freshness:
+  history: current
+  cadence: ''
+  description: ''
+allowed_derivations:
+- rename
+- cast
+attributes:
+- name: branch_id
+  type: bigint
+  concept: Branch ID
+  description: Unique internal identifier for a physical bank branch, used as the primary key across all branch-related entities.
+  required: true
+  is_key: true
+  classification: internal
+- name: branch_name
+  type: varchar
+  concept: Branch Name
+  description: Official name of the bank branch as used in customer communications and regulatory filings.
+  required: true
+  is_key: false
+  classification: internal
+- name: ifsc_code
+  type: varchar
+  concept: IFSC Code
+  description: Indian Financial System Code uniquely identifying the branch for domestic payment routing (NEFT, RTGS, IMPS).
+  required: false
+  is_key: false
+  classification: internal
+- name: branch_type
+  type: varchar
+  concept: Branch Type
+  description: Classification of the branch format, such as full-service branch, micro-branch, extension counter, or digital branch.
+  required: true
+  is_key: false
+  classification: internal
+- name: branch_status
+  type: varchar
+  concept: Branch Status
+  description: Current operational status of the branch (e.g. active, under renovation, permanently closed, temporarily closed).
+  required: true
+  is_key: false
+  classification: internal
+- name: address
+  type: varchar
+  concept: Address
+  description: Physical street address of the branch location, classified as PII due to its role in identifying specific premises.
+  required: false
+  is_key: false
+  classification: pii
+- name: pincode
+  type: varchar
+  concept: Pincode
+  description: Postal code of the branch location, used for geographic segmentation and service-area mapping.
+  required: false
+  is_key: false
+  classification: internal
+- name: circle_name
+  type: varchar
+  concept: Circle Name
+  description: Name of the administrative circle or cluster grouping the branch within the bank's internal geographic hierarchy.
+  required: true
+  is_key: false
+  classification: internal
+- name: region_name
+  type: varchar
+  concept: Region Name
+  description: Name of the region within which the branch operates, a mid-tier level in the bank's distribution hierarchy.
+  required: true
+  is_key: false
+  classification: internal
+- name: zone_name
+  type: varchar
+  concept: Zone Name
+  description: Name of the zone at the highest tier of the bank's geographic distribution hierarchy, grouping multiple regions.
+  required: true
+  is_key: false
+  classification: internal
+- name: employee_id
+  type: bigint
+  concept: Employee ID
+  description: Unique identifier for an employee assigned to or managing the branch.
+  required: true
+  is_key: true
+  classification: internal
+- name: employee_name
+  type: varchar
+  concept: Employee Name
+  description: Full name of the branch employee, classified as PII.
+  required: true
+  is_key: false
+  classification: pii
+- name: employee_role
+  type: varchar
+  concept: Employee Role
+  description: Job title or functional role of the employee within the branch (e.g. Branch Manager, Teller, Relationship Officer).
+  required: false
+  is_key: false
+  classification: internal
+- name: contact
+  type: varchar
+  concept: Contact
+  description: Contact phone number or email address of the branch employee, classified as PII.
+  required: false
+  is_key: false
+  classification: pii
+- name: assigned_since
+  type: varchar
+  concept: Assigned Since
+  description: Date from which the employee has been assigned to this branch in their current role.
+  required: false
+  is_key: false
+  classification: internal
+- name: services
+  type: varchar
+  concept: Services
+  description: List of banking services available at the branch, such as account opening, loan processing, locker facilities, or foreign exchange.
+  required: false
+  is_key: false
+  classification: internal
+- name: status
+  type: varchar
+  concept: Status
+  description: Current operational status of the branch's service availability (e.g. open, closed, limited services).
+  required: true
+  is_key: false
+  classification: internal

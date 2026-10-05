@@ -1,0 +1,409 @@
+apiVersion: v3.1.0
+kind: DataContract
+id: template:commercial-lending:src-trade-finance
+name: Trade Finance
+version: 1.0.0
+status: draft
+domain: Commercial Lending
+description: Captures data for Letters of Credit, Bank Guarantees, Bills for Collection,
+  and Export/Import transactions. Includes issuance, amendment, claims, remittances,
+  buyer/seller details, currency, Incoterms, and documentation status.
+schema:
+- name: Trade Finance
+  physicalName: trade_finance
+  physicalType: table
+  description: Captures data for Letters of Credit, Bank Guarantees, Bills for Collection,
+    and Export/Import transactions. Includes issuance, amendment, claims, remittances,
+    buyer/seller details, currency, Incoterms, and documentation status.
+  properties:
+  - name: lc_id
+    physicalName: lc_id
+    logicalName: Lc ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a Letter of Credit instrument, serving as the
+      primary key for all LC-related records including amendments and document checks.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: applicant_id
+    physicalName: applicant_id
+    logicalName: Applicant ID
+    logicalType: bigint
+    physicalType: bigint
+    description: The unique identifier of the corporate customer who applied for the
+      Letter of Credit, representing the importer or buyer.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: beneficiary_id
+    physicalName: beneficiary_id
+    logicalName: Beneficiary ID
+    logicalType: bigint
+    physicalType: bigint
+    description: The unique identifier of the exporter or seller in whose favour the
+      Letter of Credit is issued.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: amount
+    physicalName: amount
+    logicalName: Amount
+    logicalType: numeric
+    physicalType: numeric
+    description: The face value of the Letter of Credit or trade finance instrument,
+      denominated in the specified currency.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: currency
+    physicalName: currency
+    logicalName: Currency
+    logicalType: varchar
+    physicalType: varchar
+    description: The ISO currency code in which the trade finance instrument is denominated.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: issue_date
+    physicalName: issue_date
+    logicalName: Issue Date
+    logicalType: date
+    physicalType: date
+    description: The date on which the Letter of Credit or bank guarantee was formally
+      issued by the bank.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: expiry_date
+    physicalName: expiry_date
+    logicalName: Expiry Date
+    logicalType: date
+    physicalType: date
+    description: The last date by which the beneficiary must present conforming documents
+      to draw under the Letter of Credit.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: status
+    physicalName: status
+    logicalName: Status
+    logicalType: varchar
+    physicalType: varchar
+    description: The current lifecycle state of the trade finance instrument, such
+      as issued, amended, drawn, expired, or cancelled.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: guarantee_id
+    physicalName: guarantee_id
+    logicalName: Guarantee ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a Bank Guarantee instrument issued on behalf
+      of a corporate customer to a third-party beneficiary.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: doc_id
+    physicalName: doc_id
+    logicalName: Doc ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a trade document submitted for checking under
+      a Letter of Credit or collection, such as a bill of lading or invoice.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: type
+    physicalName: type
+    logicalName: Type
+    logicalType: varchar
+    physicalType: varchar
+    description: The category of trade document, such as commercial_invoice, packing_list,
+      certificate_of_origin, or bill_of_lading.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: received_date
+    physicalName: received_date
+    logicalName: Received Date
+    logicalType: date
+    physicalType: date
+    description: The date on which the presented trade documents were received by
+      the bank for examination.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: discrepancy_flag
+    physicalName: discrepancy_flag
+    logicalName: Discrepancy Flag
+    logicalType: boolean
+    physicalType: boolean
+    description: Boolean indicator signalling that one or more presented documents
+      do not comply with the terms of the Letter of Credit.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: pii
+    examples: []
+    logicalTypeOptions: {}
+  - name: drawee_id
+    physicalName: drawee_id
+    logicalName: Drawee ID
+    logicalType: bigint
+    physicalType: bigint
+    description: The unique identifier of the party on whom a bill of exchange is
+      drawn for collection, typically the importer's bank or the importer.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: presenting_bank
+    physicalName: presenting_bank
+    logicalName: Presenting Bank
+    logicalType: varchar
+    physicalType: varchar
+    description: The name of the correspondent bank presenting the collection documents
+      on behalf of the seller.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: due_date
+    physicalName: due_date
+    logicalName: Due Date
+    logicalType: date
+    physicalType: date
+    description: The date on which payment is due under a usance bill of exchange
+      or deferred payment arrangement.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: shipment_id
+    physicalName: shipment_id
+    logicalName: Shipment ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a shipment record associated with the trade
+      finance transaction, capturing logistics details.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: vessel
+    physicalName: vessel
+    logicalName: Vessel
+    logicalType: varchar
+    physicalType: varchar
+    description: The name of the shipping vessel used to transport goods under the
+      trade finance transaction.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: port_of_loading
+    physicalName: port_of_loading
+    logicalName: Port Of Loading
+    logicalType: varchar
+    physicalType: varchar
+    description: The name of the port from which the goods were loaded and dispatched.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: port_of_discharge
+    physicalName: port_of_discharge
+    logicalName: Port Of Discharge
+    logicalType: varchar
+    physicalType: varchar
+    description: The name of the destination port where goods are unloaded.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: incoterm
+    physicalName: incoterm
+    logicalName: Incoterm
+    logicalType: varchar
+    physicalType: varchar
+    description: The International Commercial Terms (Incoterms) rule governing delivery
+      obligations, risk, and cost division between buyer and seller.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: bill_id
+    physicalName: bill_id
+    logicalName: Bill ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a bill of exchange or collection instrument
+      associated with the trade finance transaction.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: settlement_id
+    physicalName: settlement_id
+    logicalName: Settlement ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for the settlement record capturing the payment
+      or funds transfer finalising a trade finance transaction.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: method
+    physicalName: method
+    logicalName: Method
+    logicalType: varchar
+    physicalType: varchar
+    description: The settlement mechanism or payment instruction type, such as SWIFT_MT103,
+      RTGS, or nostro_account_transfer.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: charges
+    physicalName: charges
+    logicalName: Charges
+    logicalType: numeric
+    physicalType: numeric
+    description: The bank charges and fees levied for processing the trade finance
+      instrument, such as issuance fees or amendment charges.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: reimbursement_bank
+    physicalName: reimbursement_bank
+    logicalName: Reimbursement Bank
+    logicalType: varchar
+    physicalType: varchar
+    description: The name of the correspondent bank authorised to claim reimbursement
+      on behalf of the negotiating or paying bank.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  foreignKeys: []
+  transform:
+    grouping_keys:
+    - lc_id
+    scd_policy:
+      type: latest_only
+customProperties:
+  feasibility:
+    schema_version: '1.0'
+    spec_classification: confidential
+    cadence: ''
+    freshness_history: current
+    freshness_description: ''
+    grain_keys:
+    - lc_id
+    grain_description: ''
+    allowed_derivations:
+    - rename
+    - cast
+    composition:
+      join_keys: []
+      composed_of: []
+      description: ''
+    attr_derivations:
+      amount:
+      - currency_normalize
+      charges:
+      - currency_normalize
+productKind: source
+sourceSpecId: src_trade_finance

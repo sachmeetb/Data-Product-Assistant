@@ -211,6 +211,7 @@ export default function App() {
         messages={messages}
         onSend={sendMessage}
         onChipClick={handleChipClick}
+        sessionId={sessionId}
         sending={sending}
         inputLocked={!startingPointPicked}
         allowUpload={allowUpload}

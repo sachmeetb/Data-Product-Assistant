@@ -1,0 +1,8 @@
+{
+  "name": "workbench-engineer",
+  "version": "0.2.0",
+  "description": "Data Workbench engineer kit — the workbench MCP server, a guide skill, and /workbench-status + /workbench-overview slash commands so a data engineer can drive workbench-managed projects from their own Claude Code (thin client; pipeline skills run server-side).",
+  "author": {
+    "name": "Data Workbench"
+  }
+}

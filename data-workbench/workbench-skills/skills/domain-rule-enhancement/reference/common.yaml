@@ -1,0 +1,52 @@
+domain: common
+description: Universal domain rules that apply across all domains.
+
+rules:
+  # ── Temporal rules ────────────────────────────────────────────────────────
+  - match:
+      data_type: ["timestamp", "timestamp without time zone", "timestamp with time zone"]
+    rule:
+      type: range
+      max: "today"
+      severity: "sh:Warning"
+      rationale: "Timestamps should not be in the future unless explicitly expected"
+
+  # ── Contact information ───────────────────────────────────────────────────
+  - match:
+      description_contains: ["email", "e-mail", "email_address"]
+      data_type: ["varchar", "text", "character varying"]
+    rule:
+      type: pattern
+      regex: "^[^@]+@[^@]+\\.[^@]+$"
+      severity: "sh:Warning"
+      rationale: "Email addresses should match basic format"
+
+  - match:
+      description_contains: ["country", "country_code", "country code"]
+      name_contains: ["country"]
+    rule:
+      type: allowedValues
+      values_file: "iso_3166_alpha2.txt"
+      severity: "sh:Warning"
+      rationale: "Country codes should conform to ISO 3166 alpha-2"
+
+  # ── Identifiers ───────────────────────────────────────────────────────────
+  - match:
+      description_contains: ["zip", "postal", "zip_code", "postal_code"]
+      data_type: ["varchar", "text", "character varying", "integer"]
+    rule:
+      type: pattern
+      regex: "^[0-9A-Za-z\\- ]{3,10}$"
+      severity: "sh:Info"
+      rationale: "Postal/ZIP codes should be short alphanumeric strings"
+
+  # ── Percentages and ratios ────────────────────────────────────────────────
+  - match:
+      description_contains: ["percent", "percentage", "ratio", "rate"]
+      data_type: ["numeric", "decimal", "real", "double precision", "float"]
+    rule:
+      type: range
+      min: 0
+      max: 100
+      severity: "sh:Warning"
+      rationale: "Percentage values should be between 0 and 100"

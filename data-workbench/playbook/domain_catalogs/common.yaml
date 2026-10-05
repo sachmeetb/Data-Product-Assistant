@@ -1,0 +1,110 @@
+domain: common
+description: Canonical columns that appear across most domain schemas.
+columns:
+  - name: id
+    logical_type: integer
+    physical_type: bigint
+    primary_key: true
+    description: Stable, non-reusable surrogate key for each row.
+    recommended_rules:
+      - { type: notNull }
+      - { type: unique }
+  - name: created_at
+    logical_type: timestamp
+    physical_type: timestamp with time zone
+    description: Row creation timestamp in UTC.
+    recommended_rules:
+      - { type: notNull }
+      - { type: range, max: "now", severity: "sh:Warning" }
+  - name: updated_at
+    logical_type: timestamp
+    physical_type: timestamp with time zone
+    description: Last-modified timestamp in UTC.
+    recommended_rules:
+      - { type: range, max: "now", severity: "sh:Warning" }
+  - name: is_deleted
+    logical_type: boolean
+    physical_type: boolean
+    description: Soft-delete flag. True rows should be excluded from most analytics.
+    recommended_rules:
+      - { type: notNull }
+
+  # ── Derived patterns ──────────────────────────────────────────────────
+  #
+  # Columns below are NOT source-system columns — they're consumer-aligned
+  # derivation templates. Tagged `source_category: derived` so the wizard's
+  # catalog picker can group them separately from raw source columns. Each
+  # entry carries the standard semantics + a derivation hint in its
+  # description; the actual SQL is composed at view-DDL time from
+  # :DatasetTransform.grouping_keys / :DatasetTransform.window_specs and
+  # column-level aggregateFunction.
+
+  # Time-bucket dimensions — declare as grouping keys on a consumer-aligned
+  # dataset to bucket aggregates by period. View-DDL emits
+  # `date_trunc(<period>, <temporal_col>)` for these.
+  - name: week_of
+    logical_type: date
+    physical_type: date
+    source_category: derived
+    description: Monday-anchored week the row's measures cover. Derived as `date_trunc('week', <temporal_column>)`; used as a grouping key for weekly aggregates.
+    recommended_rules:
+      - { type: notNull }
+  - name: month_of
+    logical_type: date
+    physical_type: date
+    source_category: derived
+    description: First-of-month date the row's measures cover. Derived as `date_trunc('month', <temporal_column>)`; used as a grouping key for monthly aggregates.
+    recommended_rules:
+      - { type: notNull }
+  - name: fiscal_quarter
+    logical_type: string
+    physical_type: varchar(8)
+    source_category: derived
+    description: Fiscal quarter label (e.g. "2024-Q3"). Derived from a temporal column plus the org's fiscal-year offset; used as a grouping key for quarterly aggregates.
+    recommended_rules:
+      - { type: regex, pattern: "^[0-9]{4}-Q[1-4]$" }
+  - name: fiscal_year
+    logical_type: integer
+    physical_type: integer
+    source_category: derived
+    description: Fiscal year as an integer (e.g. 2024). Derived from a temporal column plus the org's fiscal-year offset; used as a grouping key for annual aggregates.
+    recommended_rules:
+      - { type: range, min: 2000, max: 2100 }
+  - name: iso_week
+    logical_type: string
+    physical_type: varchar(8)
+    source_category: derived
+    description: ISO 8601 week label (e.g. "2024-W32"). Derived from a temporal column; used as a grouping key when consumers prefer ISO week semantics over Monday-of-week dates.
+    recommended_rules:
+      - { type: regex, pattern: "^[0-9]{4}-W[0-9]{2}$" }
+
+  # SCD-2 effective dating — declare on a dimension where the consumer
+  # preserves history. Companion to :DatasetTransform.scd_policy='scd2';
+  # the wizard's Shape step lets the PO point scd_policy at these columns.
+  - name: effective_from
+    logical_type: timestamp
+    physical_type: timestamp with time zone
+    source_category: derived
+    # Only meaningful when the consumer preserves history. The schema advisor
+    # excludes this from recommendations unless the Shape step's scd_policy is
+    # 'scd2'; under latest_only / snapshot / none it's dead weight.
+    requires_scd_policy: scd2
+    description: Inclusive lower bound of the period this row's values were active. SCD-2 effective dating; paired with effective_to to define a non-overlapping validity window per natural key.
+    recommended_rules:
+      - { type: notNull }
+      - { type: range, max: "now", severity: "sh:Warning" }
+  - name: effective_to
+    logical_type: timestamp
+    physical_type: timestamp with time zone
+    source_category: derived
+    requires_scd_policy: scd2
+    description: Exclusive upper bound of the period this row's values were active. SCD-2 effective dating; NULL means "currently active". Paired with effective_from.
+    recommended_rules: []
+  - name: is_current
+    logical_type: boolean
+    physical_type: boolean
+    source_category: derived
+    requires_scd_policy: scd2
+    description: Denormalised flag — true exactly when effective_to IS NULL. Lets consumers filter to "latest only" without a self-join. Derived on every write; not authored independently.
+    recommended_rules:
+      - { type: notNull }

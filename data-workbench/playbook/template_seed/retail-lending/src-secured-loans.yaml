@@ -1,0 +1,613 @@
+apiVersion: v3.1.0
+kind: DataContract
+id: template:retail-lending:src-secured-loans
+name: Secured Loans
+version: 1.0.0
+status: draft
+domain: Retail Lending
+description: Loans backed by collateral such as mortgage, car, gold, and loan against
+  property. Includes disbursement, repayment, and collateral tracking.
+schema:
+- name: Secured Loans
+  physicalName: secured_loans
+  physicalType: table
+  description: Loans backed by collateral such as mortgage, car, gold, and loan against
+    property. Includes disbursement, repayment, and collateral tracking.
+  properties:
+  - name: customer_id
+    physicalName: customer_id
+    logicalName: Customer ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for the borrower, used as a primary key to link
+      secured loan records to the customer master.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: name
+    physicalName: name
+    logicalName: Name
+    logicalType: varchar
+    physicalType: varchar
+    description: Full name of the borrower associated with the secured loan.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: contact_info
+    physicalName: contact_info
+    logicalName: Contact Info
+    logicalType: varchar
+    physicalType: varchar
+    description: Contact details of the borrower (phone number, email address), classified
+      as PII.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: pii
+    examples: []
+    logicalTypeOptions: {}
+  - name: credit_score
+    physicalName: credit_score
+    logicalName: Credit Score
+    logicalType: numeric
+    physicalType: numeric
+    description: Numeric credit score of the borrower at the time of loan origination
+      or most recent review, indicating their creditworthiness.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: loan_id
+    physicalName: loan_id
+    logicalName: Loan ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a secured loan account, used as a primary key
+      across disbursement, repayment, and collateral records.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: product
+    physicalName: product
+    logicalName: Product
+    logicalType: varchar
+    physicalType: varchar
+    description: Name or code of the secured lending product (e.g. home loan, auto
+      loan, gold loan, loan against property).
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: sanction_amount
+    physicalName: sanction_amount
+    logicalName: Sanction Amount
+    logicalType: numeric
+    physicalType: numeric
+    description: Total loan amount approved and sanctioned by the credit committee
+      or underwriting team.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: disbursed_amount
+    physicalName: disbursed_amount
+    logicalName: Disbursed Amount
+    logicalType: numeric
+    physicalType: numeric
+    description: Actual monetary amount disbursed to the borrower, which may be less
+      than the sanctioned amount.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: rate_type
+    physicalName: rate_type
+    logicalName: Rate Type
+    logicalType: varchar
+    physicalType: varchar
+    description: Classification of the interest rate structure applied to the loan,
+      such as fixed, floating, or hybrid.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: spread
+    physicalName: spread
+    logicalName: Spread
+    logicalType: numeric
+    physicalType: numeric
+    description: Margin in basis points added above the benchmark rate to determine
+      the borrower's effective floating interest rate.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: emi_amount
+    physicalName: emi_amount
+    logicalName: Emi Amount
+    logicalType: numeric
+    physicalType: numeric
+    description: Fixed equated monthly installment amount the borrower is required
+      to repay each month.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: tenor
+    physicalName: tenor
+    logicalName: Tenor
+    logicalType: varchar
+    physicalType: varchar
+    description: Original loan term or repayment period expressed as a duration (e.g.
+      15Y, 20Y, 60M).
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: start_date
+    physicalName: start_date
+    logicalName: Start Date
+    logicalType: date
+    physicalType: date
+    description: Date on which the secured loan was disbursed and the repayment schedule
+      commenced.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: maturity_date
+    physicalName: maturity_date
+    logicalName: Maturity Date
+    logicalType: date
+    physicalType: date
+    description: Date on which the final installment of the secured loan is due and
+      the loan is expected to be fully repaid.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: status
+    physicalName: status
+    logicalName: Status
+    logicalType: varchar
+    physicalType: varchar
+    description: Current lifecycle status of the secured loan (e.g. active, closed,
+      written off, non-performing, restructured).
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: collateral_id
+    physicalName: collateral_id
+    logicalName: Collateral ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a collateral asset pledged against the secured
+      loan.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: type
+    physicalName: type
+    logicalName: Type
+    logicalType: varchar
+    physicalType: varchar
+    description: Type of collateral pledged, such as residential property, vehicle,
+      gold, commercial property, or fixed deposit.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: identifier
+    physicalName: identifier
+    logicalName: Identifier
+    logicalType: varchar
+    physicalType: varchar
+    description: Legal or registration identifier for the collateral asset (e.g. property
+      registration number, vehicle chassis number).
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: valuation_amount
+    physicalName: valuation_amount
+    logicalName: Valuation Amount
+    logicalType: numeric
+    physicalType: numeric
+    description: Appraised market value of the collateral asset as assessed by an
+      approved valuer.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: valuation_date
+    physicalName: valuation_date
+    logicalName: Valuation Date
+    logicalType: date
+    physicalType: date
+    description: Date on which the most recent collateral valuation was conducted.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: ltv
+    physicalName: ltv
+    logicalName: LTV
+    logicalType: varchar
+    physicalType: varchar
+    description: Loan-to-Value ratio expressing the outstanding loan balance as a
+      percentage of the collateral's current assessed value.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: lien_charge_details
+    physicalName: lien_charge_details
+    logicalName: Lien Charge Details
+    logicalType: varchar
+    physicalType: varchar
+    description: Details of the lien or equitable mortgage charge registered against
+      the collateral in favor of the bank.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: insurance_policy_id
+    physicalName: insurance_policy_id
+    logicalName: Insurance Policy ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for an insurance policy linked to the loan to cover
+      the borrower or the collateral asset.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: schedule_id
+    physicalName: schedule_id
+    logicalName: Schedule ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for the repayment schedule record defining installment
+      dates and amounts for the secured loan.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: installment_no
+    physicalName: installment_no
+    logicalName: Installment No
+    logicalType: varchar
+    physicalType: varchar
+    description: Sequential installment number within the repayment schedule identifying
+      which EMI this record represents.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: due_date
+    physicalName: due_date
+    logicalName: Due Date
+    logicalType: date
+    physicalType: date
+    description: Date on which a specific loan installment payment is due from the
+      borrower.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: principal_component
+    physicalName: principal_component
+    logicalName: Principal Component
+    logicalType: varchar
+    physicalType: varchar
+    description: Portion of the installment amount that repays the outstanding principal
+      balance of the secured loan.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: interest_component
+    physicalName: interest_component
+    logicalName: Interest Component
+    logicalType: varchar
+    physicalType: varchar
+    description: Portion of the installment amount that covers accrued interest on
+      the outstanding principal.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: paid_flag
+    physicalName: paid_flag
+    logicalName: Paid Flag
+    logicalType: boolean
+    physicalType: boolean
+    description: Boolean indicator that a specific installment has been paid by the
+      borrower on or before its due date.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: processing_fee
+    physicalName: processing_fee
+    logicalName: Processing Fee
+    logicalType: numeric
+    physicalType: numeric
+    description: One-time fee charged to the borrower for processing and sanctioning
+      the loan application.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: prepayment_penalty
+    physicalName: prepayment_penalty
+    logicalName: Prepayment Penalty
+    logicalType: varchar
+    physicalType: varchar
+    description: Charge levied on the borrower for repaying a portion or all of the
+      loan before the scheduled maturity date.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: late_fee
+    physicalName: late_fee
+    logicalName: Late Fee
+    logicalType: numeric
+    physicalType: numeric
+    description: Penalty fee charged to the borrower when an installment payment is
+      not received by its due date.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: days_past_due
+    physicalName: days_past_due
+    logicalName: Days Past Due
+    logicalType: varchar
+    physicalType: varchar
+    description: Number of calendar days elapsed since the most recent missed installment
+      payment due date.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: bucket
+    physicalName: bucket
+    logicalName: Bucket
+    logicalType: varchar
+    physicalType: varchar
+    description: Delinquency bucket classifying the loan by its days-past-due band
+      for collections and provisioning purposes (e.g. 0-30, 31-60, 61-90 days).
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: legal_stage
+    physicalName: legal_stage
+    logicalName: Legal Stage
+    logicalType: varchar
+    physicalType: varchar
+    description: Current stage in the legal or collections process for a delinquent
+      secured loan (e.g. notice issued, suit filed, recovery proceedings).
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: promise_to_pay_date
+    physicalName: promise_to_pay_date
+    logicalName: Promise To Pay Date
+    logicalType: date
+    physicalType: date
+    description: Date on which the borrower committed to making an overdue payment
+      during a collections interaction.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: repossession_flag
+    physicalName: repossession_flag
+    logicalName: Repossession Flag
+    logicalType: boolean
+    physicalType: boolean
+    description: Boolean indicator that the bank has initiated or completed repossession
+      of the collateral asset for this loan.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: program_id
+    physicalName: program_id
+    logicalName: Program ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a loan restructuring, moratorium, or special
+      program applied to the secured loan.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: moratorium_period
+    physicalName: moratorium_period
+    logicalName: Moratorium Period
+    logicalType: varchar
+    physicalType: varchar
+    description: Duration during which the borrower is permitted to defer loan repayments
+      under a regulatory or bank-approved moratorium.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: revised_tenor
+    physicalName: revised_tenor
+    logicalName: Revised Tenor
+    logicalType: varchar
+    physicalType: varchar
+    description: Updated loan repayment period following a restructuring, moratorium
+      extension, or modification of the original loan terms.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: modification_date
+    physicalName: modification_date
+    logicalName: Modification Date
+    logicalType: date
+    physicalType: date
+    description: Date on which the loan terms were formally modified, such as a rate
+      reset, restructuring, or tenure extension.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  foreignKeys: []
+  transform:
+    grouping_keys:
+    - customer_id
+    scd_policy:
+      type: scd2
+customProperties:
+  feasibility:
+    schema_version: '1.0'
+    spec_classification: confidential
+    cadence: ''
+    freshness_history: scd2
+    freshness_description: ''
+    grain_keys:
+    - customer_id
+    grain_description: ''
+    allowed_derivations:
+    - rename
+    - cast
+    composition:
+      join_keys: []
+      composed_of: []
+      description: ''
+productKind: source
+sourceSpecId: src_secured_loans

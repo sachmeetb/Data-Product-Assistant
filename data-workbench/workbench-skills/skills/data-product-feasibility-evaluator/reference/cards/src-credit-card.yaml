@@ -1,0 +1,241 @@
+spec_id: src_credit_card
+name: Credit Card
+domain: Cards
+product_kind: source
+description: Credit limit, outstanding balance, transaction history, disputes, chargebacks, statement cycles, payment behavior,
+  penalities and rewards.
+schema_version: '1.0'
+classification: internal
+grain:
+  keys:
+  - card_id
+  description: ''
+freshness:
+  history: scd2
+  cadence: ''
+  description: ''
+allowed_derivations:
+- rename
+- cast
+attributes:
+- name: card_id
+  type: bigint
+  concept: Card ID
+  required: true
+  is_key: true
+  classification: internal
+  description: Unique identifier for a payment card issued to a customer, serving as the primary key for all card-related
+    records.
+- name: card_type
+  type: varchar
+  concept: Card Type
+  required: true
+  is_key: false
+  classification: internal
+  description: Category of payment card by product tier or type, such as classic, gold, platinum, or corporate.
+- name: card_status
+  type: varchar
+  concept: Card Status
+  required: true
+  is_key: false
+  classification: internal
+  description: Current status of the card, such as active, blocked, expired, or hotlisted.
+- name: issue_date
+  type: date
+  concept: Issue Date
+  required: true
+  is_key: false
+  classification: internal
+  description: Date on which a card, bond, or document was issued.
+- name: expiry_date
+  type: date
+  concept: Expiry Date
+  required: true
+  is_key: false
+  classification: internal
+  description: Date on which a card, offer, consent, or financial instrument expires and becomes invalid.
+- name: credit_limit
+  type: numeric
+  concept: Credit Limit
+  required: true
+  is_key: false
+  classification: internal
+  description: Maximum credit amount available on a credit card or overdraft account, set by the bank based on creditworthiness.
+- name: usage_limit
+  type: numeric
+  concept: Usage Limit
+  required: true
+  is_key: false
+  classification: internal
+  description: Transactional usage limit set on a card, which may differ from the credit limit.
+- name: account_id
+  type: bigint
+  concept: Account ID
+  required: true
+  is_key: true
+  classification: internal
+  description: Unique identifier for the bank account linked to a product or transaction, used as a join key to account-level
+    records.
+- name: account_type
+  type: numeric
+  concept: Account Type
+  required: true
+  is_key: false
+  classification: internal
+  description: Classification of the bank account by product category, such as savings, current, overdraft, or loan account.
+- name: customer_id
+  type: bigint
+  concept: Customer ID
+  required: true
+  is_key: true
+  classification: internal
+  description: Unique numeric identifier for a customer record, serving as the primary join key across all customer-related
+    entities.
+- name: account_status
+  type: numeric
+  concept: Account Status
+  required: true
+  is_key: false
+  classification: internal
+  description: Current operational state of the bank account, such as active, dormant, closed, or frozen.
+- name: account_balance
+  type: numeric
+  concept: Account Balance
+  required: true
+  is_key: false
+  classification: internal
+  description: Current net balance of the bank account, reflecting all posted credits and debits as of the reporting timestamp.
+- name: txn_id
+  type: bigint
+  concept: Txn ID
+  required: true
+  is_key: true
+  classification: internal
+  description: Unique identifier for a payment card transaction.
+- name: txn_date
+  type: date
+  concept: Txn Date
+  required: true
+  is_key: false
+  classification: internal
+  description: Date on which a payment card transaction was processed.
+- name: merchant
+  type: varchar
+  concept: Merchant
+  required: false
+  is_key: false
+  classification: internal
+  description: Name or identifier of the merchant at which a card transaction was made.
+- name: amount
+  type: numeric
+  concept: Amount
+  required: true
+  is_key: false
+  classification: internal
+  description: Monetary value associated with a transaction, payment, or financial event, denominated in the account's base
+    currency.
+- name: txn_type
+  type: varchar
+  concept: Txn Type
+  required: true
+  is_key: false
+  classification: internal
+  description: Type of card transaction, such as purchase, cash advance, or balance transfer.
+- name: billing_month
+  type: varchar
+  concept: Billing Month
+  required: false
+  is_key: false
+  classification: internal
+  description: Calendar month to which a billing statement or credit card cycle relates.
+- name: cycle_start_date
+  type: date
+  concept: Cycle Start Date
+  required: true
+  is_key: false
+  classification: internal
+  description: Start date of a billing or interest cycle for a credit card or loan account.
+- name: cycle_end_date
+  type: date
+  concept: Cycle End Date
+  required: true
+  is_key: false
+  classification: internal
+  description: End date of a billing or interest cycle for a credit card or loan account.
+- name: starting_balance
+  type: numeric
+  concept: Starting Balance
+  required: true
+  is_key: false
+  classification: internal
+  description: Account or portfolio balance at the start of a reporting period.
+- name: statement_balance
+  type: numeric
+  concept: Statement Balance
+  required: true
+  is_key: false
+  classification: internal
+  description: Total balance shown on a credit card or account statement for a billing cycle.
+- name: closing_balance
+  type: numeric
+  concept: Closing Balance
+  required: true
+  is_key: false
+  classification: internal
+  description: Account balance at the end of a statement cycle or reporting period.
+- name: due_date
+  type: date
+  concept: Due Date
+  required: true
+  is_key: false
+  classification: internal
+  description: Date by which a payment, document submission, or action must be completed to avoid penalty.
+- name: reward_id
+  type: bigint
+  concept: Reward ID
+  required: true
+  is_key: true
+  classification: internal
+  description: Unique identifier for a reward or loyalty programme transaction.
+- name: points
+  type: numeric
+  concept: Points
+  required: false
+  is_key: false
+  classification: internal
+  description: Number of reward or loyalty points accrued on a customer's account.
+- name: points_accured_date
+  type: date
+  concept: Points Accured Date
+  required: true
+  is_key: false
+  classification: internal
+  description: Date on which reward points were accrued to a customer's loyalty account.
+- name: points_expiry_date
+  type: date
+  concept: Points Expiry Date
+  required: true
+  is_key: false
+  classification: internal
+  description: Date on which accrued reward points expire if not redeemed.
+- name: charge_id
+  type: bigint
+  concept: Charge ID
+  required: true
+  is_key: true
+  classification: internal
+  description: Unique identifier for a fee or charge applied to an account.
+- name: charge_type
+  type: varchar
+  concept: Charge Type
+  required: true
+  is_key: false
+  classification: internal
+  description: Classification of the charge by type, such as annual fee, late payment fee, or service charge.
+- name: date
+  type: date
+  concept: Date
+  required: true
+  is_key: false
+  classification: internal
+  description: Calendar date associated with a record, event, or observation.

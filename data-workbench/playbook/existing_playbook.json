@@ -1,0 +1,47 @@
+{
+  "domain": "Human Resources",
+  "playbook_items": [
+    {
+      "rule": "Do not append nullability qualifiers like 'always present' or 'never null' to descriptions of simple text or name columns. Nullability is metadata, not a semantic description. Only mention presence/absence when it carries business meaning (e.g., a null end-date indicates a currently active record).",
+      "version": 1,
+      "sequence": 1,
+      "phase": "enrichment"
+    },
+    {
+      "rule": "When describing columns with constrained or enumerated value sets, state the nature of the constraint (e.g., 'one of N values') but do not exhaustively list every possible value in the description unless the number of distinct values is very small (5 or fewer).",
+      "version": 1,
+      "sequence": 2,
+      "phase": "enrichment"
+    },
+    {
+      "rule": "Include representative domain examples in parentheses for descriptive or categorical columns to ground the description in concrete HR vocabulary (e.g., 'department name (e.g. Sales, Development)').",
+      "version": 1,
+      "sequence": 3,
+      "phase": "enrichment"
+    },
+    {
+      "rule": "For foreign key columns, go beyond the generic 'foreign key referencing...' pattern. Describe the business relationship the FK represents (e.g., 'the employee who manages the department' rather than 'foreign key referencing the employee table'). Add context about the role the referenced entity plays.",
+      "version": 1,
+      "sequence": 4,
+      "phase": "enrichment"
+    },
+    {
+      "rule": "For date columns in temporal/historical tables (tables with from_date/to_date pairs), describe the business event the date represents, note whether it forms part of a composite key, and explain the far-future sentinel value convention if applicable (e.g., '9999-01-01 indicates a currently active record').",
+      "version": 1,
+      "sequence": 5,
+      "phase": "enrichment"
+    },
+    {
+      "rule": "For identifier/primary key columns, describe the format and assignment pattern (numeric sequential, alphanumeric code, UUID, etc.) rather than just stating 'unique identifier'. Avoid including specific example values unless they illustrate the format.",
+      "version": 1,
+      "sequence": 6,
+      "phase": "enrichment"
+    },
+    {
+      "rule": "Keep descriptions concise \u2014 aim for one sentence. A second clause after a semicolon is acceptable when it adds genuinely distinct business context (e.g., a sentinel value convention), but avoid padding with redundant qualifiers.",
+      "version": 1,
+      "sequence": 7,
+      "phase": "enrichment"
+    }
+  ]
+}

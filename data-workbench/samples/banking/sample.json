@@ -1,0 +1,9 @@
+{
+  "name": "banking",
+  "platform": "postgres",
+  "domain": "Banking & Finance",
+  "description": "Retail banking EDW — accounts, transactions, customers, products, marketing campaigns.",
+  "database": "banking",
+  "schemas": ["edw", "retail", "analytics", "marketing", "banking_views"],
+  "primary_schema": "edw"
+}

@@ -1,0 +1,204 @@
+spec_id: src_prepaid_card
+name: Prepaid Card
+domain: Cards
+product_kind: source
+description: Cards loaded with fixed value, not linked to an account, typically used for gifting, travel, or salary disbursements.
+schema_version: '1.0'
+classification: internal
+grain:
+  keys:
+  - card_id
+  description: ''
+freshness:
+  history: current
+  cadence: ''
+  description: ''
+allowed_derivations:
+- rename
+- cast
+attributes:
+- name: card_id
+  type: bigint
+  concept: Card ID
+  required: true
+  is_key: true
+  classification: internal
+  description: Unique identifier for a payment card issued to a customer, serving as the primary key for all card-related
+    records.
+- name: card_type
+  type: varchar
+  concept: Card Type
+  required: true
+  is_key: false
+  classification: internal
+  description: Category of payment card by product tier or type, such as classic, gold, platinum, or corporate.
+- name: card_status
+  type: varchar
+  concept: Card Status
+  required: true
+  is_key: false
+  classification: internal
+  description: Current status of the card, such as active, blocked, expired, or hotlisted.
+- name: issue_date
+  type: date
+  concept: Issue Date
+  required: true
+  is_key: false
+  classification: internal
+  description: Date on which a card, bond, or document was issued.
+- name: expiry_date
+  type: date
+  concept: Expiry Date
+  required: true
+  is_key: false
+  classification: internal
+  description: Date on which a card, offer, consent, or financial instrument expires and becomes invalid.
+- name: card_face_value
+  type: numeric
+  concept: Card Face Value
+  required: true
+  is_key: false
+  classification: internal
+  description: Nominal or face value loaded onto a prepaid card at issuance or top-up.
+- name: usage_limit
+  type: numeric
+  concept: Usage Limit
+  required: true
+  is_key: false
+  classification: internal
+  description: Transactional usage limit set on a card, which may differ from the credit limit.
+- name: customer_id
+  type: bigint
+  concept: Customer ID
+  required: true
+  is_key: true
+  classification: internal
+  description: Unique numeric identifier for a customer record, serving as the primary join key across all customer-related
+    entities.
+- name: kyc_id
+  type: bigint
+  concept: KYC ID
+  required: true
+  is_key: true
+  classification: internal
+  description: Unique identifier for a KYC (Know Your Customer) verification record for a customer.
+- name: status
+  type: varchar
+  concept: Status
+  required: true
+  is_key: false
+  classification: internal
+  description: Current operational or lifecycle status of a record, account, or product.
+- name: verification_date
+  type: date
+  concept: Verification Date
+  required: true
+  is_key: false
+  classification: internal
+  description: Date on which a KYC document, identity, or credential was verified.
+- name: txn_id
+  type: bigint
+  concept: Txn ID
+  required: true
+  is_key: true
+  classification: internal
+  description: Unique identifier for a payment card transaction.
+- name: txn_date
+  type: date
+  concept: Txn Date
+  required: true
+  is_key: false
+  classification: internal
+  description: Date on which a payment card transaction was processed.
+- name: merchant
+  type: varchar
+  concept: Merchant
+  required: false
+  is_key: false
+  classification: internal
+  description: Name or identifier of the merchant at which a card transaction was made.
+- name: amount
+  type: numeric
+  concept: Amount
+  required: true
+  is_key: false
+  classification: internal
+  description: Monetary value associated with a transaction, payment, or financial event, denominated in the account's base
+    currency.
+- name: txn_type
+  type: varchar
+  concept: Txn Type
+  required: true
+  is_key: false
+  classification: internal
+  description: Type of card transaction, such as purchase, cash advance, or balance transfer.
+- name: usage_id
+  type: bigint
+  concept: Usage ID
+  required: true
+  is_key: true
+  classification: internal
+  description: Unique identifier for a product usage or service consumption event.
+- name: location
+  type: varchar
+  concept: Location
+  required: false
+  is_key: false
+  classification: internal
+  description: Geographic location of a branch, ATM, customer, or event.
+- name: timestamp
+  type: timestamp
+  concept: Timestamp
+  required: false
+  is_key: false
+  classification: internal
+  description: Date and time at which an event, transaction, or record was created or updated.
+- name: reward_id
+  type: bigint
+  concept: Reward ID
+  required: true
+  is_key: true
+  classification: internal
+  description: Unique identifier for a reward or loyalty programme transaction.
+- name: points
+  type: numeric
+  concept: Points
+  required: false
+  is_key: false
+  classification: internal
+  description: Number of reward or loyalty points accrued on a customer's account.
+- name: points_accured_date
+  type: date
+  concept: Points Accured Date
+  required: true
+  is_key: false
+  classification: internal
+  description: Date on which reward points were accrued to a customer's loyalty account.
+- name: points_expiry_date
+  type: date
+  concept: Points Expiry Date
+  required: true
+  is_key: false
+  classification: internal
+  description: Date on which accrued reward points expire if not redeemed.
+- name: charge_id
+  type: bigint
+  concept: Charge ID
+  required: true
+  is_key: true
+  classification: internal
+  description: Unique identifier for a fee or charge applied to an account.
+- name: charge_type
+  type: varchar
+  concept: Charge Type
+  required: true
+  is_key: false
+  classification: internal
+  description: Classification of the charge by type, such as annual fee, late payment fee, or service charge.
+- name: date
+  type: date
+  concept: Date
+  required: true
+  is_key: false
+  classification: internal
+  description: Calendar date associated with a record, event, or observation.

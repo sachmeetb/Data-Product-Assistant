@@ -1,0 +1,850 @@
+domain: hr
+label: Human Resources
+description: Human Resources canonical schema — employees, departments, employment records.
+columns:
+  - name: employee_id
+    logical_type: integer
+    physical_type: bigint
+    primary_key: true
+    description: Unique identifier for an employee, stable across lifecycle events.
+    recommended_rules:
+      - { type: notNull }
+      - { type: unique }
+  - name: first_name
+    sensitivity: pii
+    logical_type: string
+    physical_type: varchar(100)
+    description: Legal first name.
+    recommended_rules:
+      - { type: notNull }
+      - { type: maxLength, value: 100 }
+  - name: last_name
+    sensitivity: pii
+    logical_type: string
+    physical_type: varchar(100)
+    description: Legal last name.
+    recommended_rules:
+      - { type: notNull }
+      - { type: maxLength, value: 100 }
+  - name: email
+    sensitivity: pii
+    logical_type: string
+    physical_type: varchar(320)
+    description: Work email address.
+    recommended_rules:
+      - { type: notNull }
+      - { type: unique }
+      - { type: regex, pattern: "^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$" }
+  - name: hire_date
+    logical_type: date
+    physical_type: date
+    description: First day of employment.
+    recommended_rules:
+      - { type: notNull }
+      - { type: range, max: "today", severity: "sh:Violation" }
+  - name: termination_date
+    logical_type: date
+    physical_type: date
+    description: Last day of employment. Null for active employees.
+    recommended_rules:
+      - { type: range, max: "today", severity: "sh:Warning" }
+  - name: employment_status
+    logical_type: string
+    physical_type: varchar(20)
+    description: Current status of the employment record.
+    recommended_rules:
+      - { type: notNull }
+      - { type: allowedValues, values: ["active", "on_leave", "terminated", "retired"] }
+  - name: department_id
+    logical_type: integer
+    physical_type: bigint
+    description: Foreign key to the department table.
+    recommended_rules:
+      - { type: notNull, severity: "sh:Warning" }
+  - name: manager_id
+    logical_type: integer
+    physical_type: bigint
+    description: Self-reference to the manager's employee_id. Null for top-level.
+    recommended_rules: []
+  - name: annual_salary
+    logical_type: number
+    physical_type: numeric(12,2)
+    description: Annualised base salary in the employee's functional currency.
+    recommended_rules:
+      - { type: range, min: 0, severity: "sh:Violation" }
+
+  # --- Identity & demographics ---
+  - name: middle_name
+    sensitivity: pii
+    logical_type: string
+    physical_type: varchar(100)
+    description: Legal middle name. Often null.
+    recommended_rules:
+      - { type: maxLength, value: 100 }
+  - name: preferred_name
+    sensitivity: pii
+    logical_type: string
+    physical_type: varchar(100)
+    description: Display name the employee prefers (e.g., "Sam" instead of "Samantha"). Used in directories and chat.
+    recommended_rules:
+      - { type: maxLength, value: 100 }
+  - name: pronouns
+    logical_type: string
+    physical_type: varchar(40)
+    description: Self-declared pronouns (e.g., "she/her", "they/them"). Free text — do not enforce a closed list.
+    recommended_rules:
+      - { type: maxLength, value: 40 }
+  - name: date_of_birth
+    sensitivity: pii
+    logical_type: date
+    physical_type: date
+    description: Employee's date of birth. PII — restrict access; use for benefits eligibility, not analytics.
+    recommended_rules:
+      - { type: range, max: "today", severity: "sh:Warning" }
+  - name: gender
+    sensitivity: pii
+    logical_type: string
+    physical_type: varchar(30)
+    description: Self-identified gender. PII — sensitive; not all jurisdictions allow capture.
+    recommended_rules:
+      - { type: allowedValues, values: ["female", "male", "non_binary", "prefer_not_to_say", "other"] }
+  - name: ethnicity
+    sensitivity: pii
+    logical_type: string
+    physical_type: varchar(50)
+    description: Self-identified ethnicity. PII — capture only where legally permitted (e.g., US EEO-1).
+    recommended_rules:
+      - { type: maxLength, value: 50 }
+  - name: nationality_country_code
+    sensitivity: pii
+    logical_type: string
+    physical_type: varchar(2)
+    description: ISO 3166-1 alpha-2 country code for the employee's nationality.
+    recommended_rules:
+      - { type: regex, pattern: "^[A-Z]{2}$" }
+  - name: marital_status
+    sensitivity: pii
+    logical_type: string
+    physical_type: varchar(20)
+    description: Marital status, used for tax and benefits enrollment. PII — restrict access.
+    recommended_rules:
+      - { type: allowedValues, values: ["single", "married", "domestic_partner", "divorced", "widowed", "prefer_not_to_say"] }
+  - name: preferred_language
+    logical_type: string
+    physical_type: varchar(10)
+    description: BCP-47 language tag the employee prefers for communication (e.g., "en", "en-US", "fr-CA").
+    recommended_rules:
+      - { type: regex, pattern: "^[a-z]{2}(-[A-Z]{2})?$" }
+
+  # --- Contact ---
+  - name: personal_email
+    sensitivity: pii
+    logical_type: string
+    physical_type: varchar(320)
+    description: Personal (non-work) email address. PII — used for offboarding and emergency contact.
+    recommended_rules:
+      - { type: regex, pattern: "^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$" }
+  - name: phone_mobile
+    sensitivity: pii
+    logical_type: string
+    physical_type: varchar(30)
+    description: Personal mobile phone number. PII.
+    recommended_rules:
+      - { type: maxLength, value: 30 }
+  - name: phone_work
+    sensitivity: pii
+    logical_type: string
+    physical_type: varchar(30)
+    description: Work phone or extension.
+    recommended_rules:
+      - { type: maxLength, value: 30 }
+  - name: address_line_1
+    sensitivity: pii
+    logical_type: string
+    physical_type: varchar(255)
+    description: Primary street address. PII.
+    recommended_rules:
+      - { type: maxLength, value: 255 }
+  - name: address_line_2
+    sensitivity: pii
+    logical_type: string
+    physical_type: varchar(255)
+    description: Secondary address line (apartment, unit). PII.
+    recommended_rules:
+      - { type: maxLength, value: 255 }
+  - name: city
+    sensitivity: pii
+    logical_type: string
+    physical_type: varchar(100)
+    description: City of residence. PII.
+    recommended_rules:
+      - { type: maxLength, value: 100 }
+  - name: state_province
+    sensitivity: pii
+    logical_type: string
+    physical_type: varchar(100)
+    description: State, province, or region of residence.
+    recommended_rules:
+      - { type: maxLength, value: 100 }
+  - name: postal_code
+    sensitivity: pii
+    logical_type: string
+    physical_type: varchar(20)
+    description: ZIP / postal code.
+    recommended_rules:
+      - { type: maxLength, value: 20 }
+  - name: country_code
+    logical_type: string
+    physical_type: varchar(2)
+    description: ISO 3166-1 alpha-2 country code of residence.
+    recommended_rules:
+      - { type: regex, pattern: "^[A-Z]{2}$" }
+  - name: emergency_contact_name
+    sensitivity: pii
+    logical_type: string
+    physical_type: varchar(200)
+    description: Full name of the employee's primary emergency contact. PII.
+    recommended_rules:
+      - { type: maxLength, value: 200 }
+  - name: emergency_contact_phone
+    sensitivity: pii
+    logical_type: string
+    physical_type: varchar(30)
+    description: Phone number of the emergency contact. PII.
+    recommended_rules:
+      - { type: maxLength, value: 30 }
+  - name: emergency_contact_relationship
+    sensitivity: pii
+    logical_type: string
+    physical_type: varchar(50)
+    description: Relationship of the emergency contact to the employee (e.g., spouse, parent, sibling).
+    recommended_rules:
+      - { type: maxLength, value: 50 }
+
+  # --- Employment / job ---
+  - name: job_title
+    logical_type: string
+    physical_type: varchar(150)
+    description: Current job title (free text — display version of the role).
+    recommended_rules:
+      - { type: notNull, severity: "sh:Warning" }
+      - { type: maxLength, value: 150 }
+  - name: job_code
+    logical_type: string
+    physical_type: varchar(30)
+    description: Internal job code that maps to the canonical job catalog.
+    recommended_rules:
+      - { type: maxLength, value: 30 }
+  - name: job_family
+    logical_type: string
+    physical_type: varchar(100)
+    description: Job family grouping (e.g., Engineering, Sales, Operations).
+    recommended_rules:
+      - { type: maxLength, value: 100 }
+  - name: job_level
+    logical_type: string
+    physical_type: varchar(20)
+    description: Career level / grade band (e.g., L3, P5, M2).
+    recommended_rules:
+      - { type: maxLength, value: 20 }
+  - name: employee_type
+    logical_type: string
+    physical_type: varchar(20)
+    description: Employment classification.
+    recommended_rules:
+      - { type: allowedValues, values: ["full_time", "part_time", "contractor", "intern", "temporary"] }
+  - name: worker_category
+    logical_type: string
+    physical_type: varchar(20)
+    description: US wage-law classification — exempt vs non-exempt for overtime purposes.
+    recommended_rules:
+      - { type: allowedValues, values: ["exempt", "non_exempt"] }
+  - name: fte_percentage
+    logical_type: number
+    physical_type: numeric(5,2)
+    description: Full-time-equivalent percentage (100.00 for full-time, 50.00 for half-time).
+    recommended_rules:
+      - { type: range, min: 0, max: 100 }
+  - name: standard_weekly_hours
+    logical_type: number
+    physical_type: numeric(5,2)
+    description: Standard scheduled hours per week.
+    recommended_rules:
+      - { type: range, min: 0, max: 80 }
+  - name: work_location_type
+    logical_type: string
+    physical_type: varchar(20)
+    description: Where the employee primarily works.
+    recommended_rules:
+      - { type: allowedValues, values: ["onsite", "remote", "hybrid"] }
+  - name: office_location_id
+    logical_type: integer
+    physical_type: bigint
+    description: Foreign key to the office / site reference table.
+    recommended_rules: []
+  - name: cost_center
+    logical_type: string
+    physical_type: varchar(30)
+    description: Finance cost-center code the employee's costs roll up to.
+    recommended_rules:
+      - { type: maxLength, value: 30 }
+  - name: business_unit
+    logical_type: string
+    physical_type: varchar(100)
+    description: Business unit or product line the employee belongs to.
+    recommended_rules:
+      - { type: maxLength, value: 100 }
+  - name: legal_entity_id
+    logical_type: integer
+    physical_type: bigint
+    description: Foreign key to the legal entity (subsidiary, country payroll entity, etc.) the employee is contracted to.
+    recommended_rules: []
+  - name: division
+    logical_type: string
+    physical_type: varchar(100)
+    description: Division or major org unit.
+    recommended_rules:
+      - { type: maxLength, value: 100 }
+  - name: region
+    logical_type: string
+    physical_type: varchar(50)
+    description: Geographic region (e.g., AMER, EMEA, APAC).
+    recommended_rules:
+      - { type: maxLength, value: 50 }
+  - name: timezone
+    logical_type: string
+    physical_type: varchar(50)
+    description: IANA timezone string (e.g., America/Los_Angeles).
+    recommended_rules:
+      - { type: maxLength, value: 50 }
+  - name: department_name
+    logical_type: string
+    physical_type: varchar(150)
+    description: Denormalised department name, kept alongside department_id for query convenience.
+    recommended_rules:
+      - { type: maxLength, value: 150 }
+  - name: skip_level_manager_id
+    logical_type: integer
+    physical_type: bigint
+    description: Manager of the manager (skip-level). Useful for org-rollup analytics.
+    recommended_rules: []
+  - name: original_hire_date
+    logical_type: date
+    physical_type: date
+    description: Earliest hire date including prior stints. Differs from hire_date for rehires.
+    recommended_rules:
+      - { type: range, max: "today", severity: "sh:Warning" }
+  - name: rehire_date
+    logical_type: date
+    physical_type: date
+    description: Most recent rehire date. Null if never rehired.
+    recommended_rules:
+      - { type: range, max: "today", severity: "sh:Warning" }
+  - name: last_promotion_date
+    logical_type: date
+    physical_type: date
+    description: Date of the most recent promotion event.
+    recommended_rules:
+      - { type: range, max: "today", severity: "sh:Warning" }
+  - name: service_years
+    logical_type: number
+    physical_type: numeric(5,2)
+    description: Continuous service in years, computed from original_hire_date.
+    recommended_rules:
+      - { type: range, min: 0 }
+  - name: probation_end_date
+    logical_type: date
+    physical_type: date
+    description: End of the new-hire probation period. Null if not applicable.
+    recommended_rules: []
+  - name: notice_period_days
+    logical_type: integer
+    physical_type: integer
+    description: Contractual notice period in calendar days for resignation or termination.
+    recommended_rules:
+      - { type: range, min: 0 }
+  - name: termination_reason
+    logical_type: string
+    physical_type: varchar(50)
+    description: Reason the employment ended.
+    recommended_rules:
+      - { type: allowedValues, values: ["voluntary", "involuntary", "layoff", "retirement", "end_of_contract", "deceased", "other"] }
+  - name: eligible_for_rehire
+    logical_type: boolean
+    physical_type: boolean
+    description: Whether the employee is eligible to be rehired in the future.
+    recommended_rules: []
+
+  # --- Government IDs / work authorization (PII) ---
+  - name: national_id_last4
+    sensitivity: pii
+    logical_type: string
+    physical_type: varchar(4)
+    description: Last 4 digits of the national ID / SSN. Full national IDs should not appear in analytics warehouses. PII.
+    recommended_rules:
+      - { type: regex, pattern: "^\\d{4}$" }
+  - name: tax_residency_country_code
+    sensitivity: pii
+    logical_type: string
+    physical_type: varchar(2)
+    description: ISO 3166-1 alpha-2 country code of the employee's tax residency.
+    recommended_rules:
+      - { type: regex, pattern: "^[A-Z]{2}$" }
+  - name: work_authorization_status
+    sensitivity: pii
+    logical_type: string
+    physical_type: varchar(30)
+    description: Right-to-work status in the country of employment.
+    recommended_rules:
+      - { type: allowedValues, values: ["citizen", "permanent_resident", "work_visa", "student_visa", "other"] }
+  - name: work_authorization_expires_on
+    logical_type: date
+    physical_type: date
+    description: Expiry date of the current work authorization. Drives renewal alerts.
+    recommended_rules: []
+  - name: visa_type
+    sensitivity: pii
+    logical_type: string
+    physical_type: varchar(20)
+    description: Visa class (e.g., H-1B, L-1, Tier 2). Free text — visa codes vary widely by country.
+    recommended_rules:
+      - { type: maxLength, value: 20 }
+
+  # --- Compensation (extends annual_salary) ---
+  - name: pay_frequency
+    logical_type: string
+    physical_type: varchar(20)
+    description: How often base pay is disbursed.
+    recommended_rules:
+      - { type: allowedValues, values: ["weekly", "biweekly", "semimonthly", "monthly"] }
+  - name: pay_currency_code
+    logical_type: string
+    physical_type: varchar(3)
+    description: ISO 4217 currency code that annual_salary and other comp fields are denominated in.
+    recommended_rules:
+      - { type: regex, pattern: "^[A-Z]{3}$" }
+  - name: bonus_target_percent
+    logical_type: number
+    physical_type: numeric(5,2)
+    description: Target annual bonus expressed as a percentage of base salary.
+    recommended_rules:
+      - { type: range, min: 0, max: 100 }
+  - name: equity_grant_value_usd
+    logical_type: number
+    physical_type: numeric(14,2)
+    description: Outstanding equity grant value in USD at grant time.
+    recommended_rules:
+      - { type: range, min: 0 }
+  - name: last_compensation_review_date
+    logical_type: date
+    physical_type: date
+    description: Date of the most recent compensation review or change.
+    recommended_rules:
+      - { type: range, max: "today", severity: "sh:Warning" }
+  - name: next_compensation_review_date
+    logical_type: date
+    physical_type: date
+    description: Scheduled date of the next compensation review.
+    recommended_rules: []
+  - name: merit_increase_eligible
+    logical_type: boolean
+    physical_type: boolean
+    description: Whether the employee is eligible for the upcoming merit cycle.
+    recommended_rules: []
+  - name: overtime_eligible
+    logical_type: boolean
+    physical_type: boolean
+    description: Whether the employee is eligible to claim overtime pay.
+    recommended_rules: []
+
+  # --- Benefits ---
+  - name: benefits_eligible
+    logical_type: boolean
+    physical_type: boolean
+    description: Whether the employee is currently eligible for company benefits.
+    recommended_rules: []
+  - name: benefits_enrollment_date
+    logical_type: date
+    physical_type: date
+    description: Date the employee enrolled in benefits. Often the first day of the month after hire.
+    recommended_rules: []
+  - name: health_plan_code
+    logical_type: string
+    physical_type: varchar(30)
+    description: Code of the elected health insurance plan (e.g., PPO_PREMIUM, HMO_BASIC).
+    recommended_rules:
+      - { type: maxLength, value: 30 }
+  - name: dental_plan_code
+    logical_type: string
+    physical_type: varchar(30)
+    description: Code of the elected dental insurance plan.
+    recommended_rules:
+      - { type: maxLength, value: 30 }
+  - name: vision_plan_code
+    logical_type: string
+    physical_type: varchar(30)
+    description: Code of the elected vision insurance plan.
+    recommended_rules:
+      - { type: maxLength, value: 30 }
+  - name: retirement_plan_code
+    logical_type: string
+    physical_type: varchar(30)
+    description: Code of the retirement plan the employee participates in (e.g., 401K_TRAD, 401K_ROTH, PENSION).
+    recommended_rules:
+      - { type: maxLength, value: 30 }
+  - name: retirement_contribution_percent
+    logical_type: number
+    physical_type: numeric(5,2)
+    description: Employee's elected contribution rate as a percentage of pay.
+    recommended_rules:
+      - { type: range, min: 0, max: 100 }
+  - name: life_insurance_multiple
+    logical_type: number
+    physical_type: numeric(4,2)
+    description: Life insurance benefit as a multiple of annual salary (e.g., 2.0 = 2x).
+    recommended_rules:
+      - { type: range, min: 0, max: 10 }
+  - name: pto_days_total
+    logical_type: number
+    physical_type: numeric(6,2)
+    description: Total paid-time-off days accrued for the current year.
+    recommended_rules:
+      - { type: range, min: 0 }
+  - name: pto_days_used
+    logical_type: number
+    physical_type: numeric(6,2)
+    description: PTO days already taken in the current year.
+    recommended_rules:
+      - { type: range, min: 0 }
+  - name: pto_days_remaining
+    logical_type: number
+    physical_type: numeric(6,2)
+    description: PTO days remaining for the current year. May go negative if borrowing is allowed.
+    recommended_rules: []
+  - name: sick_days_remaining
+    logical_type: number
+    physical_type: numeric(6,2)
+    description: Sick-leave days remaining for the current year.
+    recommended_rules:
+      - { type: range, min: 0 }
+  - name: parental_leave_used_days
+    logical_type: number
+    physical_type: numeric(6,2)
+    description: Parental-leave days taken under the current entitlement.
+    recommended_rules:
+      - { type: range, min: 0 }
+  - name: fsa_election_amount
+    logical_type: number
+    physical_type: numeric(10,2)
+    description: Annual flexible spending account election amount.
+    recommended_rules:
+      - { type: range, min: 0 }
+  - name: hsa_election_amount
+    logical_type: number
+    physical_type: numeric(10,2)
+    description: Annual health savings account election amount.
+    recommended_rules:
+      - { type: range, min: 0 }
+
+  # --- Performance & potential ---
+  - name: last_performance_rating
+    logical_type: string
+    physical_type: varchar(30)
+    description: Rating from the most recent performance review.
+    recommended_rules:
+      - { type: allowedValues, values: ["exceeds", "meets_plus", "meets", "below", "well_below"] }
+  - name: last_review_cycle
+    logical_type: string
+    physical_type: varchar(20)
+    description: Identifier of the most recent review cycle (e.g., "2025-H2").
+    recommended_rules:
+      - { type: maxLength, value: 20 }
+  - name: last_review_date
+    logical_type: date
+    physical_type: date
+    description: Date the most recent performance review was completed.
+    recommended_rules:
+      - { type: range, max: "today", severity: "sh:Warning" }
+  - name: next_review_date
+    logical_type: date
+    physical_type: date
+    description: Scheduled date of the next performance review.
+    recommended_rules: []
+  - name: performance_band
+    logical_type: string
+    physical_type: varchar(30)
+    description: Performance band derived from the rating (used for comp planning and talent review).
+    recommended_rules:
+      - { type: allowedValues, values: ["top_performer", "solid", "needs_improvement"] }
+  - name: pip_status
+    logical_type: string
+    physical_type: varchar(20)
+    description: Performance-improvement-plan status.
+    recommended_rules:
+      - { type: allowedValues, values: ["none", "on_pip", "completed_pip"] }
+  - name: promotion_readiness
+    logical_type: string
+    physical_type: varchar(20)
+    description: Manager's assessment of when the employee is ready for promotion.
+    recommended_rules:
+      - { type: allowedValues, values: ["ready_now", "ready_1_year", "ready_2_years", "not_ready"] }
+  - name: talent_pool_flag
+    logical_type: boolean
+    physical_type: boolean
+    description: Whether the employee is identified as high-potential / in the talent pool.
+    recommended_rules: []
+  - name: nine_box_position
+    logical_type: integer
+    physical_type: integer
+    description: Position on the 3x3 performance × potential grid (1-9), where 9 is the top-right cell.
+    recommended_rules:
+      - { type: range, min: 1, max: 9 }
+
+  # --- Skills, certifications, education ---
+  - name: primary_skill
+    logical_type: string
+    physical_type: varchar(100)
+    description: Primary skill or capability the employee is recognised for.
+    recommended_rules:
+      - { type: maxLength, value: 100 }
+  - name: skills_count
+    logical_type: integer
+    physical_type: integer
+    description: Number of skills tagged on the employee's profile.
+    recommended_rules:
+      - { type: range, min: 0 }
+  - name: certifications_count
+    logical_type: integer
+    physical_type: integer
+    description: Number of active professional certifications on file.
+    recommended_rules:
+      - { type: range, min: 0 }
+  - name: highest_certification
+    logical_type: string
+    physical_type: varchar(150)
+    description: Name of the most senior certification the employee holds.
+    recommended_rules:
+      - { type: maxLength, value: 150 }
+  - name: years_industry_experience
+    logical_type: number
+    physical_type: numeric(5,2)
+    description: Total years of relevant industry experience including prior employers.
+    recommended_rules:
+      - { type: range, min: 0 }
+  - name: years_in_current_role
+    logical_type: number
+    physical_type: numeric(5,2)
+    description: Years in the current job title at the company.
+    recommended_rules:
+      - { type: range, min: 0 }
+  - name: years_at_company
+    logical_type: number
+    physical_type: numeric(5,2)
+    description: Years at the company, computed from hire_date.
+    recommended_rules:
+      - { type: range, min: 0 }
+  - name: highest_education_level
+    logical_type: string
+    physical_type: varchar(40)
+    description: Highest academic credential attained.
+    recommended_rules:
+      - { type: allowedValues, values: ["high_school", "associates", "bachelors", "masters", "doctorate", "professional", "other"] }
+  - name: education_field_of_study
+    logical_type: string
+    physical_type: varchar(150)
+    description: Field of study for the highest credential (e.g., Computer Science).
+    recommended_rules:
+      - { type: maxLength, value: 150 }
+  - name: alma_mater
+    logical_type: string
+    physical_type: varchar(200)
+    description: Institution that conferred the highest credential.
+    recommended_rules:
+      - { type: maxLength, value: 200 }
+  - name: graduation_year
+    logical_type: integer
+    physical_type: integer
+    description: Year the highest credential was conferred.
+    recommended_rules:
+      - { type: range, min: 1900, max: 2100 }
+
+  # --- Engagement & sentiment ---
+  - name: last_engagement_score
+    logical_type: number
+    physical_type: numeric(4,2)
+    description: Engagement score from the most recent survey (0-10 scale).
+    recommended_rules:
+      - { type: range, min: 0, max: 10 }
+  - name: last_engagement_survey_date
+    logical_type: date
+    physical_type: date
+    description: Date the most recent engagement survey was submitted.
+    recommended_rules:
+      - { type: range, max: "today", severity: "sh:Warning" }
+  - name: enps_score
+    logical_type: integer
+    physical_type: integer
+    description: Employee Net Promoter Score from the most recent pulse (-100 to 100).
+    recommended_rules:
+      - { type: range, min: -100, max: 100 }
+
+  # --- Onboarding & compliance ---
+  - name: onboarding_completed_flag
+    logical_type: boolean
+    physical_type: boolean
+    description: Whether the new-hire onboarding checklist is complete.
+    recommended_rules: []
+  - name: onboarding_completion_date
+    logical_type: date
+    physical_type: date
+    description: Date onboarding was marked complete.
+    recommended_rules: []
+  - name: background_check_status
+    logical_type: string
+    physical_type: varchar(20)
+    description: Status of the pre-employment background check.
+    recommended_rules:
+      - { type: allowedValues, values: ["pending", "in_progress", "cleared", "flagged", "waived"] }
+  - name: nda_signed_date
+    logical_type: date
+    physical_type: date
+    description: Date the employee signed the non-disclosure agreement.
+    recommended_rules: []
+  - name: last_compliance_training_date
+    logical_type: date
+    physical_type: date
+    description: Date of the most recent mandatory compliance training (e.g., security awareness, anti-harassment).
+    recommended_rules:
+      - { type: range, max: "today", severity: "sh:Warning" }
+  - name: next_compliance_training_due_date
+    logical_type: date
+    physical_type: date
+    description: Due date for the next mandatory compliance training.
+    recommended_rules: []
+  - name: security_clearance_level
+    logical_type: string
+    physical_type: varchar(30)
+    description: Government or internal security clearance level held by the employee.
+    recommended_rules:
+      - { type: allowedValues, values: ["none", "public_trust", "secret", "top_secret", "ts_sci"] }
+  - name: gdpr_data_subject_flag
+    logical_type: boolean
+    physical_type: boolean
+    description: Whether the employee falls under GDPR data-subject rights (typically EU residents).
+    recommended_rules: []
+
+  # --- Self-identification (sensitive — voluntary disclosure) ---
+  - name: self_identified_disability
+    sensitivity: pii
+    logical_type: boolean
+    physical_type: boolean
+    description: Self-disclosed disability status. PII — voluntary; capture only with consent.
+    recommended_rules: []
+  - name: self_identified_veteran_status
+    sensitivity: pii
+    logical_type: string
+    physical_type: varchar(40)
+    description: Self-disclosed veteran status (US EEO categorisation). PII — voluntary.
+    recommended_rules:
+      - { type: allowedValues, values: ["not_a_veteran", "veteran", "disabled_veteran", "recently_separated", "prefer_not_to_say"] }
+
+  # --- SCD-2 history grain (effective-dated source history) ---
+  # Point-in-time columns carried by the compensation/assignment history tables.
+  # Effective dating (effective_from / effective_to / is_current) is inherited
+  # from common.yaml (requires_scd_policy: scd2) — do not redefine it here.
+  - name: salary_amount
+    logical_type: number
+    physical_type: numeric(12,2)
+    description: Annualised base salary in effect for a specific period (one row per change in salary_history). Distinct from the current-state annual_salary on the employee master.
+    recommended_rules:
+      - { type: notNull }
+      - { type: range, min: 0, severity: "sh:Violation" }
+  - name: prior_salary_amount
+    logical_type: number
+    physical_type: numeric(12,2)
+    description: The salary amount immediately before this change. Null for the first record of an employee's history.
+    recommended_rules:
+      - { type: range, min: 0, severity: "sh:Warning" }
+  - name: change_reason
+    logical_type: string
+    physical_type: varchar(20)
+    description: Why a compensation change occurred.
+    recommended_rules:
+      - { type: allowedValues, values: ["merit", "promotion", "market", "adjustment", "demotion"] }
+  - name: assignment_type
+    logical_type: string
+    physical_type: varchar(20)
+    description: What created a job/department/location assignment row.
+    recommended_rules:
+      - { type: allowedValues, values: ["hire", "promotion", "transfer", "reorg"] }
+  - name: benefit_plan_code
+    logical_type: string
+    physical_type: varchar(8)
+    description: Code of the enrolled benefit plan (FK to the benefit-plan catalog).
+    recommended_rules:
+      - { type: notNull }
+      - { type: maxLength, value: 8 }
+  - name: coverage_level
+    logical_type: string
+    physical_type: varchar(20)
+    description: Benefit coverage tier elected by the employee.
+    recommended_rules:
+      - { type: allowedValues, values: ["employee", "employee_plus_one", "family"] }
+  - name: pay_group
+    logical_type: string
+    physical_type: varchar(20)
+    description: Payroll grouping / run assignment the employee belongs to.
+    recommended_rules: []
+  - name: payroll_number
+    logical_type: string
+    physical_type: varchar(20)
+    description: Payroll system's own identifier for the employee (distinct from the HRIS employee_id).
+    recommended_rules:
+      - { type: unique }
+
+  # --- Derived consumer metrics (consumer-aligned products) ---
+  # NOT source columns — derivation templates surfaced by the wizard's catalog
+  # picker under source_category: derived. The SQL is composed at view-DDL time
+  # from column transforms and :DatasetTransform grouping/aggregation.
+  - name: compensation_band
+    logical_type: string
+    physical_type: varchar(8)
+    source_category: derived
+    description: Salary banded into ordinal grades (A=entry … E=executive). Derived by bucketing salary_amount.
+    recommended_rules:
+      - { type: allowedValues, values: ["A", "B", "C", "D", "E"] }
+  - name: tenure_band
+    logical_type: string
+    physical_type: varchar(16)
+    source_category: derived
+    description: Tenure bucketed into bands. Derived from hire_date relative to the as-of date.
+    recommended_rules:
+      - { type: allowedValues, values: ["under_1y", "1_to_3y", "3_to_7y", "7y_plus"] }
+  - name: pct_change_from_prior
+    logical_type: number
+    physical_type: numeric(6,2)
+    source_category: derived
+    description: Percentage change of salary_amount from prior_salary_amount. Derived as (salary_amount - prior_salary_amount) / prior_salary_amount * 100.
+    recommended_rules:
+      - { type: range, min: -50, max: 200, severity: "sh:Warning" }
+  - name: headcount
+    logical_type: integer
+    physical_type: integer
+    source_category: derived
+    description: Count of active employees in a grouping (e.g. per department per month). Derived aggregate.
+    recommended_rules:
+      - { type: range, min: 0 }
+  - name: total_compensation
+    logical_type: number
+    physical_type: numeric(14,2)
+    source_category: derived
+    description: Sum of current base salary across a grouping (e.g. per department per month). Derived aggregate.
+    recommended_rules:
+      - { type: range, min: 0 }
+  - name: avg_tenure_years
+    logical_type: number
+    physical_type: numeric(5,2)
+    source_category: derived
+    description: Average tenure in whole/fractional years across a grouping. Derived aggregate.
+    recommended_rules:
+      - { type: range, min: 0, max: 60, severity: "sh:Warning" }

@@ -1,0 +1,28 @@
+---
+description: Generate a Markdown report (with Mermaid diagrams) for a data product
+argument-hint: [<contract_id>]
+---
+
+Generate a snapshot Markdown report describing one data product, rendered fresh off the Neo4j graph at the moment of generation. The report includes the product header + overview + people, schema with per-dataset Mermaid `erDiagram` blocks, a `graph LR` lineage diagram with per-column mapping table, DQ rules grouped by source + OSI scores, and the serving view DDL.
+
+Resolve the target contract:
+
+- If `$ARGUMENTS` is non-empty, treat it as the `contract_id` to report on (e.g. `dpe-sa-05112026-01-contract`).
+- Otherwise default to this project's own contract: `{{ project.project_code }}-contract`.
+
+Generate a timestamped filename and download:
+
+```bash
+TS=$(date -u +%Y%m%dT%H%M%SZ)
+CONTRACT_ID="<resolved_contract_id>"
+OUT="report-${CONTRACT_ID}-${TS}.md"
+curl -s "{{ backend_base_url }}/api/marketplace/${CONTRACT_ID}/report" -o "${OUT}"
+```
+
+If the response begins with `{"detail":` it's an error — print the error body and stop. Otherwise:
+
+- Confirm the file was written (size > 0).
+- Print the path and a one-line summary: number of section headers (count `^##` lines), number of Mermaid blocks (count `^```mermaid` lines), and number of tables (count `^| ` lines).
+- Tell the user the file renders natively in the in-app chat panel (Mermaid is wired there), in GitHub PR previews, and in VS Code's Markdown preview.
+
+Read-only operation. The report is generated fresh on every call — there is no server-side persistence, so a second `/generate-report` invocation will produce a new file reflecting any state changes since the first call.

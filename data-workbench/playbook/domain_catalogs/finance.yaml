@@ -1,0 +1,1114 @@
+domain: finance
+label: Finance
+description: Finance canonical schema — chart of accounts, journals, transactions, fiscal periods, FX rates, customers/vendors, invoices (AR), bills (AP), payments, tax, budgets, cost-center dimensions, and bank reconciliation. Covers general-ledger, AR, AP, and treasury patterns.
+columns:
+
+  # --- transaction (ledger row) -------------------------------------------
+  - name: transaction_id
+    logical_type: string
+    physical_type: varchar(64)
+    primary_key: true
+    description: Globally unique transaction identifier (UUID or deterministic hash).
+    recommended_rules:
+      - { type: notNull }
+      - { type: unique }
+  - name: account_id
+    logical_type: integer
+    physical_type: bigint
+    description: Owning account for the transaction. FK to the chart-of-accounts / bank-account dimension.
+    recommended_rules:
+      - { type: notNull }
+  - name: posted_at
+    logical_type: timestamp
+    physical_type: timestamp with time zone
+    description: UTC timestamp when the transaction was posted to the ledger.
+    recommended_rules:
+      - { type: notNull }
+      - { type: range, max: "now", severity: "sh:Violation" }
+  - name: transaction_date
+    logical_type: date
+    physical_type: date
+    description: Business date of the transaction event. May precede posted_at when entered retroactively.
+    recommended_rules:
+      - { type: notNull }
+      - { type: range, max: "today", severity: "sh:Violation" }
+  - name: value_date
+    logical_type: date
+    physical_type: date
+    description: Date the transaction becomes value-effective (interest-bearing / available). Common in banking.
+    recommended_rules:
+      - { type: range, max: "today", severity: "sh:Warning" }
+  - name: settlement_date
+    logical_type: date
+    physical_type: date
+    description: Date the transaction is expected to settle (cleared funds). T+1 / T+2 for most rails.
+    recommended_rules: []
+  - name: amount
+    logical_type: number
+    physical_type: numeric(18,4)
+    description: Signed transaction amount in the transaction currency. Negative for debits depending on convention.
+    recommended_rules:
+      - { type: notNull }
+  - name: currency_code
+    logical_type: string
+    physical_type: char(3)
+    description: ISO 4217 currency code the amount is denominated in.
+    recommended_rules:
+      - { type: notNull }
+      - { type: regex, pattern: "^[A-Z]{3}$" }
+  - name: base_currency_amount
+    logical_type: number
+    physical_type: numeric(18,4)
+    description: Amount translated into the reporting / functional currency using the rate captured at posting.
+    recommended_rules:
+      - { type: notNull }
+  - name: base_currency_code
+    logical_type: string
+    physical_type: char(3)
+    description: ISO 4217 reporting / functional currency code (entity-level).
+    recommended_rules:
+      - { type: notNull }
+      - { type: regex, pattern: "^[A-Z]{3}$" }
+  - name: fx_rate_to_base
+    logical_type: number
+    physical_type: numeric(18,8)
+    description: Exchange rate captured at posting time to convert currency_code into base_currency_code.
+    recommended_rules:
+      - { type: range, min: 0, severity: "sh:Violation" }
+  - name: transaction_type
+    logical_type: string
+    physical_type: varchar(20)
+    description: Debit or credit classification, plus instrument subtype.
+    recommended_rules:
+      - { type: notNull }
+      - { type: allowedValues, values: ["debit", "credit", "transfer", "fee", "refund", "adjustment", "accrual", "reversal", "interest", "dividend", "tax"] }
+  - name: counterparty_id
+    logical_type: integer
+    physical_type: bigint
+    description: Other account in a transfer; null for single-sided entries.
+    recommended_rules: []
+  - name: reference_code
+    logical_type: string
+    physical_type: varchar(64)
+    description: External reference (invoice number, wire reference, batch id).
+    recommended_rules: []
+  - name: status
+    logical_type: string
+    physical_type: varchar(20)
+    description: Lifecycle state of the transaction.
+    recommended_rules:
+      - { type: notNull }
+      - { type: allowedValues, values: ["pending", "posted", "settled", "reversed", "failed", "held", "cancelled"] }
+  - name: transaction_description
+    logical_type: string
+    physical_type: varchar(500)
+    description: Free-text narration captured with the transaction. Often shown on statements.
+    recommended_rules:
+      - { type: maxLength, value: 500 }
+  - name: memo
+    logical_type: string
+    physical_type: text
+    description: Internal memo / annotation attached by the user. Not shown to external parties.
+    recommended_rules: []
+  - name: source_module
+    logical_type: string
+    physical_type: varchar(20)
+    description: ERP / source-system module that originated the transaction.
+    recommended_rules:
+      - { type: notNull }
+      - { type: allowedValues, values: ["gl", "ar", "ap", "payroll", "treasury", "fixed_assets", "inventory", "tax", "manual", "external"] }
+  - name: batch_id
+    logical_type: string
+    physical_type: varchar(64)
+    description: Identifier for the posting batch the transaction was loaded in.
+    recommended_rules:
+      - { type: maxLength, value: 64 }
+  - name: external_id
+    logical_type: string
+    physical_type: varchar(100)
+    description: Identifier from the originating external system (bank, processor, sub-ledger).
+    recommended_rules:
+      - { type: maxLength, value: 100 }
+  - name: reversed_transaction_id
+    logical_type: string
+    physical_type: varchar(64)
+    description: FK to the transaction this row reverses. Null when not a reversal.
+    recommended_rules: []
+  - name: is_intercompany
+    logical_type: boolean
+    physical_type: boolean
+    description: True if the transaction is between two legal entities within the same group. Triggers elimination rules in consolidation.
+    recommended_rules:
+      - { type: notNull }
+  - name: entered_by
+    logical_type: string
+    physical_type: varchar(80)
+    description: User or system identifier of the agent that created the transaction.
+    recommended_rules:
+      - { type: maxLength, value: 80 }
+  - name: entered_at
+    logical_type: timestamp
+    physical_type: timestamp with time zone
+    description: UTC timestamp when the transaction was first entered (may precede posted_at).
+    recommended_rules:
+      - { type: range, max: "now", severity: "sh:Violation" }
+  - name: approved_by
+    logical_type: string
+    physical_type: varchar(80)
+    description: User identifier of the approver. Required for SOX-controlled accounts.
+    recommended_rules:
+      - { type: maxLength, value: 80 }
+  - name: approved_at
+    logical_type: timestamp
+    physical_type: timestamp with time zone
+    description: UTC timestamp the transaction was approved.
+    recommended_rules:
+      - { type: range, max: "now", severity: "sh:Violation" }
+
+  # --- chart of accounts / account dimension ------------------------------
+  - name: account_code
+    logical_type: string
+    physical_type: varchar(40)
+    description: External-facing GL account code (e.g. 1100-CASH, 4000-REVENUE). Stable identifier used in journal entries and reports.
+    recommended_rules:
+      - { type: notNull }
+      - { type: unique }
+      - { type: maxLength, value: 40 }
+  - name: account_name
+    logical_type: string
+    physical_type: varchar(255)
+    description: Human-readable name of the account.
+    recommended_rules:
+      - { type: notNull }
+      - { type: maxLength, value: 255 }
+  - name: account_type
+    logical_type: string
+    physical_type: varchar(20)
+    description: Top-level classification of the account in the accounting equation.
+    recommended_rules:
+      - { type: notNull }
+      - { type: allowedValues, values: ["asset", "liability", "equity", "revenue", "expense", "gain", "loss", "contra_asset", "contra_liability", "contra_revenue"] }
+  - name: account_subtype
+    logical_type: string
+    physical_type: varchar(30)
+    description: Finer-grained classification (current_asset, non_current_liability, operating_revenue, COGS, etc.).
+    recommended_rules:
+      - { type: allowedValues, values: ["current_asset", "non_current_asset", "fixed_asset", "intangible_asset", "current_liability", "non_current_liability", "owners_equity", "retained_earnings", "operating_revenue", "non_operating_revenue", "cogs", "operating_expense", "non_operating_expense", "tax_expense", "interest_expense"] }
+  - name: account_category
+    logical_type: string
+    physical_type: varchar(60)
+    description: Business-facing grouping (Cash and Equivalents, Trade Receivables, Office Expenses).
+    recommended_rules:
+      - { type: maxLength, value: 60 }
+  - name: parent_account_id
+    logical_type: integer
+    physical_type: bigint
+    description: Self-FK to the parent account in the chart-of-accounts hierarchy.
+    recommended_rules: []
+  - name: account_depth
+    logical_type: integer
+    physical_type: smallint
+    description: Depth in the chart-of-accounts hierarchy (0 = root).
+    recommended_rules:
+      - { type: range, min: 0, max: 8, severity: "sh:Warning" }
+  - name: normal_balance
+    logical_type: string
+    physical_type: varchar(10)
+    description: The side on which the account normally carries a balance. Drives posting validation.
+    recommended_rules:
+      - { type: notNull }
+      - { type: allowedValues, values: ["debit", "credit"] }
+  - name: account_currency
+    logical_type: string
+    physical_type: char(3)
+    description: ISO 4217 currency the account holds. Null = multi-currency.
+    recommended_rules:
+      - { type: regex, pattern: "^[A-Z]{3}$" }
+  - name: account_active_flag
+    logical_type: boolean
+    physical_type: boolean
+    description: Whether the account is currently open for posting.
+    recommended_rules:
+      - { type: notNull }
+  - name: account_open_date
+    logical_type: date
+    physical_type: date
+    description: Date the account was first opened.
+    recommended_rules:
+      - { type: range, max: "today", severity: "sh:Violation" }
+  - name: account_close_date
+    logical_type: date
+    physical_type: date
+    description: Date the account was closed. Null for active accounts.
+    recommended_rules:
+      - { type: range, max: "today", severity: "sh:Warning" }
+  - name: sox_relevant_flag
+    logical_type: boolean
+    physical_type: boolean
+    description: Marks accounts in scope for Sarbanes-Oxley internal-control reviews.
+    recommended_rules:
+      - { type: notNull }
+  - name: account_balance
+    logical_type: number
+    physical_type: numeric(18,4)
+    description: Current balance of the account in account_currency. Materialised; recomputed nightly.
+    recommended_rules: []
+  - name: legal_entity_code
+    logical_type: string
+    physical_type: varchar(20)
+    description: Legal-entity identifier the account belongs to. Drives intercompany / consolidation logic.
+    recommended_rules:
+      - { type: maxLength, value: 20 }
+
+  # --- bank account (operational accounts) ---------------------------------
+  - name: bank_account_id
+    logical_type: integer
+    physical_type: bigint
+    primary_key: true
+    description: Unique identifier for a bank / operational account.
+    recommended_rules:
+      - { type: notNull }
+      - { type: unique }
+  - name: bank_name
+    logical_type: string
+    physical_type: varchar(200)
+    description: Name of the financial institution holding the account.
+    recommended_rules:
+      - { type: maxLength, value: 200 }
+  - name: account_number_masked
+    logical_type: string
+    physical_type: varchar(40)
+    description: Masked / tokenised account number (e.g. ****1234). Full number never stored.
+    recommended_rules:
+      - { type: maxLength, value: 40 }
+  - name: account_holder_name
+    logical_type: string
+    physical_type: varchar(255)
+    description: Legal account-holder name as registered with the bank. PII.
+    recommended_rules:
+      - { type: maxLength, value: 255 }
+  - name: iban
+    logical_type: string
+    physical_type: varchar(34)
+    description: International Bank Account Number. Up to 34 alphanumeric chars.
+    recommended_rules:
+      - { type: regex, pattern: "^[A-Z]{2}[0-9]{2}[A-Z0-9]{1,30}$" }
+  - name: bic_swift
+    logical_type: string
+    physical_type: varchar(11)
+    description: Bank Identifier Code (BIC / SWIFT). 8 or 11 chars.
+    recommended_rules:
+      - { type: regex, pattern: "^[A-Z]{6}[A-Z0-9]{2}([A-Z0-9]{3})?$" }
+  - name: routing_number
+    logical_type: string
+    physical_type: char(9)
+    description: US ABA routing transit number (9 digits).
+    recommended_rules:
+      - { type: regex, pattern: "^[0-9]{9}$" }
+  - name: bank_account_type
+    logical_type: string
+    physical_type: varchar(20)
+    description: Functional classification of the bank account.
+    recommended_rules:
+      - { type: allowedValues, values: ["checking", "savings", "money_market", "credit_card", "line_of_credit", "loan", "investment", "escrow", "trust"] }
+  - name: bank_account_status
+    logical_type: string
+    physical_type: varchar(20)
+    description: Operational state of the bank account.
+    recommended_rules:
+      - { type: notNull }
+      - { type: allowedValues, values: ["active", "dormant", "frozen", "closed", "pending_closure"] }
+  - name: opening_balance
+    logical_type: number
+    physical_type: numeric(18,4)
+    description: Balance at account_open_date in the account's currency.
+    recommended_rules: []
+  - name: available_balance
+    logical_type: number
+    physical_type: numeric(18,4)
+    description: Funds currently available for withdrawal (account_balance minus holds / pending).
+    recommended_rules: []
+  - name: overdraft_limit
+    logical_type: number
+    physical_type: numeric(18,4)
+    description: Approved overdraft / credit line in the account's currency.
+    recommended_rules:
+      - { type: range, min: 0, severity: "sh:Warning" }
+
+  # --- journal entry / line (double-entry) --------------------------------
+  - name: journal_entry_id
+    logical_type: string
+    physical_type: varchar(64)
+    description: Identifier for a journal entry (a balanced bundle of journal lines).
+    recommended_rules:
+      - { type: notNull }
+      - { type: unique }
+  - name: journal_entry_number
+    logical_type: string
+    physical_type: varchar(40)
+    description: User-facing sequential number for the journal entry (e.g. JE-2026-000123).
+    recommended_rules:
+      - { type: unique }
+      - { type: maxLength, value: 40 }
+  - name: journal_line_id
+    logical_type: integer
+    physical_type: bigint
+    description: Identifier for a single journal line within a journal entry.
+    recommended_rules:
+      - { type: notNull }
+  - name: journal_line_number
+    logical_type: integer
+    physical_type: smallint
+    description: Sequential line number within the journal entry (1-based).
+    recommended_rules:
+      - { type: range, min: 1, severity: "sh:Violation" }
+  - name: debit_amount
+    logical_type: number
+    physical_type: numeric(18,4)
+    description: Debit amount on this line in the entry currency. Either debit_amount or credit_amount is non-zero, not both.
+    recommended_rules:
+      - { type: range, min: 0, severity: "sh:Violation" }
+  - name: credit_amount
+    logical_type: number
+    physical_type: numeric(18,4)
+    description: Credit amount on this line in the entry currency.
+    recommended_rules:
+      - { type: range, min: 0, severity: "sh:Violation" }
+  - name: journal_source
+    logical_type: string
+    physical_type: varchar(20)
+    description: Origin of the journal — automated subledger feed, manual entry, or system adjustment.
+    recommended_rules:
+      - { type: allowedValues, values: ["manual", "subledger", "system", "recurring", "adjustment", "reclass", "accrual", "reversal", "consolidation"] }
+  - name: journal_status
+    logical_type: string
+    physical_type: varchar(20)
+    description: Approval lifecycle for the journal entry.
+    recommended_rules:
+      - { type: notNull }
+      - { type: allowedValues, values: ["draft", "pending_approval", "approved", "posted", "rejected", "reversed"] }
+  - name: document_reference
+    logical_type: string
+    physical_type: varchar(100)
+    description: Backing document reference (invoice number, contract id, supporting voucher).
+    recommended_rules:
+      - { type: maxLength, value: 100 }
+
+  # --- fiscal period -------------------------------------------------------
+  - name: period_id
+    logical_type: integer
+    physical_type: bigint
+    primary_key: true
+    description: Unique identifier for a fiscal period (month / quarter / year).
+    recommended_rules:
+      - { type: notNull }
+      - { type: unique }
+  - name: fiscal_year
+    logical_type: integer
+    physical_type: smallint
+    description: 4-digit fiscal year. Note fiscal year may not align with calendar year (e.g. FY26 starts July 2025).
+    recommended_rules:
+      - { type: notNull }
+      - { type: range, min: 1900, max: 2200, severity: "sh:Violation" }
+  - name: fiscal_quarter
+    logical_type: integer
+    physical_type: smallint
+    description: Fiscal quarter (1-4).
+    recommended_rules:
+      - { type: range, min: 1, max: 4, severity: "sh:Violation" }
+  - name: fiscal_month
+    logical_type: integer
+    physical_type: smallint
+    description: Fiscal month within the fiscal year (1-12 or 1-13 for 4-4-5 calendars).
+    recommended_rules:
+      - { type: range, min: 1, max: 13, severity: "sh:Violation" }
+  - name: period_start_date
+    logical_type: date
+    physical_type: date
+    description: First calendar date inclusive of the fiscal period.
+    recommended_rules:
+      - { type: notNull }
+  - name: period_end_date
+    logical_type: date
+    physical_type: date
+    description: Last calendar date inclusive of the fiscal period.
+    recommended_rules:
+      - { type: notNull }
+  - name: period_status
+    logical_type: string
+    physical_type: varchar(20)
+    description: Open / closed state of the period. Closed periods reject new postings except via reopen workflow.
+    recommended_rules:
+      - { type: notNull }
+      - { type: allowedValues, values: ["future", "open", "soft_close", "closed", "permanently_closed", "audited"] }
+  - name: period_closed_at
+    logical_type: timestamp
+    physical_type: timestamp with time zone
+    description: UTC timestamp when the period was hard-closed.
+    recommended_rules:
+      - { type: range, max: "now", severity: "sh:Warning" }
+
+  # --- FX rate -------------------------------------------------------------
+  - name: fx_rate_id
+    logical_type: integer
+    physical_type: bigint
+    primary_key: true
+    description: Unique identifier for an exchange-rate observation.
+    recommended_rules:
+      - { type: notNull }
+      - { type: unique }
+  - name: from_currency
+    logical_type: string
+    physical_type: char(3)
+    description: ISO 4217 source currency in the FX pair.
+    recommended_rules:
+      - { type: notNull }
+      - { type: regex, pattern: "^[A-Z]{3}$" }
+  - name: to_currency
+    logical_type: string
+    physical_type: char(3)
+    description: ISO 4217 target currency in the FX pair.
+    recommended_rules:
+      - { type: notNull }
+      - { type: regex, pattern: "^[A-Z]{3}$" }
+  - name: fx_rate
+    logical_type: number
+    physical_type: numeric(18,8)
+    description: Multiplier — units of to_currency per one unit of from_currency.
+    recommended_rules:
+      - { type: notNull }
+      - { type: range, min: 0, severity: "sh:Violation" }
+  - name: fx_rate_date
+    logical_type: date
+    physical_type: date
+    description: Effective date of the rate observation.
+    recommended_rules:
+      - { type: notNull }
+      - { type: range, max: "today", severity: "sh:Warning" }
+  - name: fx_rate_type
+    logical_type: string
+    physical_type: varchar(20)
+    description: Rate purpose / source classification.
+    recommended_rules:
+      - { type: notNull }
+      - { type: allowedValues, values: ["spot", "average", "closing", "historical", "budget", "forward", "intercompany"] }
+  - name: fx_rate_source
+    logical_type: string
+    physical_type: varchar(40)
+    description: Provider / publisher of the rate (Bloomberg, Reuters, ECB, internal_treasury).
+    recommended_rules:
+      - { type: maxLength, value: 40 }
+
+  # --- customer (AR counterparty) -----------------------------------------
+  - name: ar_customer_id
+    logical_type: integer
+    physical_type: bigint
+    primary_key: true
+    description: Unique identifier for an Accounts-Receivable customer.
+    recommended_rules:
+      - { type: notNull }
+      - { type: unique }
+  - name: customer_legal_name
+    logical_type: string
+    physical_type: varchar(255)
+    description: Legal name of the customer as registered for invoicing. PII for individuals.
+    recommended_rules:
+      - { type: notNull }
+      - { type: maxLength, value: 255 }
+  - name: customer_tax_id
+    logical_type: string
+    physical_type: varchar(40)
+    description: Tax / VAT registration number of the customer.
+    recommended_rules:
+      - { type: maxLength, value: 40 }
+  - name: customer_payment_terms
+    logical_type: string
+    physical_type: varchar(20)
+    description: Default payment-terms code (NET30, NET60, due_on_receipt, 2/10_NET30).
+    recommended_rules:
+      - { type: allowedValues, values: ["due_on_receipt", "net_7", "net_15", "net_30", "net_45", "net_60", "net_90", "2_10_net_30", "eom", "cod", "prepaid"] }
+  - name: customer_credit_limit
+    logical_type: number
+    physical_type: numeric(18,4)
+    description: Approved credit ceiling for the customer in customer_currency.
+    recommended_rules:
+      - { type: range, min: 0, severity: "sh:Warning" }
+  - name: customer_credit_used
+    logical_type: number
+    physical_type: numeric(18,4)
+    description: Materialised outstanding receivables balance against the credit limit.
+    recommended_rules:
+      - { type: range, min: 0, severity: "sh:Warning" }
+  - name: customer_currency
+    logical_type: string
+    physical_type: char(3)
+    description: ISO 4217 currency the customer invoices in by default.
+    recommended_rules:
+      - { type: regex, pattern: "^[A-Z]{3}$" }
+  - name: ar_customer_status
+    logical_type: string
+    physical_type: varchar(20)
+    description: Operational state of the AR customer record.
+    recommended_rules:
+      - { type: notNull }
+      - { type: allowedValues, values: ["active", "on_hold", "credit_hold", "inactive", "blocked"] }
+
+  # --- vendor (AP counterparty) -------------------------------------------
+  - name: vendor_id
+    logical_type: integer
+    physical_type: bigint
+    primary_key: true
+    description: Unique identifier for an Accounts-Payable vendor / supplier.
+    recommended_rules:
+      - { type: notNull }
+      - { type: unique }
+  - name: vendor_legal_name
+    logical_type: string
+    physical_type: varchar(255)
+    description: Legal name of the vendor as registered for payment.
+    recommended_rules:
+      - { type: notNull }
+      - { type: maxLength, value: 255 }
+  - name: vendor_tax_id
+    logical_type: string
+    physical_type: varchar(40)
+    description: Tax / VAT registration number of the vendor.
+    recommended_rules:
+      - { type: maxLength, value: 40 }
+  - name: vendor_payment_terms
+    logical_type: string
+    physical_type: varchar(20)
+    description: Default payment-terms code agreed with the vendor.
+    recommended_rules:
+      - { type: allowedValues, values: ["due_on_receipt", "net_7", "net_15", "net_30", "net_45", "net_60", "net_90", "2_10_net_30", "eom", "cod", "prepaid"] }
+  - name: vendor_currency
+    logical_type: string
+    physical_type: char(3)
+    description: ISO 4217 currency the vendor invoices in by default.
+    recommended_rules:
+      - { type: regex, pattern: "^[A-Z]{3}$" }
+  - name: vendor_status
+    logical_type: string
+    physical_type: varchar(20)
+    description: Operational state of the vendor record.
+    recommended_rules:
+      - { type: notNull }
+      - { type: allowedValues, values: ["active", "on_hold", "pending_approval", "inactive", "blocked", "one_time"] }
+  - name: vendor_1099_eligible
+    logical_type: boolean
+    physical_type: boolean
+    description: US-specific flag — vendor receives an annual 1099 form for tax reporting.
+    recommended_rules: []
+  - name: vendor_w9_received_at
+    logical_type: date
+    physical_type: date
+    description: Date the vendor's W-9 / tax declaration was last received.
+    recommended_rules:
+      - { type: range, max: "today", severity: "sh:Warning" }
+
+  # --- invoice (AR) -------------------------------------------------------
+  - name: invoice_id
+    logical_type: integer
+    physical_type: bigint
+    primary_key: true
+    description: Unique identifier for a customer invoice (AR).
+    recommended_rules:
+      - { type: notNull }
+      - { type: unique }
+  - name: invoice_number
+    logical_type: string
+    physical_type: varchar(40)
+    description: Customer-facing invoice reference. Sequential per legal entity.
+    recommended_rules:
+      - { type: notNull }
+      - { type: unique }
+      - { type: maxLength, value: 40 }
+  - name: invoice_issued_date
+    logical_type: date
+    physical_type: date
+    description: Date the invoice was issued to the customer.
+    recommended_rules:
+      - { type: notNull }
+      - { type: range, max: "today", severity: "sh:Violation" }
+  - name: invoice_due_date
+    logical_type: date
+    physical_type: date
+    description: Date the invoice payment is due based on payment terms.
+    recommended_rules:
+      - { type: notNull }
+  - name: invoice_status
+    logical_type: string
+    physical_type: varchar(20)
+    description: Lifecycle state of the invoice.
+    recommended_rules:
+      - { type: notNull }
+      - { type: allowedValues, values: ["draft", "sent", "viewed", "partially_paid", "paid", "overdue", "disputed", "cancelled", "written_off"] }
+  - name: invoice_subtotal
+    logical_type: number
+    physical_type: numeric(18,4)
+    description: Sum of line amounts before tax and discount, in invoice_currency.
+    recommended_rules:
+      - { type: notNull }
+      - { type: range, min: 0, severity: "sh:Violation" }
+  - name: invoice_tax_amount
+    logical_type: number
+    physical_type: numeric(18,4)
+    description: Total tax / VAT applied to the invoice in invoice_currency.
+    recommended_rules:
+      - { type: range, min: 0, severity: "sh:Violation" }
+  - name: invoice_discount_amount
+    logical_type: number
+    physical_type: numeric(18,4)
+    description: Invoice-level discount applied in invoice_currency.
+    recommended_rules:
+      - { type: range, min: 0, severity: "sh:Violation" }
+  - name: invoice_total
+    logical_type: number
+    physical_type: numeric(18,4)
+    description: Final invoice amount — subtotal + tax - discount, in invoice_currency.
+    recommended_rules:
+      - { type: notNull }
+      - { type: range, min: 0, severity: "sh:Violation" }
+  - name: invoice_balance_due
+    logical_type: number
+    physical_type: numeric(18,4)
+    description: Outstanding amount still owed on the invoice (invoice_total minus payments applied).
+    recommended_rules:
+      - { type: range, min: 0, severity: "sh:Violation" }
+  - name: invoice_currency
+    logical_type: string
+    physical_type: char(3)
+    description: ISO 4217 currency the invoice is denominated in.
+    recommended_rules:
+      - { type: notNull }
+      - { type: regex, pattern: "^[A-Z]{3}$" }
+  - name: invoice_paid_at
+    logical_type: timestamp
+    physical_type: timestamp with time zone
+    description: UTC timestamp when invoice_balance_due reached zero. Null for unpaid invoices.
+    recommended_rules:
+      - { type: range, max: "now", severity: "sh:Warning" }
+  - name: invoice_aging_days
+    logical_type: integer
+    physical_type: integer
+    description: Materialised days past due. Negative = not yet due, zero = due today, positive = overdue.
+    recommended_rules: []
+
+  # --- invoice line -------------------------------------------------------
+  - name: invoice_line_id
+    logical_type: integer
+    physical_type: bigint
+    primary_key: true
+    description: Unique identifier for an invoice line item.
+    recommended_rules:
+      - { type: notNull }
+      - { type: unique }
+  - name: invoice_line_number
+    logical_type: integer
+    physical_type: smallint
+    description: Sequential line number within the invoice.
+    recommended_rules:
+      - { type: range, min: 1, severity: "sh:Violation" }
+  - name: invoice_line_description
+    logical_type: string
+    physical_type: text
+    description: Description of the item / service billed on this line.
+    recommended_rules: []
+  - name: invoice_line_quantity
+    logical_type: number
+    physical_type: numeric(12,4)
+    description: Quantity billed. Numeric to allow fractional services (hours / litres).
+    recommended_rules:
+      - { type: range, min: 0, severity: "sh:Violation" }
+  - name: invoice_line_unit_price
+    logical_type: number
+    physical_type: numeric(18,4)
+    description: Per-unit price on this line in invoice_currency.
+    recommended_rules:
+      - { type: range, min: 0, severity: "sh:Violation" }
+  - name: invoice_line_amount
+    logical_type: number
+    physical_type: numeric(18,4)
+    description: quantity * unit_price before line-level tax / discount, in invoice_currency.
+    recommended_rules:
+      - { type: notNull }
+      - { type: range, min: 0, severity: "sh:Violation" }
+
+  # --- bill (AP) ---------------------------------------------------------
+  - name: bill_id
+    logical_type: integer
+    physical_type: bigint
+    primary_key: true
+    description: Unique identifier for a vendor bill (AP invoice).
+    recommended_rules:
+      - { type: notNull }
+      - { type: unique }
+  - name: bill_number
+    logical_type: string
+    physical_type: varchar(40)
+    description: Vendor-supplied invoice number for the bill.
+    recommended_rules:
+      - { type: notNull }
+      - { type: maxLength, value: 40 }
+  - name: bill_received_date
+    logical_type: date
+    physical_type: date
+    description: Date the bill was received from the vendor.
+    recommended_rules:
+      - { type: notNull }
+      - { type: range, max: "today", severity: "sh:Violation" }
+  - name: bill_due_date
+    logical_type: date
+    physical_type: date
+    description: Date the bill payment is due per agreed terms.
+    recommended_rules:
+      - { type: notNull }
+  - name: bill_status
+    logical_type: string
+    physical_type: varchar(20)
+    description: Lifecycle state of the bill.
+    recommended_rules:
+      - { type: notNull }
+      - { type: allowedValues, values: ["received", "pending_approval", "approved", "scheduled", "paid", "partially_paid", "overdue", "disputed", "cancelled", "void"] }
+  - name: bill_subtotal
+    logical_type: number
+    physical_type: numeric(18,4)
+    description: Sum of bill line amounts before tax, in bill_currency.
+    recommended_rules:
+      - { type: range, min: 0, severity: "sh:Violation" }
+  - name: bill_tax_amount
+    logical_type: number
+    physical_type: numeric(18,4)
+    description: Total tax / VAT on the bill in bill_currency.
+    recommended_rules:
+      - { type: range, min: 0, severity: "sh:Violation" }
+  - name: bill_total
+    logical_type: number
+    physical_type: numeric(18,4)
+    description: Total bill amount in bill_currency.
+    recommended_rules:
+      - { type: notNull }
+      - { type: range, min: 0, severity: "sh:Violation" }
+  - name: bill_balance_due
+    logical_type: number
+    physical_type: numeric(18,4)
+    description: Outstanding amount still owed on the bill.
+    recommended_rules:
+      - { type: range, min: 0, severity: "sh:Violation" }
+  - name: bill_currency
+    logical_type: string
+    physical_type: char(3)
+    description: ISO 4217 currency the bill is denominated in.
+    recommended_rules:
+      - { type: notNull }
+      - { type: regex, pattern: "^[A-Z]{3}$" }
+  - name: bill_paid_at
+    logical_type: timestamp
+    physical_type: timestamp with time zone
+    description: UTC timestamp when the bill was fully paid.
+    recommended_rules:
+      - { type: range, max: "now", severity: "sh:Warning" }
+  - name: bill_approval_status
+    logical_type: string
+    physical_type: varchar(20)
+    description: Workflow approval state for AP review.
+    recommended_rules:
+      - { type: allowedValues, values: ["not_required", "pending", "approved", "rejected", "escalated"] }
+
+  # --- payment ------------------------------------------------------------
+  - name: payment_id
+    logical_type: string
+    physical_type: varchar(64)
+    primary_key: true
+    description: Unique identifier for a payment (AR receipt or AP disbursement).
+    recommended_rules:
+      - { type: notNull }
+      - { type: unique }
+  - name: payment_direction
+    logical_type: string
+    physical_type: varchar(20)
+    description: Whether the payment is incoming (AR receipt) or outgoing (AP disbursement).
+    recommended_rules:
+      - { type: notNull }
+      - { type: allowedValues, values: ["inbound", "outbound", "internal_transfer"] }
+  - name: payment_method
+    logical_type: string
+    physical_type: varchar(30)
+    description: Rail / instrument used for the payment.
+    recommended_rules:
+      - { type: notNull }
+      - { type: allowedValues, values: ["ach", "wire", "check", "card", "cash", "sepa", "swift", "fedwire", "rtp", "paypal", "stripe", "gift_card", "crypto"] }
+  - name: payment_amount
+    logical_type: number
+    physical_type: numeric(18,4)
+    description: Payment amount in payment_currency.
+    recommended_rules:
+      - { type: notNull }
+      - { type: range, min: 0, severity: "sh:Violation" }
+  - name: payment_currency
+    logical_type: string
+    physical_type: char(3)
+    description: ISO 4217 currency of the payment.
+    recommended_rules:
+      - { type: notNull }
+      - { type: regex, pattern: "^[A-Z]{3}$" }
+  - name: payment_date
+    logical_type: date
+    physical_type: date
+    description: Business date of the payment event.
+    recommended_rules:
+      - { type: notNull }
+      - { type: range, max: "today", severity: "sh:Violation" }
+  - name: payment_reference
+    logical_type: string
+    physical_type: varchar(100)
+    description: Bank / processor reference number for the payment.
+    recommended_rules:
+      - { type: maxLength, value: 100 }
+  - name: payment_status
+    logical_type: string
+    physical_type: varchar(20)
+    description: Lifecycle state of the payment.
+    recommended_rules:
+      - { type: notNull }
+      - { type: allowedValues, values: ["scheduled", "initiated", "pending", "cleared", "settled", "failed", "returned", "voided", "reversed"] }
+  - name: payment_processor
+    logical_type: string
+    physical_type: varchar(40)
+    description: Name of the payment processor / bank handling the payment.
+    recommended_rules:
+      - { type: maxLength, value: 40 }
+  - name: applied_amount
+    logical_type: number
+    physical_type: numeric(18,4)
+    description: Portion of the payment applied to invoices / bills. Remainder is unapplied credit.
+    recommended_rules:
+      - { type: range, min: 0, severity: "sh:Violation" }
+  - name: unapplied_amount
+    logical_type: number
+    physical_type: numeric(18,4)
+    description: Portion of the payment not yet applied — sits as customer credit or vendor prepayment.
+    recommended_rules:
+      - { type: range, min: 0, severity: "sh:Violation" }
+  - name: cleared_at
+    logical_type: timestamp
+    physical_type: timestamp with time zone
+    description: UTC timestamp when the bank confirmed the payment cleared.
+    recommended_rules:
+      - { type: range, max: "now", severity: "sh:Warning" }
+
+  # --- tax ---------------------------------------------------------------
+  - name: tax_code
+    logical_type: string
+    physical_type: varchar(30)
+    description: Internal code identifying a tax treatment (e.g. STD_VAT_UK, RED_VAT_FR, EXEMPT, US_SALES_CA).
+    recommended_rules:
+      - { type: notNull }
+      - { type: maxLength, value: 30 }
+  - name: tax_rate_pct
+    logical_type: number
+    physical_type: numeric(5,2)
+    description: Tax rate as a percentage applied to the taxable base.
+    recommended_rules:
+      - { type: notNull }
+      - { type: range, min: 0, max: 100, severity: "sh:Violation" }
+  - name: tax_jurisdiction
+    logical_type: string
+    physical_type: varchar(50)
+    description: Tax authority / jurisdiction (country, state, locality) the tax_code applies to.
+    recommended_rules:
+      - { type: maxLength, value: 50 }
+  - name: tax_jurisdiction_country
+    logical_type: string
+    physical_type: char(2)
+    description: ISO 3166-1 alpha-2 country code of the tax jurisdiction.
+    recommended_rules:
+      - { type: regex, pattern: "^[A-Z]{2}$" }
+  - name: tax_type
+    logical_type: string
+    physical_type: varchar(20)
+    description: Functional classification of the tax.
+    recommended_rules:
+      - { type: allowedValues, values: ["vat", "gst", "sales_tax", "use_tax", "excise", "withholding", "import_duty", "service_tax", "stamp_duty"] }
+  - name: tax_taxable_base
+    logical_type: number
+    physical_type: numeric(18,4)
+    description: Amount the tax_rate_pct is applied to.
+    recommended_rules:
+      - { type: range, min: 0, severity: "sh:Violation" }
+  - name: tax_amount
+    logical_type: number
+    physical_type: numeric(18,4)
+    description: Calculated tax amount (taxable_base * rate_pct / 100).
+    recommended_rules:
+      - { type: range, min: 0, severity: "sh:Violation" }
+  - name: tax_recoverable_flag
+    logical_type: boolean
+    physical_type: boolean
+    description: True if the tax is recoverable (input VAT) — affects expense recognition.
+    recommended_rules: []
+
+  # --- budget / forecast --------------------------------------------------
+  - name: budget_id
+    logical_type: integer
+    physical_type: bigint
+    primary_key: true
+    description: Unique identifier for a budget / forecast row.
+    recommended_rules:
+      - { type: notNull }
+      - { type: unique }
+  - name: budget_scenario
+    logical_type: string
+    physical_type: varchar(40)
+    description: Scenario classifier (annual_plan, q1_reforecast, stretch_target, bottom_up_v1).
+    recommended_rules:
+      - { type: maxLength, value: 40 }
+  - name: budget_version
+    logical_type: integer
+    physical_type: smallint
+    description: Sequential version number of the scenario as it is reforecast through the year.
+    recommended_rules:
+      - { type: range, min: 1, severity: "sh:Violation" }
+  - name: budget_amount
+    logical_type: number
+    physical_type: numeric(18,4)
+    description: Budgeted / forecast amount in the reporting currency.
+    recommended_rules:
+      - { type: notNull }
+  - name: actual_amount
+    logical_type: number
+    physical_type: numeric(18,4)
+    description: Materialised actual ledger amount for the same dimensions (period, account, cost center).
+    recommended_rules: []
+  - name: variance_amount
+    logical_type: number
+    physical_type: numeric(18,4)
+    description: actual_amount - budget_amount. Negative = under budget for expenses, over budget for revenue depending on sign convention.
+    recommended_rules: []
+  - name: variance_pct
+    logical_type: number
+    physical_type: numeric(7,2)
+    description: variance_amount / budget_amount * 100.
+    recommended_rules: []
+  - name: budget_locked_flag
+    logical_type: boolean
+    physical_type: boolean
+    description: True once the budget version is signed off and frozen from further edits.
+    recommended_rules: []
+
+  # --- cost-center / reporting dimensions ---------------------------------
+  - name: cost_center_id
+    logical_type: integer
+    physical_type: bigint
+    primary_key: true
+    description: Unique identifier for a cost center / responsibility unit.
+    recommended_rules:
+      - { type: notNull }
+      - { type: unique }
+  - name: cost_center_code
+    logical_type: string
+    physical_type: varchar(40)
+    description: External-facing code for the cost center used in reports (e.g. CC-1000-MARKETING).
+    recommended_rules:
+      - { type: notNull }
+      - { type: unique }
+      - { type: maxLength, value: 40 }
+  - name: cost_center_name
+    logical_type: string
+    physical_type: varchar(200)
+    description: Display name of the cost center.
+    recommended_rules:
+      - { type: notNull }
+      - { type: maxLength, value: 200 }
+  - name: parent_cost_center_id
+    logical_type: integer
+    physical_type: bigint
+    description: Self-FK to a parent cost center in the rollup hierarchy.
+    recommended_rules: []
+  - name: department_code
+    logical_type: string
+    physical_type: varchar(40)
+    description: Department / functional area classifier.
+    recommended_rules:
+      - { type: maxLength, value: 40 }
+  - name: business_unit_code
+    logical_type: string
+    physical_type: varchar(40)
+    description: Strategic business unit / division classifier used for segment reporting.
+    recommended_rules:
+      - { type: maxLength, value: 40 }
+  - name: project_code
+    logical_type: string
+    physical_type: varchar(40)
+    description: Project / initiative classifier for project-accounted transactions.
+    recommended_rules:
+      - { type: maxLength, value: 40 }
+  - name: cost_center_manager_email
+    logical_type: string
+    physical_type: varchar(320)
+    description: Email of the manager / cost-center owner accountable for the budget.
+    recommended_rules:
+      - { type: regex, pattern: "^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$" }
+
+  # --- bank statement / reconciliation ------------------------------------
+  - name: statement_id
+    logical_type: integer
+    physical_type: bigint
+    primary_key: true
+    description: Unique identifier for a bank statement period.
+    recommended_rules:
+      - { type: notNull }
+      - { type: unique }
+  - name: statement_start_date
+    logical_type: date
+    physical_type: date
+    description: First date in the statement period.
+    recommended_rules:
+      - { type: notNull }
+  - name: statement_end_date
+    logical_type: date
+    physical_type: date
+    description: Last date in the statement period.
+    recommended_rules:
+      - { type: notNull }
+  - name: statement_opening_balance
+    logical_type: number
+    physical_type: numeric(18,4)
+    description: Account balance per the bank at the start of the period.
+    recommended_rules:
+      - { type: notNull }
+  - name: statement_closing_balance
+    logical_type: number
+    physical_type: numeric(18,4)
+    description: Account balance per the bank at the end of the period.
+    recommended_rules:
+      - { type: notNull }
+  - name: reconciliation_status
+    logical_type: string
+    physical_type: varchar(20)
+    description: Reconciliation state of the statement.
+    recommended_rules:
+      - { type: notNull }
+      - { type: allowedValues, values: ["not_started", "in_progress", "reconciled", "discrepancy", "approved", "locked"] }
+  - name: reconciled_amount
+    logical_type: number
+    physical_type: numeric(18,4)
+    description: Sum of matched / reconciled transactions on the statement.
+    recommended_rules: []
+  - name: unreconciled_amount
+    logical_type: number
+    physical_type: numeric(18,4)
+    description: Sum of unmatched / outstanding transactions on the statement.
+    recommended_rules: []
+  - name: reconciled_at
+    logical_type: timestamp
+    physical_type: timestamp with time zone
+    description: UTC timestamp when the statement was marked reconciled.
+    recommended_rules:
+      - { type: range, max: "now", severity: "sh:Warning" }
+  - name: reconciled_by
+    logical_type: string
+    physical_type: varchar(80)
+    description: User identifier of the accountant who reconciled the statement.
+    recommended_rules:
+      - { type: maxLength, value: 80 }

@@ -1,0 +1,209 @@
+spec_id: src_atm
+name: ATM
+domain: Operation
+product_kind: source
+description: ATM withdrawals, deposits, PIN changes, mini statements, and transaction
+  status.
+schema_version: '1.0'
+classification: confidential
+grain:
+  keys:
+  - atm_id
+  description: ''
+freshness:
+  history: current
+  cadence: ''
+  description: ''
+allowed_derivations:
+- rename
+- cast
+attributes:
+- name: terminal_id
+  type: bigint
+  concept: Terminal ID
+  description: Unique identifier for the physical ATM terminal device at the network switch level.
+  required: true
+  is_key: true
+  classification: internal
+- name: atm_id
+  type: bigint
+  concept: ATM ID
+  description: Unique identifier for the ATM machine, used as the primary key across all ATM-related entities.
+  required: true
+  is_key: true
+  classification: internal
+- name: switch_id
+  type: bigint
+  concept: Switch ID
+  description: Unique identifier for the network switch or payment switch that routed the ATM transaction.
+  required: true
+  is_key: true
+  classification: internal
+- name: location
+  type: varchar
+  concept: Location
+  description: Physical address or landmark description of the ATM's installed location.
+  required: false
+  is_key: false
+  classification: internal
+- name: ownership
+  type: varchar
+  concept: Ownership
+  description: Ownership model of the ATM, indicating whether it is bank-owned, white-label, or third-party managed.
+  required: false
+  is_key: false
+  classification: internal
+- name: status
+  type: varchar
+  concept: Status
+  description: Current operational status of the ATM (e.g. active, out of service, under maintenance, decommissioned).
+  required: true
+  is_key: false
+  classification: internal
+- name: last_health_check_ts
+  type: timestamp
+  concept: Last Health Check Ts
+  description: Timestamp of the most recent automated health check performed on the ATM to verify its operational readiness.
+  required: false
+  is_key: false
+  classification: internal
+- name: txn_id
+  type: bigint
+  concept: Txn ID
+  description: Unique identifier for a transaction processed at this ATM, such as a cash withdrawal, deposit, or PIN change.
+  required: true
+  is_key: true
+  classification: internal
+- name: txn_type
+  type: varchar
+  concept: Txn Type
+  description: Classification of the ATM transaction type (e.g. cash withdrawal, balance inquiry, mini statement, PIN change, deposit).
+  required: true
+  is_key: false
+  classification: internal
+- name: amount
+  type: numeric
+  concept: Amount
+  description: Monetary value of the cash dispensed or deposited in the ATM transaction.
+  required: true
+  is_key: false
+  classification: internal
+- name: surcharge
+  type: varchar
+  concept: Surcharge
+  description: Additional fee charged for using an off-us ATM, levied on the cardholder by the ATM operator.
+  required: false
+  is_key: false
+  classification: internal
+- name: card_scheme
+  type: varchar
+  concept: Card Scheme
+  description: Payment scheme or network used for the card transaction (e.g. Visa, Mastercard, RuPay, Maestro).
+  required: false
+  is_key: false
+  classification: internal
+- name: pan_token
+  type: varchar
+  concept: PAN Token
+  description: Tokenized representation of the card's Primary Account Number (PAN) used to identify the cardholder without exposing raw card data.
+  required: false
+  is_key: false
+  classification: pii
+- name: stan_rrn
+  type: varchar
+  concept: Stan Rrn
+  description: System Trace Audit Number and Retrieval Reference Number uniquely identifying the ATM transaction within the payment network.
+  required: false
+  is_key: false
+  classification: internal
+- name: result_code
+  type: varchar
+  concept: Result Code
+  description: Numeric or alphanumeric response code returned by the switch or issuer indicating the transaction's authorization outcome.
+  required: false
+  is_key: false
+  classification: internal
+- name: on_us_flag
+  type: boolean
+  concept: On Us Flag
+  description: Boolean indicator that the card used at the ATM belongs to the same bank that operates the ATM (on-us transaction).
+  required: false
+  is_key: false
+  classification: internal
+- name: cassette_id_list
+  type: varchar
+  concept: Cassette ID List
+  description: List of cassette identifiers installed in the ATM, each holding a specific denomination of banknotes.
+  required: false
+  is_key: false
+  classification: internal
+- name: load_event_id
+  type: bigint
+  concept: Load Event ID
+  description: Unique identifier for a cash replenishment or cassette reload event at the ATM.
+  required: true
+  is_key: true
+  classification: internal
+- name: denomination_breakup
+  type: varchar
+  concept: Denomination Breakup
+  description: Breakdown of banknote denominations and quantities loaded into the ATM cassettes during a replenishment event.
+  required: false
+  is_key: false
+  classification: internal
+- name: cassette_serials
+  type: varchar
+  concept: Cassette Serials
+  description: Serial numbers of the cassettes loaded into the ATM during a replenishment, used for chain-of-custody tracking.
+  required: false
+  is_key: false
+  classification: internal
+- name: load_ts
+  type: timestamp
+  concept: Load Ts
+  description: Timestamp at which a cash replenishment or cassette reload was performed at the ATM.
+  required: false
+  is_key: false
+  classification: internal
+- name: replenish_staff_id
+  type: bigint
+  concept: Replenish Staff ID
+  description: Unique identifier of the staff member or vendor technician who performed the cash replenishment.
+  required: true
+  is_key: true
+  classification: internal
+- name: incident_id
+  type: bigint
+  concept: Incident ID
+  description: Unique identifier for an ATM downtime, fault, or operational incident record.
+  required: true
+  is_key: true
+  classification: internal
+- name: error_code
+  type: varchar
+  concept: Error Code
+  description: Error or fault code identifying the technical reason for an ATM incident or transaction failure.
+  required: false
+  is_key: false
+  classification: internal
+- name: start_ts
+  type: timestamp
+  concept: Start Ts
+  description: Timestamp at which an ATM incident or downtime period began.
+  required: false
+  is_key: false
+  classification: internal
+- name: end_ts
+  type: timestamp
+  concept: End Ts
+  description: Timestamp at which an ATM incident or downtime period was resolved and the machine returned to service.
+  required: false
+  is_key: false
+  classification: internal
+- name: downtime_minutes
+  type: varchar
+  concept: Downtime Minutes
+  description: Total duration in minutes that the ATM was unavailable during an incident period.
+  required: false
+  is_key: false
+  classification: internal

@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "workbench": {
+      "type": "http",
+      "url": "http://localhost:8000/mcp/",
+      "note": "Data Engineer tools — stage execution, discovery, reviews, Cypher. Run: claude --mcp-config de.mcp.json --strict-mcp-config"
+    }
+  }
+}

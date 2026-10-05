@@ -1,0 +1,2091 @@
+manifest_version: '1'
+kind: estate
+platform: postgres
+catalog: hr
+generated_at: '2026-08-27T18:56:27.403975+00:00'
+tool_version: '1'
+extraction:
+  metadata: true
+  volumetrics: true
+  profiling: true
+  values_included: true
+  code_assets: false
+  redaction:
+    pii_redacted: 1
+    cardinality_capped: 22
+relations:
+- schema: hr_comp
+  table: benefit_enrollment
+  relation_kind: table
+  row_count: 342
+  row_count_is_estimate: true
+  size_bytes: 139264
+  comment: SCD-2 history of benefit-plan enrollments per employee.
+  columns:
+  - name: enrollment_id
+    data_type: bigint
+    nullable: false
+    ordinal: 1
+    primary_key: true
+    profile:
+      null_count: 0
+      null_rate: 0.0
+      distinct_count: 342
+      min: null
+      max: null
+      mean: 171.5
+      redacted: true
+      redaction_reason: cardinality_capped
+  - name: employee_id
+    data_type: integer
+    nullable: false
+    ordinal: 2
+    profile:
+      null_count: 0
+      null_rate: 0.0
+      distinct_count: 160
+      min: null
+      max: null
+      mean: 80.34502923976608
+      redacted: true
+      redaction_reason: cardinality_capped
+  - name: plan_code
+    data_type: character varying
+    nullable: false
+    ordinal: 3
+    profile:
+      null_count: 0
+      null_rate: 0.0
+      distinct_count: 10
+      min_length: 4
+      max_length: 4
+      avg_length: 4.0
+      top_values:
+      - value: BP08
+        count: 35
+        frequency: 0.102339
+      - value: BP05
+        count: 35
+        frequency: 0.102339
+      - value: BP01
+        count: 34
+        frequency: 0.099415
+      - value: BP10
+        count: 34
+        frequency: 0.099415
+      - value: BP09
+        count: 34
+        frequency: 0.099415
+      - value: BP02
+        count: 34
+        frequency: 0.099415
+      - value: BP03
+        count: 34
+        frequency: 0.099415
+      - value: BP07
+        count: 34
+        frequency: 0.099415
+      - value: BP04
+        count: 34
+        frequency: 0.099415
+      - value: BP06
+        count: 34
+        frequency: 0.099415
+      redacted: false
+  - name: coverage_level
+    data_type: character varying
+    nullable: false
+    ordinal: 4
+    comment: 'Coverage tier: employee, employee+1, family.'
+    profile:
+      null_count: 0
+      null_rate: 0.0
+      distinct_count: 3
+      min_length: 6
+      max_length: 10
+      avg_length: 8.0
+      top_values:
+      - value: employee
+        count: 128
+        frequency: 0.374269
+      - value: family
+        count: 107
+        frequency: 0.312865
+      - value: employee+1
+        count: 107
+        frequency: 0.312865
+      redacted: false
+  - name: enrolled_from
+    data_type: date
+    nullable: false
+    ordinal: 5
+    profile:
+      null_count: 0
+      null_rate: 0.0
+      distinct_count: 182
+      min: null
+      max: null
+      redacted: true
+      redaction_reason: cardinality_capped
+  - name: enrolled_to
+    data_type: date
+    nullable: true
+    ordinal: 6
+    profile:
+      null_count: 320
+      null_rate: 0.935673
+      distinct_count: 22
+      min: '2016-07-23'
+      max: '2024-09-07'
+      redacted: false
+  - name: is_current
+    data_type: boolean
+    nullable: false
+    ordinal: 7
+    comment: True for the enrollment currently in effect for this employee+plan.
+    profile:
+      null_count: 0
+      null_rate: 0.0
+      distinct_count: 2
+      top_values:
+      - value: 'true'
+        count: 320
+        frequency: 0.935673
+      - value: 'false'
+        count: 22
+        frequency: 0.064327
+      redacted: false
+  foreign_keys:
+  - from_column: employee_id
+    to_schema: hr_comp
+    to_table: pay_employee
+    to_column: employee_id
+  - from_column: plan_code
+    to_schema: hr_comp
+    to_table: benefit_plan
+    to_column: plan_code
+- schema: hr_comp
+  table: benefit_plan
+  relation_kind: table
+  row_count_is_estimate: false
+  size_bytes: 24576
+  comment: Catalog of benefit plans (health, dental, vision, retirement, life).
+  columns:
+  - name: plan_code
+    data_type: character varying
+    nullable: false
+    ordinal: 1
+    primary_key: true
+    profile:
+      null_count: 0
+      null_rate: 0.0
+      distinct_count: 10
+      min_length: 4
+      max_length: 4
+      avg_length: 4.0
+      top_values:
+      - value: BP02
+        count: 1
+        frequency: 0.1
+      - value: BP05
+        count: 1
+        frequency: 0.1
+      - value: BP01
+        count: 1
+        frequency: 0.1
+      - value: BP08
+        count: 1
+        frequency: 0.1
+      - value: BP09
+        count: 1
+        frequency: 0.1
+      - value: BP10
+        count: 1
+        frequency: 0.1
+      - value: BP06
+        count: 1
+        frequency: 0.1
+      - value: BP07
+        count: 1
+        frequency: 0.1
+      - value: BP03
+        count: 1
+        frequency: 0.1
+      - value: BP04
+        count: 1
+        frequency: 0.1
+      redacted: false
+  - name: plan_name
+    data_type: character varying
+    nullable: false
+    ordinal: 2
+    profile:
+      null_count: 0
+      null_rate: 0.0
+      distinct_count: 10
+      min_length: 6
+      max_length: 14
+      avg_length: 10.5
+      top_values:
+      - value: Life 1x
+        count: 1
+        frequency: 0.1
+      - value: Plus Health
+        count: 1
+        frequency: 0.1
+      - value: 401k Plus
+        count: 1
+        frequency: 0.1
+      - value: Premium Health
+        count: 1
+        frequency: 0.1
+      - value: Basic Health
+        count: 1
+        frequency: 0.1
+      - value: Basic Dental
+        count: 1
+        frequency: 0.1
+      - value: Life 2x
+        count: 1
+        frequency: 0.1
+      - value: Vision
+        count: 1
+        frequency: 0.1
+      - value: 401k Standard
+        count: 1
+        frequency: 0.1
+      - value: Premium Dental
+        count: 1
+        frequency: 0.1
+      redacted: false
+  - name: plan_type
+    data_type: character varying
+    nullable: false
+    ordinal: 3
+    comment: 'Plan category: health, dental, vision, retirement, life.'
+    profile:
+      null_count: 0
+      null_rate: 0.0
+      distinct_count: 5
+      min_length: 4
+      max_length: 10
+      avg_length: 6.4
+      top_values:
+      - value: health
+        count: 3
+        frequency: 0.3
+      - value: retirement
+        count: 2
+        frequency: 0.2
+      - value: dental
+        count: 2
+        frequency: 0.2
+      - value: life
+        count: 2
+        frequency: 0.2
+      - value: vision
+        count: 1
+        frequency: 0.1
+      redacted: false
+  - name: tier
+    data_type: character varying
+    nullable: false
+    ordinal: 4
+    profile:
+      null_count: 0
+      null_rate: 0.0
+      distinct_count: 6
+      min_length: 2
+      max_length: 8
+      avg_length: 5.2
+      top_values:
+      - value: basic
+        count: 2
+        frequency: 0.2
+      - value: standard
+        count: 2
+        frequency: 0.2
+      - value: plus
+        count: 2
+        frequency: 0.2
+      - value: premium
+        count: 2
+        frequency: 0.2
+      - value: 1x
+        count: 1
+        frequency: 0.1
+      - value: 2x
+        count: 1
+        frequency: 0.1
+      redacted: false
+- schema: hr_comp
+  table: pay_employee
+  relation_kind: table
+  row_count: 160
+  row_count_is_estimate: true
+  size_bytes: 73728
+  comment: Payroll's own employee record. employee_id is the shared business key with
+    the HRIS; there is intentionally NO cross-schema FK.
+  columns:
+  - name: employee_id
+    data_type: integer
+    nullable: false
+    ordinal: 1
+    comment: Shared business key matching hr_core.employee.employee_id (reconciled
+      at the consumer layer).
+    primary_key: true
+    profile:
+      null_count: 0
+      null_rate: 0.0
+      distinct_count: 160
+      min: null
+      max: null
+      mean: 80.5
+      redacted: true
+      redaction_reason: cardinality_capped
+  - name: pay_group
+    data_type: character varying
+    nullable: false
+    ordinal: 2
+    comment: Payroll grouping / run assignment.
+    profile:
+      null_count: 0
+      null_rate: 0.0
+      distinct_count: 3
+      min_length: 4
+      max_length: 5
+      avg_length: 4.66875
+      top_values:
+      - value: BW-US
+        count: 54
+        frequency: 0.3375
+      - value: SM-US
+        count: 53
+        frequency: 0.33125
+      - value: M-EU
+        count: 53
+        frequency: 0.33125
+      redacted: false
+  - name: payroll_no
+    data_type: character varying
+    nullable: false
+    ordinal: 3
+    profile:
+      null_count: 0
+      null_rate: 0.0
+      distinct_count: 160
+      min_length: 6
+      max_length: 6
+      avg_length: 6.0
+      min: null
+      max: null
+      redacted: true
+      redaction_reason: cardinality_capped
+  - name: pay_frequency
+    data_type: character varying
+    nullable: false
+    ordinal: 4
+    comment: 'How often the employee is paid: biweekly, semimonthly, monthly.'
+    profile:
+      null_count: 0
+      null_rate: 0.0
+      distinct_count: 3
+      min_length: 7
+      max_length: 11
+      avg_length: 8.6625
+      top_values:
+      - value: biweekly
+        count: 54
+        frequency: 0.3375
+      - value: monthly
+        count: 53
+        frequency: 0.33125
+      - value: semimonthly
+        count: 53
+        frequency: 0.33125
+      redacted: false
+- schema: hr_comp
+  table: salary_history
+  relation_kind: table
+  row_count: 480
+  row_count_is_estimate: true
+  size_bytes: 172032
+  comment: SCD-2 history of employee base pay over time.
+  columns:
+  - name: salary_id
+    data_type: bigint
+    nullable: false
+    ordinal: 1
+    primary_key: true
+    profile:
+      null_count: 0
+      null_rate: 0.0
+      distinct_count: 480
+      min: null
+      max: null
+      mean: 240.5
+      redacted: true
+      redaction_reason: cardinality_capped
+  - name: employee_id
+    data_type: integer
+    nullable: false
+    ordinal: 2
+    profile:
+      null_count: 0
+      null_rate: 0.0
+      distinct_count: 160
+      min: null
+      max: null
+      mean: 80.38958333333333
+      redacted: true
+      redaction_reason: cardinality_capped
+  - name: amt
+    data_type: numeric
+    nullable: false
+    ordinal: 3
+    profile:
+      null_count: 0
+      null_rate: 0.0
+      distinct_count: 50
+      min: 50000.0
+      max: 156000.0
+      mean: 95642.70833333333
+      redacted: false
+  - name: currency_code
+    data_type: character
+    nullable: false
+    ordinal: 4
+    comment: ISO 4217 currency code of the pay amount.
+    profile:
+      null_count: 0
+      null_rate: 0.0
+      distinct_count: 3
+      min_length: 3
+      max_length: 3
+      avg_length: 3.0
+      top_values:
+      - value: USD
+        count: 412
+        frequency: 0.858333
+      - value: EUR
+        count: 43
+        frequency: 0.089583
+      - value: GBP
+        count: 25
+        frequency: 0.052083
+      redacted: false
+  - name: rsn
+    data_type: character varying
+    nullable: true
+    ordinal: 5
+    profile:
+      null_count: 0
+      null_rate: 0.0
+      distinct_count: 4
+      min_length: 3
+      max_length: 5
+      avg_length: 3.6666666666666665
+      top_values:
+      - value: ADJ
+        count: 240
+        frequency: 0.5
+      - value: MERIT
+        count: 80
+        frequency: 0.166667
+      - value: PROMO
+        count: 80
+        frequency: 0.166667
+      - value: MKT
+        count: 80
+        frequency: 0.166667
+      redacted: false
+  - name: prior_amt
+    data_type: numeric
+    nullable: true
+    ordinal: 6
+    comment: The pay amount immediately before this change (NULL for the first record).
+    profile:
+      null_count: 160
+      null_rate: 0.333333
+      distinct_count: 45
+      min: 50000.0
+      max: 146000.0
+      mean: 92478.125
+      redacted: false
+  - name: effective_from
+    data_type: date
+    nullable: false
+    ordinal: 7
+    comment: Inclusive start of the period this pay amount was active.
+    profile:
+      null_count: 0
+      null_rate: 0.0
+      distinct_count: 480
+      min: null
+      max: null
+      redacted: true
+      redaction_reason: cardinality_capped
+  - name: effective_to
+    data_type: date
+    nullable: true
+    ordinal: 8
+    comment: Exclusive end of the period; NULL means currently active.
+    profile:
+      null_count: 160
+      null_rate: 0.333333
+      distinct_count: 320
+      min: null
+      max: null
+      redacted: true
+      redaction_reason: cardinality_capped
+  - name: is_current
+    data_type: boolean
+    nullable: false
+    ordinal: 9
+    comment: True for the pay amount currently in effect.
+    profile:
+      null_count: 0
+      null_rate: 0.0
+      distinct_count: 2
+      top_values:
+      - value: 'false'
+        count: 320
+        frequency: 0.666667
+      - value: 'true'
+        count: 160
+        frequency: 0.333333
+      redacted: false
+  foreign_keys:
+  - from_column: employee_id
+    to_schema: hr_comp
+    to_table: pay_employee
+    to_column: employee_id
+- schema: hr_core
+  table: department
+  relation_kind: table
+  row_count_is_estimate: false
+  size_bytes: 24576
+  comment: Organizational units; self-referencing hierarchy via parent_department_id.
+  columns:
+  - name: department_id
+    data_type: integer
+    nullable: false
+    ordinal: 1
+    primary_key: true
+    profile:
+      null_count: 0
+      null_rate: 0.0
+      distinct_count: 12
+      min: 1.0
+      max: 12.0
+      mean: 6.5
+      top_values:
+      - value: '5'
+        count: 1
+        frequency: 0.083333
+      - value: '4'
+        count: 1
+        frequency: 0.083333
+      - value: '10'
+        count: 1
+        frequency: 0.083333
+      - value: '6'
+        count: 1
+        frequency: 0.083333
+      - value: '2'
+        count: 1
+        frequency: 0.083333
+      - value: '7'
+        count: 1
+        frequency: 0.083333
+      - value: '1'
+        count: 1
+        frequency: 0.083333
+      - value: '8'
+        count: 1
+        frequency: 0.083333
+      - value: '11'
+        count: 1
+        frequency: 0.083333
+      - value: '9'
+        count: 1
+        frequency: 0.083333
+      redacted: false
+  - name: dept_name
+    data_type: character varying
+    nullable: false
+    ordinal: 2
+    profile:
+      null_count: 0
+      null_rate: 0.0
+      distinct_count: 12
+      min_length: 2
+      max_length: 11
+      avg_length: 6.833333333333333
+      top_values:
+      - value: Product
+        count: 1
+        frequency: 0.083333
+      - value: Marketing
+        count: 1
+        frequency: 0.083333
+      - value: Operations
+        count: 1
+        frequency: 0.083333
+      - value: Legal
+        count: 1
+        frequency: 0.083333
+      - value: Finance
+        count: 1
+        frequency: 0.083333
+      - value: People
+        count: 1
+        frequency: 0.083333
+      - value: Executive
+        count: 1
+        frequency: 0.083333
+      - value: Data
+        count: 1
+        frequency: 0.083333
+      - value: Support
+        count: 1
+        frequency: 0.083333
+      - value: Engineering
+        count: 1
+        frequency: 0.083333
+      redacted: false
+  - name: cost_center
+    data_type: character varying
+    nullable: false
+    ordinal: 3
+    comment: Finance cost center the department rolls up to.
+    profile:
+      null_count: 0
+      null_rate: 0.0
+      distinct_count: 12
+      min_length: 5
+      max_length: 5
+      avg_length: 5.0
+      top_values:
+      - value: CC002
+        count: 1
+        frequency: 0.083333
+      - value: CC008
+        count: 1
+        frequency: 0.083333
+      - value: CC012
+        count: 1
+        frequency: 0.083333
+      - value: CC006
+        count: 1
+        frequency: 0.083333
+      - value: CC005
+        count: 1
+        frequency: 0.083333
+      - value: CC011
+        count: 1
+        frequency: 0.083333
+      - value: CC003
+        count: 1
+        frequency: 0.083333
+      - value: CC009
+        count: 1
+        frequency: 0.083333
+      - value: CC004
+        count: 1
+        frequency: 0.083333
+      - value: CC007
+        count: 1
+        frequency: 0.083333
+      redacted: false
+  - name: parent_department_id
+    data_type: integer
+    nullable: true
+    ordinal: 4
+    comment: Parent department; NULL for top-level org units.
+    profile:
+      null_count: 3
+      null_rate: 0.25
+      distinct_count: 3
+      min: 1.0
+      max: 3.0
+      mean: 2.0
+      top_values:
+      - value: '3'
+        count: 3
+        frequency: 0.25
+      - value: '2'
+        count: 3
+        frequency: 0.25
+      - value: '1'
+        count: 3
+        frequency: 0.25
+      redacted: false
+  - name: created_at
+    data_type: timestamp with time zone
+    nullable: false
+    ordinal: 5
+    profile:
+      null_count: 0
+      null_rate: 0.0
+      distinct_count: 1
+      min: '2015-01-01T00:00:00+00:00'
+      max: '2015-01-01T00:00:00+00:00'
+      redacted: false
+  - name: updated_at
+    data_type: timestamp with time zone
+    nullable: false
+    ordinal: 6
+    profile:
+      null_count: 0
+      null_rate: 0.0
+      distinct_count: 1
+      min: '2024-12-31T00:00:00+00:00'
+      max: '2024-12-31T00:00:00+00:00'
+      redacted: false
+  foreign_keys:
+  - from_column: parent_department_id
+    to_schema: hr_core
+    to_table: department
+    to_column: department_id
+- schema: hr_core
+  table: employee
+  relation_kind: table
+  row_count: 160
+  row_count_is_estimate: true
+  size_bytes: 163840
+  comment: Employee master (current-state) in the core HRIS. Contains PII.
+  columns:
+  - name: employee_id
+    data_type: integer
+    nullable: false
+    ordinal: 1
+    primary_key: true
+    profile:
+      null_count: 0
+      null_rate: 0.0
+      distinct_count: 160
+      min: null
+      max: null
+      mean: 80.5
+      redacted: true
+      redaction_reason: cardinality_capped
+  - name: first_name
+    data_type: character varying
+    nullable: false
+    ordinal: 2
+    profile:
+      null_count: 0
+      null_rate: 0.0
+      distinct_count: 20
+      min_length: 3
+      max_length: 8
+      avg_length: 5.1
+      top_values:
+      - value: Abigail
+        count: 8
+        frequency: 0.05
+      - value: Sophia
+        count: 8
+        frequency: 0.05
+      - value: Logan
+        count: 8
+        frequency: 0.05
+      - value: Harper
+        count: 8
+        frequency: 0.05
+      - value: Evelyn
+        count: 8
+        frequency: 0.05
+      - value: Liam
+        count: 8
+        frequency: 0.05
+      - value: Isabella
+        count: 8
+        frequency: 0.05
+      - value: Lucas
+        count: 8
+        frequency: 0.05
+      - value: Henry
+        count: 8
+        frequency: 0.05
+      - value: Amelia
+        count: 8
+        frequency: 0.05
+      redacted: false
+  - name: last_name
+    data_type: character varying
+    nullable: false
+    ordinal: 3
+    profile:
+      null_count: 0
+      null_rate: 0.0
+      distinct_count: 20
+      min_length: 5
+      max_length: 9
+      avg_length: 6.5
+      top_values:
+      - value: Martin
+        count: 8
+        frequency: 0.05
+      - value: Williams
+        count: 8
+        frequency: 0.05
+      - value: Johnson
+        count: 8
+        frequency: 0.05
+      - value: Garcia
+        count: 8
+        frequency: 0.05
+      - value: Jackson
+        count: 8
+        frequency: 0.05
+      - value: Jones
+        count: 8
+        frequency: 0.05
+      - value: Thomas
+        count: 8
+        frequency: 0.05
+      - value: Moore
+        count: 8
+        frequency: 0.05
+      - value: Lopez
+        count: 8
+        frequency: 0.05
+      - value: Smith
+        count: 8
+        frequency: 0.05
+      redacted: false
+  - name: email
+    data_type: character varying
+    nullable: false
+    ordinal: 4
+    profile:
+      null_count: 0
+      null_rate: 0.0
+      distinct_count: 160
+      min_length: 22
+      max_length: 32
+      avg_length: 26.925
+      min: null
+      max: null
+      redacted: true
+      redaction_reason: pii
+  - name: date_of_birth
+    data_type: date
+    nullable: false
+    ordinal: 5
+    comment: Employee date of birth (PII).
+    profile:
+      null_count: 0
+      null_rate: 0.0
+      distinct_count: 160
+      min: null
+      max: null
+      redacted: true
+      redaction_reason: cardinality_capped
+  - name: gender
+    data_type: character
+    nullable: false
+    ordinal: 6
+    comment: 'Self-reported gender: M, F, or X (non-binary/undisclosed).'
+    profile:
+      null_count: 0
+      null_rate: 0.0
+      distinct_count: 3
+      min_length: 1
+      max_length: 1
+      avg_length: 1.0
+      top_values:
+      - value: M
+        count: 69
+        frequency: 0.43125
+      - value: F
+        count: 69
+        frequency: 0.43125
+      - value: X
+        count: 22
+        frequency: 0.1375
+      redacted: false
+  - name: national_id_last4
+    data_type: character
+    nullable: false
+    ordinal: 7
+    comment: Last four digits of national ID (PII).
+    profile:
+      null_count: 0
+      null_rate: 0.0
+      distinct_count: 160
+      min_length: 4
+      max_length: 4
+      avg_length: 4.0
+      min: null
+      max: null
+      redacted: true
+      redaction_reason: cardinality_capped
+  - name: hire_date
+    data_type: date
+    nullable: false
+    ordinal: 8
+    profile:
+      null_count: 0
+      null_rate: 0.0
+      distinct_count: 160
+      min: null
+      max: null
+      redacted: true
+      redaction_reason: cardinality_capped
+  - name: department_id
+    data_type: integer
+    nullable: false
+    ordinal: 9
+    comment: Current home department (synced from the current job assignment).
+    profile:
+      null_count: 0
+      null_rate: 0.0
+      distinct_count: 12
+      min: 1.0
+      max: 12.0
+      mean: 6.45
+      top_values:
+      - value: '5'
+        count: 14
+        frequency: 0.0875
+      - value: '3'
+        count: 14
+        frequency: 0.0875
+      - value: '4'
+        count: 14
+        frequency: 0.0875
+      - value: '6'
+        count: 14
+        frequency: 0.0875
+      - value: '10'
+        count: 13
+        frequency: 0.08125
+      - value: '12'
+        count: 13
+        frequency: 0.08125
+      - value: '1'
+        count: 13
+        frequency: 0.08125
+      - value: '2'
+        count: 13
+        frequency: 0.08125
+      - value: '7'
+        count: 13
+        frequency: 0.08125
+      - value: '11'
+        count: 13
+        frequency: 0.08125
+      redacted: false
+  - name: manager_id
+    data_type: integer
+    nullable: true
+    ordinal: 10
+    comment: Current line manager (self-reference); NULL for org leaders.
+    profile:
+      null_count: 12
+      null_rate: 0.075
+      distinct_count: 12
+      min: 1.0
+      max: 12.0
+      mean: 6.418918918918919
+      top_values:
+      - value: '5'
+        count: 13
+        frequency: 0.08125
+      - value: '2'
+        count: 13
+        frequency: 0.08125
+      - value: '4'
+        count: 13
+        frequency: 0.08125
+      - value: '3'
+        count: 13
+        frequency: 0.08125
+      - value: '10'
+        count: 12
+        frequency: 0.075
+      - value: '7'
+        count: 12
+        frequency: 0.075
+      - value: '1'
+        count: 12
+        frequency: 0.075
+      - value: '12'
+        count: 12
+        frequency: 0.075
+      - value: '6'
+        count: 12
+        frequency: 0.075
+      - value: '11'
+        count: 12
+        frequency: 0.075
+      redacted: false
+  - name: employment_status
+    data_type: character varying
+    nullable: false
+    ordinal: 11
+    comment: 'Current lifecycle status: active, on_leave, terminated.'
+    profile:
+      null_count: 0
+      null_rate: 0.0
+      distinct_count: 3
+      min_length: 6
+      max_length: 10
+      avg_length: 6.4125
+      top_values:
+      - value: active
+        count: 139
+        frequency: 0.86875
+      - value: terminated
+        count: 12
+        frequency: 0.075
+      - value: on_leave
+        count: 9
+        frequency: 0.05625
+      redacted: false
+  - name: created_at
+    data_type: timestamp with time zone
+    nullable: false
+    ordinal: 12
+    profile:
+      null_count: 0
+      null_rate: 0.0
+      distinct_count: 1
+      min: '2015-01-01T00:00:00+00:00'
+      max: '2015-01-01T00:00:00+00:00'
+      redacted: false
+  - name: updated_at
+    data_type: timestamp with time zone
+    nullable: false
+    ordinal: 13
+    profile:
+      null_count: 0
+      null_rate: 0.0
+      distinct_count: 1
+      min: '2024-12-31T00:00:00+00:00'
+      max: '2024-12-31T00:00:00+00:00'
+      redacted: false
+  foreign_keys:
+  - from_column: department_id
+    to_schema: hr_core
+    to_table: department
+    to_column: department_id
+  - from_column: manager_id
+    to_schema: hr_core
+    to_table: employee
+    to_column: employee_id
+- schema: hr_core
+  table: employment_status_history
+  relation_kind: table
+  row_count: 181
+  row_count_is_estimate: true
+  size_bytes: 90112
+  comment: 'SCD-2 history of employment lifecycle: active, on_leave, terminated.'
+  columns:
+  - name: status_id
+    data_type: bigint
+    nullable: false
+    ordinal: 1
+    primary_key: true
+    profile:
+      null_count: 0
+      null_rate: 0.0
+      distinct_count: 181
+      min: null
+      max: null
+      mean: 91.0
+      redacted: true
+      redaction_reason: cardinality_capped
+  - name: employee_id
+    data_type: integer
+    nullable: false
+    ordinal: 2
+    profile:
+      null_count: 0
+      null_rate: 0.0
+      distinct_count: 160
+      min: null
+      max: null
+      mean: 80.98895027624309
+      redacted: true
+      redaction_reason: cardinality_capped
+  - name: employment_status
+    data_type: character varying
+    nullable: false
+    ordinal: 3
+    profile:
+      null_count: 0
+      null_rate: 0.0
+      distinct_count: 3
+      min_length: 6
+      max_length: 10
+      avg_length: 6.3646408839779
+      top_values:
+      - value: active
+        count: 160
+        frequency: 0.883978
+      - value: terminated
+        count: 12
+        frequency: 0.066298
+      - value: on_leave
+        count: 9
+        frequency: 0.049724
+      redacted: false
+  - name: status_reason
+    data_type: character varying
+    nullable: true
+    ordinal: 4
+    comment: Reason for the status change (e.g. voluntary, medical).
+    profile:
+      null_count: 160
+      null_rate: 0.883978
+      distinct_count: 2
+      min_length: 7
+      max_length: 9
+      avg_length: 8.142857142857142
+      top_values:
+      - value: voluntary
+        count: 12
+        frequency: 0.066298
+      - value: medical
+        count: 9
+        frequency: 0.049724
+      redacted: false
+  - name: effective_from
+    data_type: date
+    nullable: false
+    ordinal: 5
+    profile:
+      null_count: 0
+      null_rate: 0.0
+      distinct_count: 181
+      min: null
+      max: null
+      redacted: true
+      redaction_reason: cardinality_capped
+  - name: effective_to
+    data_type: date
+    nullable: true
+    ordinal: 6
+    profile:
+      null_count: 160
+      null_rate: 0.883978
+      distinct_count: 21
+      min: '2019-10-12'
+      max: '2027-08-13'
+      redacted: false
+  - name: is_current
+    data_type: boolean
+    nullable: false
+    ordinal: 7
+    profile:
+      null_count: 0
+      null_rate: 0.0
+      distinct_count: 2
+      top_values:
+      - value: 'true'
+        count: 160
+        frequency: 0.883978
+      - value: 'false'
+        count: 21
+        frequency: 0.116022
+      redacted: false
+  foreign_keys:
+  - from_column: employee_id
+    to_schema: hr_core
+    to_table: employee
+    to_column: employee_id
+- schema: hr_core
+  table: job
+  relation_kind: table
+  row_count_is_estimate: false
+  size_bytes: 40960
+  comment: 'Job catalog: title, family, grade, and the approved salary band.'
+  columns:
+  - name: job_id
+    data_type: integer
+    nullable: false
+    ordinal: 1
+    primary_key: true
+    profile:
+      null_count: 0
+      null_rate: 0.0
+      distinct_count: 16
+      min: 1.0
+      max: 16.0
+      mean: 8.5
+      top_values:
+      - value: '11'
+        count: 1
+        frequency: 0.0625
+      - value: '9'
+        count: 1
+        frequency: 0.0625
+      - value: '15'
+        count: 1
+        frequency: 0.0625
+      - value: '3'
+        count: 1
+        frequency: 0.0625
+      - value: '5'
+        count: 1
+        frequency: 0.0625
+      - value: '4'
+        count: 1
+        frequency: 0.0625
+      - value: '10'
+        count: 1
+        frequency: 0.0625
+      - value: '6'
+        count: 1
+        frequency: 0.0625
+      - value: '14'
+        count: 1
+        frequency: 0.0625
+      - value: '13'
+        count: 1
+        frequency: 0.0625
+      redacted: false
+  - name: job_code
+    data_type: character varying
+    nullable: false
+    ordinal: 2
+    profile:
+      null_count: 0
+      null_rate: 0.0
+      distinct_count: 16
+      min_length: 4
+      max_length: 4
+      avg_length: 4.0
+      top_values:
+      - value: J013
+        count: 1
+        frequency: 0.0625
+      - value: J015
+        count: 1
+        frequency: 0.0625
+      - value: J012
+        count: 1
+        frequency: 0.0625
+      - value: J003
+        count: 1
+        frequency: 0.0625
+      - value: J014
+        count: 1
+        frequency: 0.0625
+      - value: J008
+        count: 1
+        frequency: 0.0625
+      - value: J001
+        count: 1
+        frequency: 0.0625
+      - value: J006
+        count: 1
+        frequency: 0.0625
+      - value: J007
+        count: 1
+        frequency: 0.0625
+      - value: J004
+        count: 1
+        frequency: 0.0625
+      redacted: false
+  - name: job_title
+    data_type: character varying
+    nullable: false
+    ordinal: 3
+    profile:
+      null_count: 0
+      null_rate: 0.0
+      distinct_count: 16
+      min_length: 2
+      max_length: 15
+      avg_length: 8.8125
+      top_values:
+      - value: Associate
+        count: 1
+        frequency: 0.0625
+      - value: Coordinator
+        count: 1
+        frequency: 0.0625
+      - value: Engineer
+        count: 1
+        frequency: 0.0625
+      - value: Architect
+        count: 1
+        frequency: 0.0625
+      - value: Director
+        count: 1
+        frequency: 0.0625
+      - value: Senior Manager
+        count: 1
+        frequency: 0.0625
+      - value: Manager
+        count: 1
+        frequency: 0.0625
+      - value: Specialist
+        count: 1
+        frequency: 0.0625
+      - value: VP
+        count: 1
+        frequency: 0.0625
+      - value: Consultant
+        count: 1
+        frequency: 0.0625
+      redacted: false
+  - name: job_family
+    data_type: character varying
+    nullable: false
+    ordinal: 4
+    profile:
+      null_count: 0
+      null_rate: 0.0
+      distinct_count: 11
+      min_length: 2
+      max_length: 11
+      avg_length: 7.3125
+      top_values:
+      - value: Engineering
+        count: 3
+        frequency: 0.1875
+      - value: Operations
+        count: 2
+        frequency: 0.125
+      - value: Sales
+        count: 2
+        frequency: 0.125
+      - value: Product
+        count: 2
+        frequency: 0.125
+      - value: People
+        count: 1
+        frequency: 0.0625
+      - value: Data
+        count: 1
+        frequency: 0.0625
+      - value: Support
+        count: 1
+        frequency: 0.0625
+      - value: IT
+        count: 1
+        frequency: 0.0625
+      - value: Marketing
+        count: 1
+        frequency: 0.0625
+      - value: Legal
+        count: 1
+        frequency: 0.0625
+      redacted: false
+  - name: grade
+    data_type: smallint
+    nullable: false
+    ordinal: 5
+    comment: Job grade (1=junior … 8=executive).
+    profile:
+      null_count: 0
+      null_rate: 0.0
+      distinct_count: 8
+      min: 1.0
+      max: 8.0
+      mean: 4.5
+      top_values:
+      - value: '3'
+        count: 2
+        frequency: 0.125
+      - value: '5'
+        count: 2
+        frequency: 0.125
+      - value: '4'
+        count: 2
+        frequency: 0.125
+      - value: '6'
+        count: 2
+        frequency: 0.125
+      - value: '2'
+        count: 2
+        frequency: 0.125
+      - value: '7'
+        count: 2
+        frequency: 0.125
+      - value: '1'
+        count: 2
+        frequency: 0.125
+      - value: '8'
+        count: 2
+        frequency: 0.125
+      redacted: false
+  - name: min_salary
+    data_type: numeric
+    nullable: false
+    ordinal: 6
+    comment: Bottom of the approved annual salary band for the job.
+    profile:
+      null_count: 0
+      null_rate: 0.0
+      distinct_count: 8
+      min: 54000.0
+      max: 152000.0
+      mean: 103000.0
+      top_values:
+      - value: '138000.00'
+        count: 2
+        frequency: 0.125
+      - value: '68000.00'
+        count: 2
+        frequency: 0.125
+      - value: '96000.00'
+        count: 2
+        frequency: 0.125
+      - value: '124000.00'
+        count: 2
+        frequency: 0.125
+      - value: '152000.00'
+        count: 2
+        frequency: 0.125
+      - value: '54000.00'
+        count: 2
+        frequency: 0.125
+      - value: '110000.00'
+        count: 2
+        frequency: 0.125
+      - value: '82000.00'
+        count: 2
+        frequency: 0.125
+      redacted: false
+  - name: max_salary
+    data_type: numeric
+    nullable: false
+    ordinal: 7
+    comment: Top of the approved annual salary band for the job.
+    profile:
+      null_count: 0
+      null_rate: 0.0
+      distinct_count: 8
+      min: 99000.0
+      max: 197000.0
+      mean: 148000.0
+      top_values:
+      - value: '99000.00'
+        count: 2
+        frequency: 0.125
+      - value: '197000.00'
+        count: 2
+        frequency: 0.125
+      - value: '127000.00'
+        count: 2
+        frequency: 0.125
+      - value: '155000.00'
+        count: 2
+        frequency: 0.125
+      - value: '169000.00'
+        count: 2
+        frequency: 0.125
+      - value: '113000.00'
+        count: 2
+        frequency: 0.125
+      - value: '183000.00'
+        count: 2
+        frequency: 0.125
+      - value: '141000.00'
+        count: 2
+        frequency: 0.125
+      redacted: false
+- schema: hr_core
+  table: job_assignment_history
+  relation_kind: table
+  row_count: 320
+  row_count_is_estimate: true
+  size_bytes: 122880
+  comment: SCD-2 history of an employee's job/department/location assignments over
+    time.
+  columns:
+  - name: assignment_id
+    data_type: bigint
+    nullable: false
+    ordinal: 1
+    primary_key: true
+    profile:
+      null_count: 0
+      null_rate: 0.0
+      distinct_count: 320
+      min: null
+      max: null
+      mean: 160.5
+      redacted: true
+      redaction_reason: cardinality_capped
+  - name: employee_id
+    data_type: integer
+    nullable: false
+    ordinal: 2
+    profile:
+      null_count: 0
+      null_rate: 0.0
+      distinct_count: 160
+      min: null
+      max: null
+      mean: 80.334375
+      redacted: true
+      redaction_reason: cardinality_capped
+  - name: job_id
+    data_type: integer
+    nullable: false
+    ordinal: 3
+    profile:
+      null_count: 0
+      null_rate: 0.0
+      distinct_count: 16
+      min: 1.0
+      max: 16.0
+      mean: 8.5
+      top_values:
+      - value: '4'
+        count: 20
+        frequency: 0.0625
+      - value: '14'
+        count: 20
+        frequency: 0.0625
+      - value: '3'
+        count: 20
+        frequency: 0.0625
+      - value: '13'
+        count: 20
+        frequency: 0.0625
+      - value: '10'
+        count: 20
+        frequency: 0.0625
+      - value: '9'
+        count: 20
+        frequency: 0.0625
+      - value: '7'
+        count: 20
+        frequency: 0.0625
+      - value: '1'
+        count: 20
+        frequency: 0.0625
+      - value: '5'
+        count: 20
+        frequency: 0.0625
+      - value: '2'
+        count: 20
+        frequency: 0.0625
+      redacted: false
+  - name: department_id
+    data_type: integer
+    nullable: false
+    ordinal: 4
+    profile:
+      null_count: 0
+      null_rate: 0.0
+      distinct_count: 12
+      min: 1.0
+      max: 12.0
+      mean: 6.4375
+      top_values:
+      - value: '3'
+        count: 28
+        frequency: 0.0875
+      - value: '5'
+        count: 28
+        frequency: 0.0875
+      - value: '4'
+        count: 28
+        frequency: 0.0875
+      - value: '2'
+        count: 27
+        frequency: 0.084375
+      - value: '6'
+        count: 27
+        frequency: 0.084375
+      - value: '12'
+        count: 26
+        frequency: 0.08125
+      - value: '1'
+        count: 26
+        frequency: 0.08125
+      - value: '7'
+        count: 26
+        frequency: 0.08125
+      - value: '11'
+        count: 26
+        frequency: 0.08125
+      - value: '8'
+        count: 26
+        frequency: 0.08125
+      redacted: false
+  - name: location_id
+    data_type: integer
+    nullable: false
+    ordinal: 5
+    profile:
+      null_count: 0
+      null_rate: 0.0
+      distinct_count: 8
+      min: 1.0
+      max: 8.0
+      mean: 4.5
+      top_values:
+      - value: '8'
+        count: 40
+        frequency: 0.125
+      - value: '7'
+        count: 40
+        frequency: 0.125
+      - value: '1'
+        count: 40
+        frequency: 0.125
+      - value: '5'
+        count: 40
+        frequency: 0.125
+      - value: '4'
+        count: 40
+        frequency: 0.125
+      - value: '2'
+        count: 40
+        frequency: 0.125
+      - value: '6'
+        count: 40
+        frequency: 0.125
+      - value: '3'
+        count: 40
+        frequency: 0.125
+      redacted: false
+  - name: lvl
+    data_type: smallint
+    nullable: false
+    ordinal: 6
+    profile:
+      null_count: 0
+      null_rate: 0.0
+      distinct_count: 8
+      min: 1.0
+      max: 8.0
+      mean: 4.5
+      top_values:
+      - value: '8'
+        count: 40
+        frequency: 0.125
+      - value: '7'
+        count: 40
+        frequency: 0.125
+      - value: '1'
+        count: 40
+        frequency: 0.125
+      - value: '5'
+        count: 40
+        frequency: 0.125
+      - value: '4'
+        count: 40
+        frequency: 0.125
+      - value: '2'
+        count: 40
+        frequency: 0.125
+      - value: '6'
+        count: 40
+        frequency: 0.125
+      - value: '3'
+        count: 40
+        frequency: 0.125
+      redacted: false
+  - name: assignment_type
+    data_type: character varying
+    nullable: false
+    ordinal: 7
+    comment: 'What created the assignment: hire, promotion, transfer, reorg.'
+    profile:
+      null_count: 0
+      null_rate: 0.0
+      distinct_count: 4
+      min_length: 4
+      max_length: 9
+      avg_length: 5.659375
+      top_values:
+      - value: hire
+        count: 160
+        frequency: 0.5
+      - value: reorg
+        count: 54
+        frequency: 0.16875
+      - value: promotion
+        count: 53
+        frequency: 0.165625
+      - value: transfer
+        count: 53
+        frequency: 0.165625
+      redacted: false
+  - name: effective_from
+    data_type: date
+    nullable: false
+    ordinal: 8
+    comment: Inclusive start of the period this assignment was active.
+    profile:
+      null_count: 0
+      null_rate: 0.0
+      distinct_count: 320
+      min: null
+      max: null
+      redacted: true
+      redaction_reason: cardinality_capped
+  - name: effective_to
+    data_type: date
+    nullable: true
+    ordinal: 9
+    comment: Exclusive end of the period; NULL means currently active.
+    profile:
+      null_count: 160
+      null_rate: 0.5
+      distinct_count: 160
+      min: null
+      max: null
+      redacted: true
+      redaction_reason: cardinality_capped
+  - name: is_current
+    data_type: boolean
+    nullable: false
+    ordinal: 10
+    comment: True for the row currently in effect.
+    profile:
+      null_count: 0
+      null_rate: 0.0
+      distinct_count: 2
+      top_values:
+      - value: 'false'
+        count: 160
+        frequency: 0.5
+      - value: 'true'
+        count: 160
+        frequency: 0.5
+      redacted: false
+  foreign_keys:
+  - from_column: department_id
+    to_schema: hr_core
+    to_table: department
+    to_column: department_id
+  - from_column: employee_id
+    to_schema: hr_core
+    to_table: employee
+    to_column: employee_id
+  - from_column: job_id
+    to_schema: hr_core
+    to_table: job
+    to_column: job_id
+  - from_column: location_id
+    to_schema: hr_core
+    to_table: location
+    to_column: location_id
+- schema: hr_core
+  table: location
+  relation_kind: table
+  row_count_is_estimate: false
+  size_bytes: 24576
+  comment: Physical work sites / offices.
+  columns:
+  - name: location_id
+    data_type: integer
+    nullable: false
+    ordinal: 1
+    primary_key: true
+    profile:
+      null_count: 0
+      null_rate: 0.0
+      distinct_count: 8
+      min: 1.0
+      max: 8.0
+      mean: 4.5
+      top_values:
+      - value: '3'
+        count: 1
+        frequency: 0.125
+      - value: '5'
+        count: 1
+        frequency: 0.125
+      - value: '4'
+        count: 1
+        frequency: 0.125
+      - value: '6'
+        count: 1
+        frequency: 0.125
+      - value: '2'
+        count: 1
+        frequency: 0.125
+      - value: '7'
+        count: 1
+        frequency: 0.125
+      - value: '1'
+        count: 1
+        frequency: 0.125
+      - value: '8'
+        count: 1
+        frequency: 0.125
+      redacted: false
+  - name: site_name
+    data_type: character varying
+    nullable: false
+    ordinal: 2
+    profile:
+      null_count: 0
+      null_rate: 0.0
+      distinct_count: 8
+      min_length: 2
+      max_length: 12
+      avg_length: 8.75
+      top_values:
+      - value: North Office
+        count: 1
+        frequency: 0.125
+      - value: APAC Hub
+        count: 1
+        frequency: 0.125
+      - value: EMEA Hub
+        count: 1
+        frequency: 0.125
+      - value: HQ
+        count: 1
+        frequency: 0.125
+      - value: East Campus
+        count: 1
+        frequency: 0.125
+      - value: Remote
+        count: 1
+        frequency: 0.125
+      - value: West Campus
+        count: 1
+        frequency: 0.125
+      - value: South Office
+        count: 1
+        frequency: 0.125
+      redacted: false
+  - name: city
+    data_type: character varying
+    nullable: false
+    ordinal: 3
+    profile:
+      null_count: 0
+      null_rate: 0.0
+      distinct_count: 8
+      min_length: 6
+      max_length: 13
+      avg_length: 7.625
+      top_values:
+      - value: Austin
+        count: 1
+        frequency: 0.125
+      - value: Chicago
+        count: 1
+        frequency: 0.125
+      - value: Singapore
+        count: 1
+        frequency: 0.125
+      - value: New York
+        count: 1
+        frequency: 0.125
+      - value: San Francisco
+        count: 1
+        frequency: 0.125
+      - value: Boston
+        count: 1
+        frequency: 0.125
+      - value: London
+        count: 1
+        frequency: 0.125
+      - value: Remote
+        count: 1
+        frequency: 0.125
+      redacted: false
+  - name: country_code
+    data_type: character
+    nullable: false
+    ordinal: 4
+    comment: ISO 3166-1 alpha-2 country code.
+    profile:
+      null_count: 0
+      null_rate: 0.0
+      distinct_count: 3
+      min_length: 2
+      max_length: 2
+      avg_length: 2.0
+      top_values:
+      - value: US
+        count: 6
+        frequency: 0.75
+      - value: SG
+        count: 1
+        frequency: 0.125
+      - value: GB
+        count: 1
+        frequency: 0.125
+      redacted: false
+  - name: region
+    data_type: character varying
+    nullable: false
+    ordinal: 5
+    profile:
+      null_count: 0
+      null_rate: 0.0
+      distinct_count: 3
+      min_length: 2
+      max_length: 4
+      avg_length: 2.5
+      top_values:
+      - value: NA
+        count: 6
+        frequency: 0.75
+      - value: APAC
+        count: 1
+        frequency: 0.125
+      - value: EMEA
+        count: 1
+        frequency: 0.125
+      redacted: false
+- schema: hr_core
+  table: performance_review
+  relation_kind: table
+  row_count: 444
+  row_count_is_estimate: true
+  size_bytes: 147456
+  comment: Periodic performance reviews — one row per employee per review cycle.
+  columns:
+  - name: review_id
+    data_type: bigint
+    nullable: false
+    ordinal: 1
+    primary_key: true
+    profile:
+      null_count: 0
+      null_rate: 0.0
+      distinct_count: 444
+      min: null
+      max: null
+      mean: 222.5
+      redacted: true
+      redaction_reason: cardinality_capped
+  - name: employee_id
+    data_type: integer
+    nullable: false
+    ordinal: 2
+    profile:
+      null_count: 0
+      null_rate: 0.0
+      distinct_count: 148
+      min: null
+      max: null
+      mean: 80.17567567567568
+      redacted: true
+      redaction_reason: cardinality_capped
+  - name: review_cycle
+    data_type: character varying
+    nullable: false
+    ordinal: 3
+    comment: Review period label, e.g. 2024-H1.
+    profile:
+      null_count: 0
+      null_rate: 0.0
+      distinct_count: 3
+      min_length: 7
+      max_length: 7
+      avg_length: 7.0
+      top_values:
+      - value: 2024-H2
+        count: 148
+        frequency: 0.333333
+      - value: 2023-H2
+        count: 148
+        frequency: 0.333333
+      - value: 2024-H1
+        count: 148
+        frequency: 0.333333
+      redacted: false
+  - name: rating
+    data_type: smallint
+    nullable: false
+    ordinal: 4
+    comment: Performance rating 1 (low) … 5 (high).
+    profile:
+      null_count: 0
+      null_rate: 0.0
+      distinct_count: 5
+      min: 1.0
+      max: 5.0
+      mean: 2.9954954954954953
+      top_values:
+      - value: '1'
+        count: 89
+        frequency: 0.20045
+      - value: '3'
+        count: 89
+        frequency: 0.20045
+      - value: '4'
+        count: 89
+        frequency: 0.20045
+      - value: '2'
+        count: 89
+        frequency: 0.20045
+      - value: '5'
+        count: 88
+        frequency: 0.198198
+      redacted: false
+  - name: reviewer_id
+    data_type: integer
+    nullable: true
+    ordinal: 5
+    profile:
+      null_count: 36
+      null_rate: 0.081081
+      distinct_count: 12
+      min: 1.0
+      max: 12.0
+      mean: 6.411764705882353
+      top_values:
+      - value: '5'
+        count: 36
+        frequency: 0.081081
+      - value: '2'
+        count: 36
+        frequency: 0.081081
+      - value: '4'
+        count: 36
+        frequency: 0.081081
+      - value: '3'
+        count: 36
+        frequency: 0.081081
+      - value: '10'
+        count: 33
+        frequency: 0.074324
+      - value: '7'
+        count: 33
+        frequency: 0.074324
+      - value: '1'
+        count: 33
+        frequency: 0.074324
+      - value: '12'
+        count: 33
+        frequency: 0.074324
+      - value: '6'
+        count: 33
+        frequency: 0.074324
+      - value: '11'
+        count: 33
+        frequency: 0.074324
+      redacted: false
+  - name: review_date
+    data_type: date
+    nullable: false
+    ordinal: 6
+    profile:
+      null_count: 0
+      null_rate: 0.0
+      distinct_count: 3
+      min: '2023-12-15'
+      max: '2024-12-15'
+      redacted: false
+  foreign_keys:
+  - from_column: employee_id
+    to_schema: hr_core
+    to_table: employee
+    to_column: employee_id
+  - from_column: reviewer_id
+    to_schema: hr_core
+    to_table: employee
+    to_column: employee_id
+code_assets: []

@@ -1,0 +1,284 @@
+spec_id: src_payments_data_product
+name: Payments Data product
+domain: Payments
+product_kind: source
+description: Unified view of domestic and international payments including NEFT, UPI,
+  ACH, remittances, bill, and merchant payments. Captures transaction details, status,
+  FX rates, and merchant info
+schema_version: '1.0'
+classification: confidential
+grain:
+  keys:
+  - txn_id
+  description: ''
+freshness:
+  history: current
+  cadence: ''
+  description: ''
+allowed_derivations:
+- rename
+- cast
+attributes:
+- name: txn_id
+  type: bigint
+  concept: Txn ID
+  description: Unique identifier for a domestic or international payment transaction, serving as the primary key across payment entities.
+  required: true
+  is_key: true
+  classification: internal
+- name: type
+  type: varchar
+  concept: Type
+  description: Classification of the payment type or scheme used (e.g. NEFT, UPI, ACH, RTGS, bill payment, merchant payment).
+  required: true
+  is_key: false
+  classification: internal
+- name: amount
+  type: numeric
+  concept: Amount
+  description: Monetary value of the payment in the transaction currency.
+  required: true
+  is_key: false
+  classification: internal
+  derivations:
+  - currency_normalize
+- name: currency
+  type: varchar
+  concept: Currency
+  description: ISO currency code of the payment amount.
+  required: true
+  is_key: false
+  classification: internal
+- name: txn_initiation_and_completion_timestamp
+  type: timestamp
+  concept: Txn Initiation And Completion Timestamp
+  description: Timestamps recording when the payment was initiated by the customer and when it was completed or rejected by the system.
+  required: false
+  is_key: false
+  classification: internal
+- name: status
+  type: varchar
+  concept: Status
+  description: Current processing status of the payment (e.g. pending, completed, failed, reversed).
+  required: true
+  is_key: false
+  classification: internal
+- name: initiating_bank
+  type: varchar
+  concept: Initiating Bank
+  description: Name or code of the bank that originated and submitted the payment instruction.
+  required: false
+  is_key: false
+  classification: internal
+- name: receiving_bank
+  type: varchar
+  concept: Receiving Bank
+  description: Name or code of the bank that received and is processing the incoming payment.
+  required: false
+  is_key: false
+  classification: internal
+- name: participant_id
+  type: bigint
+  concept: Participant ID
+  description: Unique identifier for a party (payer or payee) involved in the payment transaction; classified as PII.
+  required: true
+  is_key: true
+  classification: pii
+- name: transaction_id
+  type: bigint
+  concept: Transaction ID
+  description: Secondary transaction identifier assigned by the payment network or clearing house for routing and reconciliation.
+  required: true
+  is_key: true
+  classification: internal
+- name: role
+  type: varchar
+  concept: Role
+  description: Role of the participant in the payment transaction (e.g. payer, payee, agent).
+  required: false
+  is_key: false
+  classification: internal
+- name: participant_type
+  type: varchar
+  concept: Participant Type
+  description: Classification of the transaction participant as an individual, corporate entity, government, or merchant; classified as PII.
+  required: true
+  is_key: false
+  classification: pii
+- name: identifier_type
+  type: varchar
+  concept: Identifier Type
+  description: Type of identifier used to route the payment to the participant (e.g. VPA for UPI, IBAN, account number, MSISDN).
+  required: true
+  is_key: false
+  classification: internal
+- name: channel_type
+  type: varchar
+  concept: Channel Type
+  description: High-level channel category through which the payment was initiated (e.g. mobile app, internet banking, branch, POS).
+  required: true
+  is_key: false
+  classification: internal
+- name: device_type
+  type: varchar
+  concept: Device Type
+  description: Type of device used to initiate the payment (e.g. smartphone, desktop browser, POS terminal, feature phone).
+  required: true
+  is_key: false
+  classification: internal
+- name: app_name
+  type: varchar
+  concept: App Name
+  description: Name of the mobile or web application through which the payment was initiated (e.g. bank's mobile app or a third-party UPI app).
+  required: true
+  is_key: false
+  classification: internal
+- name: settlement_date
+  type: date
+  concept: Settlement Date
+  description: Date on which the payment was settled between the participating banks through the clearing infrastructure.
+  required: true
+  is_key: false
+  classification: internal
+- name: settlement_status
+  type: varchar
+  concept: Settlement Status
+  description: Status of the interbank settlement for this payment (e.g. settled, pending, failed).
+  required: true
+  is_key: false
+  classification: internal
+- name: settlement_mode
+  type: varchar
+  concept: Settlement Mode
+  description: Mechanism by which the interbank settlement is executed (e.g. net settlement, gross real-time settlement, deferred net settlement).
+  required: false
+  is_key: false
+  classification: internal
+- name: reconciliation_status
+  type: varchar
+  concept: Reconciliation Status
+  description: Status of the reconciliation process matching payment records between internal systems and the clearing house.
+  required: true
+  is_key: false
+  classification: internal
+- name: merchant_id
+  type: bigint
+  concept: Merchant ID
+  description: Unique identifier for the merchant involved in a merchant payment or bill-payment transaction.
+  required: true
+  is_key: true
+  classification: internal
+- name: name
+  type: varchar
+  concept: Name
+  description: Registered name of the merchant associated with the payment.
+  required: true
+  is_key: false
+  classification: internal
+- name: settlement_bank
+  type: varchar
+  concept: Settlement Bank
+  description: Name of the bank responsible for settling funds on behalf of the merchant.
+  required: false
+  is_key: false
+  classification: internal
+- name: merchant_category_code
+  type: varchar
+  concept: Merchant Category Code
+  description: ISO 18245 Merchant Category Code classifying the type of goods or services sold by the merchant.
+  required: false
+  is_key: false
+  classification: internal
+- name: source_and_destination_country
+  type: numeric
+  concept: Source And Destination Country
+  description: Numeric country codes identifying the source and destination countries for cross-border payment transactions.
+  required: false
+  is_key: false
+  classification: internal
+- name: currency_pair
+  type: varchar
+  concept: Currency Pair
+  description: Currency pair involved in the FX conversion for a cross-border payment (e.g. USD/INR, EUR/USD).
+  required: true
+  is_key: false
+  classification: internal
+- name: fx_rate
+  type: numeric
+  concept: FX Rate
+  description: Exchange rate applied to convert the payment amount between the source and destination currencies.
+  required: true
+  is_key: false
+  classification: internal
+- name: purpose_code_education
+  type: varchar
+  concept: Purpose Code Education
+  description: Regulatory purpose code for education-related remittance payments under RBI or equivalent regulatory guidelines.
+  required: false
+  is_key: false
+  classification: internal
+- name: family
+  type: varchar
+  concept: Family
+  description: Sub-category or purpose label for family remittance payments in cross-border transactions.
+  required: false
+  is_key: false
+  classification: internal
+- name: investment
+  type: varchar
+  concept: Investment
+  description: Sub-category or purpose label for investment-related cross-border payment transactions.
+  required: false
+  is_key: false
+  classification: internal
+- name: exception_id
+  type: bigint
+  concept: Exception ID
+  description: Unique identifier for an exception, dispute, or exception-handling record associated with a payment transaction.
+  required: true
+  is_key: true
+  classification: internal
+- name: exception_type
+  type: varchar
+  concept: Exception Type
+  description: Category of payment exception, such as duplicate transaction, failed authorization, or reconciliation mismatch.
+  required: true
+  is_key: false
+  classification: internal
+- name: raised_by
+  type: varchar
+  concept: Raised By
+  description: System or user who raised the payment exception or dispute record.
+  required: false
+  is_key: false
+  classification: internal
+- name: resolution_time
+  type: varchar
+  concept: Resolution Time
+  description: Duration or timestamp by which the payment exception or dispute was resolved.
+  required: false
+  is_key: false
+  classification: internal
+- name: resolution_outcome
+  type: varchar
+  concept: Resolution Outcome
+  description: Final disposition of the payment exception, such as accepted, rejected, or escalated.
+  required: false
+  is_key: false
+  classification: internal
+- name: payment_purpose
+  type: varchar
+  concept: Payment Purpose
+  description: Narrative description of the economic purpose of the payment as declared by the initiating party.
+  required: false
+  is_key: false
+  classification: internal
+- name: p2p_or_p2m_amount_transactions
+  type: numeric
+  concept: P2p Or P2m Amount Transactions
+  description: Monetary amount of peer-to-peer (P2P) or person-to-merchant (P2M) payment transactions in this record or batch.
+  required: true
+  is_key: false
+  classification: internal
+  derivations:
+  - currency_normalize

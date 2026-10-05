@@ -1,0 +1,392 @@
+apiVersion: v3.1.0
+kind: DataContract
+id: "northwind-customer-master-dp"
+name: "Northwind Customer Master"
+version: "2.3.0"
+status: published
+domain: customer
+dataProduct: customer_master
+tenant: northwind-retail
+
+description: "Authoritative customer master combining CRM, e-commerce, loyalty program, and support touchpoints into a single conformed dimension. Refreshed every 4 hours from upstream source systems via CDC."
+purpose: "Single source of truth for customer identity, contact preferences, and engagement metrics across marketing analytics, personalization, churn modeling, and regulatory reporting."
+limitations: "Excludes anonymous browse-only visitors (no account). Soft-deleted accounts retained for 7 years per regulatory retention; marked via account_status='archived'. Real-time transactions are not in scope — see northwind-orders-stream-dp."
+
+owners:
+  - name: "Priya Raman"
+    role: "Data Product Owner"
+    email: "priya.raman@northwind.example.com"
+  - name: "Marcus Chen"
+    role: "Data Steward"
+    email: "marcus.chen@northwind.example.com"
+
+stewards:
+  - name: "Marcus Chen"
+    role: "Customer Domain Steward"
+    email: "marcus.chen@northwind.example.com"
+
+team:
+  - username: "ekofi"
+    name: "Emmanuel Kofi"
+    role: "Data Engineer"
+    email: "emmanuel.kofi@northwind.example.com"
+  - username: "lhaverford"
+    name: "Lena Haverford"
+    role: "Analytics Engineer"
+    email: "lena.haverford@northwind.example.com"
+
+roles:
+  - role: marketing_analyst
+    description: "Read access to non-PII attributes plus segment & lifetime_value"
+    access: read
+    datasets: ["customer_profile", "customer_engagement"]
+  - role: data_protection_officer
+    description: "Full PII read access with audit logging"
+    access: read
+    datasets: ["customer_profile", "customer_consent"]
+
+servers:
+  - name: "prod-snowflake"
+    environment: production
+    type: snowflake
+    account: "northwind-prod"
+    database: "ANALYTICS_DP"
+    schema: "CUSTOMER_MASTER_V2"
+    datasets: ["customer_profile", "customer_consent", "customer_engagement"]
+
+schema:
+  - name: customer_profile
+    physicalName: customer_profile
+    physicalType: table
+    description: "Conformed customer dimension. One row per unique customer identified by a stable surrogate key. SCD-2 history preserved for material attribute changes (address, name, status)."
+    properties:
+      - name: customer_key
+        physicalName: customer_key
+        logicalName: Customer Surrogate Key
+        logicalType: string
+        physicalType: varchar(36)
+        description: "Stable UUID assigned at first onboarding. Survives source-system migrations and email changes."
+        primaryKey: true
+        required: true
+        criticalDataElement: true
+      - name: source_customer_id
+        physicalName: source_customer_id
+        logicalName: Source CRM Customer ID
+        logicalType: integer
+        physicalType: bigint
+        description: "Foreign key into the originating CRM system (Salesforce). May be reused after deletion in CRM — do NOT use for cross-system joins; use customer_key instead."
+        primaryKey: false
+        required: true
+        criticalDataElement: false
+      - name: email_hash
+        physicalName: email_hash
+        logicalName: Email Hash (SHA-256)
+        logicalType: string
+        physicalType: char(64)
+        description: "SHA-256 hash of the normalized (lowercased, trimmed) primary email. Used for marketing-platform identity resolution without exposing raw PII."
+        primaryKey: false
+        required: false
+        criticalDataElement: true
+      - name: email_masked
+        physicalName: email_masked
+        logicalName: Email (Masked)
+        logicalType: string
+        physicalType: varchar(255)
+        description: "Format-preserving masked email (e.g. j****@example.com) for analytics environments. Raw email available only via customer_consent.email_raw with DPO approval."
+        primaryKey: false
+        required: false
+        criticalDataElement: true
+      - name: full_name
+        physicalName: full_name
+        logicalName: Full Name
+        logicalType: string
+        physicalType: varchar(255)
+        description: "Concatenated given + family name as supplied at onboarding. Not normalized; downstream personalization layer handles casing."
+        primaryKey: false
+        required: false
+        criticalDataElement: true
+      - name: country_code
+        physicalName: country_code
+        logicalName: ISO Country Code
+        logicalType: string
+        physicalType: char(2)
+        description: "ISO 3166-1 alpha-2 country of registered address. Drives regulatory routing (GDPR, CCPA, LGPD)."
+        primaryKey: false
+        required: true
+        criticalDataElement: true
+      - name: account_status
+        physicalName: account_status
+        logicalName: Account Status
+        logicalType: string
+        physicalType: varchar(16)
+        description: "One of: active, dormant (no activity 18mo+), suspended (fraud flag), archived (soft-deleted, retained for compliance)."
+        primaryKey: false
+        required: true
+        criticalDataElement: false
+      - name: lifecycle_segment
+        physicalName: lifecycle_segment
+        logicalName: Lifecycle Segment
+        logicalType: string
+        physicalType: varchar(32)
+        description: "Derived RFM-style segment: new, growing, loyal, at_risk, lapsed. Updated nightly by the segmentation pipeline."
+        primaryKey: false
+        required: false
+        criticalDataElement: false
+      - name: lifetime_value_usd
+        physicalName: lifetime_value_usd
+        logicalName: Lifetime Value (USD)
+        logicalType: number
+        physicalType: numeric(14,2)
+        description: "Cumulative net revenue (gross - returns - refunds) attributed to this customer, converted to USD at transaction-date FX rate."
+        primaryKey: false
+        required: false
+        criticalDataElement: true
+      - name: first_order_at
+        physicalName: first_order_at
+        logicalName: First Order Timestamp
+        logicalType: timestamp
+        physicalType: timestamp_ntz
+        description: "Timestamp (UTC) of the first non-cancelled order. NULL for prospects who have never purchased."
+        primaryKey: false
+        required: false
+        criticalDataElement: false
+      - name: last_order_at
+        physicalName: last_order_at
+        logicalName: Last Order Timestamp
+        logicalType: timestamp
+        physicalType: timestamp_ntz
+        description: "Most recent non-cancelled order timestamp. Drives dormant-account detection."
+        primaryKey: false
+        required: false
+        criticalDataElement: false
+      - name: effective_from
+        physicalName: effective_from
+        logicalName: SCD-2 Effective From
+        logicalType: timestamp
+        physicalType: timestamp_ntz
+        description: "Timestamp this row became the current version of the customer dimension. Used with effective_to for point-in-time queries."
+        primaryKey: false
+        required: true
+        criticalDataElement: false
+      - name: effective_to
+        physicalName: effective_to
+        logicalName: SCD-2 Effective To
+        logicalType: timestamp
+        physicalType: timestamp_ntz
+        description: "Timestamp this row was superseded. NULL for the currently-active version."
+        primaryKey: false
+        required: false
+        criticalDataElement: false
+    transform:
+      grain_prose: "One row per (customer_key, effective_from) — current row has effective_to IS NULL."
+      scd_policy:
+        type: scd2
+        effective_column: effective_from
+        expiration_column: effective_to
+        add_is_current: true
+
+  - name: customer_consent
+    physicalName: customer_consent
+    physicalType: table
+    description: "Per-channel marketing consent state with audit-grade history. Source of truth for outbound campaign eligibility."
+    properties:
+      - name: customer_key
+        physicalName: customer_key
+        logicalName: Customer Surrogate Key
+        logicalType: string
+        physicalType: varchar(36)
+        description: "FK to customer_profile.customer_key"
+        primaryKey: true
+        required: true
+        criticalDataElement: true
+      - name: channel
+        physicalName: channel
+        logicalName: Consent Channel
+        logicalType: string
+        physicalType: varchar(16)
+        description: "One of: email, sms, push, postal, phone"
+        primaryKey: true
+        required: true
+        criticalDataElement: false
+      - name: consent_state
+        physicalName: consent_state
+        logicalName: Consent State
+        logicalType: string
+        physicalType: varchar(16)
+        description: "One of: opted_in, opted_out, unknown, expired"
+        primaryKey: false
+        required: true
+        criticalDataElement: true
+      - name: captured_at
+        physicalName: captured_at
+        logicalName: Consent Captured At
+        logicalType: timestamp
+        physicalType: timestamp_ntz
+        description: "Timestamp consent was last captured or updated. Used for GDPR re-consent windows."
+        primaryKey: false
+        required: true
+        criticalDataElement: false
+      - name: source_of_consent
+        physicalName: source_of_consent
+        logicalName: Source of Consent
+        logicalType: string
+        physicalType: varchar(64)
+        description: "Free-text describing where consent was captured (e.g. 'web_signup_v3', 'checkout_2024_q1', 'preferences_center')."
+        primaryKey: false
+        required: false
+        criticalDataElement: false
+
+  - name: customer_engagement
+    physicalName: customer_engagement
+    physicalType: table
+    description: "Rolling 90-day engagement aggregates per customer. Refreshed nightly. Use for marketing scoring; not for financial reporting."
+    properties:
+      - name: customer_key
+        physicalName: customer_key
+        logicalName: Customer Surrogate Key
+        logicalType: string
+        physicalType: varchar(36)
+        description: "FK to customer_profile.customer_key"
+        primaryKey: true
+        required: true
+        criticalDataElement: false
+      - name: orders_90d
+        physicalName: orders_90d
+        logicalName: Orders in last 90 days
+        logicalType: integer
+        physicalType: integer
+        description: "Count of non-cancelled orders placed in the trailing 90 days."
+        primaryKey: false
+        required: true
+        criticalDataElement: false
+      - name: revenue_90d_usd
+        physicalName: revenue_90d_usd
+        logicalName: Revenue in last 90 days (USD)
+        logicalType: number
+        physicalType: numeric(12,2)
+        description: "Net revenue in the trailing 90 days, USD."
+        primaryKey: false
+        required: true
+        criticalDataElement: false
+      - name: email_opens_90d
+        physicalName: email_opens_90d
+        logicalName: Email opens in last 90 days
+        logicalType: integer
+        physicalType: integer
+        description: "Distinct email opens in the trailing 90 days, dedup'd by message."
+        primaryKey: false
+        required: false
+        criticalDataElement: false
+      - name: support_tickets_90d
+        physicalName: support_tickets_90d
+        logicalName: Support tickets in last 90 days
+        logicalType: integer
+        physicalType: integer
+        description: "Count of support tickets opened by the customer in the trailing 90 days, any channel."
+        primaryKey: false
+        required: false
+        criticalDataElement: false
+      - name: engagement_score
+        physicalName: engagement_score
+        logicalName: Engagement Score (0-100)
+        logicalType: number
+        physicalType: numeric(5,2)
+        description: "Weighted composite score: 0.5*norm(orders_90d) + 0.3*norm(revenue_90d) + 0.2*norm(email_opens_90d), clipped to [0,100]."
+        primaryKey: false
+        required: false
+        criticalDataElement: false
+
+quality:
+  - rule: uniqueness
+    name: customer_key uniqueness
+    description: "customer_profile.customer_key must be unique for currently-active rows (effective_to IS NULL)"
+    severity: error
+    dimension: uniqueness
+    businessImpact: "Duplicate active customer rows fan out joins and double-count revenue/engagement metrics across all downstream reports."
+    column: customer_key
+    dataset: customer_profile
+
+  - rule: completeness
+    name: country_code completeness
+    description: "country_code must not be null"
+    severity: error
+    dimension: completeness
+    businessImpact: "Missing country breaks GDPR/CCPA routing; the customer cannot be correctly assigned a regulatory jurisdiction."
+    column: country_code
+    dataset: customer_profile
+
+  - rule: validity
+    name: country_code ISO format
+    description: "country_code must match ^[A-Z]{2}$"
+    severity: error
+    dimension: validity
+    businessImpact: "Non-ISO codes break downstream regional reporting and tax-engine integrations."
+    column: country_code
+    dataset: customer_profile
+
+  - rule: validity
+    name: account_status enum
+    description: "account_status must be one of: active, dormant, suspended, archived"
+    severity: error
+    dimension: validity
+    businessImpact: "Unknown status values cause segmentation pipeline to drop rows from active-customer counts."
+    column: account_status
+    dataset: customer_profile
+
+  - rule: validity
+    name: lifetime_value non-negative
+    description: "lifetime_value_usd must be >= 0 when not null"
+    severity: warning
+    dimension: accuracy
+    businessImpact: "Negative lifetime values point to upstream refund-attribution errors in the orders pipeline."
+    column: lifetime_value_usd
+    dataset: customer_profile
+
+  - rule: freshness
+    name: customer_profile freshness
+    description: "Max effective_from must be within 6 hours of current time"
+    severity: warning
+    dimension: timeliness
+    businessImpact: "Stale data delays personalization decisioning and erodes campaign relevance."
+    dataset: customer_profile
+
+  - rule: referential_integrity
+    name: consent → profile FK
+    description: "Every customer_consent.customer_key must resolve to an active customer_profile row"
+    severity: error
+    dimension: integrity
+    businessImpact: "Orphan consent rows allow outbound sends to customers who no longer exist; regulatory risk."
+    column: customer_key
+    dataset: customer_consent
+
+  - rule: completeness
+    name: email_hash completeness for opted_in
+    description: "email_hash must not be null when customer_consent.consent_state='opted_in' for channel='email'"
+    severity: warning
+    dimension: completeness
+    businessImpact: "Opted-in customers without an email hash cannot be reached by activation campaigns."
+    column: email_hash
+    dataset: customer_profile
+
+slaProperties:
+  - property: availability
+    value: "99.95"
+    unit: percent
+  - property: freshness
+    value: "4"
+    unit: hours
+  - property: retention
+    value: "7"
+    unit: years
+  - property: latency
+    value: "30"
+    unit: seconds
+  - property: error_rate
+    value: "0.1"
+    unit: percent
+
+terms:
+  usage: "Available to marketing, analytics, support, and risk teams. PII fields (full_name, email_masked, email_hash) require explicit consumer-side data-handling registration. Outbound use must reconcile against customer_consent in the same query — never against a stale snapshot."
+  limitations: "PII raw values (full email, address, phone) are NOT in this product. Request via the PII Access Gateway. Engagement metrics are best-effort daily aggregates and lag actual events by up to 24 hours."
+  billing: "Free for internal consumers. External partner access via API requires a separate data-sharing agreement and is metered per-row."
+  noticePeriod: "90 days for breaking schema changes; 30 days for additive changes."

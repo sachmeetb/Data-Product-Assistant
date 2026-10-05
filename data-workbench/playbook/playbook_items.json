@@ -1,0 +1,84 @@
+[
+  {
+    "phase": "enrichment",
+    "operation": "add",
+    "rule": "Do not append nullability qualifiers like 'always present' or 'never null' to descriptions of simple text or name columns. Nullability is metadata, not a semantic description. Only mention presence/absence when it carries business meaning (e.g., a null end-date indicates a currently active record).",
+    "rationale": "Two descriptions for name-type columns (first_name, last_name) were rejected with category 'too_specific' because they included 'always present'. The corrected versions removed this qualifier. Meanwhile, date columns where nullability has business meaning (e.g., 'may be null for a currently held title') were rated quality-3.",
+    "evidence_activities": [
+      "prov:activity:employees.employee.first_name:20260331T211514Z:review:20260331T212104",
+      "prov:activity:employees.employee.last_name:20260331T211514Z:review:20260331T212113",
+      "prov:activity:employees.title.to_date:20260331T211514Z:review:20260331T212118"
+    ]
+  },
+  {
+    "phase": "enrichment",
+    "operation": "add",
+    "rule": "When describing columns with constrained or enumerated value sets, state the nature of the constraint (e.g., 'one of N values') but do not exhaustively list every possible value in the description unless the number of distinct values is very small (5 or fewer).",
+    "rationale": "A title column listing all six job titles was rated quality-1 (marginal). A gender column listing two values was also quality-1. Meanwhile, a department name column that gave a few representative examples (not an exhaustive list) was rated quality-3. Reviewers prefer representative examples over exhaustive enumeration.",
+    "evidence_activities": [
+      "prov:activity:employees.title.title:20260331T211514Z:review:20260331T212118",
+      "prov:activity:employees.employee.gender:20260331T211514Z:review:20260331T212114",
+      "prov:activity:employees.department.dept_name:20260331T211514Z:review:20260331T212026"
+    ]
+  },
+  {
+    "phase": "enrichment",
+    "operation": "add",
+    "rule": "Include representative domain examples in parentheses for descriptive or categorical columns to ground the description in concrete HR vocabulary (e.g., 'department name (e.g. Sales, Development)').",
+    "rationale": "The quality-3 exemplar for dept_name included '(e.g. Sales, Development, Human Resources)' — grounding the description in the actual domain. Descriptions lacking examples were consistently rated lower (quality-1 or quality-2).",
+    "evidence_activities": [
+      "prov:activity:employees.department.dept_name:20260331T211514Z:review:20260331T212026"
+    ]
+  },
+  {
+    "phase": "enrichment",
+    "operation": "add",
+    "rule": "For foreign key columns, go beyond the generic 'foreign key referencing...' pattern. Describe the business relationship the FK represents (e.g., 'the employee who manages the department' rather than 'foreign key referencing the employee table'). Add context about the role the referenced entity plays.",
+    "rationale": "All FK-style descriptions ('Foreign key referencing the employee...', 'Foreign key referencing the department...') were rated quality-1 (marginal). 10 of 22 approved descriptions were quality-1, and most were FK columns with this generic pattern. Reviewers want business context, not schema-level references.",
+    "evidence_activities": [
+      "prov:activity:employees.department_employee.employee_id:20260331T211514Z:review:20260331T212028",
+      "prov:activity:employees.department_employee.department_id:20260331T211514Z:review:20260331T212029",
+      "prov:activity:employees.department_manager.employee_id:20260331T211514Z:review:20260331T212039",
+      "prov:activity:employees.department_manager.department_id:20260331T211514Z:review:20260331T212041",
+      "prov:activity:employees.salary.employee_id:20260331T211514Z:review:20260331T212116",
+      "prov:activity:employees.title.employee_id:20260331T211514Z:review:20260331T212117"
+    ]
+  },
+  {
+    "phase": "enrichment",
+    "operation": "add",
+    "rule": "For date columns in temporal/historical tables (tables with from_date/to_date pairs), describe the business event the date represents, note whether it forms part of a composite key, and explain the far-future sentinel value convention if applicable (e.g., '9999-01-01 indicates a currently active record').",
+    "rationale": "Date columns with clear business-event context scored quality-2 to quality-3. The quality-3 exemplar for title.to_date specifically noted 'may be null for a currently held title'. Salary and department assignment date pairs that mentioned far-future sentinel values scored quality-2. Date columns that simply said 'always present' without event context were rated lower.",
+    "evidence_activities": [
+      "prov:activity:employees.title.to_date:20260331T211514Z:review:20260331T212118",
+      "prov:activity:employees.department_employee.from_date:20260331T211514Z:review:20260331T212036",
+      "prov:activity:employees.department_employee.to_date:20260331T211514Z:review:20260331T212037",
+      "prov:activity:employees.department_manager.from_date:20260331T211514Z:review:20260331T212045",
+      "prov:activity:employees.department_manager.to_date:20260331T211514Z:review:20260331T212046",
+      "prov:activity:employees.salary.from_date:20260331T211514Z:review:20260331T212117",
+      "prov:activity:employees.salary.to_date:20260331T211514Z:review:20260331T212117"
+    ]
+  },
+  {
+    "phase": "enrichment",
+    "operation": "add",
+    "rule": "For identifier/primary key columns, describe the format and assignment pattern (numeric sequential, alphanumeric code, UUID, etc.) rather than just stating 'unique identifier'. Avoid including specific example values unless they illustrate the format.",
+    "rationale": "The department.id description mentioned specific codes '(e.g. d001, d005)' and was rated quality-1. The employee.id description ('assigned as a numeric key') was rated quality-2. Format information is useful but specific example values add noise for identifiers.",
+    "evidence_activities": [
+      "prov:activity:employees.department.id:20260331T211514Z:review:20260331T212022",
+      "prov:activity:employees.employee.id:20260331T211514Z:review:20260331T212048"
+    ]
+  },
+  {
+    "phase": "enrichment",
+    "operation": "add",
+    "rule": "Keep descriptions concise — aim for one sentence. A second clause after a semicolon is acceptable when it adds genuinely distinct business context (e.g., a sentinel value convention), but avoid padding with redundant qualifiers.",
+    "rationale": "The two rejected descriptions were rejected for including unnecessary 'always present' padding. Quality-3 exemplars were all concise single sentences. The best-rated descriptions communicated maximum meaning in minimum words.",
+    "evidence_activities": [
+      "prov:activity:employees.employee.first_name:20260331T211514Z:review:20260331T212104",
+      "prov:activity:employees.employee.last_name:20260331T211514Z:review:20260331T212113",
+      "prov:activity:employees.employee.birth_date:20260331T211514Z:review:20260331T212050",
+      "prov:activity:employees.department.dept_name:20260331T211514Z:review:20260331T212026"
+    ]
+  }
+]

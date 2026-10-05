@@ -1,0 +1,9 @@
+{
+  "name": "hr",
+  "platform": "postgres",
+  "domain": "Human Resources",
+  "description": "Core HR + compensation — employees, departments, salaries, job history.",
+  "database": "hr",
+  "schemas": ["hr_core", "hr_comp", "hr_views"],
+  "primary_schema": "hr_core"
+}

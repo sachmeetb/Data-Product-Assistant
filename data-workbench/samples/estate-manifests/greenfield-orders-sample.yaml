@@ -1,0 +1,111 @@
+# Sample offline extraction manifest — small, human-readable, ready to upload.
+#
+# Use it for the GREENFIELD source-aligned (dpe-sa) offline flow:
+#   Product Workbench → New Source Product → tick "I can't grant a live connection"
+#   → submit; then (as the engineer) open the project and click "Import metadata"
+#   on the first stage, choosing THIS file.
+#
+# It's the same "DCAT-in-YAML" format the extraction kit produces (schemas, tables,
+# columns, types, keys, foreign keys, comments, and guarded/PII-redacted profiling).
+# Two related tables (orders → customers) so you can see FK-driven joins downstream.
+manifest_version: "1"
+kind: estate
+platform: postgres
+catalog: sales_db          # the source database / catalog (the {db} URI segment)
+generated_at: "2026-08-27T12:00:00Z"
+tool_version: "1"
+extraction:
+  metadata: true
+  volumetrics: true
+  profiling: true
+  values_included: true
+  redaction:
+    pii_redacted: 1
+relations:
+  - schema: sales
+    table: customers
+    relation_kind: table
+    row_count: 4820
+    size_bytes: 786432
+    comment: "Customer master — one row per customer."
+    columns:
+      - name: customer_id
+        data_type: integer
+        nullable: false
+        ordinal: 1
+        primary_key: true
+        comment: "Surrogate key."
+        profile: {null_count: 0, distinct_count: 4820}
+      - name: full_name
+        data_type: varchar
+        nullable: false
+        ordinal: 2
+        comment: "Customer display name."
+        profile: {null_count: 0, distinct_count: 4791, min_length: 4, max_length: 42}
+      - name: email
+        data_type: varchar
+        nullable: true
+        ordinal: 3
+        comment: "Primary contact email (PII)."
+        # PII by name → value-bearing outputs auto-redacted; counts kept.
+        profile: {null_count: 12, distinct_count: 4808, redacted: true, redaction_reason: pii}
+      - name: segment
+        data_type: varchar
+        nullable: false
+        ordinal: 4
+        comment: "Marketing segment."
+        profile:
+          null_count: 0
+          distinct_count: 3
+          top_values:
+            - {value: consumer, count: 3100, frequency: 0.643}
+            - {value: smb, count: 1200, frequency: 0.249}
+            - {value: enterprise, count: 520, frequency: 0.108}
+  - schema: sales
+    table: orders
+    relation_kind: table
+    row_count: 128934
+    size_bytes: 20447232
+    last_modified: "2026-08-20T02:14:00Z"
+    comment: "Order header — one row per placed order."
+    columns:
+      - name: order_id
+        data_type: integer
+        nullable: false
+        ordinal: 1
+        primary_key: true
+        profile: {null_count: 0, distinct_count: 128934}
+      - name: customer_id
+        data_type: integer
+        nullable: false
+        ordinal: 2
+        comment: "FK to sales.customers."
+        profile: {null_count: 0, distinct_count: 4790}
+      - name: order_status
+        data_type: varchar
+        nullable: false
+        ordinal: 3
+        comment: "Lifecycle state."
+        profile:
+          null_count: 0
+          distinct_count: 4
+          top_values:
+            - {value: SHIPPED, count: 62310, frequency: 0.483}
+            - {value: OPEN, count: 40120, frequency: 0.311}
+            - {value: CANCELLED, count: 15300, frequency: 0.119}
+            - {value: RETURNED, count: 11204, frequency: 0.087}
+      - name: order_total
+        data_type: numeric
+        nullable: false
+        ordinal: 4
+        comment: "Order gross amount."
+        profile: {null_count: 0, distinct_count: 9821, min: 4.99, max: 8420.5, mean: 214.37}
+      - name: ordered_at
+        data_type: timestamp
+        nullable: false
+        ordinal: 5
+        comment: "When the order was placed."
+        profile: {null_count: 0, distinct_count: 120044, min: "2023-01-01T00:00:03Z", max: "2026-08-19T23:58:11Z"}
+    foreign_keys:
+      - {from_column: customer_id, to_schema: sales, to_table: customers, to_column: customer_id}
+code_assets: []

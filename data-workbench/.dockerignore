@@ -1,0 +1,40 @@
+# Backend build context excludes (build: . → COPY . .). The image installs its
+# own deps from requirements.txt and supplies runtime state via mounted volumes,
+# so none of the below belongs in the image. Keeping them out also avoids a
+# secret leak (.env) and a ~1.4 GB context (env/ + node_modules/ + .git/).
+
+# Python virtualenv — the image pip-installs into the system interpreter.
+env/
+venv/
+.venv/
+
+# Frontend deps + build output — not used by the backend image, and the host
+# node_modules is glibc-built (the frontend image runs its own `npm ci`).
+**/node_modules/
+workbench/frontend/dist/
+
+# VCS + tooling caches
+.git/
+.gitignore
+**/__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+*.egg-info/
+
+# Runtime state (supplied by mounted volumes per the Dockerfile + compose)
+projects/
+*.db
+*.sqlite
+*.sqlite3
+.dwb/
+
+# Secrets — NEVER bake into the image; compose injects env at runtime.
+.env
+.env.*
+
+# OS / editor cruft
+.DS_Store
+*.swp
+Thumbs.db

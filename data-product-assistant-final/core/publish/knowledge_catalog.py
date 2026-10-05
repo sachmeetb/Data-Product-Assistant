@@ -252,11 +252,11 @@ def plan_publish(
 
 
 class KnowledgeCatalogClient:
-    """Thin client. Left unimplemented until Phase 8 -- see docs/06-roadmap.md.
+    """Client for Dataplex Universal Catalog (Knowledge Catalog) data products.
 
-    Publishing creates externally-visible governance objects and grants IAM via
-    access groups, so it must be an explicit, reviewed action rather than
-    something an agent triggers implicitly.
+    Publishing creates externally-visible governance objects; call apply() with
+    dry_run=True to preview, dry_run=False to execute against the live API.
+    Requires google.auth ADC with roles/dataplex.dataProductsAdmin on the project.
     """
 
     def __init__(self, target: PublishTarget) -> None:
@@ -275,6 +275,59 @@ class KnowledgeCatalogClient:
                 "assets": [plan.asset_url(self.target, a) for a in plan.assets],
                 "aspect_types": sorted(plan.aspects),
             }
-        raise NotImplementedError(
-            "live Knowledge Catalog publish is Phase 8; use dry_run=True"
+
+        import google.auth
+        import google.auth.transport.requests
+        import requests as _http
+
+        credentials, _ = google.auth.default(
+            scopes=["https://www.googleapis.com/auth/cloud-platform"]
         )
+        credentials.refresh(google.auth.transport.requests.Request())
+        headers = {
+            "Authorization": f"Bearer {credentials.token}",
+            "Content-Type": "application/json",
+        }
+
+        # Create the data product (409 = already exists, treat as success)
+        create_resp = _http.post(
+            plan.create_url(self.target),
+            json=plan.data_product,
+            headers=headers,
+            timeout=30,
+        )
+        if create_resp.status_code not in (200, 201, 409):
+            raise PublishError(
+                f"dataProducts.create failed {create_resp.status_code}: "
+                f"{create_resp.text[:300]}"
+            )
+
+        # Register each BigQuery table as a data asset
+        registered: list[str] = []
+        failed: list[str] = []
+        for asset in plan.assets:
+            ar = _http.post(
+                plan.asset_url(self.target, asset),
+                json=asset.payload(),
+                headers=headers,
+                timeout=30,
+            )
+            if ar.status_code in (200, 201, 409):
+                registered.append(asset.asset_id)
+            else:
+                failed.append(f"{asset.asset_id}:{ar.status_code}")
+
+        project = self.target.project
+        location = self.target.location
+        kc_id = plan.data_product_id
+        return {
+            "dry_run": False,
+            "data_product_id": kc_id,
+            "assets_registered": len(registered),
+            "assets_failed": failed,
+            "kc_url": (
+                f"https://console.cloud.google.com/dataplex/products"
+                f"/projects/{project}/locations/{location}"
+                f"/dataProducts/{kc_id}?project={project}"
+            ),
+        }

@@ -1,0 +1,6 @@
+# Manifest for the curated composite-derivation catalog.
+# `catalog_version` bumps whenever derivation_patterns.yaml changes (stamped on
+# every feasibility run for audit); `schema_version` tracks the pattern shape
+# understood by feasibility_derivations.DerivationPattern.
+catalog_version: "1.0"
+schema_version: "1.0"

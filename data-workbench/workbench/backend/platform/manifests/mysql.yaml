@@ -1,0 +1,43 @@
+apiVersion: workbench.platform/v1
+id: mysql
+displayName: MySQL
+adapterVersion: "0.1.0"
+adapterKind: jdbc
+supportedServerVersions: ">=8.0"
+
+driver:
+  package: pymysql
+  compatibility: ">=1.0"
+
+credentialSchema: schemas/mysql-credentials.json
+
+namespace:
+  parts: [schema, relation]
+  labels:
+    schema: Database
+    relation: Table / View
+
+capabilities:
+  connection: preview
+  discovery: preview
+  profiling: preview
+  read_query: preview
+  native_view: preview
+  dbt_materialized: unsupported
+  remediation: unsupported
+  semantic_qa: unsupported
+  transfer_source: preview
+  transfer_target: unsupported
+  lakehouse_export: unsupported
+  lakehouse_source: preview
+  volumetrics: preview
+  code_assets: unsupported
+
+notes: >
+  MySQL discovery scripts exist (data-discovery-mysql skill) but are not
+  yet routed through the platform registry. Gate 0 (charter) and Gate 1
+  (evidence dossier) must be completed before any capability can advance
+  beyond experimental.  The existing scripts are extracted into a proper
+  DiscoveryProvider in Phase 2.
+  Important: MySQL DDL (CREATE VIEW, DROP VIEW) implicitly commits; the
+  deployment provider must NOT assume transactional rollback semantics.

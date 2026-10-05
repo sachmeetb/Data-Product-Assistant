@@ -1,0 +1,129 @@
+# AI-Ready readiness rubric — alternative to OSI for products consumed
+# primarily by LLM agents and BI tools.
+#
+# Measures lineage traceability, DQ rule density, description quality, and
+# example-question coverage. Unlike OSI it does NOT require the contract to
+# round-trip through the OSI v0.1.1 JSON Schema — predicates read directly
+# from the project's knowledge graph (:DProdColumn, :ColumnMapping,
+# :ColumnDescription, :PropertyShape, :QAEvaluation).
+#
+# Two criteria are reused verbatim from OSI: primary_keys (the OSI predicate
+# already reads from the translated dict, and is a sensible baseline for any
+# rubric) and ai_context (because LLM-agent consumption literally depends on
+# it).
+#
+# Weights sum to 100. Future work could add synonym_coverage and
+# pii_classification once the corresponding graph fields exist
+# (:DProdColumn.piiClass, :Synonym nodes).
+
+id: ai_ready
+label: AI-Ready Readiness
+short_label: AI-Ready
+description: |
+  Readiness for direct LLM-agent and BI consumption — measures lineage
+  traceability, DQ rule density, description quality, and example-question
+  coverage. Bands: red below 50%, amber 50-79%, green 80%+.
+empty_state_note: |
+  AI-Ready emphasises consumer-side grounding (descriptions, lineage,
+  example questions) — early-stage products with no mappings will score
+  low until engineering attaches the source side.
+
+evaluator_version: ai_ready-v0.1
+
+band_thresholds:
+  green: 80
+  amber: 50
+
+band_headlines:
+  red: "Not yet AI-consumable — agents lack the grounding to answer questions reliably"
+  amber: "Partially AI-ready — some grounding present but gaps remain"
+  green: "AI-ready — agents have lineage, examples, and rules to ground answers"
+
+# AI-Ready predicates read from the graph directly; no OSI doc to validate.
+require_osi_conformance: false
+requires_translation: false
+
+# No advisor wired in v1. Future work could add a data-product-ai-ready-advisor.
+advisor: null
+
+criteria:
+  - id: description_quality
+    label: Description quality
+    weight: 20
+    predicate: ai_description_quality
+    hint:
+      pass:
+        title: Approved descriptions cover all product columns.
+      partial:
+        title: Approve the remaining column descriptions.
+        detail: "Reviews → Descriptions (or PO source validation gate for source products). metadata-enrichment auto-generates them; PO confirms."
+      fail:
+        title: Run metadata-enrichment, then approve column descriptions.
+        detail: "Reviews → Descriptions. The enrichment stage drafts text; PO approves to count toward this slot."
+
+  - id: lineage_traceability
+    label: Lineage traceability
+    weight: 25
+    predicate: ai_lineage_traceability
+    hint:
+      pass:
+        title: Every product column has a current source mapping.
+      partial:
+        title: Engineer to author mappings for the remaining product columns.
+        detail: "data_mapping stage. Unmapped product columns can't be traced back to a source — UnmappedColumnsPanel surfaces them."
+      fail:
+        title: Run the data_mapping stage to attach product columns to sources.
+        detail: "AI agents need lineage to explain where values come from. Reviews → Unmapped columns shows the queue."
+
+  - id: dq_rule_density
+    label: DQ rule density
+    weight: 20
+    predicate: ai_dq_rule_density
+    hint:
+      pass:
+        title: Approved DQ rules cover the product surface.
+      partial:
+        title: Approve more domain or observation rules.
+        detail: "Reviews → Domain rules / Source product validation. Density target: ≥1 approved :PropertyShape per :DProdColumn on average."
+      fail:
+        title: Run data-quality-rule-generation, then approve generated rules.
+        detail: "AI-Ready expects approved rules so agents can warn consumers about value ranges, nullability, allowed values."
+
+  - id: example_question_coverage
+    label: Example question coverage
+    weight: 15
+    predicate: ai_example_questions
+    hint:
+      pass:
+        title: At least 3 example questions on the latest QA evaluation.
+      partial:
+        title: Add more example questions in the Readiness Review.
+        detail: "Wizard Step 7 → Question Analysis. ≥3 questions help agents understand the product's purpose."
+      fail:
+        title: Run Question Analysis to seed example questions.
+        detail: "Wizard Step 7 → Run Question Analysis. The skill drafts NL questions the product can answer; consumers and agents see them on the marketplace card."
+
+  - id: primary_keys
+    label: Primary keys
+    weight: 10
+    predicate: osi_primary_keys
+    hint:
+      pass:
+        title: Primary keys declared on all datasets.
+      partial:
+        title: Declare PKs on the remaining datasets.
+        detail: "Source products: re-run discovery if PKs were missed. Consumer products: pick PKs in wizard Step 4 (Shape the Schema)."
+      fail:
+        title: Declare a primary key for each dataset.
+        detail: "Without PKs, agents can't reliably join your product with others."
+
+  - id: ai_context
+    label: AI context
+    weight: 10
+    predicate: osi_ai_context
+    hint:
+      pass:
+        title: AI context populated.
+      fail:
+        title: Set an AI context block (synonyms, sample questions, agent instructions).
+        detail: "Open chat and ask the assistant for AI-context suggestions. Even without the OSI advisor, the chat skill can draft synonyms and sample queries."

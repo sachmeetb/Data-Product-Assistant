@@ -1,0 +1,13 @@
+---
+description: Regenerate this project's CLAUDE.md from current backend state
+---
+
+Re-run the CLI bootstrap so this `CLAUDE.md` reflects the current pipeline state (new stages, status changes, added workflows).
+
+```bash
+curl -s -X POST "{{ backend_base_url }}/api/projects/{{ project.id }}/cli-bootstrap"
+```
+
+The endpoint overwrites `projects/{{ project.project_code }}/CLAUDE.md` and the `.claude/commands/*.md` files in this directory. Then tell the user:
+
+> Context refreshed. Run `/clear` and re-prime Claude Code to load the new CLAUDE.md — or just trust that the next slash-command invocation sees the fresh state.

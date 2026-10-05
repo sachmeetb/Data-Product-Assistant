@@ -1,0 +1,188 @@
+spec_id: src_campaign_management
+name: Campaign Management
+domain: Marketing & Sales
+product_kind: source
+description: 'Storing raw metadata about active and historical marketing campaigns
+  (eg: Campaign type, product targeted, budget etc.) and their targeting'
+schema_version: '1.0'
+classification: internal
+grain:
+  keys:
+  - campaign_id
+  description: ''
+freshness:
+  history: scd2
+  cadence: ''
+  description: ''
+allowed_derivations:
+- rename
+- cast
+attributes:
+- name: campaign_id
+  type: bigint
+  concept: Campaign ID
+  description: Unique identifier for a marketing campaign record, used as the primary key across all campaign-related entities.
+  required: true
+  is_key: true
+  classification: internal
+- name: campaign_name
+  type: varchar
+  concept: Campaign Name
+  description: Descriptive human-readable name assigned to the marketing campaign.
+  required: true
+  is_key: false
+  classification: internal
+- name: campaign_type
+  type: varchar
+  concept: Campaign Type
+  description: Classification of the campaign strategy or mechanism, such as acquisition, cross-sell, retention, or awareness.
+  required: true
+  is_key: false
+  classification: internal
+- name: start_date
+  type: date
+  concept: Start Date
+  description: Date on which the campaign was launched and began delivering messages or offers to customers.
+  required: true
+  is_key: false
+  classification: internal
+- name: end_date
+  type: date
+  concept: End Date
+  description: Date on which the campaign concluded and ceased delivering messages or offers.
+  required: true
+  is_key: false
+  classification: internal
+- name: status
+  type: varchar
+  concept: Status
+  description: Current execution status of the campaign (e.g. planned, active, paused, completed, cancelled).
+  required: true
+  is_key: false
+  classification: internal
+- name: budget
+  type: numeric
+  concept: Budget
+  description: Total monetary budget allocated to the campaign for media spend and execution costs.
+  required: false
+  is_key: false
+  classification: internal
+- name: delivery_channel
+  type: varchar
+  concept: Delivery Channel
+  description: Channel through which the campaign message is delivered to customers, such as email, SMS, push notification, or outbound call.
+  required: false
+  is_key: false
+  classification: internal
+- name: product_targeted
+  type: varchar
+  concept: Product Targeted
+  description: Bank product or product category that the campaign is promoting or selling (e.g. savings account, credit card, personal loan).
+  required: false
+  is_key: false
+  classification: internal
+- name: objective
+  type: varchar
+  concept: Objective
+  description: Business objective of the campaign, such as increasing account openings, reducing churn, or promoting a new product feature.
+  required: false
+  is_key: false
+  classification: internal
+- name: owner_team
+  type: varchar
+  concept: Owner Team
+  description: Internal marketing or business team responsible for executing and managing the campaign.
+  required: false
+  is_key: false
+  classification: internal
+- name: customer_id
+  type: bigint
+  concept: Customer ID
+  description: Unique identifier of the customer targeted by this campaign; a primary key linking to the customer master.
+  required: true
+  is_key: true
+  classification: internal
+- name: customer_segment
+  type: varchar
+  concept: Customer Segment
+  description: Named segment or cohort to which the targeted customer belongs, used for tailoring campaign messages and offers.
+  required: false
+  is_key: false
+  classification: internal
+- name: targeting_rules
+  type: varchar
+  concept: Targeting Rules
+  description: Eligibility criteria or rule logic used to select customers for inclusion in the campaign audience.
+  required: false
+  is_key: false
+  classification: internal
+- name: risk_profile
+  type: varchar
+  concept: Risk Profile
+  description: Credit or behavioral risk classification of the targeted customer, used to ensure campaign offers are appropriate for their profile.
+  required: false
+  is_key: false
+  classification: internal
+- name: consent_status
+  type: varchar
+  concept: Consent Status
+  description: Customer's current consent or opt-in status for marketing communications on the campaign's delivery channel.
+  required: true
+  is_key: false
+  classification: internal
+- name: demographics
+  type: varchar
+  concept: Demographics
+  description: Demographic attributes of the customer used to personalize campaign content (e.g. age band, income tier, location).
+  required: false
+  is_key: false
+  classification: internal
+- name: message_sent_date
+  type: date
+  concept: Message Sent Date
+  description: Date on which the campaign message was dispatched to the targeted customer.
+  required: true
+  is_key: false
+  classification: internal
+- name: delivery_status
+  type: varchar
+  concept: Delivery Status
+  description: Outcome of the message delivery attempt, indicating whether the message was delivered, bounced, or undeliverable.
+  required: true
+  is_key: false
+  classification: internal
+- name: opened_flag
+  type: boolean
+  concept: Opened Flag
+  description: Boolean indicator that the customer opened or viewed the campaign message.
+  required: false
+  is_key: false
+  classification: internal
+- name: clicked_flag
+  type: boolean
+  concept: Clicked Flag
+  description: Boolean indicator that the customer clicked on a link or call-to-action within the campaign message.
+  required: false
+  is_key: false
+  classification: internal
+- name: converted_flag
+  type: boolean
+  concept: Converted Flag
+  description: Boolean indicator that the customer completed the desired action (e.g. product purchase or application) attributed to this campaign.
+  required: false
+  is_key: false
+  classification: internal
+- name: conversion_date
+  type: date
+  concept: Conversion Date
+  description: Date on which the customer converted by completing the campaign's target action.
+  required: true
+  is_key: false
+  classification: internal
+- name: opt_out_flag
+  type: boolean
+  concept: Opt Out Flag
+  description: Boolean indicator that the customer has opted out of marketing communications as a result of or following this campaign.
+  required: false
+  is_key: false
+  classification: internal

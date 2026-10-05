@@ -1,0 +1,60 @@
+apiVersion: workbench.platform/v1
+id: databricks
+displayName: Databricks
+adapterVersion: "0.1.0"
+adapterKind: jdbc
+supportedServerVersions: "current"
+
+driver:
+  package: databricks-sql-connector
+  compatibility: ">=3.0"
+
+credentialSchema: schemas/databricks-credentials.json
+
+namespace:
+  parts: [catalog, schema, relation]
+  labels:
+    catalog: Catalog
+    schema: Schema
+    relation: Table / View
+  # Unqualified `schema.table` refs in a view body resolve against the session
+  # default catalog. The deploy sets it to the SOURCE catalog so cross-catalog
+  # view bodies bind correctly at creation time. `{catalog}` is filled with the
+  # quoted source catalog. Absent on platforms that carry the catalog in the
+  # connection (Snowflake) or fully qualify (BigQuery).
+  sessionCatalogStatement: "USE CATALOG {catalog}"
+
+capabilities:
+  connection: preview
+  discovery: preview
+  profiling: preview
+  read_query: preview
+  native_view: preview
+  dbt_materialized: preview
+  remediation: unsupported
+  semantic_qa: unsupported
+  transfer_source: unsupported
+  # transfer_target: the Phase-2.1 dlt engine loads a product into Databricks
+  # (DuckDB extracts the shaped result; dlt loads it). Requires dlt[databricks] +
+  # credentials in the backend environment — a deploy concern surfaced at run time.
+  transfer_target: preview
+  lakehouse_export: unsupported
+  lakehouse_source: unsupported
+  volumetrics: preview
+  code_assets: preview
+
+notes: >
+  Manifest scaffolded in Phase 1. No capability is supported yet.
+  Databricks-specific notes for Gate 1:
+  - Identifiers use backticks and are case-insensitive.
+  - Requires Unity Catalog (UC) for three-part identifiers; Hive
+    metastore uses two-part. The adapter must probe which metastore
+    type is configured.
+  - Primary, foreign, and unique constraints are informational.
+  - CREATE OR REPLACE VIEW is equivalent to DROP + CREATE; does not
+    preserve grants or the table ID.
+  - Databricks materialized views are backed by Lakeflow pipelines and
+    must NOT be treated as a generic dbt table synonym.
+  - Iceberg is accessed via Unity Catalog; the catalog provider must
+    be treated as a separate connection, not embedded in the compute
+    execution profile.

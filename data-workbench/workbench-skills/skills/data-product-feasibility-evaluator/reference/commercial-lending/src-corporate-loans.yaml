@@ -1,0 +1,217 @@
+spec_id: src_corporate_loans
+name: Corporate Loans
+domain: Commercial Lending
+product_kind: source
+description: All types of corporate loans including term loans, asset finance, working
+  capital, and business loans—includes financials, covenants, collateral, bank overdraft
+  with limit tracking, utilization etc. and disbursement structure.
+schema_version: '1.0'
+classification: internal
+grain:
+  keys:
+  - customer_id
+  description: ''
+freshness:
+  history: scd2
+  cadence: ''
+  description: ''
+allowed_derivations:
+- rename
+- cast
+attributes:
+- name: customer_id
+  type: bigint
+  concept: Customer ID
+  description: Unique identifier for the corporate borrower, linking the loan and collateral records to the business customer's profile.
+  required: true
+  is_key: true
+  classification: internal
+- name: name
+  type: varchar
+  concept: Name
+  description: The registered legal name of the corporate borrower or business entity.
+  required: true
+  is_key: false
+  classification: internal
+- name: industry
+  type: varchar
+  concept: Industry
+  description: The economic sector or industry classification of the corporate borrower, such as manufacturing, retail, or financial services.
+  required: false
+  is_key: false
+  classification: internal
+- name: registration_date
+  type: date
+  concept: Registration Date
+  description: The date on which the corporate entity was formally registered with the relevant regulatory or company authority.
+  required: true
+  is_key: false
+  classification: internal
+- name: credit_score
+  type: numeric
+  concept: Credit Score
+  description: A numeric creditworthiness assessment of the corporate borrower, used to determine loan eligibility and pricing.
+  required: true
+  is_key: false
+  classification: internal
+- name: loan_id
+  type: bigint
+  concept: Loan ID
+  description: Unique identifier for a corporate loan facility, serving as the primary key for all loan-level financial and covenant records.
+  required: true
+  is_key: true
+  classification: internal
+- name: loan_type
+  type: varchar
+  concept: Loan Type
+  description: The category of corporate lending product, such as term_loan, working_capital_facility, asset_finance, or bank_overdraft.
+  required: true
+  is_key: false
+  classification: internal
+- name: principal_amount
+  type: numeric
+  concept: Principal Amount
+  description: The face value of the loan at origination, representing the total amount disbursed or committed under the facility.
+  required: true
+  is_key: false
+  classification: internal
+- name: interest_rate
+  type: numeric
+  concept: Interest Rate
+  description: The annual rate of interest charged on the loan principal, expressed as a percentage.
+  required: true
+  is_key: false
+  classification: internal
+- name: start_date
+  type: date
+  concept: Start Date
+  description: The date on which the loan facility became active and funds were first available or disbursed.
+  required: true
+  is_key: false
+  classification: internal
+- name: maturity_date
+  type: date
+  concept: Maturity Date
+  description: The contractual date on which the outstanding loan balance must be fully repaid.
+  required: true
+  is_key: false
+  classification: internal
+- name: collateral_id
+  type: bigint
+  concept: Collateral ID
+  description: Unique identifier for a collateral asset pledged to secure the corporate loan facility.
+  required: true
+  is_key: true
+  classification: internal
+- name: collateral_type
+  type: varchar
+  concept: Collateral Type
+  description: The category of asset pledged as security, such as real_estate, equipment, receivables, or listed_securities.
+  required: true
+  is_key: false
+  classification: internal
+- name: market_value
+  type: numeric
+  concept: Market Value
+  description: The current assessed market value of the collateral asset at the time of valuation.
+  required: true
+  is_key: false
+  classification: internal
+- name: status
+  type: varchar
+  concept: Status
+  description: The current lifecycle state of the collateral, such as active, released, or under_review.
+  required: true
+  is_key: false
+  classification: internal
+- name: covenant_id
+  type: bigint
+  concept: Covenant ID
+  description: Unique identifier for a financial or operational covenant attached to the loan agreement.
+  required: true
+  is_key: true
+  classification: internal
+- name: covenant_type
+  type: varchar
+  concept: Covenant Type
+  description: The category of covenant, such as financial_ratio, information_covenant, or negative_pledge.
+  required: true
+  is_key: false
+  classification: internal
+- name: threshold_value
+  type: numeric
+  concept: Threshold Value
+  description: The numeric limit or ratio that must not be breached under the terms of the loan covenant.
+  required: true
+  is_key: false
+  classification: internal
+- name: effective_date
+  type: date
+  concept: Effective Date
+  description: The date from which the covenant terms became binding on the borrower.
+  required: true
+  is_key: false
+  classification: internal
+- name: breach_flag
+  type: boolean
+  concept: Breach Flag
+  description: Boolean indicator signalling whether the covenant threshold has been breached as of the last review date.
+  required: false
+  is_key: false
+  classification: internal
+- name: facility_id
+  type: bigint
+  concept: Facility ID
+  description: Unique identifier for a credit facility (e.g. overdraft or revolving credit line) available to the corporate customer.
+  required: true
+  is_key: true
+  classification: internal
+- name: facility_type
+  type: varchar
+  concept: Facility Type
+  description: The type of credit facility, such as revolving_credit, overdraft, or standby_letter_of_credit.
+  required: true
+  is_key: false
+  classification: internal
+- name: limit_amount
+  type: numeric
+  concept: Limit Amount
+  description: The maximum drawn balance permitted under the credit facility at any point in time.
+  required: true
+  is_key: false
+  classification: internal
+- name: utilization_percentage
+  type: numeric
+  concept: Utilization Percentage
+  description: The proportion of the facility limit currently drawn by the borrower, expressed as a percentage.
+  required: false
+  is_key: false
+  classification: internal
+- name: disbursement_id
+  type: bigint
+  concept: Disbursement ID
+  description: Unique identifier for a single loan disbursement event, tracking individual fund releases under the facility.
+  required: true
+  is_key: true
+  classification: internal
+- name: disbursement_date
+  type: date
+  concept: Disbursement Date
+  description: The date on which loan funds were released to the borrower's account.
+  required: true
+  is_key: false
+  classification: internal
+- name: amount
+  type: numeric
+  concept: Amount
+  description: The monetary value of funds disbursed in a single disbursement event.
+  required: true
+  is_key: false
+  classification: internal
+- name: payment_method
+  type: varchar
+  concept: Payment Method
+  description: The mechanism used to transfer disbursed funds, such as RTGS, NEFT, or account_credit.
+  required: false
+  is_key: false
+  classification: internal

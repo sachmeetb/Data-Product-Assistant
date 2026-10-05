@@ -1,0 +1,376 @@
+apiVersion: v3.1.0
+kind: DataContract
+id: template:marketing-sales:src-campaign-management
+name: Campaign Management
+version: 1.0.0
+status: draft
+domain: Marketing & Sales
+description: 'Storing raw metadata about active and historical marketing campaigns
+  (eg: Campaign type, product targeted, budget etc.) and their targeting'
+schema:
+- name: Campaign Management
+  physicalName: campaign_management
+  physicalType: table
+  description: 'Storing raw metadata about active and historical marketing campaigns
+    (eg: Campaign type, product targeted, budget etc.) and their targeting'
+  properties:
+  - name: campaign_id
+    physicalName: campaign_id
+    logicalName: Campaign ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a marketing campaign record, used as the primary
+      key across all campaign-related entities.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: campaign_name
+    physicalName: campaign_name
+    logicalName: Campaign Name
+    logicalType: varchar
+    physicalType: varchar
+    description: Descriptive human-readable name assigned to the marketing campaign.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: campaign_type
+    physicalName: campaign_type
+    logicalName: Campaign Type
+    logicalType: varchar
+    physicalType: varchar
+    description: Classification of the campaign strategy or mechanism, such as acquisition,
+      cross-sell, retention, or awareness.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: start_date
+    physicalName: start_date
+    logicalName: Start Date
+    logicalType: date
+    physicalType: date
+    description: Date on which the campaign was launched and began delivering messages
+      or offers to customers.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: end_date
+    physicalName: end_date
+    logicalName: End Date
+    logicalType: date
+    physicalType: date
+    description: Date on which the campaign concluded and ceased delivering messages
+      or offers.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: status
+    physicalName: status
+    logicalName: Status
+    logicalType: varchar
+    physicalType: varchar
+    description: Current execution status of the campaign (e.g. planned, active, paused,
+      completed, cancelled).
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: budget
+    physicalName: budget
+    logicalName: Budget
+    logicalType: numeric
+    physicalType: numeric
+    description: Total monetary budget allocated to the campaign for media spend and
+      execution costs.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: delivery_channel
+    physicalName: delivery_channel
+    logicalName: Delivery Channel
+    logicalType: varchar
+    physicalType: varchar
+    description: Channel through which the campaign message is delivered to customers,
+      such as email, SMS, push notification, or outbound call.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: product_targeted
+    physicalName: product_targeted
+    logicalName: Product Targeted
+    logicalType: varchar
+    physicalType: varchar
+    description: Bank product or product category that the campaign is promoting or
+      selling (e.g. savings account, credit card, personal loan).
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: objective
+    physicalName: objective
+    logicalName: Objective
+    logicalType: varchar
+    physicalType: varchar
+    description: Business objective of the campaign, such as increasing account openings,
+      reducing churn, or promoting a new product feature.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: owner_team
+    physicalName: owner_team
+    logicalName: Owner Team
+    logicalType: varchar
+    physicalType: varchar
+    description: Internal marketing or business team responsible for executing and
+      managing the campaign.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: customer_id
+    physicalName: customer_id
+    logicalName: Customer ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier of the customer targeted by this campaign; a primary
+      key linking to the customer master.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: customer_segment
+    physicalName: customer_segment
+    logicalName: Customer Segment
+    logicalType: varchar
+    physicalType: varchar
+    description: Named segment or cohort to which the targeted customer belongs, used
+      for tailoring campaign messages and offers.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: targeting_rules
+    physicalName: targeting_rules
+    logicalName: Targeting Rules
+    logicalType: varchar
+    physicalType: varchar
+    description: Eligibility criteria or rule logic used to select customers for inclusion
+      in the campaign audience.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: risk_profile
+    physicalName: risk_profile
+    logicalName: Risk Profile
+    logicalType: varchar
+    physicalType: varchar
+    description: Credit or behavioral risk classification of the targeted customer,
+      used to ensure campaign offers are appropriate for their profile.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: consent_status
+    physicalName: consent_status
+    logicalName: Consent Status
+    logicalType: varchar
+    physicalType: varchar
+    description: Customer's current consent or opt-in status for marketing communications
+      on the campaign's delivery channel.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: demographics
+    physicalName: demographics
+    logicalName: Demographics
+    logicalType: varchar
+    physicalType: varchar
+    description: Demographic attributes of the customer used to personalize campaign
+      content (e.g. age band, income tier, location).
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: message_sent_date
+    physicalName: message_sent_date
+    logicalName: Message Sent Date
+    logicalType: date
+    physicalType: date
+    description: Date on which the campaign message was dispatched to the targeted
+      customer.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: delivery_status
+    physicalName: delivery_status
+    logicalName: Delivery Status
+    logicalType: varchar
+    physicalType: varchar
+    description: Outcome of the message delivery attempt, indicating whether the message
+      was delivered, bounced, or undeliverable.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: opened_flag
+    physicalName: opened_flag
+    logicalName: Opened Flag
+    logicalType: boolean
+    physicalType: boolean
+    description: Boolean indicator that the customer opened or viewed the campaign
+      message.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: clicked_flag
+    physicalName: clicked_flag
+    logicalName: Clicked Flag
+    logicalType: boolean
+    physicalType: boolean
+    description: Boolean indicator that the customer clicked on a link or call-to-action
+      within the campaign message.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: converted_flag
+    physicalName: converted_flag
+    logicalName: Converted Flag
+    logicalType: boolean
+    physicalType: boolean
+    description: Boolean indicator that the customer completed the desired action
+      (e.g. product purchase or application) attributed to this campaign.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: conversion_date
+    physicalName: conversion_date
+    logicalName: Conversion Date
+    logicalType: date
+    physicalType: date
+    description: Date on which the customer converted by completing the campaign's
+      target action.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: opt_out_flag
+    physicalName: opt_out_flag
+    logicalName: Opt Out Flag
+    logicalType: boolean
+    physicalType: boolean
+    description: Boolean indicator that the customer has opted out of marketing communications
+      as a result of or following this campaign.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  foreignKeys: []
+  transform:
+    grouping_keys:
+    - campaign_id
+    scd_policy:
+      type: scd2
+customProperties:
+  feasibility:
+    schema_version: '1.0'
+    spec_classification: internal
+    cadence: ''
+    freshness_history: scd2
+    freshness_description: ''
+    grain_keys:
+    - campaign_id
+    grain_description: ''
+    allowed_derivations:
+    - rename
+    - cast
+    composition:
+      join_keys: []
+      composed_of: []
+      description: ''
+productKind: source
+sourceSpecId: src_campaign_management

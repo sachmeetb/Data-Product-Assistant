@@ -1,0 +1,1652 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>Data Workbench Multi-Platform Onboarding</title>
+  <style>
+    :root {
+      --canvas: #eef1f4;
+      --paper: #ffffff;
+      --ink: #14202b;
+      --muted: #5f6b76;
+      --line: #d9e0e5;
+      --soft: #f4f6f8;
+      --teal: #087e78;
+      --teal-soft: #e3f4f2;
+      --blue: #2458b3;
+      --blue-soft: #e9effa;
+      --coral: #c94f45;
+      --coral-soft: #fbecea;
+      --amber: #a76b00;
+      --amber-soft: #fff3d6;
+      --green: #35734a;
+      --green-soft: #e7f3ea;
+      --violet: #7251a1;
+      --violet-soft: #f0eafa;
+      --shadow: 0 18px 50px rgba(20, 32, 43, 0.16);
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: var(--canvas);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    button, a { font: inherit; }
+    a { color: inherit; }
+
+    #viewport {
+      position: fixed;
+      inset: 0;
+      overflow: hidden;
+    }
+
+    #stage {
+      position: absolute;
+      width: 1280px;
+      height: 720px;
+      transform-origin: top left;
+      background: var(--paper);
+      box-shadow: var(--shadow);
+    }
+
+    .slide {
+      position: absolute;
+      inset: 0;
+      display: none;
+      overflow: hidden;
+      padding: 48px 62px 44px;
+      background: var(--paper);
+    }
+
+    .slide.active { display: block; }
+
+    .slide::after {
+      content: attr(data-section);
+      position: absolute;
+      left: 62px;
+      bottom: 18px;
+      color: #7b8790;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.4px;
+    }
+
+    .slide-no {
+      position: absolute;
+      right: 62px;
+      bottom: 17px;
+      color: #7b8790;
+      font-size: 13px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .eyebrow {
+      margin: 0 0 8px;
+      color: var(--teal);
+      font-size: 14px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+    }
+
+    h1, h2, h3, p { margin-top: 0; }
+
+    h1 {
+      max-width: 1050px;
+      margin-bottom: 22px;
+      font-size: 58px;
+      line-height: 1.03;
+      letter-spacing: 0;
+    }
+
+    h2 {
+      max-width: 1100px;
+      margin-bottom: 24px;
+      font-size: 38px;
+      line-height: 1.12;
+      letter-spacing: 0;
+    }
+
+    h3 {
+      margin-bottom: 10px;
+      font-size: 21px;
+      line-height: 1.2;
+      letter-spacing: 0;
+    }
+
+    p, li {
+      font-size: 21px;
+      line-height: 1.42;
+    }
+
+    p { margin-bottom: 16px; }
+    ul, ol { margin: 0; padding-left: 26px; }
+    li { margin-bottom: 11px; }
+    strong { font-weight: 800; }
+    code {
+      padding: 2px 5px;
+      border-radius: 4px;
+      background: #eef2f5;
+      color: #274054;
+      font-size: 0.9em;
+    }
+
+    .lead {
+      max-width: 1040px;
+      color: #344553;
+      font-size: 28px;
+      line-height: 1.35;
+    }
+
+    .small { font-size: 17px; line-height: 1.38; }
+    .tiny { font-size: 13px; line-height: 1.35; }
+    .muted { color: var(--muted); }
+    .accent { color: var(--teal); }
+    .danger { color: var(--coral); }
+    .success { color: var(--green); }
+    .center { text-align: center; }
+
+    .grid-2, .grid-3, .grid-4 {
+      display: grid;
+      gap: 16px;
+    }
+
+    .grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .grid-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .cols-40-60 { grid-template-columns: 0.82fr 1.18fr; }
+    .cols-60-40 { grid-template-columns: 1.18fr 0.82fr; }
+
+    .card {
+      min-width: 0;
+      padding: 18px 20px;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: var(--paper);
+    }
+
+    .card.soft { background: var(--soft); }
+    .card.teal { border-color: #a7d8d4; background: var(--teal-soft); }
+    .card.blue { border-color: #b9c9e8; background: var(--blue-soft); }
+    .card.coral { border-color: #efbbb5; background: var(--coral-soft); }
+    .card.amber { border-color: #e8ce8f; background: var(--amber-soft); }
+    .card.green { border-color: #b8d8c1; background: var(--green-soft); }
+    .card.violet { border-color: #d0bee7; background: var(--violet-soft); }
+    .card p:last-child, .card ul:last-child { margin-bottom: 0; }
+
+    .callout {
+      padding: 18px 22px;
+      border-left: 6px solid var(--teal);
+      background: var(--teal-soft);
+      font-size: 23px;
+      line-height: 1.35;
+    }
+
+    .metric {
+      display: flex;
+      min-height: 116px;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .metric .value {
+      color: var(--teal);
+      font-size: 38px;
+      font-weight: 850;
+      line-height: 1;
+    }
+
+    .metric .label {
+      color: #42515d;
+      font-size: 16px;
+      font-weight: 700;
+      line-height: 1.25;
+    }
+
+    .tag {
+      display: inline-block;
+      padding: 4px 8px;
+      border: 1px solid #b9c4cc;
+      border-radius: 4px;
+      background: #fff;
+      color: #42515d;
+      font-size: 12px;
+      font-weight: 800;
+      line-height: 1;
+      text-transform: uppercase;
+    }
+
+    .tag.good { border-color: #9ac5a6; background: var(--green-soft); color: var(--green); }
+    .tag.warn { border-color: #d8b964; background: var(--amber-soft); color: #805300; }
+    .tag.bad { border-color: #df9c95; background: var(--coral-soft); color: #9d332b; }
+    .tag.info { border-color: #abc0e4; background: var(--blue-soft); color: var(--blue); }
+
+    .flow {
+      display: flex;
+      align-items: stretch;
+      gap: 12px;
+    }
+
+    .flow-node {
+      position: relative;
+      display: flex;
+      min-width: 0;
+      flex: 1;
+      flex-direction: column;
+      justify-content: center;
+      min-height: 94px;
+      padding: 14px 16px;
+      border: 2px solid var(--line);
+      border-radius: 7px;
+      background: #fff;
+      text-align: center;
+    }
+
+    .flow-node:not(:last-child)::after {
+      content: "→";
+      position: absolute;
+      z-index: 2;
+      right: -21px;
+      top: 50%;
+      width: 28px;
+      margin-top: -17px;
+      background: var(--paper);
+      color: var(--teal);
+      font-size: 25px;
+      font-weight: 900;
+      line-height: 34px;
+    }
+
+    .flow-node strong { font-size: 17px; line-height: 1.2; }
+    .flow-node span { margin-top: 5px; color: var(--muted); font-size: 13px; line-height: 1.25; }
+    .flow-node.teal { border-color: var(--teal); background: var(--teal-soft); }
+    .flow-node.blue { border-color: var(--blue); background: var(--blue-soft); }
+    .flow-node.coral { border-color: var(--coral); background: var(--coral-soft); }
+    .flow-node.green { border-color: var(--green); background: var(--green-soft); }
+
+    .stack {
+      display: grid;
+      gap: 10px;
+    }
+
+    .layer {
+      display: grid;
+      grid-template-columns: 182px 1fr;
+      align-items: center;
+      min-height: 76px;
+      border: 1px solid var(--line);
+      border-left: 7px solid var(--teal);
+      border-radius: 6px;
+      background: #fff;
+    }
+
+    .layer:nth-child(2) { border-left-color: var(--blue); }
+    .layer:nth-child(3) { border-left-color: var(--violet); }
+    .layer:nth-child(4) { border-left-color: var(--amber); }
+    .layer:nth-child(5) { border-left-color: var(--green); }
+
+    .layer-label {
+      padding: 0 18px;
+      color: #344553;
+      font-size: 16px;
+      font-weight: 850;
+      text-transform: uppercase;
+    }
+
+    .layer-content {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      padding: 12px 16px;
+      border-left: 1px solid var(--line);
+    }
+
+    .pill {
+      padding: 8px 11px;
+      border: 1px solid #c6d0d7;
+      border-radius: 5px;
+      background: var(--soft);
+      color: #334552;
+      font-size: 14px;
+      font-weight: 750;
+      line-height: 1;
+    }
+
+    .decision {
+      display: grid;
+      grid-template-columns: 1fr 128px 1fr;
+      align-items: center;
+      gap: 18px;
+    }
+
+    .diamond {
+      display: flex;
+      width: 110px;
+      height: 110px;
+      align-items: center;
+      justify-content: center;
+      transform: rotate(45deg);
+      border: 2px solid var(--teal);
+      background: var(--teal-soft);
+    }
+
+    .diamond span {
+      width: 92px;
+      transform: rotate(-45deg);
+      color: #22504d;
+      font-size: 13px;
+      font-weight: 800;
+      line-height: 1.2;
+      text-align: center;
+    }
+
+    .route {
+      display: grid;
+      grid-template-columns: 215px 1fr;
+      gap: 14px;
+      align-items: center;
+      min-height: 62px;
+      padding: 9px 14px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .route:last-child { border-bottom: 0; }
+    .route strong { font-size: 16px; }
+    .route span { font-size: 15px; line-height: 1.3; }
+
+    .matrix {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+    }
+
+    .matrix th, .matrix td {
+      padding: 9px 10px;
+      border-bottom: 1px solid var(--line);
+      vertical-align: top;
+      text-align: left;
+      font-size: 15px;
+      line-height: 1.28;
+      overflow-wrap: anywhere;
+    }
+
+    .matrix th {
+      background: #f0f3f5;
+      color: #344553;
+      font-size: 13px;
+      font-weight: 850;
+      text-transform: uppercase;
+    }
+
+    .matrix tr:last-child td { border-bottom: 0; }
+    .matrix.compact th, .matrix.compact td { padding: 7px 8px; font-size: 13px; line-height: 1.2; }
+    .matrix.compact th { font-size: 11px; }
+    .matrix .name { font-weight: 800; }
+    .matrix a { text-decoration-color: #a7b2ba; text-underline-offset: 2px; }
+
+    .timeline {
+      position: relative;
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 12px;
+      padding-top: 32px;
+    }
+
+    .timeline::before {
+      content: "";
+      position: absolute;
+      left: 7%;
+      right: 7%;
+      top: 16px;
+      height: 3px;
+      background: #cbd4da;
+    }
+
+    .phase {
+      position: relative;
+      min-height: 280px;
+      padding: 20px 14px 14px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #fff;
+    }
+
+    .phase::before {
+      content: "";
+      position: absolute;
+      top: -24px;
+      left: calc(50% - 8px);
+      width: 16px;
+      height: 16px;
+      border: 4px solid #fff;
+      border-radius: 50%;
+      background: var(--teal);
+      box-shadow: 0 0 0 2px var(--teal);
+    }
+
+    .phase .num {
+      color: var(--teal);
+      font-size: 13px;
+      font-weight: 900;
+      text-transform: uppercase;
+    }
+
+    .phase h3 { margin: 6px 0 10px; font-size: 17px; }
+    .phase p { color: var(--muted); font-size: 14px; line-height: 1.32; }
+
+    .codebox {
+      padding: 17px 20px;
+      border: 1px solid #ced7dd;
+      border-radius: 6px;
+      background: #202c36;
+      color: #eaf2f5;
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+      font-size: 14px;
+      line-height: 1.5;
+      white-space: pre-wrap;
+    }
+
+    .source-line {
+      position: absolute;
+      left: 62px;
+      right: 160px;
+      bottom: 36px;
+      color: #76828c;
+      font-size: 10px;
+      line-height: 1.25;
+    }
+
+    .source-line a { text-decoration: none; }
+    .source-line a:hover { text-decoration: underline; }
+
+    .notes { display: none; }
+
+    .title-slide {
+      padding: 72px 72px 58px;
+      border-left: 16px solid var(--teal);
+      background: var(--paper);
+    }
+
+    .title-slide .title-rule {
+      width: 92px;
+      height: 8px;
+      margin: 32px 0 24px;
+      background: var(--coral);
+    }
+
+    .title-slide .subtitle {
+      max-width: 980px;
+      color: #41515e;
+      font-size: 26px;
+      line-height: 1.38;
+    }
+
+    .title-slide .meta {
+      position: absolute;
+      left: 72px;
+      bottom: 58px;
+      display: flex;
+      gap: 26px;
+      color: var(--muted);
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    .big-thesis {
+      max-width: 1090px;
+      margin: 40px 0 32px;
+      font-size: 43px;
+      font-weight: 780;
+      line-height: 1.2;
+    }
+
+    .three-choices {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-top: 26px;
+    }
+
+    .choice {
+      min-height: 225px;
+      padding: 20px;
+      border: 2px solid var(--line);
+      border-radius: 7px;
+      background: #fff;
+    }
+
+    .choice.selected {
+      border-color: var(--teal);
+      background: var(--teal-soft);
+    }
+
+    .choice .choice-label {
+      margin-bottom: 18px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 850;
+      text-transform: uppercase;
+    }
+
+    .choice h3 { font-size: 22px; }
+    .choice p { color: #4f5f6b; font-size: 16px; line-height: 1.35; }
+
+    .contract {
+      display: grid;
+      grid-template-columns: 170px 1fr 120px;
+      gap: 12px;
+      align-items: center;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .contract:last-child { border-bottom: 0; }
+    .contract .cap { font-size: 15px; font-weight: 850; }
+    .contract .desc { color: #4d5c67; font-size: 14px; line-height: 1.28; }
+
+    .lifecycle {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 22px;
+    }
+
+    .state {
+      position: relative;
+      flex: 1;
+      min-height: 96px;
+      padding: 14px 10px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #fff;
+      text-align: center;
+    }
+
+    .state:not(:last-child)::after {
+      content: "→";
+      position: absolute;
+      right: -17px;
+      top: 33px;
+      z-index: 2;
+      width: 26px;
+      background: #fff;
+      color: var(--teal);
+      font-size: 22px;
+      font-weight: 900;
+    }
+
+    .state strong { display: block; font-size: 15px; }
+    .state span { display: block; margin-top: 7px; color: var(--muted); font-size: 12px; line-height: 1.2; }
+    .state.active-state { border-color: var(--teal); background: var(--teal-soft); }
+
+    .ui-shell {
+      display: grid;
+      grid-template-columns: 185px 1fr;
+      height: 430px;
+      overflow: hidden;
+      border: 1px solid #bac5cd;
+      border-radius: 7px;
+      background: #fff;
+      box-shadow: 0 8px 22px rgba(20, 32, 43, 0.08);
+    }
+
+    .ui-nav {
+      padding: 18px 12px;
+      background: #1e2a34;
+      color: #dce5ea;
+    }
+
+    .ui-logo { margin: 0 8px 22px; font-size: 15px; font-weight: 850; }
+    .ui-nav-item { padding: 9px 10px; border-radius: 4px; font-size: 12px; }
+    .ui-nav-item.on { background: #2f5960; color: #fff; }
+    .ui-main { padding: 20px 24px; }
+    .ui-top { display: flex; justify-content: space-between; margin-bottom: 16px; }
+    .ui-title { font-size: 18px; font-weight: 850; }
+    .ui-button { padding: 7px 10px; border-radius: 4px; background: var(--teal); color: #fff; font-size: 11px; font-weight: 800; }
+    .ui-steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 7px; margin-bottom: 18px; }
+    .ui-step { padding: 8px; border-bottom: 3px solid #ccd4da; color: #71808a; font-size: 10px; font-weight: 800; text-align: center; }
+    .ui-step.on { border-color: var(--teal); color: var(--teal); }
+    .ui-panel { padding: 14px; border: 1px solid var(--line); border-radius: 6px; }
+    .ui-row { display: grid; grid-template-columns: 150px 1fr; gap: 12px; padding: 8px 0; border-bottom: 1px solid #edf0f2; }
+    .ui-row:last-child { border-bottom: 0; }
+    .ui-key { color: #65727c; font-size: 10px; font-weight: 800; text-transform: uppercase; }
+    .ui-value { font-size: 11px; font-weight: 700; }
+
+    #progress {
+      position: fixed;
+      z-index: 50;
+      left: 0;
+      top: 0;
+      width: 0;
+      height: 4px;
+      background: var(--teal);
+      transition: width 160ms ease;
+    }
+
+    #controls {
+      position: fixed;
+      z-index: 60;
+      right: 14px;
+      bottom: 14px;
+      display: flex;
+      gap: 7px;
+      padding: 7px;
+      border: 1px solid rgba(130, 143, 153, 0.35);
+      border-radius: 7px;
+      background: rgba(255, 255, 255, 0.94);
+      box-shadow: 0 5px 18px rgba(20, 32, 43, 0.15);
+    }
+
+    #controls button {
+      display: flex;
+      width: 36px;
+      height: 34px;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      border: 1px solid #cbd4da;
+      border-radius: 5px;
+      background: #fff;
+      color: #273844;
+      cursor: pointer;
+      font-size: 17px;
+      font-weight: 800;
+    }
+
+    #controls button:hover, #controls button:focus-visible {
+      border-color: var(--teal);
+      color: var(--teal);
+      outline: none;
+    }
+
+    #controls button:disabled { opacity: 0.35; cursor: default; }
+
+    #overview {
+      position: fixed;
+      z-index: 80;
+      inset: 0;
+      display: none;
+      overflow: auto;
+      padding: 42px;
+      background: rgba(238, 241, 244, 0.98);
+    }
+
+    #overview.open { display: block; }
+    #overview h2 { margin-bottom: 18px; }
+    #overview-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 12px;
+    }
+
+    .overview-item {
+      min-height: 104px;
+      padding: 15px;
+      border: 1px solid #cbd4da;
+      border-radius: 6px;
+      background: #fff;
+      color: var(--ink);
+      cursor: pointer;
+      text-align: left;
+    }
+
+    .overview-item:hover, .overview-item.current { border-color: var(--teal); background: var(--teal-soft); }
+    .overview-item .ov-num { color: var(--teal); font-size: 12px; font-weight: 900; }
+    .overview-item .ov-title { display: block; margin-top: 8px; font-size: 15px; font-weight: 800; line-height: 1.25; }
+
+    #notes-panel {
+      position: fixed;
+      z-index: 75;
+      left: 50%;
+      bottom: 58px;
+      display: none;
+      width: min(940px, calc(100vw - 40px));
+      max-height: 190px;
+      overflow: auto;
+      transform: translateX(-50%);
+      padding: 18px 22px;
+      border: 1px solid #b8c3ca;
+      border-radius: 7px;
+      background: rgba(255, 255, 255, 0.98);
+      box-shadow: var(--shadow);
+      color: #334450;
+      font-size: 15px;
+      line-height: 1.45;
+    }
+
+    #notes-panel.open { display: block; }
+    #notes-panel::before {
+      content: "SPEAKER NOTES";
+      display: block;
+      margin-bottom: 7px;
+      color: var(--teal);
+      font-size: 11px;
+      font-weight: 900;
+      letter-spacing: 1.2px;
+    }
+
+    #help {
+      position: fixed;
+      z-index: 90;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(20, 32, 43, 0.56);
+    }
+
+    #help.open { display: flex; }
+    .help-card {
+      width: 530px;
+      padding: 28px;
+      border-radius: 7px;
+      background: #fff;
+      box-shadow: var(--shadow);
+    }
+    .help-grid { display: grid; grid-template-columns: 150px 1fr; gap: 10px; }
+    .help-key { font-weight: 850; }
+    .help-desc { color: var(--muted); }
+
+    @media (max-width: 720px) {
+      #controls { right: 7px; bottom: 7px; gap: 4px; padding: 5px; }
+      #controls button { width: 32px; height: 31px; }
+      #overview { padding: 22px; }
+      #overview-grid { grid-template-columns: 1fr; }
+    }
+
+    @media print {
+      html, body { width: auto; height: auto; overflow: visible; background: #fff; }
+      #viewport { position: static; overflow: visible; }
+      #stage { position: static; width: 1280px; height: auto; transform: none !important; box-shadow: none; }
+      .slide {
+        position: relative;
+        display: block !important;
+        width: 1280px;
+        height: 720px;
+        break-after: page;
+        page-break-after: always;
+      }
+      #controls, #progress, #overview, #notes-panel, #help { display: none !important; }
+      @page { size: 13.333in 7.5in; margin: 0; }
+    }
+  </style>
+</head>
+<body>
+  <div id="progress" aria-hidden="true"></div>
+  <main id="viewport" aria-label="Presentation">
+    <div id="stage">
+
+      <section class="slide title-slide active" data-title="Multi-Platform by Design" data-section="Architecture Committee">
+        <p class="eyebrow">Data Workbench architecture proposal</p>
+        <h1>Multi-Platform<br>by Design</h1>
+        <div class="title-rule"></div>
+        <p class="subtitle">A repeatable onboarding architecture for discovering from and deploying to PostgreSQL, MySQL, Snowflake, Databricks, and the platforms that follow.</p>
+        <div class="meta">
+          <span>Architecture committee briefing</span>
+          <span>30 slides</span>
+          <span>16 July 2026</span>
+        </div>
+        <aside class="notes">Frame this as a platform design, not four database integrations. The goal is to establish one controlled onboarding path that keeps PostgreSQL behavior stable while allowing database-specific behavior to evolve independently.</aside>
+      </section>
+
+      <section class="slide" data-title="Executive Thesis" data-section="Recommendation">
+        <p class="eyebrow">Executive thesis</p>
+        <div class="big-thesis">Keep practitioner workflows stable. Move platform variability behind explicit, testable adapter contracts.</div>
+        <div class="grid-3">
+          <div class="card teal">
+            <h3>Capability-oriented skills</h3>
+            <p class="small">Discovery, profiling, compilation, deployment, and verification remain the user-facing units.</p>
+          </div>
+          <div class="card blue">
+            <h3>Typed semantic core</h3>
+            <p class="small">A platform-neutral IR carries transformation intent; the selected target determines SQL and DDL.</p>
+          </div>
+          <div class="card green">
+            <h3>Isolated adapters</h3>
+            <p class="small">Each platform owns metadata, rendering, execution, lifecycle, and capability evidence.</p>
+          </div>
+        </div>
+        <div class="callout" style="margin-top:18px">This is the middle path between platform-skill sprawl and a fragile multi-platform “uber skill.”</div>
+        <aside class="notes">Lead with the division of responsibilities. Skills express workflow and intent. The core owns contracts and planning. Adapters own deterministic database behavior. This lets practitioners use one workflow while engineers qualify each platform capability independently.</aside>
+      </section>
+
+      <section class="slide" data-title="Why the Current Shape Will Not Scale" data-section="Context">
+        <p class="eyebrow">Current-state pressure</p>
+        <h2>PostgreSQL is embedded across the workflow, not only in the connector</h2>
+        <div class="grid-4">
+          <div class="card metric"><span class="value">1</span><span class="label">required project connection field, named for PostgreSQL</span></div>
+          <div class="card metric"><span class="value">43</span><span class="label">skills already in the catalog; sibling platform skills compound maintenance</span></div>
+          <div class="card metric"><span class="value">4+</span><span class="label">execution surfaces: discovery, preview, deployment, Q&amp;A, remediation</span></div>
+          <div class="card metric"><span class="value">0</span><span class="label">cross-platform live conformance matrices today</span></div>
+        </div>
+        <div class="grid-2" style="margin-top:18px">
+          <div class="card coral">
+            <h3>Hidden coupling</h3>
+            <p class="small">Prompt construction, stage dispatch, DSN parsing, error handling, DDL lifecycle, and smoke tests assume Postgres.</p>
+          </div>
+          <div class="card amber">
+            <h3>False confidence</h3>
+            <p class="small">Having a partial Snowflake or Databricks renderer is not platform support. Credentials, discovery, deployment, verification, and operations must also pass.</p>
+          </div>
+        </div>
+        <aside class="notes">The key point is that a new driver cannot solve the problem. Platform assumptions exist in data contracts, UI routing, execution, deployment lifecycle, and testing. Existing dialect classes prove only that some expressions can be rendered.</aside>
+      </section>
+
+      <section class="slide" data-title="Support Is a Capability Matrix" data-section="Operating model">
+        <p class="eyebrow">Define support precisely</p>
+        <h2>A platform is not simply “supported”</h2>
+        <table class="matrix">
+          <thead><tr><th style="width:23%">Capability</th><th>Evidence required</th><th style="width:22%">Maturity reported</th></tr></thead>
+          <tbody>
+            <tr><td class="name">Discover &amp; profile</td><td>Namespaces, columns, types, constraints, samples, privilege failure behavior</td><td><span class="tag info">per platform</span></td></tr>
+            <tr><td class="name">Read &amp; preview</td><td>Parameterized execution, cancellation, limits, normalized results, stable errors</td><td><span class="tag info">per platform</span></td></tr>
+            <tr><td class="name">Render SQL &amp; DDL</td><td>Golden output, parser acceptance, target compilation, semantic fixtures</td><td><span class="tag info">per feature</span></td></tr>
+            <tr><td class="name">Deploy &amp; verify</td><td>Lifecycle semantics, grants, rollback/compensation, observability, reconciliation</td><td><span class="tag info">per strategy</span></td></tr>
+            <tr><td class="name">Transfer &amp; materialize</td><td>Checkpointing, schema evolution, row/hash reconciliation, approved target adapter</td><td><span class="tag info">per route</span></td></tr>
+          </tbody>
+        </table>
+        <div class="lifecycle" style="margin-top:20px">
+          <div class="state"><strong>Unsupported</strong><span>not selectable</span></div>
+          <div class="state"><strong>Experimental</strong><span>developer only</span></div>
+          <div class="state"><strong>Preview</strong><span>visible restrictions</span></div>
+          <div class="state active-state"><strong>Certified</strong><span>conformance + runbook</span></div>
+          <div class="state"><strong>Deprecated</strong><span>migration deadline</span></div>
+        </div>
+        <aside class="notes">Ask the committee to reject a single platform boolean. MySQL discovery may be certified while MySQL dbt materialization remains unsupported. This is both more honest and easier to release safely.</aside>
+      </section>
+
+      <section class="slide" data-title="Non-Negotiable Guardrails" data-section="Principles">
+        <p class="eyebrow">Design principles</p>
+        <h2>Guardrails that keep expansion from breaking the platform</h2>
+        <div class="grid-2">
+          <div class="card"><h3>Target determines dialect</h3><p class="small">Users select a target and serving intent. They do not independently choose SQL that can contradict the target.</p></div>
+          <div class="card"><h3>Fail closed</h3><p class="small">Unknown platforms, unsupported capabilities, or lossy transforms return actionable errors. No silent Postgres fallback.</p></div>
+          <div class="card"><h3>Execution boundary, not vendor label</h3><p class="small">A native view is legal only when one target identity can resolve every source relation at query time.</p></div>
+          <div class="card"><h3>Secrets remain references</h3><p class="small">No reusable DSNs in graph data, prompts, logs, generated projects, or API reads.</p></div>
+          <div class="card"><h3>One semantic source of truth</h3><p class="small">Preview, view DDL, dbt models, and verification derive from the same typed transformation IR.</p></div>
+          <div class="card"><h3>Postgres compatibility is measured</h3><p class="small">Characterization tests, golden SQL, live regression, and a compatibility facade precede migration.</p></div>
+        </div>
+        <aside class="notes">These principles address the known failure modes: target/dialect drift, false same-platform assumptions, secret leakage, preview/deploy divergence, silent semantic weakening, and accidental Postgres regression.</aside>
+      </section>
+
+      <section class="slide" data-title="Reference Architecture" data-section="Architecture">
+        <p class="eyebrow">Reference architecture</p>
+        <h2>Stable core, replaceable edges</h2>
+        <div class="stack">
+          <div class="layer"><div class="layer-label">Experience</div><div class="layer-content"><span class="pill">Workbench UI</span><span class="pill">REST API</span><span class="pill">MCP / CLI</span><span class="pill">Capability skills</span></div></div>
+          <div class="layer"><div class="layer-label">Orchestration</div><div class="layer-content"><span class="pill">Connection registry</span><span class="pill">Capability registry</span><span class="pill">Serving planner</span><span class="pill">Run state machine</span></div></div>
+          <div class="layer"><div class="layer-label">Semantic core</div><div class="layer-content"><span class="pill">Canonical metadata</span><span class="pill">Typed transformation IR</span><span class="pill">Policy &amp; contracts</span><span class="pill">Provenance</span></div></div>
+          <div class="layer"><div class="layer-label">Provider SPI</div><div class="layer-content"><span class="pill">Metadata</span><span class="pill">Dialect</span><span class="pill">Executor</span><span class="pill">Deployment</span><span class="pill">Transfer</span><span class="pill">Verification</span></div></div>
+          <div class="layer"><div class="layer-label">Platforms</div><div class="layer-content"><span class="pill">PostgreSQL</span><span class="pill">MySQL</span><span class="pill">Snowflake</span><span class="pill">Databricks</span><span class="pill">Future adapters</span></div></div>
+        </div>
+        <aside class="notes">The experience layer never imports a database driver. The semantic core does not contain vendor conditionals. Platform behavior enters through provider interfaces registered by a manifest. This creates a narrow and testable blast radius.</aside>
+      </section>
+
+      <section class="slide" data-title="Skill Architecture Decision" data-section="Modularity">
+        <p class="eyebrow">Skill design</p>
+        <h2>Compare the three structural choices</h2>
+        <div class="three-choices">
+          <div class="choice">
+            <div class="choice-label">Option A</div>
+            <h3>Platform skill per capability</h3>
+            <p>Strong isolation, but multiplies discovery, profiling, serving, remediation, and evaluation assets for every platform.</p>
+            <span class="tag bad">skill sprawl</span>
+          </div>
+          <div class="choice">
+            <div class="choice-label">Option B</div>
+            <h3>One multi-platform skill</h3>
+            <p>Fewer skills, but prompts, scripts, and tests become branch-heavy. Tuning one target can regress another.</p>
+            <span class="tag bad">fragile coupling</span>
+          </div>
+          <div class="choice selected">
+            <div class="choice-label">Recommended</div>
+            <h3>Capability skill + adapter</h3>
+            <p>One practitioner workflow delegates deterministic platform work through stable contracts and lazy-loaded references.</p>
+            <span class="tag good">bounded change</span>
+          </div>
+        </div>
+        <aside class="notes">The recommendation keeps progressive disclosure at the workflow level. Platform-specific instructions can live as adapter resources loaded only when selected, but platform execution code does not live in prose-heavy sibling skills.</aside>
+      </section>
+
+      <section class="slide" data-title="Where Each Concern Lives" data-section="Modularity">
+        <p class="eyebrow">Component boundaries</p>
+        <h2>Put policy in the core and mechanism in adapters</h2>
+        <div class="grid-3">
+          <div class="card teal">
+            <h3>Capability skill</h3>
+            <ul class="small">
+              <li>User intent and stage workflow</li>
+              <li>Questions and explanations</li>
+              <li>Platform-neutral inputs/outputs</li>
+              <li>Progressive references</li>
+            </ul>
+          </div>
+          <div class="card blue">
+            <h3>Core services</h3>
+            <ul class="small">
+              <li>Contracts and canonical types</li>
+              <li>Capability and connection registries</li>
+              <li>Serving-plan policy</li>
+              <li>Run state and audit events</li>
+            </ul>
+          </div>
+          <div class="card green">
+            <h3>Platform adapter</h3>
+            <ul class="small">
+              <li>Metadata discovery</li>
+              <li>SQL and DDL rendering</li>
+              <li>Execution and error taxonomy</li>
+              <li>Lifecycle and verification</li>
+            </ul>
+          </div>
+        </div>
+        <div class="callout" style="margin-top:24px">A new platform should add a manifest, providers, fixtures, and a dossier—not new branches throughout the application.</div>
+        <aside class="notes">This is the practical modularity rule. Core policy decides whether a route is allowed; adapters prove whether a platform can execute it. Skills remain readable and stable because they consume capability contracts rather than driver APIs.</aside>
+      </section>
+
+      <section class="slide" data-title="Adapter Manifest and Contracts" data-section="Architecture">
+        <p class="eyebrow">Adapter contract</p>
+        <h2>Every platform declares capabilities and evidence</h2>
+        <div class="grid-2 cols-40-60">
+          <div class="codebox">platform_id: snowflake
+adapter_version: 1.0.0
+contract_version: 2
+providers:
+  metadata: SnowflakeMetadata
+  dialect: SnowflakeDialect
+  executor: SnowflakeExecutor
+  deployer: SnowflakeDeployer
+capabilities:
+  discovery: certified
+  native_view: preview
+  dbt_materialized: preview
+limits:
+  max_identifier_length: 255
+evidence:
+  conformance_run: run_...</div>
+          <div class="card">
+            <div class="contract"><span class="cap">MetadataProvider</span><span class="desc">List catalogs, namespaces, relations, columns, constraints, and statistics.</span><span class="tag info">required</span></div>
+            <div class="contract"><span class="cap">DialectProvider</span><span class="desc">Render identifiers, types, expressions, SELECT, DDL, and capability errors.</span><span class="tag info">required</span></div>
+            <div class="contract"><span class="cap">ExecutorProvider</span><span class="desc">Execute safely, cancel, normalize results, classify errors, and report reachability.</span><span class="tag info">required</span></div>
+            <div class="contract"><span class="cap">DeploymentProvider</span><span class="desc">Plan, apply, compensate, grant, inspect, and verify target artifacts.</span><span class="tag info">required</span></div>
+            <div class="contract"><span class="cap">TransferProvider</span><span class="desc">Land data with checkpoints, schema evolution, and reconciliation.</span><span class="tag warn">optional</span></div>
+          </div>
+        </div>
+        <aside class="notes">The manifest is machine-readable and versioned. Capabilities are declared with maturity and backed by a conformance run, not merely asserted. Optional providers keep discovery-only platforms lightweight.</aside>
+      </section>
+
+      <section class="slide" data-title="Connections, Identity, and Secrets" data-section="Foundation">
+        <p class="eyebrow">Connection foundation</p>
+        <h2>Separate platform identity from purpose-specific execution</h2>
+        <div class="flow">
+          <div class="flow-node teal"><strong>Platform instance</strong><span>vendor scope + endpoint identity</span></div>
+          <div class="flow-node blue"><strong>Execution profile</strong><span>secret ref + role + compute + session</span></div>
+          <div class="flow-node"><strong>Source binding</strong><span>project + readable namespaces</span></div>
+          <div class="flow-node green"><strong>Deployment target</strong><span>write profile + namespace + policy</span></div>
+        </div>
+        <div class="grid-3" style="margin-top:26px">
+          <div class="card"><h3>Store</h3><p class="small">Platform type, endpoint fingerprint, non-secret options, secret reference, ownership, status.</p></div>
+          <div class="card coral"><h3>Never store</h3><p class="small">Reusable plaintext passwords or DSNs in Neo4j, prompts, logs, generated dbt projects, or API reads.</p></div>
+          <div class="card"><h3>Resolve at runtime</h3><p class="small">The execution boundary resolves credentials only for the provider and purpose authorized for that run.</p></div>
+        </div>
+        <aside class="notes">One instance can have separate read, deployment, and administrative profiles. This prevents a discovery credential from becoming an accidental deployment credential and makes source-versus-target decisions explicit.</aside>
+      </section>
+
+      <section class="slide" data-title="Physical Metadata Identity" data-section="Foundation">
+        <p class="eyebrow">Metadata contract v2</p>
+        <h2><code>schema.table</code> is not a globally safe identity</h2>
+        <div class="grid-2 cols-40-60">
+          <div class="card coral">
+            <h3>Collision-prone</h3>
+            <div class="codebox" style="margin-top:14px">sales.orders</div>
+            <p class="small" style="margin-top:15px">It omits the platform instance, catalog/database, and source binding that make the relation resolvable.</p>
+          </div>
+          <div class="card teal">
+            <h3>Canonical physical identity</h3>
+            <div class="codebox" style="margin-top:14px">platform_instance_id
+catalog_or_database
+namespace
+relation_name
+relation_kind
+native_qualified_name
+raw_type
+canonical_type
+capability_evidence</div>
+          </div>
+        </div>
+        <div class="callout" style="margin-top:20px">Preserve native metadata losslessly; add canonical types for cross-platform reasoning. Never discard the raw type.</div>
+        <aside class="notes">Snowflake and Databricks make the catalog dimension unavoidable, but the same issue exists across accounts and servers for every platform. Native identity is required for deployment, lineage, reconciliation, and collision-free graph keys.</aside>
+      </section>
+
+      <section class="slide" data-title="Discovery Flow" data-section="Discovery">
+        <p class="eyebrow">Source onboarding</p>
+        <h2>Normalize output, preserve provenance</h2>
+        <div class="flow">
+          <div class="flow-node teal"><strong>Resolve profile</strong><span>purpose = discovery</span></div>
+          <div class="flow-node"><strong>Adapter introspection</strong><span>catalog APIs + bounded samples</span></div>
+          <div class="flow-node blue"><strong>Normalize</strong><span>physical contract + canonical types</span></div>
+          <div class="flow-node"><strong>Validate</strong><span>schema + completeness + privileges</span></div>
+          <div class="flow-node green"><strong>Load graph</strong><span>idempotent keys + evidence</span></div>
+        </div>
+        <div class="grid-3" style="margin-top:28px">
+          <div class="card"><h3>Adapter-owned</h3><p class="small">Catalog hierarchy, raw type parsing, quoting, statistics queries, error mapping.</p></div>
+          <div class="card"><h3>Core-owned</h3><p class="small">Output schema, canonical types, stable IDs, provenance, capability maturity.</p></div>
+          <div class="card amber"><h3>Fail visibly</h3><p class="small">Partial privileges and unsupported metadata are explicit findings, not empty successful results.</p></div>
+        </div>
+        <aside class="notes">Discovery should never install packages at runtime. Adapters ship with pinned dependencies. Every discovery artifact records which adapter, profile, and capability evidence produced it so later planning can determine whether the metadata remains trustworthy.</aside>
+      </section>
+
+      <section class="slide" data-title="When Platform Decisions Are Made" data-section="Planning">
+        <p class="eyebrow">Decision timing</p>
+        <h2>Bind decisions only when the necessary evidence exists</h2>
+        <div class="timeline">
+          <div class="phase"><span class="num">Step 1</span><h3>Register</h3><p>Choose platform type and create instance/profile references. Validate connectivity and identity.</p></div>
+          <div class="phase"><span class="num">Step 2</span><h3>Discover</h3><p>Bind source relations to physical identities and record capability evidence.</p></div>
+          <div class="phase"><span class="num">Step 3</span><h3>Model</h3><p>Keep product intent and transformations platform-neutral in the typed IR.</p></div>
+          <div class="phase"><span class="num">Step 4</span><h3>Plan serving</h3><p>Select target profile and strategy from reachability, policy, semantics, freshness, and cost.</p></div>
+          <div class="phase"><span class="num">Step 5</span><h3>Compile &amp; run</h3><p>Dialect follows the target. Deploy only after conformance and preflight checks.</p></div>
+        </div>
+        <aside class="notes">Do not choose a target dialect during source discovery. The model remains portable until serving planning. At that point the target, execution boundary, and required semantics are known, so compilation can be deterministic.</aside>
+      </section>
+
+      <section class="slide" data-title="Serving Strategy Decision Tree" data-section="Planning">
+        <p class="eyebrow">Serving planner</p>
+        <h2>Choose strategy from evidence, not preference alone</h2>
+        <div class="decision">
+          <div class="card teal">
+            <h3>Inputs</h3>
+            <ul class="small">
+              <li>Source physical identities</li>
+              <li>Target execution profile</li>
+              <li>IR semantic requirements</li>
+              <li>Freshness, policy, cost</li>
+              <li>Certified capabilities</li>
+            </ul>
+          </div>
+          <div class="diamond"><span>Can target resolve all sources?</span></div>
+          <div class="card">
+            <div class="route"><strong>Yes + virtual is valid</strong><span><span class="tag good">native view</span></span></div>
+            <div class="route"><strong>Yes + physical required</strong><span><span class="tag info">dbt / native materialized</span></span></div>
+            <div class="route"><strong>No + movement allowed</strong><span><span class="tag warn">transfer then dbt</span></span></div>
+            <div class="route"><strong>No + certified federation</strong><span><span class="tag info">federated view</span></span></div>
+            <div class="route"><strong>Artifact only</strong><span><span class="tag info">render only</span></span></div>
+            <div class="route"><strong>No viable route</strong><span><span class="tag bad">actionable error</span></span></div>
+          </div>
+        </div>
+        <div class="callout" style="margin-top:18px">The same vendor name does not prove a shared execution boundary.</div>
+        <aside class="notes">A Snowflake account and role may see several databases; two Snowflake accounts may not. The adapter must prove reachability through the selected target identity. Federation is an explicit certified capability, never a silent fallback.</aside>
+      </section>
+
+      <section class="slide" data-title="Same-Boundary Native View" data-section="Deployment patterns">
+        <p class="eyebrow">Pattern A</p>
+        <h2>Native view when the target can resolve every source</h2>
+        <div class="grid-2 cols-40-60">
+          <div class="card">
+            <h3>Qualification gates</h3>
+            <ul class="small">
+              <li>Reachability proven under target profile</li>
+              <li>All IR operations supported by target renderer</li>
+              <li>View semantics satisfy freshness and policy</li>
+              <li>DDL lifecycle and grants are certified</li>
+              <li>Post-deploy semantic checks pass</li>
+            </ul>
+          </div>
+          <div class="card soft">
+            <div class="flow" style="margin-top:44px">
+              <div class="flow-node"><strong>Source A</strong><span>target-visible namespace</span></div>
+              <div class="flow-node"><strong>Source B</strong><span>target-visible namespace</span></div>
+              <div class="flow-node teal"><strong>Target compiler</strong><span>IR → target SELECT + DDL</span></div>
+              <div class="flow-node green"><strong>Native view</strong><span>live, governed artifact</span></div>
+            </div>
+            <p class="small center muted" style="margin-top:30px">One execution boundary • no transport step • target-native query semantics</p>
+          </div>
+        </div>
+        <aside class="notes">This is the lowest-latency path and can preserve source freshness, but only if all inputs are visible and target view semantics match the product contract. MySQL DDL implicit commits, for example, change the compensation plan even though CREATE OR REPLACE VIEW exists.</aside>
+      </section>
+
+      <section class="slide" data-title="Cross-Platform Transfer Then Transform" data-section="Deployment patterns">
+        <p class="eyebrow">Pattern B</p>
+        <h2>When platforms differ, transport is a separate concern</h2>
+        <div class="flow" style="margin-top:26px">
+          <div class="flow-node coral"><strong>Source platform</strong><span>MySQL / Postgres / other</span></div>
+          <div class="flow-node"><strong>Transfer provider</strong><span>checkpoint + schema evolution</span></div>
+          <div class="flow-node blue"><strong>Target staging</strong><span>target-visible, reconciled data</span></div>
+          <div class="flow-node teal"><strong>dbt / native pipeline</strong><span>target-local transformation</span></div>
+          <div class="flow-node green"><strong>Data product</strong><span>verified target artifact</span></div>
+        </div>
+        <div class="grid-3" style="margin-top:30px">
+          <div class="card"><h3>Transfer proves</h3><p class="small">Offsets, retries, ordering expectations, schema changes, deletes, and source-to-stage reconciliation.</p></div>
+          <div class="card"><h3>Transformation proves</h3><p class="small">Target SQL compilation, model ordering, tests, target grants, and product semantics.</p></div>
+          <div class="card coral"><h3>Do not conflate</h3><p class="small">dbt transforms relations already visible to its target. It is not the heterogeneous transport layer.</p></div>
+        </div>
+        <aside class="notes">This separation is operationally important. A failed transfer has different checkpoints and recovery semantics from a failed model build. It also lets a MySQL source feed a certified Snowflake or Databricks target even while MySQL dbt materialization remains unsupported.</aside>
+      </section>
+
+      <section class="slide" data-title="Compiler and Typed IR" data-section="Dialect safety">
+        <p class="eyebrow">Compilation architecture</p>
+        <h2>Transformation intent is typed before SQL exists</h2>
+        <div class="flow">
+          <div class="flow-node teal"><strong>Product mapping</strong><span>joins + rules + policies</span></div>
+          <div class="flow-node blue"><strong>Typed IR</strong><span>names, types, nullability, semantics</span></div>
+          <div class="flow-node"><strong>Capability analysis</strong><span>supported? exact? lossy?</span></div>
+          <div class="flow-node"><strong>Target renderer</strong><span>SELECT + DDL + dbt artifacts</span></div>
+          <div class="flow-node green"><strong>Verification</strong><span>parse → compile → execute → compare</span></div>
+        </div>
+        <div class="grid-2" style="margin-top:28px">
+          <div class="card">
+            <h3>SQLGlot’s role</h3>
+            <p class="small">Parse, inspect ASTs, validate target syntax, and perform bounded translation with unsupported operations raised as errors.</p>
+          </div>
+          <div class="card amber">
+            <h3>SQLGlot is not the proof</h3>
+            <p class="small">Best-effort translation cannot establish semantic equivalence. Schema-aware target compilation and live fixtures remain mandatory.</p>
+          </div>
+        </div>
+        <div class="source-line">Source: <a href="https://github.com/tobymao/sqlglot" target="_blank" rel="noreferrer">SQLGlot repository and documentation</a> (MIT).</div>
+        <aside class="notes">The typed IR prevents the common mistake of using one platform’s SQL as the canonical representation. SQLGlot is valuable infrastructure but should run in fail-closed mode and be paired with schema information and target execution tests.</aside>
+      </section>
+
+      <section class="slide" data-title="Dialect Risk Is Semantic" data-section="Dialect safety">
+        <p class="eyebrow">Dialect due diligence</p>
+        <h2>Correct text is not the same as correct behavior</h2>
+        <table class="matrix">
+          <thead><tr><th style="width:19%">Risk area</th><th>Cross-platform difference</th><th style="width:31%">Required evidence</th></tr></thead>
+          <tbody>
+            <tr><td class="name">Identifiers</td><td>Quoting, case folding, qualification depth, reserved words, length limits</td><td>Round-trip names and live catalog lookup</td></tr>
+            <tr><td class="name">Types &amp; casts</td><td>Precision, timezone, semi-structured values, binary, invalid-cast behavior</td><td>Typed fixture corpus and boundary values</td></tr>
+            <tr><td class="name">Null &amp; strings</td><td>Concatenation, empty strings, collation, comparison, trimming</td><td>Semantic result comparison</td></tr>
+            <tr><td class="name">Joins &amp; windows</td><td>Ambiguous names, frame defaults, QUALIFY support, ordering determinism</td><td>Join/window golden cases executed live</td></tr>
+            <tr><td class="name">DDL lifecycle</td><td>Transactional behavior, replace semantics, grants, dependencies, compensation</td><td>Failure injection and rollback rehearsal</td></tr>
+            <tr><td class="name">Hashing &amp; policy</td><td>Functions, encodings, return types, security strength</td><td>Known-answer tests; no weaker fallback</td></tr>
+          </tbody>
+        </table>
+        <div class="callout" style="margin-top:18px">Certification requires semantic fixtures on a live target—not merely emitted SQL or parser acceptance.</div>
+        <aside class="notes">This slide is the response to the iterative Postgres experience. The test corpus must target values that expose dialect differences: nulls, time zones, precision edges, Unicode, duplicate join keys, nondeterministic ordering, and DDL failure points.</aside>
+      </section>
+
+      <section class="slide" data-title="Deployment Is a State Machine" data-section="Operations">
+        <p class="eyebrow">Controlled execution</p>
+        <h2>Deployment is an auditable run, not one SQL call</h2>
+        <div class="lifecycle">
+          <div class="state"><strong>Planned</strong><span>immutable target + strategy</span></div>
+          <div class="state"><strong>Compiled</strong><span>artifacts + checksums</span></div>
+          <div class="state"><strong>Preflighted</strong><span>capability + grants + reachability</span></div>
+          <div class="state active-state"><strong>Applying</strong><span>provider lifecycle</span></div>
+          <div class="state"><strong>Verifying</strong><span>structure + semantics</span></div>
+          <div class="state"><strong>Succeeded</strong><span>evidence + lineage</span></div>
+        </div>
+        <div class="grid-3" style="margin-top:26px">
+          <div class="card"><h3>Immutable run inputs</h3><p class="small">IR version, source bindings, target profile, adapter versions, artifacts, policy decision.</p></div>
+          <div class="card"><h3>Platform lifecycle</h3><p class="small">Transaction where available; otherwise staged apply, compensation, and explicit partial-failure state.</p></div>
+          <div class="card coral"><h3>No ambiguous success</h3><p class="small">A created object that fails verification is not deployed. Record failure and execute the provider’s recovery plan.</p></div>
+        </div>
+        <aside class="notes">Different databases have different DDL atomicity. The common state machine preserves a consistent user and API contract while each deployment provider implements the correct transaction or compensation mechanism.</aside>
+      </section>
+
+      <section class="slide" data-title="Workbench UI Journey" data-section="Experience">
+        <p class="eyebrow">UI placement</p>
+        <h2>Expose evidence and constraints at the point of choice</h2>
+        <div class="ui-shell">
+          <div class="ui-nav">
+            <div class="ui-logo">Data Workbench</div>
+            <div class="ui-nav-item">Products</div>
+            <div class="ui-nav-item on">Sources &amp; targets</div>
+            <div class="ui-nav-item">Mappings</div>
+            <div class="ui-nav-item">Deployments</div>
+            <div class="ui-nav-item">Evidence</div>
+          </div>
+          <div class="ui-main">
+            <div class="ui-top"><span class="ui-title">Plan serving</span><span class="ui-button">Compile plan</span></div>
+            <div class="ui-steps"><div class="ui-step">1 · Product</div><div class="ui-step">2 · Sources</div><div class="ui-step on">3 · Target &amp; strategy</div><div class="ui-step">4 · Review</div></div>
+            <div class="grid-2">
+              <div class="ui-panel">
+                <div class="ui-row"><span class="ui-key">Target</span><span class="ui-value">Snowflake · analytics_prod</span></div>
+                <div class="ui-row"><span class="ui-key">Profile</span><span class="ui-value">deployment_writer · COMPUTE_WH</span></div>
+                <div class="ui-row"><span class="ui-key">Strategy</span><span class="ui-value">Transfer then dbt materialized</span></div>
+                <div class="ui-row"><span class="ui-key">Dialect</span><span class="ui-value">Snowflake · derived from target</span></div>
+              </div>
+              <div class="ui-panel">
+                <div class="ui-row"><span class="ui-key">Discovery</span><span class="ui-value"><span class="tag good">certified</span></span></div>
+                <div class="ui-row"><span class="ui-key">dbt materialize</span><span class="ui-value"><span class="tag warn">preview</span> restrictions available</span></div>
+                <div class="ui-row"><span class="ui-key">Reachability</span><span class="ui-value">2 sources require staging</span></div>
+                <div class="ui-row"><span class="ui-key">Plan evidence</span><span class="ui-value">12 checks passed · 1 warning</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <aside class="notes">The UI should never show a platform as globally enabled. It shows capability maturity, restrictions, reachability, and why the planner selected a strategy. Dialect is displayed as derived information, not a conflicting control.</aside>
+      </section>
+
+      <section class="slide" data-title="Headless and API Parity" data-section="Experience">
+        <p class="eyebrow">Headless operation</p>
+        <h2>The API uses the same plan contract as the UI</h2>
+        <div class="grid-2 cols-60-40">
+          <div class="codebox">POST /v2/serving-plans
+{
+  "product_version": "dpv_421",
+  "source_bindings": ["src_mysql_orders"],
+  "target_profile": "snowflake_prod_writer",
+  "intent": {
+    "freshness": "daily",
+    "physical": true
+  }
+}
+
+202 Accepted
+{
+  "plan_id": "plan_8031",
+  "strategy": "transfer_then_dbt",
+  "dialect": "snowflake",
+  "capability_snapshot": "caps_119",
+  "state": "planned"
+}</div>
+          <div>
+            <div class="card teal"><h3>Idempotent</h3><p class="small">Client request keys and immutable plan versions prevent duplicate deployment.</p></div>
+            <div class="card" style="margin-top:12px"><h3>Inspectable</h3><p class="small">Plan rationale, restrictions, artifacts, events, and evidence are retrievable.</p></div>
+            <div class="card" style="margin-top:12px"><h3>Event-driven</h3><p class="small">Long-running discovery, transfer, dbt, and verification runs expose status and cancellation.</p></div>
+          </div>
+        </div>
+        <aside class="notes">Headless clients should not recreate the serving decision logic. They provide target and intent, receive a deterministic plan, then execute that plan through idempotent run APIs. UI and automation therefore cannot diverge.</aside>
+      </section>
+
+      <section class="slide" data-title="Open-Source Selection Policy" data-section="Technology">
+        <p class="eyebrow">Technology governance</p>
+        <h2>A strict permissive-license and community-health gate</h2>
+        <div class="grid-3">
+          <div class="card green">
+            <h3>Allowed licenses</h3>
+            <p class="small">Apache-2.0, MIT, BSD-2-Clause, BSD-3-Clause, PostgreSQL, and comparable permissive licenses.</p>
+            <span class="tag good">allowlist</span>
+          </div>
+          <div class="card coral">
+            <h3>Not accepted</h3>
+            <p class="small">GPL, LGPL, AGPL, SSPL, BSL, ELv2, or other source-available/non-OSI dependency paths.</p>
+            <span class="tag bad">including transitive</span>
+          </div>
+          <div class="card blue">
+            <h3>Community evidence</h3>
+            <p class="small">Recent maintenance plus multiple contributors, releases or active commits, responsive issues, and meaningful downstream use.</p>
+            <span class="tag info">reviewed annually</span>
+          </div>
+        </div>
+        <div class="callout" style="margin-top:26px">License approval is not platform certification. Each dependency must also pass security, compatibility, performance, and operational qualification.</div>
+        <div class="grid-2" style="margin-top:18px">
+          <div class="card soft"><h3>Build gate</h3><p class="small">Generate SBOM, scan direct and transitive licenses, pin versions, verify provenance, and block policy violations.</p></div>
+          <div class="card soft"><h3>Lifecycle gate</h3><p class="small">Record owner, supported version envelope, release cadence, end-of-life trigger, and replacement plan.</p></div>
+        </div>
+        <aside class="notes">This is intentionally stricter than simply checking the top-level project license. Connector and adapter dependency trees matter. The policy should run in CI and be repeated at every dependency update.</aside>
+      </section>
+
+      <section class="slide" data-title="Proposed Core Technology Stack" data-section="Technology">
+        <p class="eyebrow">Proposed baseline</p>
+        <h2>Permissive, active components with narrow responsibilities</h2>
+        <table class="matrix compact">
+          <thead><tr><th style="width:18%">Technology</th><th style="width:13%">License</th><th>Architecture role</th><th style="width:25%">Community evidence snapshot</th></tr></thead>
+          <tbody>
+            <tr><td class="name"><a href="https://github.com/fastapi/fastapi" target="_blank" rel="noreferrer">FastAPI</a></td><td>MIT</td><td>Existing REST/application service foundation</td><td>101k stars; release Jul 2026</td></tr>
+            <tr><td class="name"><a href="https://github.com/pydantic/pydantic" target="_blank" rel="noreferrer">Pydantic</a></td><td>MIT</td><td>Typed provider, plan, run, and metadata contracts</td><td>28k stars; release May 2026</td></tr>
+            <tr><td class="name"><a href="https://github.com/python-jsonschema/jsonschema" target="_blank" rel="noreferrer">jsonschema</a></td><td>MIT</td><td>Versioned manifests and portable JSON validation</td><td>5k stars; release Jan 2026</td></tr>
+            <tr><td class="name"><a href="https://github.com/tobymao/sqlglot" target="_blank" rel="noreferrer">SQLGlot</a></td><td>MIT</td><td>SQL AST parsing, inspection, validation, bounded translation</td><td>9k stars; active commits</td></tr>
+            <tr><td class="name"><a href="https://github.com/dbt-labs/dbt-core" target="_blank" rel="noreferrer">dbt Core</a></td><td>Apache-2.0</td><td>Target-local transformation and materialization runtime</td><td>12k stars; release May 2026</td></tr>
+            <tr><td class="name"><a href="https://github.com/apache/arrow" target="_blank" rel="noreferrer">Apache Arrow / PyArrow</a></td><td>Apache-2.0</td><td>Typed tabular interchange across executor providers</td><td>16k stars; release Jul 2026</td></tr>
+            <tr><td class="name"><a href="https://github.com/pytest-dev/pytest" target="_blank" rel="noreferrer">pytest</a></td><td>MIT</td><td>Adapter conformance and semantic fixture harness</td><td>14k stars; release Jun 2026</td></tr>
+          </tbody>
+        </table>
+        <div class="source-line">Activity snapshot: 16 Jul 2026. Linked primary repositories provide license, releases, contributors, and current activity. Counts are directional, not selection criteria by themselves.</div>
+        <aside class="notes">These components form a deliberately small baseline. Pydantic owns in-process typed contracts; JSON Schema gives language-neutral manifest validation. SQLGlot is bounded to AST work. Arrow gives executors one normalized result representation. dbt is target-local, not transport.</aside>
+      </section>
+
+      <section class="slide" data-title="Platform Drivers and dbt Adapters" data-section="Technology">
+        <p class="eyebrow">Platform technology map</p>
+        <h2>License screen passes do not bypass platform certification</h2>
+        <table class="matrix compact">
+          <thead><tr><th style="width:14%">Platform</th><th style="width:22%">Discovery / execution</th><th style="width:22%">Materialization</th><th>Status under strict policy</th></tr></thead>
+          <tbody>
+            <tr>
+              <td class="name">PostgreSQL</td>
+              <td><a href="https://github.com/MagicStack/asyncpg" target="_blank" rel="noreferrer">asyncpg</a><br>Apache-2.0 · active</td>
+              <td>Native provider initially<br>dbt path requires remediation</td>
+              <td><span class="tag good">new executor allowed</span><br><span class="tag warn" style="margin-top:5px">legacy dbt conditional</span></td>
+            </tr>
+            <tr>
+              <td class="name">MySQL</td>
+              <td><a href="https://github.com/PyMySQL/PyMySQL" target="_blank" rel="noreferrer">PyMySQL</a><br>MIT · active</td>
+              <td>Native view provider<br>No approved dbt adapter today</td>
+              <td><span class="tag good">discover/read candidate</span><br><span class="tag bad" style="margin-top:5px">dbt unavailable</span></td>
+            </tr>
+            <tr>
+              <td class="name">Snowflake</td>
+              <td><a href="https://github.com/snowflakedb/snowflake-connector-python" target="_blank" rel="noreferrer">Snowflake Connector</a><br>Apache-2.0 · official/active</td>
+              <td><a href="https://github.com/dbt-labs/dbt-adapters" target="_blank" rel="noreferrer">dbt-snowflake</a><br>Apache-2.0</td>
+              <td><span class="tag good">license/community pass</span><br><span class="tag info" style="margin-top:5px">qualify next</span></td>
+            </tr>
+            <tr>
+              <td class="name">Databricks</td>
+              <td><a href="https://github.com/databricks/databricks-sql-python" target="_blank" rel="noreferrer">Databricks SQL Connector</a><br>Apache-2.0 · official/active</td>
+              <td><a href="https://github.com/databricks/dbt-databricks" target="_blank" rel="noreferrer">dbt-databricks</a><br>Apache-2.0</td>
+              <td><span class="tag good">license/community pass</span><br><span class="tag info" style="margin-top:5px">qualify next</span></td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="source-line">“Pass” means the proposed component meets the top-level license/community screen as of 16 Jul 2026. It does not mean the Workbench capability is certified.</div>
+        <aside class="notes">The provider SPI lets asyncpg remain asyncio-native without leaking that choice into the core. Snowflake and Databricks have strong official connectors and active Apache-licensed dbt adapters. MySQL’s permissive path currently stops before dbt materialization.</aside>
+      </section>
+
+      <section class="slide" data-title="License Policy Changes the Roadmap" data-section="Technology">
+        <p class="eyebrow">Important qualification gaps</p>
+        <h2>Three dependency paths cannot enter the approved baseline</h2>
+        <div class="grid-3">
+          <div class="card coral">
+            <h3>MySQL Connector/Python</h3>
+            <p class="small">GPLv2 with a Universal FOSS Exception. It is not a permissive license under this policy.</p>
+            <span class="tag bad">use PyMySQL instead</span>
+          </div>
+          <div class="card coral">
+            <h3>dbt-mysql</h3>
+            <p class="small">Apache headline license, but experimental/inactive and depends on the GPL connector.</p>
+            <span class="tag bad">not approved</span>
+          </div>
+          <div class="card amber">
+            <h3>Current dbt-postgres chain</h3>
+            <p class="small"><code>dbt-postgres</code> requires <code>psycopg2-binary</code>; psycopg2 is LGPL-3.0-or-later.</p>
+            <span class="tag warn">legacy remediation</span>
+          </div>
+        </div>
+        <div class="callout" style="margin-top:24px">Result: MySQL discovery/read/native views can proceed; MySQL dbt materialization cannot. Existing PostgreSQL dbt remains compatibility-only until a permissive route is qualified.</div>
+        <div class="source-line">Sources: <a href="https://github.com/mysql/mysql-connector-python/blob/trunk/LICENSE.txt" target="_blank" rel="noreferrer">MySQL connector license</a> · <a href="https://github.com/dbeatty10/dbt-mysql" target="_blank" rel="noreferrer">dbt-mysql status</a> · <a href="https://github.com/dbt-labs/dbt-adapters/blob/main/dbt-postgres/pyproject.toml" target="_blank" rel="noreferrer">dbt-postgres dependency</a> · <a href="https://github.com/psycopg/psycopg2/blob/master/LICENSE" target="_blank" rel="noreferrer">psycopg2 license</a></div>
+        <aside class="notes">This is the most important technology caveat. A top-level Apache license is insufficient when a required runtime dependency fails the policy. The architecture still supports these capabilities later, but the roadmap must not imply an approved adapter exists today.</aside>
+      </section>
+
+      <section class="slide" data-title="Optional Permissive Components" data-section="Technology">
+        <p class="eyebrow">Qualified candidates, not default dependencies</p>
+        <h2>Add optional providers only when a route requires them</h2>
+        <table class="matrix compact">
+          <thead><tr><th style="width:21%">Technology</th><th style="width:14%">License</th><th>Potential provider role</th><th style="width:25%">Adoption posture</th></tr></thead>
+          <tbody>
+            <tr><td class="name"><a href="https://github.com/open-telemetry/opentelemetry-python" target="_blank" rel="noreferrer">OpenTelemetry Python</a></td><td>Apache-2.0</td><td>Traces, metrics, and context for discovery/deployment runs</td><td><span class="tag good">baseline observability</span></td></tr>
+            <tr><td class="name"><a href="https://github.com/OpenLineage/OpenLineage" target="_blank" rel="noreferrer">OpenLineage</a></td><td>Apache-2.0</td><td>Interoperable run/job/dataset events alongside graph provenance</td><td><span class="tag info">optional integration</span></td></tr>
+            <tr><td class="name"><a href="https://github.com/apache/seatunnel" target="_blank" rel="noreferrer">Apache SeaTunnel</a></td><td>Apache-2.0</td><td>Batch/stream transfer provider candidate</td><td><span class="tag warn">connector qualification</span></td></tr>
+            <tr><td class="name"><a href="https://github.com/debezium/debezium" target="_blank" rel="noreferrer">Debezium</a></td><td>Apache-2.0</td><td>CDC capture component; not a complete product mover by itself</td><td><span class="tag warn">route-specific</span></td></tr>
+            <tr><td class="name"><a href="https://github.com/trinodb/trino" target="_blank" rel="noreferrer">Trino</a></td><td>Apache-2.0</td><td>Explicit FederationProvider for approved use cases</td><td><span class="tag info">defer; not fallback</span></td></tr>
+            <tr><td class="name"><a href="https://github.com/agentskills/agentskills" target="_blank" rel="noreferrer">Agent Skills specification</a></td><td>Apache-2.0 code<br>CC-BY-4.0 docs</td><td>Progressive workflow packaging; no runtime platform logic</td><td><span class="tag good">format alignment</span></td></tr>
+          </tbody>
+        </table>
+        <div class="source-line">All listed projects showed active maintenance and communities at the 16 Jul 2026 review. Every selected connector and transitive dependency still requires its own scan.</div>
+        <aside class="notes">Optional means installed and operated only when justified. SeaTunnel is a candidate umbrella transfer runtime; Debezium is useful for CDC capture. Trino is deliberately deferred because federation adds security, performance, and semantic complexity.</aside>
+      </section>
+
+      <section class="slide" data-title="Conformance Before Certification" data-section="Quality">
+        <p class="eyebrow">Test strategy</p>
+        <h2>One adapter contract, five layers of evidence</h2>
+        <div class="grid-2 cols-40-60">
+          <div class="stack">
+            <div class="card coral center"><strong>5 · Failure injection</strong><br><span class="tiny">timeouts, partial DDL, cancellation, recovery</span></div>
+            <div class="card amber center"><strong>4 · End-to-end routes</strong><br><span class="tiny">discover → model → deploy → verify</span></div>
+            <div class="card green center"><strong>3 · Live target semantics</strong><br><span class="tiny">fixtures and result equivalence</span></div>
+            <div class="card blue center"><strong>2 · Compile and golden artifacts</strong><br><span class="tiny">SQL, DDL, profiles, manifests</span></div>
+            <div class="card teal center"><strong>1 · Contract tests</strong><br><span class="tiny">provider behavior and error taxonomy</span></div>
+          </div>
+          <div>
+            <table class="matrix compact">
+              <thead><tr><th>Matrix axis</th><th>Minimum coverage</th></tr></thead>
+              <tbody>
+                <tr><td class="name">Platforms</td><td>Postgres compatibility + each new adapter</td></tr>
+                <tr><td class="name">Transformations</td><td>casts, concat, coalesce, case, lookup, masks, hashes, windows, joins, shape, SCD</td></tr>
+                <tr><td class="name">Data edges</td><td>nulls, Unicode, time zones, precision, duplicates, empty relations, large identifiers</td></tr>
+                <tr><td class="name">Lifecycle</td><td>create, replace, grant, inspect, compensate, rerun, drift</td></tr>
+                <tr><td class="name">Security</td><td>least privilege, secret redaction, injection, unsafe SQL, audit completeness</td></tr>
+                <tr><td class="name">Operations</td><td>timeouts, cancellation, retries, cost limits, telemetry, runbooks</td></tr>
+              </tbody>
+            </table>
+            <div class="callout small" style="margin-top:15px">Certification artifact: versioned platform dossier + conformance report + restrictions + rollback evidence.</div>
+          </div>
+        </div>
+        <aside class="notes">The same test suite runs against all adapters. Golden SQL catches rendering drift; live tests catch semantic drift. PostgreSQL remains in every matrix, so expanding another platform cannot silently change the established behavior.</aside>
+      </section>
+
+      <section class="slide" data-title="Reusable Platform Onboarding Dossier" data-section="Quality">
+        <p class="eyebrow">Repeatable onboarding template</p>
+        <h2>Every platform advances through the same eleven gates</h2>
+        <div class="grid-2" style="gap:14px">
+          <div class="card">
+            <div class="contract"><span class="cap">0 · Charter</span><span class="desc">Bounded support slice, owners, users, and explicit non-goals</span><span class="tag info">scope</span></div>
+            <div class="contract"><span class="cap">1 · Evidence</span><span class="desc">Namespaces, types, SQL/DDL semantics, auth, lifecycle, limits</span><span class="tag info">research</span></div>
+            <div class="contract"><span class="cap">2 · Package</span><span class="desc">Manifest, pinned permissive dependencies, connection provider</span><span class="tag info">supply chain</span></div>
+            <div class="contract"><span class="cap">3 · Discover</span><span class="desc">Metadata provider, canonical mapping, identity, privilege behavior</span><span class="tag info">source</span></div>
+            <div class="contract"><span class="cap">4 · Operate</span><span class="desc">Read, profile, data quality, value resolution, remediation</span><span class="tag info">runtime</span></div>
+            <div class="contract"><span class="cap">5 · Render</span><span class="desc">Typed IR coverage, target SQL/DDL, golden and live semantics</span><span class="tag info">compiler</span></div>
+          </div>
+          <div class="card">
+            <div class="contract"><span class="cap">6 · Native view</span><span class="desc">Reachability, lifecycle, grants, verification, compensation</span><span class="tag info">virtual</span></div>
+            <div class="contract"><span class="cap">7 · Materialize</span><span class="desc">Approved dbt/target runtime, profiles, tests, reconciliation</span><span class="tag info">physical</span></div>
+            <div class="contract"><span class="cap">8 · Transfer</span><span class="desc">Checkpointing, schema evolution, retries, delete handling</span><span class="tag info">movement</span></div>
+            <div class="contract"><span class="cap">9 · Parity</span><span class="desc">UI, REST, MCP, CLI, operator guidance, visible restrictions</span><span class="tag info">experience</span></div>
+            <div class="contract"><span class="cap">10 · Certify</span><span class="desc">Security, conformance, performance, runbooks, rollback evidence</span><span class="tag good">release</span></div>
+            <div class="callout small" style="margin-top:12px">Output: a versioned dossier that states exactly which capability-platform pairs are certified, restricted, or unsupported.</div>
+          </div>
+        </div>
+        <aside class="notes">This is the reusable meta-plan. A platform name recognized by a SQL parser cannot skip any gate. Discovery-only onboarding can stop after its required gates, while later capabilities extend the same dossier rather than claiming blanket support.</aside>
+      </section>
+
+      <section class="slide" data-title="Phased Rollout" data-section="Delivery">
+        <p class="eyebrow">Implementation sequence</p>
+        <h2>Build the platform once; onboard capabilities incrementally</h2>
+        <div class="timeline">
+          <div class="phase"><span class="num">Phase 0</span><h3>Characterize</h3><p>Freeze Postgres behavior with golden artifacts, semantic fixtures, and live regression. Establish license/SBOM policy.</p></div>
+          <div class="phase"><span class="num">Phase 1</span><h3>Foundation</h3><p>Connection registry, secret refs, physical identity v2, canonical types, capability registry, provider SPI.</p></div>
+          <div class="phase"><span class="num">Phase 2</span><h3>Discovery</h3><p>Qualify metadata and read providers: MySQL first, then Snowflake and Databricks. Expose capability maturity.</p></div>
+          <div class="phase"><span class="num">Phase 3</span><h3>Compile &amp; serve</h3><p>Typed IR, target renderers, native view lifecycle, approved Snowflake/Databricks dbt adapters.</p></div>
+          <div class="phase"><span class="num">Phase 4</span><h3>Move &amp; operate</h3><p>Transfer provider, reconciliation, run telemetry, recovery drills, then optional federation evaluation.</p></div>
+        </div>
+        <div class="callout" style="margin-top:18px">Release capability-platform pairs independently; keep unsupported routes unavailable rather than weakening the contract.</div>
+        <aside class="notes">MySQL is useful as the first discovery adapter because the repository already contains an orphaned experiment, but that code must be repackaged and tested. Snowflake and Databricks then exercise multi-catalog identity and approved dbt target paths.</aside>
+      </section>
+
+      <section class="slide" data-title="What This Architecture Buys Us" data-section="Conclusion">
+        <p class="eyebrow">Conclusion</p>
+        <h2>One onboarding template, controlled variation</h2>
+        <div class="grid-2">
+          <div class="card teal"><h3>For practitioners</h3><p class="small">Stable workflows, visible support levels, explainable serving plans, and the same behavior in UI and headless automation.</p></div>
+          <div class="card blue"><h3>For platform engineers</h3><p class="small">Narrow provider contracts, isolated dependencies, reusable conformance suites, and independent adapter versioning.</p></div>
+          <div class="card green"><h3>For architecture &amp; risk</h3><p class="small">Explicit execution boundaries, fail-closed semantics, auditable runs, and a strict permissive-license supply chain.</p></div>
+          <div class="card amber"><h3>For delivery</h3><p class="small">Incremental capability releases without pretending every platform supports every deployment route.</p></div>
+        </div>
+        <div class="big-thesis" style="margin-top:28px; font-size:35px">The durable unit of extension is a certified capability provider—not a vendor branch in every workflow.</div>
+        <p class="small muted">Source report: <a href="../../research/2026-07-16-multi-platform-onboarding-meta-plan.md">Multi-Platform Data Capability Onboarding Meta-Plan</a></p>
+        <aside class="notes">Close on the unit of extension. This design makes future platforms routine: a dossier, manifest, providers, fixtures, and certification evidence. It does not require restructuring practitioner workflows or weakening existing Postgres guarantees.</aside>
+      </section>
+
+    </div>
+  </main>
+
+  <nav id="controls" aria-label="Presentation controls">
+    <button id="prev" type="button" aria-label="Previous slide" title="Previous slide (Left arrow)">←</button>
+    <button id="next" type="button" aria-label="Next slide" title="Next slide (Right arrow)">→</button>
+    <button id="overview-btn" type="button" aria-label="Slide overview" title="Overview (O)">▦</button>
+    <button id="notes-btn" type="button" aria-label="Toggle speaker notes" title="Speaker notes (N)">N</button>
+    <button id="fullscreen-btn" type="button" aria-label="Toggle fullscreen" title="Fullscreen (F)">⛶</button>
+    <button id="help-btn" type="button" aria-label="Keyboard help" title="Keyboard help (?)">?</button>
+  </nav>
+
+  <div id="overview" role="dialog" aria-modal="true" aria-label="Slide overview">
+    <h2>Slide overview</h2>
+    <div id="overview-grid"></div>
+  </div>
+
+  <aside id="notes-panel" aria-live="polite"></aside>
+
+  <div id="help" role="dialog" aria-modal="true" aria-label="Keyboard shortcuts">
+    <div class="help-card">
+      <h2>Keyboard shortcuts</h2>
+      <div class="help-grid">
+        <span class="help-key">→ / Space / PgDn</span><span class="help-desc">Next slide</span>
+        <span class="help-key">← / PgUp</span><span class="help-desc">Previous slide</span>
+        <span class="help-key">Home / End</span><span class="help-desc">First / last slide</span>
+        <span class="help-key">O</span><span class="help-desc">Slide overview</span>
+        <span class="help-key">N</span><span class="help-desc">Speaker notes</span>
+        <span class="help-key">F</span><span class="help-desc">Fullscreen</span>
+        <span class="help-key">P</span><span class="help-desc">Print / save as PDF</span>
+        <span class="help-key">Esc</span><span class="help-desc">Close overlay</span>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      'use strict';
+
+      var slides = Array.prototype.slice.call(document.querySelectorAll('.slide'));
+      var stage = document.getElementById('stage');
+      var viewport = document.getElementById('viewport');
+      var progress = document.getElementById('progress');
+      var prevButton = document.getElementById('prev');
+      var nextButton = document.getElementById('next');
+      var overview = document.getElementById('overview');
+      var overviewGrid = document.getElementById('overview-grid');
+      var notesPanel = document.getElementById('notes-panel');
+      var help = document.getElementById('help');
+      var current = 0;
+
+      function hashIndex() {
+        var match = window.location.hash.match(/^#slide-(\d+)$/);
+        return match ? Math.max(0, Math.min(slides.length - 1, Number(match[1]) - 1)) : 0;
+      }
+
+      function fitStage() {
+        var scale = Math.min(window.innerWidth / 1280, window.innerHeight / 720);
+        var left = (window.innerWidth - 1280 * scale) / 2;
+        var top = (window.innerHeight - 720 * scale) / 2;
+        stage.style.transform = 'translate(' + left + 'px,' + top + 'px) scale(' + scale + ')';
+      }
+
+      function updateNotes() {
+        var notes = slides[current].querySelector('.notes');
+        notesPanel.textContent = notes ? notes.textContent.trim() : 'No speaker notes for this slide.';
+      }
+
+      function show(index, updateHash) {
+        current = Math.max(0, Math.min(slides.length - 1, index));
+        slides.forEach(function (slide, i) {
+          var active = i === current;
+          slide.classList.toggle('active', active);
+          slide.setAttribute('aria-hidden', active ? 'false' : 'true');
+        });
+        prevButton.disabled = current === 0;
+        nextButton.disabled = current === slides.length - 1;
+        progress.style.width = ((current + 1) / slides.length * 100) + '%';
+        updateNotes();
+        Array.prototype.forEach.call(overviewGrid.children, function (item, i) {
+          item.classList.toggle('current', i === current);
+        });
+        if (updateHash !== false) {
+          history.replaceState(null, '', '#slide-' + (current + 1));
+        }
+        document.title = (current + 1) + '/' + slides.length + ' · ' + slides[current].dataset.title;
+      }
+
+      function closeOverlays() {
+        overview.classList.remove('open');
+        help.classList.remove('open');
+      }
+
+      function toggleOverview() {
+        help.classList.remove('open');
+        overview.classList.toggle('open');
+      }
+
+      function toggleNotes() {
+        notesPanel.classList.toggle('open');
+      }
+
+      function toggleFullscreen() {
+        if (!document.fullscreenElement) {
+          document.documentElement.requestFullscreen().catch(function () {});
+        } else {
+          document.exitFullscreen();
+        }
+      }
+
+      slides.forEach(function (slide, i) {
+        var number = document.createElement('span');
+        number.className = 'slide-no';
+        number.textContent = String(i + 1).padStart(2, '0') + ' / ' + slides.length;
+        slide.appendChild(number);
+
+        var item = document.createElement('button');
+        item.type = 'button';
+        item.className = 'overview-item';
+        item.innerHTML = '<span class="ov-num">' + String(i + 1).padStart(2, '0') + '</span><span class="ov-title">' + slide.dataset.title + '</span>';
+        item.addEventListener('click', function () {
+          show(i);
+          overview.classList.remove('open');
+        });
+        overviewGrid.appendChild(item);
+      });
+
+      prevButton.addEventListener('click', function () { show(current - 1); });
+      nextButton.addEventListener('click', function () { show(current + 1); });
+      document.getElementById('overview-btn').addEventListener('click', toggleOverview);
+      document.getElementById('notes-btn').addEventListener('click', toggleNotes);
+      document.getElementById('fullscreen-btn').addEventListener('click', toggleFullscreen);
+      document.getElementById('help-btn').addEventListener('click', function () {
+        overview.classList.remove('open');
+        help.classList.toggle('open');
+      });
+
+      overview.addEventListener('click', function (event) {
+        if (event.target === overview) overview.classList.remove('open');
+      });
+      help.addEventListener('click', function (event) {
+        if (event.target === help) help.classList.remove('open');
+      });
+
+      window.addEventListener('resize', fitStage);
+      window.addEventListener('hashchange', function () { show(hashIndex(), false); });
+      document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape') {
+          closeOverlays();
+          notesPanel.classList.remove('open');
+          return;
+        }
+        if (overview.classList.contains('open') || help.classList.contains('open')) return;
+        if (event.key === 'ArrowRight' || event.key === 'PageDown' || event.key === ' ') {
+          event.preventDefault();
+          show(current + 1);
+        } else if (event.key === 'ArrowLeft' || event.key === 'PageUp') {
+          event.preventDefault();
+          show(current - 1);
+        } else if (event.key === 'Home') {
+          event.preventDefault();
+          show(0);
+        } else if (event.key === 'End') {
+          event.preventDefault();
+          show(slides.length - 1);
+        } else if (event.key.toLowerCase() === 'o') {
+          toggleOverview();
+        } else if (event.key.toLowerCase() === 'n') {
+          toggleNotes();
+        } else if (event.key.toLowerCase() === 'f') {
+          toggleFullscreen();
+        } else if (event.key.toLowerCase() === 'p') {
+          window.print();
+        } else if (event.key === '?') {
+          help.classList.toggle('open');
+        }
+      });
+
+      fitStage();
+      show(hashIndex(), false);
+    }());
+  </script>
+</body>
+</html>

@@ -1,0 +1,260 @@
+apiVersion: v3.1.0
+kind: DataContract
+id: template:products-sales:products-sales-product-performance
+name: Product Performance (Products & Sales)
+version: 1.0.0
+status: draft
+domain: products_sales
+dataProduct: product_performance
+description: One row per product, joining catalog attributes, current price (SCD-2
+  latest), and sales rollups (units sold, revenue). Powers merchandising and category-management
+  dashboards.
+purpose: Help merchandising and category managers identify top sellers, dead inventory,
+  margin pressure, and price-vs-revenue dynamics. Single source of truth for product
+  KPIs across web / mobile / store / partner channels.
+limitations: Sales rollups count delivered orders only — cancelled and returned orders
+  are excluded. Inactive products are included with zero sales rollups for visibility.
+owners:
+- name: Merchandising Analytics
+  role: Data Product Owner
+  email: merch-analytics@example.com
+schema:
+- name: product_performance
+  physicalName: product_performance
+  physicalType: view
+  description: Product-grain performance view.
+  properties:
+  - name: product_id
+    physicalName: product_id
+    logicalName: Product Identifier
+    logicalType: integer
+    physicalType: bigint
+    description: Stable product identifier.
+    primaryKey: true
+    required: true
+    criticalDataElement: true
+    pii: false
+    classification: ''
+    examples: []
+    logicalTypeOptions: {}
+  - name: sku
+    physicalName: sku
+    logicalName: SKU
+    logicalType: string
+    physicalType: varchar
+    description: Stock-keeping unit. Direct from source.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: ''
+    examples: []
+    logicalTypeOptions: {}
+  - name: product_name
+    physicalName: product_name
+    logicalName: Product Name
+    logicalType: string
+    physicalType: text
+    description: Display name.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: ''
+    examples: []
+    logicalTypeOptions: {}
+  - name: brand
+    physicalName: brand
+    logicalName: Brand
+    logicalType: string
+    physicalType: text
+    description: Manufacturer / brand.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: ''
+    examples: []
+    logicalTypeOptions: {}
+  - name: category_name
+    physicalName: category_name
+    logicalName: Category Name
+    logicalType: string
+    physicalType: text
+    description: Leaf-level category (lookup-equi from category dimension).
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: ''
+    examples: []
+    logicalTypeOptions: {}
+  - name: list_price
+    physicalName: list_price
+    logicalName: List Price
+    logicalType: number
+    physicalType: numeric
+    description: Catalog list price, direct from source.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: ''
+    examples: []
+    logicalTypeOptions: {}
+  - name: current_price
+    physicalName: current_price
+    logicalName: Current Price
+    logicalType: number
+    physicalType: numeric
+    description: Latest effective price from product_price_history (lookup latest).
+    primaryKey: false
+    required: true
+    criticalDataElement: true
+    pii: false
+    classification: ''
+    examples: []
+    logicalTypeOptions: {}
+  - name: cost
+    physicalName: cost
+    logicalName: Cost of Goods
+    logicalType: number
+    physicalType: numeric
+    description: Unit cost-of-goods-sold.
+    primaryKey: false
+    required: false
+    criticalDataElement: true
+    pii: false
+    classification: ''
+    examples: []
+    logicalTypeOptions: {}
+  - name: margin_pct
+    physicalName: margin_pct
+    logicalName: Gross Margin %
+    logicalType: number
+    physicalType: numeric
+    description: (current_price - cost) / current_price * 100. Arithmetic transform.
+    primaryKey: false
+    required: false
+    criticalDataElement: true
+    pii: false
+    classification: ''
+    examples: []
+    logicalTypeOptions: {}
+  - name: units_sold
+    physicalName: units_sold
+    logicalName: Units Sold
+    logicalType: integer
+    physicalType: bigint
+    description: Total quantity sold across delivered orders (aggregate lookup over
+      order_item.quantity).
+    primaryKey: false
+    required: true
+    criticalDataElement: true
+    pii: false
+    classification: ''
+    examples: []
+    logicalTypeOptions: {}
+  - name: revenue
+    physicalName: revenue
+    logicalName: Revenue
+    logicalType: number
+    physicalType: numeric
+    description: Total revenue across delivered orders (aggregate lookup over order_item.line_total).
+    primaryKey: false
+    required: true
+    criticalDataElement: true
+    pii: false
+    classification: ''
+    examples: []
+    logicalTypeOptions: {}
+  - name: top_seller_rank_in_category
+    physicalName: top_seller_rank_in_category
+    logicalName: Top Seller Rank in Category
+    logicalType: integer
+    physicalType: integer
+    description: RANK() OVER (PARTITION BY category_id ORDER BY revenue DESC).
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: ''
+    examples: []
+    logicalTypeOptions: {}
+  - name: launched_at
+    physicalName: launched_at
+    logicalName: Launch Date
+    logicalType: date
+    physicalType: date
+    description: Date the product first became available.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: ''
+    examples: []
+    logicalTypeOptions: {}
+  - name: active_flag
+    physicalName: active_flag
+    logicalName: Currently Sellable
+    logicalType: boolean
+    physicalType: boolean
+    description: True if the product is in the active catalog.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: ''
+    examples: []
+    logicalTypeOptions: {}
+  foreignKeys: []
+quality:
+- rule: uniqueness
+  name: product_id uniqueness
+  description: product_id must be unique.
+  severity: error
+  dimension: uniqueness
+  businessImpact: Duplicate product rows break KPI rollups.
+- rule: validity
+  name: current_price non-negative
+  description: current_price >= 0.
+  severity: error
+  dimension: validity
+  businessImpact: Negative price indicates a broken SCD-2 lookup.
+- rule: validity
+  name: margin_pct range
+  description: margin_pct must be between -100 and 100 inclusive.
+  severity: warning
+  dimension: accuracy
+  businessImpact: Out-of-range margin suggests cost > price (loss-leader pricing)
+    or data error.
+- rule: completeness
+  name: category_name completeness
+  description: category_name must not be null.
+  severity: error
+  dimension: completeness
+  businessImpact: Missing category breaks category-management dashboards.
+- rule: validity
+  name: units_sold non-negative
+  description: units_sold >= 0.
+  severity: error
+  dimension: validity
+  businessImpact: Negative units indicate an aggregation error.
+slaProperties:
+- property: availability
+  value: '99.5'
+  unit: percent
+- property: freshness
+  value: '24'
+  unit: hours
+- property: retention
+  value: '5'
+  unit: years
+terms:
+  usage: Available to merchandising, finance, and product-management teams.
+  limitations: Inactive products are included for visibility but show zero sales rollups;
+    filter on active_flag for active-catalog reporting.
+  billing: No charge for internal consumers.
+  noticePeriod: 60 days
+productKind: consumer
+sourceSpecId: products_sales_product_performance

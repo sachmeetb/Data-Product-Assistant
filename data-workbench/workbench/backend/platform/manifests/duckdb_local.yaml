@@ -1,0 +1,42 @@
+apiVersion: workbench.platform/v1
+id: duckdb_local
+displayName: DuckDB (local lakehouse)
+adapterVersion: "0.1.0"
+adapterKind: object_store
+supportedServerVersions: ">=1.0"
+
+driver:
+  package: duckdb
+  compatibility: ">=1.0"
+
+namespace:
+  parts: [dir, glob]
+  labels:
+    dir: Directory
+    glob: File glob
+
+capabilities:
+  connection: preview
+  discovery: preview
+  profiling: preview
+  read_query: preview
+  native_view: unsupported
+  dbt_materialized: unsupported
+  remediation: unsupported
+  semantic_qa: unsupported
+  transfer_source: preview
+  transfer_target: preview
+  # DuckDB is the local lakehouse query engine: Parquet export + a catalog of
+  # read_parquet() views. This is the target capability the serving advisor gates
+  # lakehouse_file on.
+  lakehouse_export: preview
+  lakehouse_source: unsupported
+  volumetrics: preview
+  code_assets: unsupported
+
+notes: >
+  DuckDB-over-Parquet: a portable "file hop" serving target. Discovery and
+  profiling read Parquet files/globs via DuckDB (DESCRIBE / dual-engine row
+  counts). It is NOT a networked database — connection config carries a base
+  directory + optional file glob, not host/port/credentials. Object-store
+  backends (s3/gcs/azure_adls) stay unsupported until Phase 3.

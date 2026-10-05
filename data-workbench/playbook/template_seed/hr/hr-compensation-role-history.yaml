@@ -1,0 +1,233 @@
+apiVersion: v3.1.0
+kind: DataContract
+id: template:hr:hr-compensation-role-history
+name: Compensation & Role History (HR)
+version: 1.0.0
+status: draft
+domain: hr
+dataProduct: compensation_role_history
+description: An effective-dated, point-in-time timeline of each employee's compensation
+  and role. Built by temporally interval-joining the compensation/payroll salary history
+  with the HRIS job-assignment history (on the shared employee_id), so one row covers
+  the period during which both the salary AND the job/department were stable. This
+  is the consumer's OWN history shape — it does not exist in any single source table.
+purpose: Give comp, finance, and people-analytics an auditable as-of-any-date view
+  of who earned what, in which role and department, over time — without re-deriving
+  the temporal join by hand.
+limitations: Materialized as a dbt SCD-2 snapshot (history accumulates across builds);
+  SCD-2 ⇒ materialized is required (a virtual view cannot retain history). CONSUMES
+  two source products — workforce_core (Core HRIS) and compensation_payroll — joined
+  on employee_id; that cross-product join is engineer-authored (not auto-discovered).
+  Excludes terminated employees' post-termination periods.
+owners:
+- name: People Analytics Team
+  role: Data Product Owner
+  email: people-analytics@example.com
+schema:
+- name: compensation_role_history
+  physicalName: compensation_role_history
+  physicalType: table
+  description: Employee × effective-period grain. Materialized SCD-2 (dbt snapshot).
+    Effective dating is the intersection of the salary and assignment validity windows.
+  properties:
+  - name: employee_id
+    physicalName: employee_id
+    logicalName: Employee Identifier
+    logicalType: integer
+    physicalType: bigint
+    description: Shared employee_id reconciled across the HRIS and payroll source
+      products.
+    primaryKey: true
+    required: true
+    criticalDataElement: true
+    pii: false
+    classification: ''
+    examples: []
+    logicalTypeOptions: {}
+  - name: effective_from
+    physicalName: effective_from
+    logicalName: Effective From
+    logicalType: date
+    physicalType: date
+    description: Inclusive start of the period this comp+role combination was in effect
+      (intersection of the salary and assignment windows).
+    primaryKey: true
+    required: true
+    criticalDataElement: true
+    pii: false
+    classification: ''
+    examples: []
+    logicalTypeOptions: {}
+  - name: effective_to
+    physicalName: effective_to
+    logicalName: Effective To
+    logicalType: date
+    physicalType: date
+    description: Exclusive end of the period; NULL means currently in effect.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: ''
+    examples: []
+    logicalTypeOptions: {}
+  - name: is_current
+    physicalName: is_current
+    logicalName: Is Current
+    logicalType: boolean
+    physicalType: boolean
+    description: True for the row currently in effect for the employee (effective_to
+      IS NULL).
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: ''
+    examples: []
+    logicalTypeOptions: {}
+  - name: job_title
+    physicalName: job_title
+    logicalName: Job Title
+    logicalType: string
+    physicalType: varchar
+    description: Job title held during the period (lookup-equi via the job assignment
+      in effect).
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: ''
+    examples: []
+    logicalTypeOptions: {}
+  - name: job_level
+    physicalName: job_level
+    logicalName: Job Level
+    logicalType: integer
+    physicalType: smallint
+    description: Job level / grade band held during the period (standardized from
+      the source `lvl` column).
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: ''
+    examples: []
+    logicalTypeOptions: {}
+  - name: department_name
+    physicalName: department_name
+    logicalName: Department Name
+    logicalType: string
+    physicalType: varchar
+    description: Department the employee belonged to during the period (lookup-equi).
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: ''
+    examples: []
+    logicalTypeOptions: {}
+  - name: salary_amount
+    physicalName: salary_amount
+    logicalName: Salary Amount
+    logicalType: number
+    physicalType: numeric
+    description: Annualised base salary in effect during the period (standardized
+      from the source `amt` column).
+    primaryKey: false
+    required: true
+    criticalDataElement: true
+    pii: false
+    classification: ''
+    examples: []
+    logicalTypeOptions: {}
+  - name: compensation_band
+    physicalName: compensation_band
+    logicalName: Compensation Band
+    logicalType: string
+    physicalType: varchar
+    description: Salary bucketed into ordinal bands A–E.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: ''
+    examples: []
+    logicalTypeOptions: {}
+  - name: change_reason
+    physicalName: change_reason
+    logicalName: Change Reason
+    logicalType: string
+    physicalType: varchar
+    description: 'Reason the salary changed at the start of the period (standardized
+      from the source `rsn` column): merit / promotion / market / adjustment / demotion.'
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: ''
+    examples: []
+    logicalTypeOptions: {}
+  - name: pct_change_from_prior
+    physicalName: pct_change_from_prior
+    logicalName: Percent Change from Prior
+    logicalType: number
+    physicalType: numeric
+    description: 'Percentage change of salary_amount from the prior period: (salary_amount
+      - prior_salary_amount) / prior_salary_amount * 100.'
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: ''
+    examples: []
+    logicalTypeOptions: {}
+  foreignKeys: []
+quality:
+- rule: uniqueness
+  name: one current row per employee
+  description: Exactly one row per employee_id may have is_current = true.
+  severity: error
+  dimension: uniqueness
+  businessImpact: More than one current row double-counts an employee in as-of-today
+    comp reporting.
+- rule: validity
+  name: effective interval sanity
+  description: effective_to IS NULL OR effective_to > effective_from.
+  severity: error
+  dimension: accuracy
+  businessImpact: Inverted or zero-length periods corrupt point-in-time joins.
+- rule: validity
+  name: promotion raises pay
+  description: When change_reason = 'promotion', pct_change_from_prior must be > 0.
+  severity: warning
+  dimension: consistency
+  businessImpact: A promotion that lowered pay signals a data or process error worth
+    reviewing.
+- rule: validity
+  name: salary non-negative
+  description: salary_amount >= 0.
+  severity: error
+  dimension: accuracy
+  businessImpact: Negative pay indicates an upstream extraction error.
+- rule: validity
+  name: compensation_band allowedValues
+  description: compensation_band must be one of A / B / C / D / E.
+  severity: error
+  dimension: validity
+  businessImpact: Unknown bands break tier-filtered dashboards.
+slaProperties:
+- property: freshness
+  value: '24'
+  unit: hours
+- property: retention
+  value: '7'
+  unit: years
+terms:
+  usage: Available to comp, finance, and people-analytics. Auditable history — do
+    not mutate prior periods.
+  limitations: Derived from two source products; the cross-product join is engineer-authored
+    on employee_id.
+  billing: No charge for internal consumers.
+  noticePeriod: 60 days
+productKind: consumer
+sourceSpecId: hr_compensation_role_history

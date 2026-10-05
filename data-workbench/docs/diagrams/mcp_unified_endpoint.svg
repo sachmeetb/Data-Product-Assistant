@@ -1,0 +1,218 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 810" width="1440" height="810" font-family="Inter, Segoe UI, Helvetica Neue, Arial, sans-serif">
+  <title>Unified MCP Endpoint</title>
+  <desc>Clients connect to one Data Workbench MCP endpoint, which exposes tools by execution class and invokes server-side skills through an agent harness.</desc>
+  <defs>
+    <linearGradient id="page-bg" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#F8FAFC"/>
+      <stop offset="0.52" stop-color="#F4F7FB"/>
+      <stop offset="1" stop-color="#EEF4F7"/>
+    </linearGradient>
+    <linearGradient id="header-bg" x1="0" x2="1" y1="0" y2="0">
+      <stop offset="0" stop-color="#0F172A"/>
+      <stop offset="0.45" stop-color="#172033"/>
+      <stop offset="1" stop-color="#14213D"/>
+    </linearGradient>
+    <linearGradient id="endpoint-bg" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#132238"/>
+      <stop offset="1" stop-color="#0F172A"/>
+    </linearGradient>
+    <linearGradient id="agent-bg" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#FFF7ED"/>
+      <stop offset="1" stop-color="#FEF3C7"/>
+    </linearGradient>
+    <linearGradient id="skill-bg" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#ECFDF5"/>
+      <stop offset="1" stop-color="#F0FDFA"/>
+    </linearGradient>
+    <pattern id="grid" width="36" height="36" patternUnits="userSpaceOnUse">
+      <path d="M 36 0 L 0 0 0 36" fill="none" stroke="#CBD5E1" stroke-width="1" opacity="0.28"/>
+    </pattern>
+    <filter id="shadow" x="-12%" y="-12%" width="124%" height="130%">
+      <feDropShadow dx="0" dy="8" stdDeviation="10" flood-color="#0F172A" flood-opacity="0.15"/>
+    </filter>
+    <filter id="tight-shadow" x="-8%" y="-8%" width="116%" height="120%">
+      <feDropShadow dx="0" dy="4" stdDeviation="5" flood-color="#0F172A" flood-opacity="0.14"/>
+    </filter>
+    <filter id="endpoint-glow" x="-18%" y="-18%" width="136%" height="136%">
+      <feDropShadow dx="0" dy="0" stdDeviation="9" flood-color="#38BDF8" flood-opacity="0.38"/>
+    </filter>
+    <marker id="arrow-slate" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#64748B"/></marker>
+    <marker id="arrow-blue" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#2563EB"/></marker>
+    <marker id="arrow-indigo" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#4F46E5"/></marker>
+    <marker id="arrow-amber" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#D97706"/></marker>
+    <marker id="arrow-green" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#16A34A"/></marker>
+    <marker id="arrow-rose" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#E11D48"/></marker>
+  </defs>
+  <rect x="0" y="0" width="1440" height="810" rx="0" fill="#F8FAFC"/>
+  <rect x="0" y="0" width="1440" height="92" rx="0" fill="#0F172A"/>
+  <text x="720.0" y="30" font-size="25" font-weight="800" fill="#FFFFFF" text-anchor="middle" font-family="Inter, Segoe UI, Helvetica Neue, Arial, sans-serif" dominant-baseline="middle">Unified MCP Endpoint</text>
+  <text x="720.0" y="62" font-size="13" font-weight="500" fill="#CBD5E1" text-anchor="middle" font-family="Inter, Segoe UI, Helvetica Neue, Arial, sans-serif" dominant-baseline="middle">One Workbench service exposes every capability to Claude Code, IDE agents, OpenAI Codex, and other MCP clients.</text>
+  <rect x="616.0" y="87" width="208" height="4" rx="2" fill="#22C55E"/>
+  <rect x="48" y="124" width="268" height="430" rx="10" fill="#FFFFFF" stroke="#C7D2FE" stroke-width="1.5" filter="url(#shadow)"/>
+  <rect x="48" y="124" width="268" height="42" rx="10" fill="#EEF2FF" stroke="#C7D2FE" stroke-width="1"/>
+  <rect x="48" y="150" width="268" height="16" rx="0" fill="#EEF2FF"/>
+  <text x="70" y="147" font-size="14" font-weight="850" fill="#312E81" text-anchor="start" font-family="Inter, Segoe UI, Helvetica Neue, Arial, sans-serif" dominant-baseline="middle">MCP clients</text>
+  <text x="290" y="147" font-size="10" font-weight="800" fill="#6366F1" text-anchor="end" font-family="Inter, Segoe UI, Helvetica Neue, Arial, sans-serif" dominant-baseline="middle">anywhere</text>
+  <rect x="76" y="188" width="210" height="68" rx="8" fill="#FFFFFF" stroke="#D8E2EE" stroke-width="1.4" filter="url(#tight-shadow)"/>
+  <rect x="76" y="188" width="5" height="68" rx="4" fill="#2563EB"/>
+  <circle cx="98" cy="210" r="9" fill="#2563EB" opacity="0.18"/>
+  <circle cx="98" cy="210" r="4" fill="#2563EB"/>
+  <text x="116" y="209" font-size="13" font-weight="800" fill="#0F172A" text-anchor="start" font-family="Inter, Segoe UI, Helvetica Neue, Arial, sans-serif" dominant-baseline="middle">Claude Code</text>
+  <text x="116" y="228" font-size="10.5" font-weight="600" fill="#475569" text-anchor="start" font-family="Inter, Segoe UI, Helvetica Neue, Arial, sans-serif" dominant-baseline="middle">engineer workflow</text>
+  <text x="116" y="244" font-size="9" font-weight="500" fill="#64748B" text-anchor="start" font-family="Inter, Segoe UI, Helvetica Neue, Arial, sans-serif" dominant-baseline="middle">project-local MCP config</text>
+  <rect x="76" y="272" width="210" height="68" rx="8" fill="#FFFFFF" stroke="#D8E2EE" stroke-width="1.4" filter="url(#tight-shadow)"/>
+  <rect x="76" y="272" width="5" height="68" rx="4" fill="#7C3AED"/>
+  <circle cx="98" cy="294" r="9" fill="#7C3AED" opacity="0.18"/>
+  <circle cx="98" cy="294" r="4" fill="#7C3AED"/>
+  <text x="116" y="293" font-size="13" font-weight="800" fill="#0F172A" text-anchor="start" font-family="Inter, Segoe UI, Helvetica Neue, Arial, sans-serif" dominant-baseline="middle">IDE agent</text>
+  <text x="116" y="312" font-size="10.5" font-weight="600" fill="#475569" text-anchor="start" font-family="Inter, Segoe UI, Helvetica Neue, Arial, sans-serif" dominant-baseline="middle">editor-integrated</text>
+  <text x="116" y="328" font-size="9" font-weight="500" fill="#64748B" text-anchor="start" font-family="Inter, Segoe UI, Helvetica Neue, Arial, sans-serif" dominant-baseline="middle">same endpoint + token</text>
+  <rect x="76" y="356" width="210" height="68" rx="8" fill="#FFFFFF" stroke="#D8E2EE" stroke-width="1.4" filter="url(#tight-shadow)"/>
+  <rect x="76" y="356" width="5" height="68" rx="4" fill="#0891B2"/>
+  <circle cx="98" cy="378" r="9" fill="#0891B2" opacity="0.18"/>
+  <circle cx="98" cy="378" r="4" fill="#0891B2"/>
+  <text x="116" y="377" font-size="13" font-weight="800" fill="#0F172A" text-anchor="start" font-family="Inter, Segoe UI, Helvetica Neue, Arial, sans-serif" dominant-baseline="middle">OpenAI Codex</text>
+  <text x="116" y="396" font-size="10.5" font-weight="600" fill="#475569" text-anchor="start" font-family="Inter, Segoe UI, Helvetica Neue, Arial, sans-serif" dominant-baseline="middle">agentic coding client</text>
+  <text x="116" y="412" font-size="9" font-weight="500" fill="#64748B" text-anchor="start" font-family="Inter, Segoe UI, Helvetica Neue, Arial, sans-serif" dominant-baseline="middle">streamable HTTP MCP</text>
+  <rect x="76" y="462" width="210" height="30" rx="15.0" fill="#FFFBEB" stroke="#F59E0B" stroke-width="1"/>
+  <text x="181.0" y="477.5" font-size="10.2" font-weight="700" fill="#92400E" text-anchor="middle" font-family="Inter, Segoe UI, Helvetica Neue, Arial, sans-serif" dominant-baseline="middle">client skill: workbench-guide</text>
+  <text x="86" y="510" font-size="9.5" font-weight="600" fill="#64748B" text-anchor="start" font-family="Inter, Segoe UI, Helvetica Neue, Arial, sans-serif" dominant-baseline="middle">Orchestrates the lifecycle.</text>
+  <text x="86" y="525" font-size="9.5" font-weight="600" fill="#64748B" text-anchor="start" font-family="Inter, Segoe UI, Helvetica Neue, Arial, sans-serif" dominant-baseline="middle">Does not run server skills locally.</text>
+  <rect x="362" y="154" width="330" height="360" rx="12" fill="#0F172A" stroke="#38BDF8" stroke-width="2.4" filter="url(#endpoint-glow)"/>
+  <text x="527.0" y="198" font-size="19" font-weight="850" fill="#FFFFFF" text-anchor="middle" font-family="Inter, Segoe UI, Helvetica Neue, Arial, sans-serif" dominant-baseline="middle">Data Workbench MCP</text>
+  <text x="527.0" y="226" font-size="11.5" font-weight="600" fill="#BAE6FD" text-anchor="middle" font-family="Inter, Segoe UI, Helvetica Neue, Arial, sans-serif" dominant-baseline="middle">FastMCP control plane mounted at /mcp</text>
+  <circle cx="527.0" cy="304" r="72" fill="#0B1220" stroke="#38BDF8" stroke-width="2.2" opacity="0.96"/>
+  <text x="527.0" y="286" font-size="34" font-weight="900" fill="#FFFFFF" text-anchor="middle" font-family="JetBrains Mono, SFMono-Regular, Consolas, monospace" dominant-baseline="middle">/mcp</text>
+  <text x="527.0" y="318" font-size="16" font-weight="800" fill="#7DD3FC" text-anchor="middle" font-family="Inter, Segoe UI, Helvetica Neue, Arial, sans-serif" dominant-baseline="middle">22 tools</text>
+  <text x="527.0" y="344" font-size="10.5" font-weight="700" fill="#CBD5E1" text-anchor="middle" font-family="Inter, Segoe UI, Helvetica Neue, Arial, sans-serif" dominant-baseline="middle">one authenticated endpoint</text>
+  <rect x="396" y="404" width="120" height="28" rx="14.0" fill="#172554" stroke="#60A5FA" stroke-width="1"/>
+  <text x="456.0" y="418.5" font-size="10" font-weight="700" fill="#BFDBFE" text-anchor="middle" font-family="Inter, Segoe UI, Helvetica Neue, Arial, sans-serif" dominant-baseline="middle">bearer token</text>
+  <rect x="538" y="404" width="120" height="28" rx="14.0" fill="#052E2B" stroke="#2DD4BF" stroke-width="1"/>
+  <text x="598.0" y="418.5" font-size="10" font-weight="700" fill="#99F6E4" text-anchor="middle" font-family="Inter, Segoe UI, Helvetica Neue, Arial, sans-serif" dominant-baseline="middle">project ACL</text>
+  <rect x="396" y="446" width="262" height="28" rx="14.0" fill="#1E1B4B" stroke="#A78BFA" stroke-width="1"/>
+  <text x="527.0" y="460.5" font-size="10" font-weight="700" fill="#DDD6FE" text-anchor="middle" font-family="Inter, Segoe UI, Helvetica Neue, Arial, sans-serif" dominant-baseline="middle">server-side trust boundary</text>
+  <text x="527.0" y="494" font-size="10" font-weight="650" fill="#94A3B8" text-anchor="middle" font-family="Inter, Segoe UI, Helvetica Neue, Arial, sans-serif" dominant-baseline="middle">UI parity lives behind this same service</text>
+  <rect x="730" y="124" width="662" height="430" rx="10" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.5" filter="url(#shadow)"/>
+  <rect x="730" y="124" width="662" height="42" rx="10" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="1"/>
+  <rect x="730" y="150" width="662" height="16" rx="0" fill="#F8FAFC"/>
+  <text x="752" y="147" font-size="14" font-weight="850" fill="#0F172A" text-anchor="start" font-family="Inter, Segoe UI, Helvetica Neue, Arial, sans-serif" dominant-baseline="middle">Tool surface by execution class</text>
+  <text x="1370" y="147" font-size="10.5" font-weight="700" fill="#64748B" text-anchor="end" font-family="Inter, Segoe UI, Helvetica Neue, Arial, sans-serif" dominant-baseline="middle">read / mutate / ask / review / run</text>
+  <rect x="748" y="186" width="198" height="154" rx="8" fill="#EFF6FF" stroke="#D8E2EE" stroke-width="1.1" filter="url(#tight-shadow)"/>
+  <rect x="748" y="186" width="198" height="34" rx="8" fill="#2563EB"/>
+  <rect x="748" y="208" width="198" height="12" rx="0" fill="#2563EB"/>
+  <text x="762" y="204" font-size="12" font-weight="800" fill="#FFFFFF" text-anchor="start" font-family="Inter, Segoe UI, Helvetica Neue, Arial, sans-serif" dominant-baseline="middle">READ</text>
+  <text x="932" y="204" font-size="10" font-weight="800" fill="#E0F2FE" text-anchor="end" font-family="Inter, Segoe UI, Helvetica Neue, Arial, sans-serif" dominant-baseline="middle">6 tools</text>
+  <circle cx="765" cy="237" r="3.2" fill="#2563EB" opacity="0.85"/>
+  <text x="775" y="238" font-size="9.4" font-weight="650" fill="#1E293B" text-anchor="start" font-family="JetBrains Mono, SFMono-Regular, Consolas, monospace" dominant-baseline="middle">list_projects</text>
+  <circle cx="765" cy="251" r="3.2" fill="#2563EB" opacity="0.85"/>
+  <text x="775" y="252" font-size="9.4" font-weight="650" fill="#1E293B" text-anchor="start" font-family="JetBrains Mono, SFMono-Regular, Consolas, monospace" dominant-baseline="middle">get_project_state</text>
+  <circle cx="765" cy="265" r="3.2" fill="#2563EB" opacity="0.85"/>
+  <text x="775" y="266" font-size="9.4" font-weight="650" fill="#1E293B" text-anchor="start" font-family="JetBrains Mono, SFMono-Regular, Consolas, monospace" dominant-baseline="middle">get_plan_summary</text>
+  <circle cx="765" cy="279" r="3.2" fill="#2563EB" opacity="0.85"/>
+  <text x="775" y="280" font-size="9.4" font-weight="650" fill="#1E293B" text-anchor="start" font-family="JetBrains Mono, SFMono-Regular, Consolas, monospace" dominant-baseline="middle">get_stage_results</text>
+  <circle cx="765" cy="293" r="3.2" fill="#2563EB" opacity="0.85"/>
+  <text x="775" y="294" font-size="9.4" font-weight="650" fill="#1E293B" text-anchor="start" font-family="JetBrains Mono, SFMono-Regular, Consolas, monospace" dominant-baseline="middle">run_cypher</text>
+  <circle cx="765" cy="307" r="3.2" fill="#2563EB" opacity="0.85"/>
+  <text x="775" y="308" font-size="9.4" font-weight="650" fill="#1E293B" text-anchor="start" font-family="JetBrains Mono, SFMono-Regular, Consolas, monospace" dominant-baseline="middle">get_dbt_project</text>
+  <rect x="962" y="186" width="198" height="154" rx="8" fill="#F8FAFC" stroke="#D8E2EE" stroke-width="1.1" filter="url(#tight-shadow)"/>
+  <rect x="962" y="186" width="198" height="34" rx="8" fill="#64748B"/>
+  <rect x="962" y="208" width="198" height="12" rx="0" fill="#64748B"/>
+  <text x="976" y="204" font-size="12" font-weight="800" fill="#FFFFFF" text-anchor="start" font-family="Inter, Segoe UI, Helvetica Neue, Arial, sans-serif" dominant-baseline="middle">MECHANICAL</text>
+  <text x="1146" y="204" font-size="10" font-weight="800" fill="#E0F2FE" text-anchor="end" font-family="Inter, Segoe UI, Helvetica Neue, Arial, sans-serif" dominant-baseline="middle">7 tools</text>
+  <circle cx="979" cy="237" r="3.2" fill="#64748B" opacity="0.85"/>
+  <text x="989" y="238" font-size="9.4" font-weight="650" fill="#1E293B" text-anchor="start" font-family="JetBrains Mono, SFMono-Regular, Consolas, monospace" dominant-baseline="middle">set_data_source</text>
+  <circle cx="979" cy="251" r="3.2" fill="#64748B" opacity="0.85"/>
+  <text x="989" y="252" font-size="9.4" font-weight="650" fill="#1E293B" text-anchor="start" font-family="JetBrains Mono, SFMono-Regular, Consolas, monospace" dominant-baseline="middle">set_serving_mode</text>
+  <circle cx="979" cy="265" r="3.2" fill="#64748B" opacity="0.85"/>
+  <text x="989" y="266" font-size="9.4" font-weight="650" fill="#1E293B" text-anchor="start" font-family="JetBrains Mono, SFMono-Regular, Consolas, monospace" dominant-baseline="middle">set_materialization_target</text>
+  <circle cx="979" cy="279" r="3.2" fill="#64748B" opacity="0.85"/>
+  <text x="989" y="280" font-size="9.4" font-weight="650" fill="#1E293B" text-anchor="start" font-family="JetBrains Mono, SFMono-Regular, Consolas, monospace" dominant-baseline="middle">accept_request</text>
+  <circle cx="979" cy="293" r="3.2" fill="#64748B" opacity="0.85"/>
+  <text x="989" y="294" font-size="9.4" font-weight="650" fill="#1E293B" text-anchor="start" font-family="JetBrains Mono, SFMono-Regular, Consolas, monospace" dominant-baseline="middle">reset_stage</text>
+  <circle cx="979" cy="307" r="3.2" fill="#64748B" opacity="0.85"/>
+  <text x="989" y="308" font-size="9.4" font-weight="650" fill="#1E293B" text-anchor="start" font-family="JetBrains Mono, SFMono-Regular, Consolas, monospace" dominant-baseline="middle">complete_stage</text>
+  <circle cx="979" cy="321" r="3.2" fill="#64748B" opacity="0.85"/>
+  <text x="989" y="322" font-size="9.4" font-weight="650" fill="#1E293B" text-anchor="start" font-family="JetBrains Mono, SFMono-Regular, Consolas, monospace" dominant-baseline="middle">get_stage_config_options</text>
+  <rect x="1176" y="186" width="198" height="154" rx="8" fill="#FAF5FF" stroke="#D8E2EE" stroke-width="1.1" filter="url(#tight-shadow)"/>
+  <rect x="1176" y="186" width="198" height="34" rx="8" fill="#7C3AED"/>
+  <rect x="1176" y="208" width="198" height="12" rx="0" fill="#7C3AED"/>
+  <text x="1190" y="204" font-size="12" font-weight="800" fill="#FFFFFF" text-anchor="start" font-family="Inter, Segoe UI, Helvetica Neue, Arial, sans-serif" dominant-baseline="middle">INTERACTIVE</text>
+  <text x="1360" y="204" font-size="10" font-weight="800" fill="#E0F2FE" text-anchor="end" font-family="Inter, Segoe UI, Helvetica Neue, Arial, sans-serif" dominant-baseline="middle">2 tools</text>
+  <circle cx="1193" cy="237" r="3.2" fill="#7C3AED" opacity="0.85"/>
+  <text x="1203" y="238" font-size="9.4" font-weight="650" fill="#1E293B" text-anchor="start" font-family="JetBrains Mono, SFMono-Regular, Consolas, monospace" dominant-baseline="middle">get_pending_questions</text>
+  <circle cx="1193" cy="253" r="3.2" fill="#7C3AED" opacity="0.85"/>
+  <text x="1203" y="254" font-size="9.4" font-weight="650" fill="#1E293B" text-anchor="start" font-family="JetBrains Mono, SFMono-Regular, Consolas, monospace" dominant-baseline="middle">answer_question</text>
+  <rect x="748" y="364" width="306" height="166" rx="8" fill="#FFF1F2" stroke="#D8E2EE" stroke-width="1.1" filter="url(#tight-shadow)"/>
+  <rect x="748" y="364" width="306" height="34" rx="8" fill="#E11D48"/>
+  <rect x="748" y="386" width="306" height="12" rx="0" fill="#E11D48"/>
+  <text x="762" y="382" font-size="12" font-weight="800" fill="#FFFFFF" text-anchor="start" font-family="Inter, Segoe UI, Helvetica Neue, Arial, sans-serif" dominant-baseline="middle">REVIEW-WRITE</text>
+  <text x="1040" y="382" font-size="10" font-weight="800" fill="#E0F2FE" text-anchor="end" font-family="Inter, Segoe UI, Helvetica Neue, Arial, sans-serif" dominant-baseline="middle">5 tools</text>
+  <circle cx="765" cy="415" r="3.2" fill="#E11D48" opacity="0.85"/>
+  <text x="775" y="416" font-size="9.4" font-weight="650" fill="#1E293B" text-anchor="start" font-family="JetBrains Mono, SFMono-Regular, Consolas, monospace" dominant-baseline="middle">review_description</text>
+  <circle cx="765" cy="431" r="3.2" fill="#E11D48" opacity="0.85"/>
+  <text x="775" y="432" font-size="9.4" font-weight="650" fill="#1E293B" text-anchor="start" font-family="JetBrains Mono, SFMono-Regular, Consolas, monospace" dominant-baseline="middle">review_mapping</text>
+  <circle cx="765" cy="447" r="3.2" fill="#E11D48" opacity="0.85"/>
+  <text x="775" y="448" font-size="9.4" font-weight="650" fill="#1E293B" text-anchor="start" font-family="JetBrains Mono, SFMono-Regular, Consolas, monospace" dominant-baseline="middle">review_domain_rule</text>
+  <circle cx="765" cy="463" r="3.2" fill="#E11D48" opacity="0.85"/>
+  <text x="775" y="464" font-size="9.4" font-weight="650" fill="#1E293B" text-anchor="start" font-family="JetBrains Mono, SFMono-Regular, Consolas, monospace" dominant-baseline="middle">review_table_description</text>
+  <circle cx="765" cy="479" r="3.2" fill="#E11D48" opacity="0.85"/>
+  <text x="775" y="480" font-size="8.2" font-weight="650" fill="#1E293B" text-anchor="start" font-family="JetBrains Mono, SFMono-Regular, Consolas, monospace" dominant-baseline="middle">review_relationship_description</text>
+  <rect x="1068" y="364" width="306" height="166" rx="8" fill="#ECFDF5" stroke="#D8E2EE" stroke-width="1.1" filter="url(#tight-shadow)"/>
+  <rect x="1068" y="364" width="306" height="34" rx="8" fill="#16A34A"/>
+  <rect x="1068" y="386" width="306" height="12" rx="0" fill="#16A34A"/>
+  <text x="1082" y="382" font-size="12" font-weight="800" fill="#FFFFFF" text-anchor="start" font-family="Inter, Segoe UI, Helvetica Neue, Arial, sans-serif" dominant-baseline="middle">AGENTIC</text>
+  <text x="1360" y="382" font-size="10" font-weight="800" fill="#E0F2FE" text-anchor="end" font-family="Inter, Segoe UI, Helvetica Neue, Arial, sans-serif" dominant-baseline="middle">2 tools</text>
+  <circle cx="1085" cy="415" r="3.2" fill="#16A34A" opacity="0.85"/>
+  <text x="1095" y="416" font-size="9.4" font-weight="650" fill="#1E293B" text-anchor="start" font-family="JetBrains Mono, SFMono-Regular, Consolas, monospace" dominant-baseline="middle">run_stage</text>
+  <circle cx="1085" cy="431" r="3.2" fill="#16A34A" opacity="0.85"/>
+  <text x="1095" y="432" font-size="9.4" font-weight="650" fill="#1E293B" text-anchor="start" font-family="JetBrains Mono, SFMono-Regular, Consolas, monospace" dominant-baseline="middle">query_semantic_layer</text>
+  <rect x="1088" y="460" width="266" height="52" rx="8" fill="#FFFBEB" stroke="#D97706" stroke-width="1.5"/>
+  <text x="1221" y="478" font-size="13" font-weight="900" fill="#92400E" text-anchor="middle" font-family="Inter, Segoe UI, Helvetica Neue, Arial, sans-serif" dominant-baseline="middle">AGENT HARNESS</text>
+  <text x="1221" y="498" font-size="9.5" font-weight="700" fill="#B45309" text-anchor="middle" font-family="Inter, Segoe UI, Helvetica Neue, Arial, sans-serif" dominant-baseline="middle">sub-agent + one skill per run</text>
+  <path d="M 316 342 C 334 342 342 342 362 342" fill="none" stroke="#2563EB" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow-blue)"/>
+  <text x="338" y="324" font-size="9.5" font-weight="750" fill="#2563EB" text-anchor="middle" font-family="Inter, Segoe UI, Helvetica Neue, Arial, sans-serif" dominant-baseline="middle">MCP over HTTP</text>
+  <path d="M 692 342 C 708 342 714 342 730 342" fill="none" stroke="#64748B" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow-slate)"/>
+  <text x="711" y="324" font-size="9.5" font-weight="750" fill="#64748B" text-anchor="middle" font-family="Inter, Segoe UI, Helvetica Neue, Arial, sans-serif" dominant-baseline="middle">dispatch</text>
+  <rect x="428" y="548" width="200" height="50" rx="8" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.2" filter="url(#tight-shadow)"/>
+  <text x="528" y="566" font-size="11" font-weight="850" fill="#334155" text-anchor="middle" font-family="Inter, Segoe UI, Helvetica Neue, Arial, sans-serif" dominant-baseline="middle">direct backend writes</text>
+  <text x="528" y="584" font-size="9.4" font-weight="600" fill="#64748B" text-anchor="middle" font-family="Inter, Segoe UI, Helvetica Neue, Arial, sans-serif" dominant-baseline="middle">Neo4j graph + run state</text>
+  <path d="M 532 514 C 532 526 532 534 532 548" fill="none" stroke="#64748B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow-slate)" stroke-dasharray="5 5"/>
+  <rect x="48" y="620" width="1344" height="152" rx="12" fill="#ECFDF5" stroke="#16A34A" stroke-width="2" filter="url(#shadow)"/>
+  <rect x="48" y="620" width="1344" height="42" rx="12" fill="#16A34A"/>
+  <rect x="48" y="646" width="1344" height="16" rx="0" fill="#16A34A"/>
+  <text x="70" y="643" font-size="15" font-weight="900" fill="#FFFFFF" text-anchor="start" font-family="Inter, Segoe UI, Helvetica Neue, Arial, sans-serif" dominant-baseline="middle">Agent Runtime Skills Pool</text>
+  <text x="1370" y="643" font-size="10.5" font-weight="750" fill="#DCFCE7" text-anchor="end" font-family="Inter, Segoe UI, Helvetica Neue, Arial, sans-serif" dominant-baseline="middle">the same server-side skills used by the web UI</text>
+  <rect x="70.0" y="678" width="248.8" height="25" rx="12.5" fill="#FFFFFF" stroke="#86EFAC" stroke-width="1.2"/>
+  <text x="194.4" y="691" font-size="9.2" font-weight="700" fill="#14532D" text-anchor="middle" font-family="JetBrains Mono, SFMono-Regular, Consolas, monospace" dominant-baseline="middle">data-discovery</text>
+  <rect x="332.8" y="678" width="248.8" height="25" rx="12.5" fill="#FFFFFF" stroke="#86EFAC" stroke-width="1.2"/>
+  <text x="457.20000000000005" y="691" font-size="8.2" font-weight="700" fill="#14532D" text-anchor="middle" font-family="JetBrains Mono, SFMono-Regular, Consolas, monospace" dominant-baseline="middle">data-discovery-to-dcat-neo4j</text>
+  <rect x="595.6" y="678" width="248.8" height="25" rx="12.5" fill="#FFFFFF" stroke="#86EFAC" stroke-width="1.2"/>
+  <text x="720.0" y="691" font-size="9.2" font-weight="700" fill="#14532D" text-anchor="middle" font-family="JetBrains Mono, SFMono-Regular, Consolas, monospace" dominant-baseline="middle">data-profiling</text>
+  <rect x="858.4000000000001" y="678" width="248.8" height="25" rx="12.5" fill="#FFFFFF" stroke="#86EFAC" stroke-width="1.2"/>
+  <text x="982.8000000000001" y="691" font-size="9.2" font-weight="700" fill="#14532D" text-anchor="middle" font-family="JetBrains Mono, SFMono-Regular, Consolas, monospace" dominant-baseline="middle">data-profiling-to-dqv-neo4j</text>
+  <rect x="1121.2" y="678" width="248.8" height="25" rx="12.5" fill="#FFFFFF" stroke="#86EFAC" stroke-width="1.2"/>
+  <text x="1245.6000000000001" y="691" font-size="9.2" font-weight="700" fill="#14532D" text-anchor="middle" font-family="JetBrains Mono, SFMono-Regular, Consolas, monospace" dominant-baseline="middle">metadata-enrichment</text>
+  <rect x="70.0" y="710" width="248.8" height="25" rx="12.5" fill="#FFFFFF" stroke="#86EFAC" stroke-width="1.2"/>
+  <text x="194.4" y="723" font-size="9.2" font-weight="700" fill="#14532D" text-anchor="middle" font-family="JetBrains Mono, SFMono-Regular, Consolas, monospace" dominant-baseline="middle">column-name-standardizer</text>
+  <rect x="332.8" y="710" width="248.8" height="25" rx="12.5" fill="#FFFFFF" stroke="#86EFAC" stroke-width="1.2"/>
+  <text x="457.20000000000005" y="723" font-size="8.2" font-weight="700" fill="#14532D" text-anchor="middle" font-family="JetBrains Mono, SFMono-Regular, Consolas, monospace" dominant-baseline="middle">data-quality-rule-generation</text>
+  <rect x="595.6" y="710" width="248.8" height="25" rx="12.5" fill="#FFFFFF" stroke="#86EFAC" stroke-width="1.2"/>
+  <text x="720.0" y="723" font-size="9.2" font-weight="700" fill="#14532D" text-anchor="middle" font-family="JetBrains Mono, SFMono-Regular, Consolas, monospace" dominant-baseline="middle">data-mapping-neo4j</text>
+  <rect x="858.4000000000001" y="710" width="248.8" height="25" rx="12.5" fill="#FFFFFF" stroke="#86EFAC" stroke-width="1.2"/>
+  <text x="982.8000000000001" y="723" font-size="9.2" font-weight="700" fill="#14532D" text-anchor="middle" font-family="JetBrains Mono, SFMono-Regular, Consolas, monospace" dominant-baseline="middle">odcs-to-graph</text>
+  <rect x="1121.2" y="710" width="248.8" height="25" rx="12.5" fill="#FFFFFF" stroke="#86EFAC" stroke-width="1.2"/>
+  <text x="1245.6000000000001" y="723" font-size="9.2" font-weight="700" fill="#14532D" text-anchor="middle" font-family="JetBrains Mono, SFMono-Regular, Consolas, monospace" dominant-baseline="middle">data-serving-virtual-view</text>
+  <rect x="70.0" y="742" width="248.8" height="25" rx="12.5" fill="#FFFFFF" stroke="#86EFAC" stroke-width="1.2"/>
+  <text x="194.4" y="755" font-size="8.2" font-weight="700" fill="#14532D" text-anchor="middle" font-family="JetBrains Mono, SFMono-Regular, Consolas, monospace" dominant-baseline="middle">data-product-deployment-reflector</text>
+  <rect x="332.8" y="742" width="248.8" height="25" rx="12.5" fill="#FFFFFF" stroke="#86EFAC" stroke-width="1.2"/>
+  <text x="457.20000000000005" y="755" font-size="9.2" font-weight="700" fill="#14532D" text-anchor="middle" font-family="JetBrains Mono, SFMono-Regular, Consolas, monospace" dominant-baseline="middle">data-scoring</text>
+  <rect x="595.6" y="742" width="248.8" height="25" rx="12.5" fill="#FFFFFF" stroke="#86EFAC" stroke-width="1.2"/>
+  <text x="720.0" y="755" font-size="8.2" font-weight="700" fill="#14532D" text-anchor="middle" font-family="JetBrains Mono, SFMono-Regular, Consolas, monospace" dominant-baseline="middle">data-quality-failure-analysis</text>
+  <rect x="858.4000000000001" y="742" width="248.8" height="25" rx="12.5" fill="#FFFFFF" stroke="#86EFAC" stroke-width="1.2"/>
+  <text x="982.8000000000001" y="755" font-size="9.2" font-weight="700" fill="#14532D" text-anchor="middle" font-family="JetBrains Mono, SFMono-Regular, Consolas, monospace" dominant-baseline="middle">data-remediation-planning</text>
+  <rect x="1121.2" y="742" width="248.8" height="25" rx="12.5" fill="#FFFFFF" stroke="#86EFAC" stroke-width="1.2"/>
+  <text x="1245.6000000000001" y="755" font-size="9.2" font-weight="700" fill="#14532D" text-anchor="middle" font-family="JetBrains Mono, SFMono-Regular, Consolas, monospace" dominant-baseline="middle">playbook-reflector</text>
+  <path d="M 1190 568 C 1190 594 1190 598 1190 620" fill="none" stroke="#16A34A" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow-green)"/>
+  <text x="1110" y="594" font-size="10" font-weight="850" fill="#15803D" text-anchor="middle" font-family="Inter, Segoe UI, Helvetica Neue, Arial, sans-serif" dominant-baseline="middle">agentic tools load skills</text>
+</svg>

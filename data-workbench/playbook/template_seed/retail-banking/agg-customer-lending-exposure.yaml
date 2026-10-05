@@ -1,0 +1,263 @@
+apiVersion: v3.1.0
+kind: DataContract
+id: template:retail-banking:agg-customer-lending-exposure
+name: Customer Lending Exposure
+version: 1.0.0
+status: draft
+domain: Retail Banking
+description: Per-customer lending exposure view — their loans, repayment behaviour
+  and delinquency status, plus card credit limits — assembled from the party, lending
+  and card source systems for credit-risk monitoring and collections.
+schema:
+- name: Customer Lending Exposure
+  physicalName: customer_lending_exposure
+  physicalType: table
+  description: Per-customer lending exposure view — their loans, repayment behaviour
+    and delinquency status, plus card credit limits — assembled from the party, lending
+    and card source systems for credit-risk monitoring and collections.
+  properties:
+  - name: customer_id
+    physicalName: customer_id
+    logicalName: Customer ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique numeric identifier for a customer record, serving as the primary
+      join key across all customer-related entities.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: full_name
+    physicalName: full_name
+    logicalName: Full Name
+    logicalType: varchar
+    physicalType: varchar
+    description: Full legal name of the borrowing customer.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: pii
+    examples: []
+    logicalTypeOptions: {}
+  - name: customer_segment
+    physicalName: customer_segment
+    logicalName: Customer Segment
+    logicalType: varchar
+    physicalType: varchar
+    description: Marketing/value segment of the customer such as mass, affluent, premium,
+      private or business.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: loan_id
+    physicalName: loan_id
+    logicalName: Loan ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a loan account held by the customer.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: loan_type
+    physicalName: loan_type
+    logicalName: Loan Type
+    logicalType: varchar
+    physicalType: varchar
+    description: Loan product classification such as home, auto, personal, business
+      or education.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: principal_amount
+    physicalName: principal_amount
+    logicalName: Principal Amount
+    logicalType: numeric
+    physicalType: numeric
+    description: Original sanctioned principal amount of the loan.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: interest_rate
+    physicalName: interest_rate
+    logicalName: Interest Rate
+    logicalType: numeric
+    physicalType: numeric
+    description: Annual interest rate applied to the loan, expressed as a percentage.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: disbursal_date
+    physicalName: disbursal_date
+    logicalName: Disbursal Date
+    logicalType: date
+    physicalType: date
+    description: Date the loan principal was disbursed to the customer.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: maturity_date
+    physicalName: maturity_date
+    logicalName: Maturity Date
+    logicalType: date
+    physicalType: date
+    description: Contractual maturity date of the loan.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: loan_status
+    physicalName: loan_status
+    logicalName: Loan Status
+    logicalType: varchar
+    physicalType: varchar
+    description: Servicing state of the loan such as active, closed, written_off or
+      delinquent.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: amount_due
+    physicalName: amount_due
+    logicalName: Amount Due
+    logicalType: numeric
+    physicalType: numeric
+    description: Scheduled instalment amount due for the loan.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: amount_paid
+    physicalName: amount_paid
+    logicalName: Amount Paid
+    logicalType: numeric
+    physicalType: numeric
+    description: Instalment amount actually paid by the customer.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: dpd_bucket
+    physicalName: dpd_bucket
+    logicalName: Days Past Due Bucket
+    logicalType: varchar
+    physicalType: varchar
+    description: Days-past-due delinquency bucket such as current, 1-30, 31-60, 61-90
+      or 90+.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: overdue_amount
+    physicalName: overdue_amount
+    logicalName: Overdue Amount
+    logicalType: numeric
+    physicalType: numeric
+    description: Total overdue amount on the loan as of the reporting date.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: credit_limit
+    physicalName: credit_limit
+    logicalName: Credit Limit
+    logicalType: numeric
+    physicalType: numeric
+    description: Maximum credit amount available on the customer's card, contributing
+      to total credit exposure.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: kyc_status
+    physicalName: kyc_status
+    logicalName: KYC Status
+    logicalType: varchar
+    physicalType: varchar
+    description: Current Know-Your-Customer verification state of the customer.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  foreignKeys: []
+  transform:
+    grouping_keys:
+    - customer_id
+    scd_policy:
+      type: scd2
+    grain_prose: One row per customer, enriched with their loan and card-credit exposure.
+customProperties:
+  feasibility:
+    schema_version: '1.0'
+    spec_classification: confidential
+    cadence: daily
+    freshness_history: scd2
+    freshness_description: Refreshed daily; delinquency and repayment status change
+      frequently.
+    grain_keys:
+    - customer_id
+    grain_description: One row per customer, enriched with their loan and card-credit
+      exposure.
+    allowed_derivations:
+    - rename
+    - cast
+    composition:
+      join_keys:
+      - customer_id
+      - loan_id
+      composed_of: []
+      description: Assembled by joining the party, lending and card source systems
+        on the shared customer_id (and loan_id within lending).
+productKind: aggregate
+sourceSpecId: agg_customer_lending_exposure

@@ -1,0 +1,561 @@
+apiVersion: v3.1.0
+kind: DataContract
+id: template:customer:src-customer-data-product
+name: Customer data product
+version: 1.0.0
+status: draft
+domain: Customer
+description: Customer's core identity and demographic informattion, contant info,
+  KYC Details, account features, account status history, account limits, nominee details,
+  marketing & channel, preferences, mapping of customers to assigned RMs or service
+  agenst along with all the arrangement keys with other FDPs
+schema:
+- name: Customer data product
+  physicalName: customer_data_product
+  physicalType: table
+  description: Customer's core identity and demographic informattion, contant info,
+    KYC Details, account features, account status history, account limits, nominee
+    details, marketing & channel, preferences, mapping of customers to assigned RMs
+    or service agenst along with all the arrangement keys with other FDPs
+  properties:
+  - name: customer_id
+    physicalName: customer_id
+    logicalName: Customer ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique numeric identifier for the bank customer, serving as the primary
+      key across all personal, account, and relationship records.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: name
+    physicalName: name
+    logicalName: Name
+    logicalType: varchar
+    physicalType: varchar
+    description: The full legal name of the customer as recorded at onboarding and
+      verified through KYC.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: gender
+    physicalName: gender
+    logicalName: Gender
+    logicalType: varchar
+    physicalType: varchar
+    description: The customer's self-declared or KYC-recorded gender, used for demographic
+      segmentation and regulatory reporting.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: pan_and_aadhaar_number
+    physicalName: pan_and_aadhaar_number
+    logicalName: PAN And Aadhaar Number
+    logicalType: varchar
+    physicalType: varchar
+    description: The customer's tax identification (PAN) and national biometric identity
+      (Aadhaar) numbers, used for KYC verification in India.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: pii
+    examples: []
+    logicalTypeOptions: {}
+  - name: customer_type
+    physicalName: customer_type
+    logicalName: Customer Type
+    logicalType: varchar
+    physicalType: varchar
+    description: The classification of the customer, such as individual, corporate,
+      joint, or minor, determining applicable product and regulatory treatment.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: citizenship_country
+    physicalName: citizenship_country
+    logicalName: Citizenship Country
+    logicalType: numeric
+    physicalType: numeric
+    description: The numeric country code representing the customer's country of citizenship,
+      used for residency and FATCA/CRS classification.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: onboarded_date
+    physicalName: onboarded_date
+    logicalName: Onboarded Date
+    logicalType: date
+    physicalType: date
+    description: The date on which the customer relationship was formally established
+      and the account first activated.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: onborading_channel
+    physicalName: onborading_channel
+    logicalName: Onborading Channel
+    logicalType: varchar
+    physicalType: varchar
+    description: The channel through which the customer was onboarded, such as branch,
+      mobile_app, or banking_agent.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: mobile_number
+    physicalName: mobile_number
+    logicalName: Mobile Number
+    logicalType: varchar
+    physicalType: varchar
+    description: The customer's registered mobile phone number, used for OTP authentication,
+      alerts, and outbound communication.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: pii
+    examples: []
+    logicalTypeOptions: {}
+  - name: email
+    physicalName: email
+    logicalName: Email
+    logicalType: varchar
+    physicalType: varchar
+    description: The customer's registered email address, used for digital notifications,
+      statements, and marketing correspondence.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: pii
+    examples: []
+    logicalTypeOptions: {}
+  - name: address
+    physicalName: address
+    logicalName: Address
+    logicalType: varchar
+    physicalType: varchar
+    description: The customer's current residential or mailing address as held on
+      record for KYC and statement delivery purposes.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: pii
+    examples: []
+    logicalTypeOptions: {}
+  - name: language
+    physicalName: language
+    logicalName: Language
+    logicalType: varchar
+    physicalType: varchar
+    description: The customer's preferred communication language, used to route correspondence
+      and service interactions appropriately.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: communication_channel_pref
+    physicalName: communication_channel_pref
+    logicalName: Communication Channel Pref
+    logicalType: varchar
+    physicalType: varchar
+    description: The customer's preferred channel for receiving bank communications,
+      such as SMS, email, or in-app notification.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: marketing_opt_in_flags
+    physicalName: marketing_opt_in_flags
+    logicalName: Marketing Opt In Flags
+    logicalType: varchar
+    physicalType: varchar
+    description: A set of flags indicating whether the customer has consented to receiving
+      marketing communications across various channels and product categories.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: accessibility_needs
+    physicalName: accessibility_needs
+    logicalName: Accessibility Needs
+    logicalType: varchar
+    physicalType: varchar
+    description: Any declared accessibility requirements of the customer, used to
+      ensure appropriate service adaptations are made.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: kyc_id
+    physicalName: kyc_id
+    logicalName: KYC ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for the customer's KYC verification record, linking
+      identity documents and due-diligence outcomes.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: document_type
+    physicalName: document_type
+    logicalName: Document Type
+    logicalType: varchar
+    physicalType: varchar
+    description: The category of identity document used for KYC verification, such
+      as passport, national_id, or driving_licence.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: kyc_status
+    physicalName: kyc_status
+    logicalName: KYC Status
+    logicalType: varchar
+    physicalType: varchar
+    description: The current KYC compliance status of the customer, such as verified,
+      pending, expired, or under_review.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: verifcation_date
+    physicalName: verifcation_date
+    logicalName: Verifcation Date
+    logicalType: date
+    physicalType: date
+    description: The date on which the customer's KYC documents were last verified
+      or renewed.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: mapping_id
+    physicalName: mapping_id
+    logicalName: Mapping ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for the record linking the customer to a specific
+      financial product or account arrangement.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: product_type
+    physicalName: product_type
+    logicalName: Product Type
+    logicalType: varchar
+    physicalType: varchar
+    description: The type of financial product held by the customer under this mapping,
+      such as savings_account, loan, credit_card, or fixed_deposit.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: account_number
+    physicalName: account_number
+    logicalName: Account Number
+    logicalType: numeric
+    physicalType: numeric
+    description: The customer's account number associated with the product mapping,
+      masked or partial for PII protection.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: pii
+    examples: []
+    logicalTypeOptions: {}
+  - name: load_id
+    physicalName: load_id
+    logicalName: Load ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a batch data load event, used for lineage tracking
+      and reconciliation of customer record updates.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: card_number
+    physicalName: card_number
+    logicalName: Card Number
+    logicalType: varchar
+    physicalType: varchar
+    description: The masked card number associated with the customer's payment card
+      product under this arrangement.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: pii
+    examples: []
+    logicalTypeOptions: {}
+  - name: product_status
+    physicalName: product_status
+    logicalName: Product Status
+    logicalType: varchar
+    physicalType: varchar
+    description: The current lifecycle state of the customer's product arrangement,
+      such as active, dormant, closed, or suspended.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: start_date
+    physicalName: start_date
+    logicalName: Start Date
+    logicalType: date
+    physicalType: date
+    description: The date on which the customer's product arrangement became active.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: maturity_date
+    physicalName: maturity_date
+    logicalName: Maturity Date
+    logicalType: date
+    physicalType: date
+    description: The scheduled maturity or expiry date of the customer's product arrangement,
+      if applicable (e.g. fixed deposit or loan).
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: household_id_group_id
+    physicalName: household_id_group_id
+    logicalName: Household ID Group ID
+    logicalType: bigint
+    physicalType: bigint
+    description: The unique identifier for the household or group to which this customer
+      belongs, enabling household-level analytics and relationship banking.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: rm_id
+    physicalName: rm_id
+    logicalName: RM ID
+    logicalType: bigint
+    physicalType: bigint
+    description: The unique identifier of the Relationship Manager assigned to serve
+      this customer.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: rn_name
+    physicalName: rn_name
+    logicalName: Rn Name
+    logicalType: varchar
+    physicalType: varchar
+    description: The full name of the Relationship Manager assigned to this customer.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: assigned_on
+    physicalName: assigned_on
+    logicalName: Assigned On
+    logicalType: varchar
+    physicalType: varchar
+    description: The date or timestamp on which the Relationship Manager was assigned
+      to the customer.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: servicing_branch
+    physicalName: servicing_branch
+    logicalName: Servicing Branch
+    logicalType: varchar
+    physicalType: varchar
+    description: The bank branch designated as the primary servicing location for
+      this customer.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: nominee_id
+    physicalName: nominee_id
+    logicalName: Nominee ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for the nominee record designating a beneficiary
+      for the customer's account or product in the event of death.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: linked_acc_number
+    physicalName: linked_acc_number
+    logicalName: Linked Acc Number
+    logicalType: varchar
+    physicalType: varchar
+    description: The account number of the linked account held by the nominee, used
+      for credit instructions or payout processing.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: nominee_name
+    physicalName: nominee_name
+    logicalName: Nominee Name
+    logicalType: varchar
+    physicalType: varchar
+    description: The full name of the nominee designated to receive account proceeds
+      on behalf of the deceased customer.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: pii
+    examples: []
+    logicalTypeOptions: {}
+  - name: relationship_to_customer
+    physicalName: relationship_to_customer
+    logicalName: Relationship To Customer
+    logicalType: varchar
+    physicalType: varchar
+    description: The nature of the relationship between the nominee and the customer,
+      such as spouse, child, or sibling.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: share
+    physicalName: share
+    logicalName: Share
+    logicalType: varchar
+    physicalType: varchar
+    description: The percentage share or portion of the account proceeds allocated
+      to this nominee, relevant when multiple nominees are designated.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  foreignKeys: []
+  transform:
+    grouping_keys:
+    - customer_id
+    scd_policy:
+      type: scd2
+customProperties:
+  feasibility:
+    schema_version: '1.0'
+    spec_classification: confidential
+    cadence: ''
+    freshness_history: scd2
+    freshness_description: ''
+    grain_keys:
+    - customer_id
+    grain_description: ''
+    allowed_derivations:
+    - rename
+    - cast
+    composition:
+      join_keys: []
+      composed_of: []
+      description: ''
+productKind: source
+sourceSpecId: src_customer_data_product

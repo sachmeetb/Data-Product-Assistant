@@ -1,0 +1,174 @@
+spec_id: agg_customer_banking_360
+name: Customer Banking 360
+domain: Retail Banking
+product_kind: aggregate
+description: Unified retail-banking view of a customer — identity and KYC, their deposit accounts and balances, and their issued cards and limits — assembled from the party, core-banking and card source systems for servicing, marketing and analytics.
+schema_version: '1.0'
+classification: confidential
+grain:
+  keys:
+  - customer_id
+  description: One row per customer, enriched with their deposit-account and card holdings.
+freshness:
+  history: scd2
+  cadence: daily
+  description: Refreshed daily; account balances and card status change frequently.
+composition:
+  join_keys:
+  - customer_id
+  - account_id
+  composed_of: []
+  description: Assembled by joining the party, deposit-account and card source systems on the shared customer_id (and account_id within core banking).
+allowed_derivations:
+- rename
+- cast
+attributes:
+- name: customer_id
+  type: bigint
+  concept: Customer ID
+  required: true
+  is_key: true
+  classification: internal
+  description: Unique numeric identifier for a customer record, serving as the primary join key across all customer-related entities.
+- name: full_name
+  type: varchar
+  concept: Full Name
+  required: true
+  is_key: false
+  classification: pii
+  description: Full legal name of the customer.
+- name: date_of_birth
+  type: date
+  concept: Date Of Birth
+  required: true
+  is_key: false
+  classification: pii
+  description: Customer date of birth.
+- name: gender
+  type: varchar
+  concept: Gender
+  required: true
+  is_key: false
+  classification: pii
+  description: Recorded gender of the customer.
+- name: email
+  type: varchar
+  concept: Email
+  required: true
+  is_key: false
+  classification: pii
+  description: Primary email address on file for the customer.
+- name: mobile_number
+  type: varchar
+  concept: Mobile Number
+  required: true
+  is_key: false
+  classification: pii
+  description: Primary mobile contact number for the customer.
+- name: residential_address
+  type: varchar
+  concept: Residential Address
+  required: true
+  is_key: false
+  classification: pii
+  description: Registered residential or mailing address of the customer.
+- name: customer_segment
+  type: varchar
+  concept: Customer Segment
+  required: true
+  is_key: false
+  classification: internal
+  description: Marketing/value segment of the customer such as mass, affluent, premium, private or business.
+- name: kyc_status
+  type: varchar
+  concept: KYC Status
+  required: true
+  is_key: false
+  classification: internal
+  description: Current Know-Your-Customer verification state such as verified, pending or expired.
+- name: account_id
+  type: bigint
+  concept: Account ID
+  required: true
+  is_key: false
+  classification: internal
+  description: Unique identifier for the customer's deposit account, used to join to account-level balances and transactions.
+- name: product_type
+  type: varchar
+  concept: Product Type
+  required: true
+  is_key: false
+  classification: internal
+  description: Deposit-account product classification such as savings, current, overdraft or salary.
+- name: account_status
+  type: varchar
+  concept: Account Status
+  required: true
+  is_key: false
+  classification: internal
+  description: Current operational state of the deposit account such as active, dormant, closed or frozen.
+- name: currency
+  type: varchar
+  concept: Currency
+  required: true
+  is_key: false
+  classification: internal
+  description: ISO currency code the deposit account is denominated in.
+- name: ledger_balance
+  type: numeric
+  concept: Ledger Balance
+  required: true
+  is_key: false
+  classification: internal
+  description: Ledger (book) balance of the deposit account as of the reporting date.
+- name: available_balance
+  type: numeric
+  concept: Available Balance
+  required: true
+  is_key: false
+  classification: internal
+  description: Available (spendable) balance of the deposit account after holds as of the reporting date.
+- name: card_id
+  type: bigint
+  concept: Card ID
+  required: true
+  is_key: false
+  classification: internal
+  description: Unique identifier for a payment card issued to the customer.
+- name: card_type
+  type: varchar
+  concept: Card Type
+  required: true
+  is_key: false
+  classification: internal
+  description: Card product tier such as classic, gold, platinum, corporate or debit.
+- name: card_status
+  type: varchar
+  concept: Card Status
+  required: true
+  is_key: false
+  classification: internal
+  description: Current state of the card such as active, blocked, expired or hotlisted.
+- name: credit_limit
+  type: numeric
+  concept: Credit Limit
+  required: true
+  is_key: false
+  classification: internal
+  description: Maximum credit amount available on the customer's card.
+- name: onboarded_date
+  type: date
+  concept: Onboarded Date
+  required: false
+  is_key: false
+  classification: internal
+  description: Date the customer relationship was first established.
+- name: relationship_tenure_years
+  type: numeric
+  concept: Relationship Tenure Years
+  required: false
+  is_key: false
+  classification: internal
+  derivations:
+  - compute
+  description: Number of years the customer has banked with the institution, computed from the onboarding date. Derived — no single source column.

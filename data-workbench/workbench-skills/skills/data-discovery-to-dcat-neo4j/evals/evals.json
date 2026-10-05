@@ -1,0 +1,23 @@
+{
+  "skill_name": "dcat-neo4j",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "I've run data discovery on my employees database and the YAML files are in /home/niel/working/discoverytest. Can you generate the Neo4j Cypher script for me using the DCAT ontology?",
+      "expected_output": "A catalog.cypher file containing Cypher CREATE statements for Catalog, Dataset, and Column nodes plus DCAT_DATASET, HAS_COLUMN, and REFERENCES relationships. Summary stats should show 1 schema, 6 tables, all columns, and FK relationships.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "I want to load my database schema into a Neo4j knowledge graph. I've already done data discovery and have the yaml files in the current directory. Generate the cypher script.",
+      "expected_output": "A catalog.cypher file written to the current working directory with properly structured DCAT-2 Cypher statements.",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "Generate a DCAT knowledge graph representation of my discovered tables so I can import it into Neo4j.",
+      "expected_output": "A catalog.cypher file with CREATE statements for all nodes and relationships, including foreign key REFERENCES relationships between Dataset nodes.",
+      "files": []
+    }
+  ]
+}

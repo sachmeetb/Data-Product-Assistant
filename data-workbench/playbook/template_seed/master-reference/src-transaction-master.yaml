@@ -1,0 +1,337 @@
+apiVersion: v3.1.0
+kind: DataContract
+id: template:master-reference:src-transaction-master
+name: Transaction Master
+version: 1.0.0
+status: draft
+domain: Master Reference
+description: Detailed transaction logs across savings cards, UPI, type, amount, status,
+  balance, parties. Also includes transactional and non-transactional charges - schedules,
+  waivers  and reversals
+schema:
+- name: Transaction Master
+  physicalName: transaction_master
+  physicalType: table
+  description: Detailed transaction logs across savings cards, UPI, type, amount,
+    status, balance, parties. Also includes transactional and non-transactional charges
+    - schedules, waivers  and reversals
+  properties:
+  - name: txn_id
+    physicalName: txn_id
+    logicalName: Txn ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for an individual financial transaction posted
+      across savings accounts, UPI, or card channels.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: account_id
+    physicalName: account_id
+    logicalName: Account ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Identifier of the deposit or payment account on which the transaction
+      was posted.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: amount
+    physicalName: amount
+    logicalName: Amount
+    logicalType: numeric
+    physicalType: numeric
+    description: Monetary value of the transaction in the account's denomination currency.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: currency
+    physicalName: currency
+    logicalName: Currency
+    logicalType: varchar
+    physicalType: varchar
+    description: ISO currency code of the transaction amount.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: timestamp
+    physicalName: timestamp
+    logicalName: Timestamp
+    logicalType: timestamp
+    physicalType: timestamp
+    description: Date and time at which the transaction was initiated or processed.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: channel
+    physicalName: channel
+    logicalName: Channel
+    logicalType: varchar
+    physicalType: varchar
+    description: Delivery channel through which the transaction was initiated, such
+      as branch, ATM, internet banking, mobile, or UPI.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: status
+    physicalName: status
+    logicalName: Status
+    logicalType: varchar
+    physicalType: varchar
+    description: Current processing status of the transaction (e.g. posted, pending,
+      reversed, failed).
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: customer_id
+    physicalName: customer_id
+    logicalName: Customer ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier of the account-holding customer who initiated or
+      received the transaction.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: party_id
+    physicalName: party_id
+    logicalName: Party ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a counterparty or participant in the transaction,
+      such as a remitter, beneficiary, or merchant.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: role
+    physicalName: role
+    logicalName: Role
+    logicalType: varchar
+    physicalType: varchar
+    description: Functional role of the party in the transaction (e.g. payer, payee,
+      intermediary, guarantor).
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: name
+    physicalName: name
+    logicalName: Name
+    logicalType: varchar
+    physicalType: varchar
+    description: Name of the transaction party or counterparty associated with this
+      record.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: external_id
+    physicalName: external_id
+    logicalName: External ID
+    logicalType: bigint
+    physicalType: bigint
+    description: External or cross-system identifier linking the transaction to a
+      record in an upstream originating system.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: merchant_id
+    physicalName: merchant_id
+    logicalName: Merchant ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for the merchant involved in a card or merchant
+      payment transaction.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: mcc
+    physicalName: mcc
+    logicalName: Mcc
+    logicalType: varchar
+    physicalType: varchar
+    description: ISO 18245 Merchant Category Code classifying the type of goods or
+      services provided by the merchant.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: country
+    physicalName: country
+    logicalName: Country
+    logicalType: numeric
+    physicalType: numeric
+    description: Numeric country code indicating the country where the merchant or
+      transaction counterparty is located.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: posting_id
+    physicalName: posting_id
+    logicalName: Posting ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for the accounting posting or general ledger entry
+      created for this transaction.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: gl_account
+    physicalName: gl_account
+    logicalName: Gl Account
+    logicalType: numeric
+    physicalType: numeric
+    description: General ledger account code to which the transaction amount is posted
+      for accounting purposes.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: debit_credit
+    physicalName: debit_credit
+    logicalName: Debit Credit
+    logicalType: varchar
+    physicalType: varchar
+    description: Indicator of whether the posting is a debit or credit to the general
+      ledger account.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: ref_id
+    physicalName: ref_id
+    logicalName: Ref ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Cross-reference identifier linking this transaction to a related
+      record in another system, such as a payment order or batch.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: source_system
+    physicalName: source_system
+    logicalName: Source System
+    logicalType: varchar
+    physicalType: varchar
+    description: Name of the originating system from which the transaction was ingested
+      (e.g. CBS, UPI switch, card processor).
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: source_key
+    physicalName: source_key
+    logicalName: Source Key
+    logicalType: varchar
+    physicalType: varchar
+    description: Natural key or unique reference from the originating source system
+      used for deduplication and reconciliation.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  foreignKeys: []
+  transform:
+    grouping_keys:
+    - txn_id
+    scd_policy:
+      type: latest_only
+customProperties:
+  feasibility:
+    schema_version: '1.0'
+    spec_classification: internal
+    cadence: ''
+    freshness_history: current
+    freshness_description: ''
+    grain_keys:
+    - txn_id
+    grain_description: ''
+    allowed_derivations:
+    - rename
+    - cast
+    composition:
+      join_keys: []
+      composed_of: []
+      description: ''
+    attr_derivations:
+      amount:
+      - currency_normalize
+productKind: source
+sourceSpecId: src_transaction_master

@@ -1,0 +1,161 @@
+# HR-domain transformation templates.
+# Matched by the data-mapping skill when authoring a consumer-aligned product
+# over the HR source products (samples/hr/ → workforce_core + compensation_payroll).
+
+domain: hr
+templates:
+
+  # --- Name composition ----------------------------------------------------
+  - name: employee_full_name
+    match:
+      target_name_patterns: ["employee_name", "full_name", "fullname"]
+      source_columns_required: ["first_name", "last_name"]
+    transform:
+      kind: concat
+      inputs: ["first_name", "last_name"]
+      separator: " "
+      decorators:
+        standardization: ["trim"]
+    confidence_floor: 0.90
+
+  # --- PII handling --------------------------------------------------------
+  - name: email_masked
+    match:
+      target_name_patterns: ["email_masked", "masked_email", "email_safe", "email_redacted"]
+      source_columns_required: ["email"]
+    transform:
+      kind: mask
+      inputs: ["email"]
+      params:
+        algorithm: "keep_last"
+        keep_n: 4
+        mask_char: "X"
+        keep_format: true
+    confidence_floor: 0.85
+
+  - name: national_id_masked
+    match:
+      target_name_patterns: ["national_id_masked", "ssn_masked", "id_redacted", "national_id_safe"]
+      source_columns_required: ["national_id_last4"]
+    transform:
+      kind: mask
+      inputs: ["national_id_last4"]
+      params:
+        algorithm: "keep_last"
+        keep_n: 0
+        mask_char: "X"
+        keep_format: false
+    confidence_floor: 0.80
+
+  # --- Tenure / banding ----------------------------------------------------
+  # Portability (transform-portability.md): tenure is authored as the NEUTRAL
+  # date_difference op (renders AGE on Postgres, TIMESTAMPDIFF on MySQL,
+  # FLOOR(MONTHS_BETWEEN/12) on Databricks/Snowflake, boundary-adjusted DATE_DIFF
+  # on BigQuery) instead of hand-written Postgres AGE()/INTERVAL SQL — which
+  # only ran on Postgres and broke on a Databricks-served view.
+  - name: tenure_years_from_hire_date
+    match:
+      target_name_patterns: ["tenure_years", "years_of_service", "tenure"]
+      source_columns_required: ["hire_date"]
+    transform:
+      kind: date_difference
+      inputs: ["hire_date"]           # single input pairs with CURRENT_DATE (age-from-date)
+      params:
+        unit: year
+        semantics: completed_units    # completed elapsed whole years (NOT calendar-boundary count)
+    confidence_floor: 0.80
+
+  # tenure_band bands the COMPUTED tenure. Authored as a self-contained,
+  # data-platform-independent `bucket` whose banded value is a nested
+  # `date_difference` neutral op — the compiler lowers the value per served
+  # engine (AGE on Postgres, TIMESTAMPDIFF on MySQL, FLOOR(MONTHS_BETWEEN/12) on
+  # Databricks/Snowflake, boundary-adjusted DATE_DIFF on BigQuery) and wraps it in
+  # the universal band CASE. One column, no intermediate `tenure_years` product
+  # column required, portable across all served platforms. (Supersedes the earlier
+  # hand-written AGE()/INTERVAL CASE and the derived-on-derived-over-tenure_years
+  # form, which broke when a product mapped the band but not the years column.)
+  - name: tenure_band_from_hire_date
+    match:
+      target_name_patterns: ["tenure_band", "service_band", "tenure_bucket"]
+      source_columns_required: ["hire_date"]
+    transform:
+      kind: bucket
+      inputs: ["hire_date"]            # single input pairs with CURRENT_DATE
+      params:
+        value: { op: date_difference, unit: year, semantics: completed_units }
+        boundaries: [1, 3, 7]
+        labels: ["under_1y", "1_to_3y", "3_to_7y", "7y_plus"]
+    confidence_floor: 0.75
+
+  - name: compensation_band_from_salary
+    match:
+      target_name_patterns: ["compensation_band", "comp_band", "salary_band", "pay_band"]
+      source_columns_required: ["salary_amount"]
+    transform:
+      kind: bucket
+      inputs: ["salary_amount"]
+      params:
+        boundaries: [60000, 100000, 140000, 180000]
+        labels: ["A", "B", "C", "D", "E"]
+    confidence_floor: 0.80
+
+  # --- Compensation change math (uses the source prior_amt) ----------------
+  - name: pct_change_from_prior
+    match:
+      target_name_patterns: ["pct_change_from_prior", "salary_pct_change", "pct_change", "raise_pct"]
+      source_columns_required: ["salary_amount", "prior_salary_amount"]
+    transform:
+      kind: expression
+      inputs: ["salary_amount", "prior_salary_amount"]
+      expression: "ROUND((salary_amount - prior_salary_amount) / NULLIF(prior_salary_amount, 0) * 100, 2)"
+    confidence_floor: 0.75
+
+  # --- Cross-product lookups (into the compensation_payroll source product) -
+  # Bare lookup_table names resolve to the consuming view (vw_<table>) of the
+  # CONSUMES'd source product, so a workforce_core-primary product can pull the
+  # current salary from compensation_payroll. (See research/hr-demo-scenario.md §4.)
+  - name: current_salary_latest
+    match:
+      target_name_patterns: ["current_salary", "active_salary", "live_salary", "salary_now"]
+      source_columns_required: ["employee_id"]
+    transform:
+      kind: lookup
+      inputs: ["employee_id"]
+      params:
+        lookup_table: "salary_history"
+        key_column: "employee_id"
+        value_column: "salary_amount"
+        selection_strategy: "latest"
+        order_by_column: "effective_from"
+        filter_clause: "is_current = true"
+    confidence_floor: 0.85
+
+  # --- Org / reference lookups (within workforce_core) ---------------------
+  # Reconciled to the samples/hr schema: employee.department_id -> department.
+  - name: department_name_from_id
+    match:
+      target_name_patterns: ["department_name", "dept_name", "department"]
+      source_columns_required: ["department_id"]
+    transform:
+      kind: lookup
+      inputs: ["department_id"]
+      params:
+        lookup_table: "department"
+        key_column: "department_id"
+        value_column: "dept_name"
+        selection_strategy: "equi"
+    confidence_floor: 0.85
+
+  - name: job_title_from_id
+    match:
+      target_name_patterns: ["job_title", "title", "position_title"]
+      source_columns_required: ["job_id"]
+    transform:
+      kind: lookup
+      inputs: ["job_id"]
+      params:
+        lookup_table: "job"
+        key_column: "job_id"
+        value_column: "job_title"
+        selection_strategy: "equi"
+    confidence_floor: 0.85

@@ -1,0 +1,322 @@
+apiVersion: v3.1.0
+kind: DataContract
+id: template:marketing-sales:src-marketing-execution-and-conversion-log
+name: Marketing Execution and Conversion Log
+version: 1.0.0
+status: draft
+domain: Marketing & Sales
+description: Data tracking lead-to-opportunity-to-closure and drop-off points, in
+  other words - capturing customer-level response to campaigns-opens, clicks, redemptions,
+  conversions.
+schema:
+- name: Marketing Execution and Conversion Log
+  physicalName: marketing_execution_and_conversion_log
+  physicalType: table
+  description: Data tracking lead-to-opportunity-to-closure and drop-off points, in
+    other words - capturing customer-level response to campaigns-opens, clicks, redemptions,
+    conversions.
+  properties:
+  - name: lead_id
+    physicalName: lead_id
+    logicalName: Lead ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a marketing lead record tracking a customer's
+      progression through the sales funnel.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: customer_id
+    physicalName: customer_id
+    logicalName: Customer ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier of the customer associated with the lead, linking
+      to the customer master.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: campaign_id
+    physicalName: campaign_id
+    logicalName: Campaign ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Identifier of the marketing campaign that generated or is attributed
+      to this lead.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: lead_source
+    physicalName: lead_source
+    logicalName: Lead Source
+    logicalType: varchar
+    physicalType: varchar
+    description: Originating channel or touchpoint through which the lead was generated
+      (e.g. email campaign, branch referral, digital ad).
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: lead_creation_date
+    physicalName: lead_creation_date
+    logicalName: Lead Creation Date
+    logicalType: date
+    physicalType: date
+    description: Date on which the lead record was created, marking the start of the
+      customer's tracked funnel journey.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: product_interest
+    physicalName: product_interest
+    logicalName: Product Interest
+    logicalType: varchar
+    physicalType: varchar
+    description: Bank product or product category the customer expressed interest
+      in or was targeted for through the campaign.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: rm_id
+    physicalName: rm_id
+    logicalName: RM ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier of the relationship manager or sales officer assigned
+      to follow up on this lead.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: message_sent_date
+    physicalName: message_sent_date
+    logicalName: Message Sent Date
+    logicalType: date
+    physicalType: date
+    description: Date on which the campaign message or offer was dispatched to the
+      customer associated with this lead.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: channel
+    physicalName: channel
+    logicalName: Channel
+    logicalType: varchar
+    physicalType: varchar
+    description: Communication channel used to deliver the campaign message, such
+      as email, SMS, or push notification.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: open_timestamp
+    physicalName: open_timestamp
+    logicalName: Open Timestamp
+    logicalType: timestamp
+    physicalType: timestamp
+    description: Timestamp at which the customer opened or viewed the campaign message.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: click_timestamp
+    physicalName: click_timestamp
+    logicalName: Click Timestamp
+    logicalType: timestamp
+    physicalType: timestamp
+    description: Timestamp at which the customer clicked on a link or call-to-action
+      in the campaign message.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: redemption_timestamp
+    physicalName: redemption_timestamp
+    logicalName: Redemption Timestamp
+    logicalType: timestamp
+    physicalType: timestamp
+    description: Timestamp at which the customer redeemed an offer or coupon associated
+      with the campaign.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: conversion_flag
+    physicalName: conversion_flag
+    logicalName: Conversion Flag
+    logicalType: boolean
+    physicalType: boolean
+    description: Boolean indicator that the customer completed the targeted action
+      (e.g. product application or purchase) for this lead.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: conversion_status
+    physicalName: conversion_status
+    logicalName: Conversion Status
+    logicalType: varchar
+    physicalType: varchar
+    description: Detailed status of the conversion outcome, such as applied, approved,
+      dropped, or pending.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: conversion_date
+    physicalName: conversion_date
+    logicalName: Conversion Date
+    logicalType: date
+    physicalType: date
+    description: Date on which the customer successfully converted by completing the
+      campaign's target action.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: drop_reason
+    physicalName: drop_reason
+    logicalName: Drop Reason
+    logicalType: varchar
+    physicalType: varchar
+    description: Reason the lead was lost or the customer dropped out of the funnel
+      without converting.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: converted_product
+    physicalName: converted_product
+    logicalName: Converted Product
+    logicalType: varchar
+    physicalType: varchar
+    description: Name or code of the banking product the customer purchased or applied
+      for upon conversion.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: conversion_value
+    physicalName: conversion_value
+    logicalName: Conversion Value
+    logicalType: numeric
+    physicalType: numeric
+    description: Monetary value attributed to the conversion event, such as loan amount
+      sanctioned or deposit amount opened.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: segment_id
+    physicalName: segment_id
+    logicalName: Segment ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for the customer segment to which this lead belongs,
+      used for funnel analysis by cohort.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: size
+    physicalName: size
+    logicalName: Size
+    logicalType: numeric
+    physicalType: numeric
+    description: Estimated count of customers in the segment associated with this
+      lead, used for reach and coverage reporting.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  foreignKeys: []
+  transform:
+    grouping_keys:
+    - lead_id
+    scd_policy:
+      type: latest_only
+customProperties:
+  feasibility:
+    schema_version: '1.0'
+    spec_classification: internal
+    cadence: ''
+    freshness_history: current
+    freshness_description: ''
+    grain_keys:
+    - lead_id
+    grain_description: ''
+    allowed_derivations:
+    - rename
+    - cast
+    composition:
+      join_keys: []
+      composed_of: []
+      description: ''
+productKind: source
+sourceSpecId: src_marketing_execution_and_conversion_log

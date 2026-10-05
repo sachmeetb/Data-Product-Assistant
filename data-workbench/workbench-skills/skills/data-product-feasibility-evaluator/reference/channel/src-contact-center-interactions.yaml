@@ -1,0 +1,244 @@
+spec_id: src_contact_center_interactions
+name: Contact Center Interactions
+domain: Channel
+product_kind: source
+description: Call logs, IVR paths, agent notes, complaint tickets, authentication
+  steps.
+schema_version: '1.0'
+classification: confidential
+grain:
+  keys:
+  - interaction_id
+  description: ''
+freshness:
+  history: current
+  cadence: ''
+  description: ''
+allowed_derivations:
+- rename
+- cast
+attributes:
+- name: interaction_id
+  type: bigint
+  concept: Interaction ID
+  description: Unique identifier for a single contact center interaction (call, chat, or other channel contact), serving as the primary key for the interaction record.
+  required: true
+  is_key: true
+  classification: internal
+- name: customer_id
+  type: bigint
+  concept: Customer ID
+  description: The bank customer identifier linking the interaction to the caller's profile and account history.
+  required: true
+  is_key: true
+  classification: internal
+- name: channel
+  type: varchar
+  concept: Channel
+  description: The medium through which the interaction occurred, such as inbound_call, outbound_call, web_chat, or secure_message.
+  required: false
+  is_key: false
+  classification: internal
+- name: start_ts
+  type: timestamp
+  concept: Start Ts
+  description: The timestamp when the contact center interaction began, used for measuring handle time and session duration.
+  required: false
+  is_key: false
+  classification: internal
+- name: end_ts
+  type: timestamp
+  concept: End Ts
+  description: The timestamp when the contact center interaction concluded, used alongside start_ts to compute average handle time.
+  required: false
+  is_key: false
+  classification: internal
+- name: ivr_path
+  type: varchar
+  concept: Ivr Path
+  description: The sequence of IVR menu options navigated by the customer before reaching an agent or completing self-service.
+  required: false
+  is_key: false
+  classification: internal
+- name: queue
+  type: varchar
+  concept: Queue
+  description: The routing queue or skill group to which the interaction was directed, indicating the service category or team.
+  required: false
+  is_key: false
+  classification: internal
+- name: aht_seconds
+  type: varchar
+  concept: Aht Seconds
+  description: Average handle time in seconds for the interaction, encompassing talk time, hold time, and after-call work.
+  required: false
+  is_key: false
+  classification: internal
+- name: wrap_code
+  type: varchar
+  concept: Wrap Code
+  description: The post-call disposition code entered by the agent summarising the nature and outcome of the interaction.
+  required: false
+  is_key: false
+  classification: internal
+- name: language
+  type: varchar
+  concept: Language
+  description: The language spoken or selected by the customer during the interaction.
+  required: false
+  is_key: false
+  classification: internal
+- name: transcript_id
+  type: bigint
+  concept: Transcript ID
+  description: Unique identifier linking the interaction to its voice or chat transcript record for quality and compliance review.
+  required: true
+  is_key: true
+  classification: internal
+- name: case_id
+  type: bigint
+  concept: Case ID
+  description: Unique identifier for the complaint or service case raised during or as a result of this interaction.
+  required: true
+  is_key: true
+  classification: internal
+- name: category
+  type: varchar
+  concept: Category
+  description: The functional category of the complaint or case, such as billing_dispute, fraud, or product_enquiry.
+  required: false
+  is_key: false
+  classification: internal
+- name: priority
+  type: varchar
+  concept: Priority
+  description: The urgency classification of the case, determining the order and speed of resolution handling.
+  required: false
+  is_key: false
+  classification: internal
+- name: sla_clock_start
+  type: varchar
+  concept: Sla Clock Start
+  description: The timestamp marking when the SLA resolution clock began for the associated complaint case.
+  required: false
+  is_key: false
+  classification: internal
+- name: status
+  type: varchar
+  concept: Status
+  description: The current lifecycle state of the complaint case, such as open, in_progress, escalated, or resolved.
+  required: true
+  is_key: false
+  classification: internal
+- name: resolution_ts
+  type: timestamp
+  concept: Resolution Ts
+  description: The timestamp at which the complaint case was formally closed or resolved.
+  required: false
+  is_key: false
+  classification: internal
+- name: root_cause_code
+  type: varchar
+  concept: Root Cause Code
+  description: Standardised code identifying the underlying reason the customer's issue arose, used for root-cause analysis reporting.
+  required: false
+  is_key: false
+  classification: internal
+- name: refund_amount
+  type: numeric
+  concept: Refund Amount
+  description: The monetary value of any refund or compensation authorised and processed as part of resolving the complaint.
+  required: true
+  is_key: false
+  classification: internal
+- name: agent_id
+  type: bigint
+  concept: Agent ID
+  description: Unique identifier for the contact center agent who handled the interaction, used for performance and workload reporting.
+  required: true
+  is_key: true
+  classification: internal
+- name: team
+  type: varchar
+  concept: Team
+  description: The team or group to which the agent belongs within the contact center, such as a specialist unit or geographic cluster.
+  required: false
+  is_key: false
+  classification: internal
+- name: skillset
+  type: varchar
+  concept: Skillset
+  description: The defined competency set assigned to the agent, determining which queue types and interaction categories they can handle.
+  required: false
+  is_key: false
+  classification: internal
+- name: occupancy_rate
+  type: numeric
+  concept: Occupancy Rate
+  description: The proportion of the agent's logged-in time spent actively handling interactions, expressed as a percentage.
+  required: true
+  is_key: false
+  classification: pii
+- name: qa_score
+  type: numeric
+  concept: Qa Score
+  description: The quality assurance score assigned to the interaction after evaluation against defined call quality criteria.
+  required: true
+  is_key: false
+  classification: internal
+- name: sentiment_score
+  type: numeric
+  concept: Sentiment Score
+  description: A numeric measure of customer sentiment derived from interaction transcript or voice analysis, indicating satisfaction tone.
+  required: true
+  is_key: false
+  classification: internal
+- name: intent
+  type: varchar
+  concept: Intent
+  description: The primary reason or goal the customer expressed during the interaction, as detected by NLP or agent classification.
+  required: false
+  is_key: false
+  classification: internal
+- name: sensitivity
+  type: varchar
+  concept: Sensitivity
+  description: A flag or category indicating whether the interaction content involved sensitive topics such as bereavement, vulnerability, or financial hardship.
+  required: false
+  is_key: false
+  classification: internal
+- name: keywords
+  type: varchar
+  concept: Keywords
+  description: Extracted terms from the interaction transcript that signal significant topics, products, or issues discussed.
+  required: false
+  is_key: false
+  classification: internal
+- name: survey_id
+  type: bigint
+  concept: Survey ID
+  description: Unique identifier for the post-interaction customer satisfaction survey administered after the call or case closure.
+  required: true
+  is_key: true
+  classification: internal
+- name: score
+  type: numeric
+  concept: Score
+  description: The numeric satisfaction score submitted by the customer in the post-interaction survey, typically on a scale of 1–10.
+  required: true
+  is_key: false
+  classification: internal
+- name: verbatim
+  type: varchar
+  concept: Verbatim
+  description: The customer's free-text comment provided alongside the survey score, capturing their qualitative feedback.
+  required: false
+  is_key: false
+  classification: pii
+- name: followup_needed_flag
+  type: boolean
+  concept: Followup Needed Flag
+  description: Boolean indicator signalling that the interaction requires a follow-up action or callback before the case can be fully closed.
+  required: false
+  is_key: false
+  classification: internal

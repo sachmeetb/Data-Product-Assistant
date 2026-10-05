@@ -1,0 +1,21 @@
+---
+description: List pending review items across all review types
+---
+
+Summarise pending reviews for this project. Read-only.
+
+```bash
+curl -s "{{ backend_base_url }}/api/projects/{{ project.id }}/reviews/descriptions?summary=true"
+curl -s "{{ backend_base_url }}/api/projects/{{ project.id }}/reviews/mappings?summary=true"
+curl -s "{{ backend_base_url }}/api/projects/{{ project.id }}/reviews/unmapped_columns?summary=true"
+curl -s "{{ backend_base_url }}/api/projects/{{ project.id }}/reviews/transformation_escalations?summary=true"
+curl -s "{{ backend_base_url }}/api/projects/{{ project.id }}/reviews/domain_rules?summary=true"
+```
+
+For each non-empty response, print:
+- `=== <review_type>: <count> pending ===`
+- The first 5 items as `<uri> — <label> — <ai_proposal preview>`
+
+Engineer-actionable items: items in `unmapped_columns` (they need a mapping authored) and items in `mappings` if any are `engineer`-authored edits awaiting Reviewer signoff. Items in `descriptions` / `source_product_validation` / `domain_rules` are owned by other roles — flag them as informational.
+
+To **act** on a review item, open the browser at `{{ frontend_base_url }}/engineer/projects/{{ project.id }}` (engineer shell) or `{{ frontend_base_url }}/product/validate/{{ project.id }}` (PO source validation gate). The CLI is read-only for reviews in v1.

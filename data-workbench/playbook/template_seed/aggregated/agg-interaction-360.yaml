@@ -1,0 +1,2565 @@
+apiVersion: v3.1.0
+kind: DataContract
+id: template:aggregated:agg-interaction-360
+name: Interaction 360
+version: 1.0.0
+status: draft
+domain: Aggregated
+description: Consolidated record of customer interactions and digital engagement across
+  channels for journey analytics and targeting.
+schema:
+- name: Interaction 360
+  physicalName: interaction_360
+  physicalType: table
+  description: Consolidated record of customer interactions and digital engagement
+    across channels for journey analytics and targeting.
+  properties:
+  - name: customer_id
+    physicalName: customer_id
+    logicalName: Customer ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique numeric identifier for a customer record, serving as the primary
+      join key across all customer-related entities.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: session_id
+    physicalName: session_id
+    logicalName: Session ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a customer's authenticated digital session.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: timestamp
+    physicalName: timestamp
+    logicalName: Timestamp
+    logicalType: timestamp
+    physicalType: timestamp
+    description: Date and time at which an event, transaction, or record was created
+      or updated.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: ip_address
+    physicalName: ip_address
+    logicalName: IP Address
+    logicalType: varchar
+    physicalType: varchar
+    description: IP address from which a digital interaction or transaction originated,
+      used for security and fraud detection.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: pii
+    examples: []
+    logicalTypeOptions: {}
+  - name: session_duration
+    physicalName: session_duration
+    logicalName: Session Duration
+    logicalType: numeric
+    physicalType: numeric
+    description: Duration of a customer's digital session in seconds.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: authentication_method
+    physicalName: authentication_method
+    logicalName: Authentication Method
+    logicalType: varchar
+    physicalType: varchar
+    description: Method used to authenticate a customer or user session, such as two-factor
+      authentication or biometric verification.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: login_status
+    physicalName: login_status
+    logicalName: Login Status
+    logicalType: varchar
+    physicalType: varchar
+    description: Outcome of a customer's login attempt, such as success or failure.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: reaaon_for_failure
+    physicalName: reaaon_for_failure
+    logicalName: Reaaon For Failure
+    logicalType: varchar
+    physicalType: varchar
+    description: Reason recorded for the failure of a transaction or process.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: device_id
+    physicalName: device_id
+    logicalName: Device ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a customer's registered device, used for authentication
+      and fraud detection.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: device_type
+    physicalName: device_type
+    logicalName: Device Type
+    logicalType: varchar
+    physicalType: varchar
+    description: Type of device used by the customer, such as smartphone, tablet,
+      or desktop.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: user_agent_hash
+    physicalName: user_agent_hash
+    logicalName: User Agent Hash
+    logicalType: varchar
+    physicalType: varchar
+    description: Hashed representation of the browser or application user-agent string,
+      used for device fingerprinting.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: pii
+    examples: []
+    logicalTypeOptions: {}
+  - name: first_seen_ts
+    physicalName: first_seen_ts
+    logicalName: First Seen Ts
+    logicalType: timestamp
+    physicalType: timestamp
+    description: Timestamp at which a device, user, or entity was first observed in
+      the system.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: last_seen_ts
+    physicalName: last_seen_ts
+    logicalName: Last Seen Ts
+    logicalType: timestamp
+    physicalType: timestamp
+    description: Most recent timestamp at which a device, user, or entity was observed
+      active in the system.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: txn_id
+    physicalName: txn_id
+    logicalName: Txn ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a payment card transaction.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: transaction_type
+    physicalName: transaction_type
+    logicalName: Transaction Type
+    logicalType: varchar
+    physicalType: varchar
+    description: Classification of a transaction by type, such as purchase, refund,
+      transfer, or cash withdrawal.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: amount
+    physicalName: amount
+    logicalName: Amount
+    logicalType: numeric
+    physicalType: numeric
+    description: Monetary value associated with a transaction, payment, or financial
+      event, denominated in the account's base currency.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: initiation_and_completion_timestamp
+    physicalName: initiation_and_completion_timestamp
+    logicalName: Initiation And Completion Timestamp
+    logicalType: timestamp
+    physicalType: timestamp
+    description: Timestamps marking the start and end of a transaction or payment
+      process.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: beneficiary_id
+    physicalName: beneficiary_id
+    logicalName: Beneficiary ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for the beneficiary of a payment or funds transfer
+      instruction.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: status
+    physicalName: status
+    logicalName: Status
+    logicalType: varchar
+    physicalType: varchar
+    description: Current operational or lifecycle status of a record, account, or
+      product.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: currency
+    physicalName: currency
+    logicalName: Currency
+    logicalType: varchar
+    physicalType: varchar
+    description: ISO 4217 currency code in which a monetary amount or instrument is
+      denominated.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: reason_for_failure
+    physicalName: reason_for_failure
+    logicalName: Reason For Failure
+    logicalType: varchar
+    physicalType: varchar
+    description: Reason for a transaction, authentication, or system process failure.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: event_id
+    physicalName: event_id
+    logicalName: Event ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a discrete system, user, or business event.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: failed_login_count
+    physicalName: failed_login_count
+    logicalName: Failed Login Count
+    logicalType: numeric
+    physicalType: numeric
+    description: Number of consecutive failed login attempts for a user, used for
+      security monitoring and lockout policies.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: password_reset
+    physicalName: password_reset
+    logicalName: Password Reset
+    logicalType: varchar
+    physicalType: varchar
+    description: Indicator or timestamp of a customer's password reset event.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: otp_resend_count
+    physicalName: otp_resend_count
+    logicalName: OTP Resend Count
+    logicalType: numeric
+    physicalType: numeric
+    description: Number of times a one-time password was resent during an authentication
+      session.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: anomaly_flags
+    physicalName: anomaly_flags
+    logicalName: Anomaly Flags
+    logicalType: varchar
+    physicalType: varchar
+    description: Indicators flagging unusual patterns or potential anomalies detected
+      in transaction or usage data.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: session_start_and_end
+    physicalName: session_start_and_end
+    logicalName: Session Start And End
+    logicalType: varchar
+    physicalType: varchar
+    description: Start and end timestamps of a customer's banking session.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: os_version
+    physicalName: os_version
+    logicalName: Os Version
+    logicalType: varchar
+    physicalType: varchar
+    description: Operating system version of the customer's device, used for compatibility
+      and security analysis.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: app_version
+    physicalName: app_version
+    logicalName: App Version
+    logicalType: varchar
+    physicalType: varchar
+    description: Version number of the application at the time of the interaction,
+      used for troubleshooting and analytics.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: network_information
+    physicalName: network_information
+    logicalName: Network Information
+    logicalType: varchar
+    physicalType: varchar
+    description: Technical network details such as IP address, connection type, or
+      ISP associated with a session.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: tap_click_events
+    physicalName: tap_click_events
+    logicalName: Tap Click Events
+    logicalType: varchar
+    physicalType: varchar
+    description: Count or log of tap or click events recorded during a mobile or web
+      session.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: imei_number
+    physicalName: imei_number
+    logicalName: Imei Number
+    logicalType: varchar
+    physicalType: varchar
+    description: International Mobile Equipment Identity number of the customer's
+      device, used for device authentication.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: app_permissions
+    physicalName: app_permissions
+    logicalName: App Permissions
+    logicalType: varchar
+    physicalType: varchar
+    description: Set of permissions granted to a third-party application by the customer
+      under an open-banking consent.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: notifications_enabled
+    physicalName: notifications_enabled
+    logicalName: Notifications Enabled
+    logicalType: varchar
+    physicalType: varchar
+    description: Flag indicating whether push or email notifications are enabled for
+      a customer's account or service.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: type
+    physicalName: type
+    logicalName: Type
+    logicalType: varchar
+    physicalType: varchar
+    description: Generic type or classification field for the entity or event.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: linked_account_number
+    physicalName: linked_account_number
+    logicalName: Linked Account Number
+    logicalType: numeric
+    physicalType: numeric
+    description: Account number of an account linked to a primary account for features
+      such as sweep or offset.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: pii
+    examples: []
+    logicalTypeOptions: {}
+  - name: beneficiary
+    physicalName: beneficiary
+    logicalName: Beneficiary
+    logicalType: varchar
+    physicalType: varchar
+    description: Name or identifier of the party designated to receive a payment,
+      transfer, or insurance payout.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: auth_method
+    physicalName: auth_method
+    logicalName: Auth Method
+    logicalType: varchar
+    physicalType: varchar
+    description: Authentication method used to verify a user's identity, such as PIN,
+      biometric, OTP, or password.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: failture_reasons
+    physicalName: failture_reasons
+    logicalName: Failture Reasons
+    logicalType: varchar
+    physicalType: varchar
+    description: List of reasons for which a transaction, application, or process
+      failed.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: error_id
+    physicalName: error_id
+    logicalName: Error ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for an error event logged in the system.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: error_message
+    physicalName: error_message
+    logicalName: Error Message
+    logicalType: varchar
+    physicalType: varchar
+    description: Human-readable description of the error encountered during a transaction
+      or system operation.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: crash_report
+    physicalName: crash_report
+    logicalName: Crash Report
+    logicalType: varchar
+    physicalType: varchar
+    description: Diagnostic report generated when a mobile or web application crashes,
+      used for technical support.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: interaction_id
+    physicalName: interaction_id
+    logicalName: Interaction ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a customer interaction event across any channel.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: channel
+    physicalName: channel
+    logicalName: Channel
+    logicalType: varchar
+    physicalType: varchar
+    description: Banking channel through which the interaction, transaction, or service
+      was delivered.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: start_ts
+    physicalName: start_ts
+    logicalName: Start Ts
+    logicalType: timestamp
+    physicalType: timestamp
+    description: Timestamp at which a process, session, or event started.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: end_ts
+    physicalName: end_ts
+    logicalName: End Ts
+    logicalType: timestamp
+    physicalType: timestamp
+    description: Timestamp at which a process, session, or event concluded.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: ivr_path
+    physicalName: ivr_path
+    logicalName: Ivr Path
+    logicalType: varchar
+    physicalType: varchar
+    description: Path taken through an Interactive Voice Response system during a
+      contact center interaction.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: queue
+    physicalName: queue
+    logicalName: Queue
+    logicalType: varchar
+    physicalType: varchar
+    description: Collections or service queue to which a case has been assigned for
+      processing.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: aht_seconds
+    physicalName: aht_seconds
+    logicalName: Aht Seconds
+    logicalType: varchar
+    physicalType: varchar
+    description: Average handle time in seconds for a contact center interaction,
+      used as a productivity metric.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: wrap_code
+    physicalName: wrap_code
+    logicalName: Wrap Code
+    logicalType: varchar
+    physicalType: varchar
+    description: Code for a discretionary or advisory investment wrap account structure.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: language
+    physicalName: language
+    logicalName: Language
+    logicalType: varchar
+    physicalType: varchar
+    description: Language preferred by the customer for communications, or language
+      of a survey instrument.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: transcript_id
+    physicalName: transcript_id
+    logicalName: Transcript ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a contact center call transcript or chat log.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: case_id
+    physicalName: case_id
+    logicalName: Case ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a collections, servicing, or dispute case assigned
+      to a customer account.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: category
+    physicalName: category
+    logicalName: Category
+    logicalType: varchar
+    physicalType: varchar
+    description: Classification category for a transaction, product, or entity, providing
+      a standard grouping for analytics.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: priority
+    physicalName: priority
+    logicalName: Priority
+    logicalType: varchar
+    physicalType: varchar
+    description: Relative priority of a transaction, case, or task in a processing
+      queue.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: sla_clock_start
+    physicalName: sla_clock_start
+    logicalName: Sla Clock Start
+    logicalType: varchar
+    physicalType: varchar
+    description: Timestamp at which the SLA clock started for a case or service request.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: resolution_ts
+    physicalName: resolution_ts
+    logicalName: Resolution Ts
+    logicalType: timestamp
+    physicalType: timestamp
+    description: Timestamp at which a case or alert was resolved.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: root_cause_code
+    physicalName: root_cause_code
+    logicalName: Root Cause Code
+    logicalType: varchar
+    physicalType: varchar
+    description: Code identifying the root cause of an incident, exception, or complaint.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: refund_amount
+    physicalName: refund_amount
+    logicalName: Refund Amount
+    logicalType: numeric
+    physicalType: numeric
+    description: Monetary amount refunded to a customer following a dispute or over-charge.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: agent_id
+    physicalName: agent_id
+    logicalName: Agent ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for the collections or service agent who handled
+      a customer interaction.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: team
+    physicalName: team
+    logicalName: Team
+    logicalType: varchar
+    physicalType: varchar
+    description: Business team or unit associated with a record, case, or operational
+      metric.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: skillset
+    physicalName: skillset
+    logicalName: Skillset
+    logicalType: varchar
+    physicalType: varchar
+    description: Skills or competencies of a contact center agent or employee, used
+      for routing and analytics.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: occupancy_rate
+    physicalName: occupancy_rate
+    logicalName: Occupancy Rate
+    logicalType: numeric
+    physicalType: numeric
+    description: Proportion of an ATM, branch, or property that is occupied or in
+      active use.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: pii
+    examples: []
+    logicalTypeOptions: {}
+  - name: qa_score
+    physicalName: qa_score
+    logicalName: Qa Score
+    logicalType: numeric
+    physicalType: numeric
+    description: Quality assurance score assigned to an interaction or process, reflecting
+      adherence to standards.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: sentiment_score
+    physicalName: sentiment_score
+    logicalName: Sentiment Score
+    logicalType: numeric
+    physicalType: numeric
+    description: Sentiment analysis score derived from customer feedback or interaction
+      transcripts.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: intent
+    physicalName: intent
+    logicalName: Intent
+    logicalType: varchar
+    physicalType: varchar
+    description: Stated or inferred intent of a customer interaction, such as purchase
+      intent or complaint intent.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: sensitivity
+    physicalName: sensitivity
+    logicalName: Sensitivity
+    logicalType: varchar
+    physicalType: varchar
+    description: Sensitivity analysis value for a financial instrument or portfolio,
+      such as duration or delta.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: keywords
+    physicalName: keywords
+    logicalName: Keywords
+    logicalType: varchar
+    physicalType: varchar
+    description: Set of keywords associated with a record, used for search, tagging,
+      or content analysis.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: survey_id
+    physicalName: survey_id
+    logicalName: Survey ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a customer or enterprise survey.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: score
+    physicalName: score
+    logicalName: Score
+    logicalType: numeric
+    physicalType: numeric
+    description: Numeric score assigned to a customer, portfolio, or process for risk,
+      quality, or performance assessment.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: verbatim
+    physicalName: verbatim
+    logicalName: Verbatim
+    logicalType: varchar
+    physicalType: varchar
+    description: Verbatim text of a customer survey response or call transcript excerpt.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: pii
+    examples: []
+    logicalTypeOptions: {}
+  - name: followup_needed_flag
+    physicalName: followup_needed_flag
+    logicalName: Followup Needed Flag
+    logicalType: boolean
+    physicalType: boolean
+    description: Indicator that a follow-up action is required on a collections case
+      or customer interaction.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: terminal_id
+    physicalName: terminal_id
+    logicalName: Terminal ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a payment terminal or POS device.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: atm_id
+    physicalName: atm_id
+    logicalName: ATM ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for an ATM terminal, used to trace cash transactions
+      and machine events.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: switch_id
+    physicalName: switch_id
+    logicalName: Switch ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a payment switch or network routing point.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: location
+    physicalName: location
+    logicalName: Location
+    logicalType: varchar
+    physicalType: varchar
+    description: Geographic location of a branch, ATM, customer, or event.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: ownership
+    physicalName: ownership
+    logicalName: Ownership
+    logicalType: varchar
+    physicalType: varchar
+    description: Ownership structure or percentage stake held in an asset, entity,
+      or portfolio.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: last_health_check_ts
+    physicalName: last_health_check_ts
+    logicalName: Last Health Check Ts
+    logicalType: timestamp
+    physicalType: timestamp
+    description: Timestamp of the most recent health check performed on a system or
+      device.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: txn_type
+    physicalName: txn_type
+    logicalName: Txn Type
+    logicalType: varchar
+    physicalType: varchar
+    description: Type of card transaction, such as purchase, cash advance, or balance
+      transfer.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: surcharge
+    physicalName: surcharge
+    logicalName: Surcharge
+    logicalType: varchar
+    physicalType: varchar
+    description: Additional charge levied on a transaction by an acquiring bank or
+      merchant.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: card_scheme
+    physicalName: card_scheme
+    logicalName: Card Scheme
+    logicalType: varchar
+    physicalType: varchar
+    description: Payment network scheme under which the card operates, such as Visa,
+      Mastercard, or RuPay.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: pan_token
+    physicalName: pan_token
+    logicalName: PAN Token
+    logicalType: varchar
+    physicalType: varchar
+    description: Tokenised representation of a Primary Account Number used to protect
+      card data in transit.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: pii
+    examples: []
+    logicalTypeOptions: {}
+  - name: stan_rrn
+    physicalName: stan_rrn
+    logicalName: Stan Rrn
+    logicalType: varchar
+    physicalType: varchar
+    description: System Trace Audit Number and Retrieval Reference Number used in
+      card transaction authorisation messages.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: result_code
+    physicalName: result_code
+    logicalName: Result Code
+    logicalType: varchar
+    physicalType: varchar
+    description: Numeric or alphanumeric code indicating the outcome of a transaction
+      or process.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: on_us_flag
+    physicalName: on_us_flag
+    logicalName: On Us Flag
+    logicalType: boolean
+    physicalType: boolean
+    description: Indicator that both the paying and receiving accounts are held at
+      the same bank.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: cassette_id_list
+    physicalName: cassette_id_list
+    logicalName: Cassette ID List
+    logicalType: varchar
+    physicalType: varchar
+    description: List of cassette identifiers loaded into an ATM, used for cash reconciliation
+      and audit.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: load_event_id
+    physicalName: load_event_id
+    logicalName: Load Event ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a data load event in the ETL or data pipeline.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: denomination_breakup
+    physicalName: denomination_breakup
+    logicalName: Denomination Breakup
+    logicalType: varchar
+    physicalType: varchar
+    description: Breakdown of cash by denomination loaded or dispensed in an ATM cassette.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: cassette_serials
+    physicalName: cassette_serials
+    logicalName: Cassette Serials
+    logicalType: varchar
+    physicalType: varchar
+    description: Serial numbers of ATM cassettes, enabling denomination-level cash
+      tracking and reconciliation.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: load_ts
+    physicalName: load_ts
+    logicalName: Load Ts
+    logicalType: timestamp
+    physicalType: timestamp
+    description: Timestamp at which a record was loaded into the data system.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: replenish_staff_id
+    physicalName: replenish_staff_id
+    logicalName: Replenish Staff ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Identifier of the staff member who replenished an ATM with cash.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: incident_id
+    physicalName: incident_id
+    logicalName: Incident ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for an operational or IT incident recorded in the
+      bank's incident management system.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: error_code
+    physicalName: error_code
+    logicalName: Error Code
+    logicalType: varchar
+    physicalType: varchar
+    description: Standardised code identifying the type of error encountered during
+      a transaction or system process.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: downtime_minutes
+    physicalName: downtime_minutes
+    logicalName: Downtime Minutes
+    logicalType: varchar
+    physicalType: varchar
+    description: Duration of service or system downtime in minutes, used for SLA monitoring
+      and operational reporting.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: lead_id
+    physicalName: lead_id
+    logicalName: Lead ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a sales or marketing lead record.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: campaign_id
+    physicalName: campaign_id
+    logicalName: Campaign ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a marketing campaign, used to track leads,
+      conversions, and ROI.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: lead_source
+    physicalName: lead_source
+    logicalName: Lead Source
+    logicalType: varchar
+    physicalType: varchar
+    description: Channel or campaign through which a sales lead was generated.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: lead_creation_date
+    physicalName: lead_creation_date
+    logicalName: Lead Creation Date
+    logicalType: date
+    physicalType: date
+    description: Date on which a sales lead was created in the CRM system.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: product_interest
+    physicalName: product_interest
+    logicalName: Product Interest
+    logicalType: varchar
+    physicalType: varchar
+    description: Customer's expressed interest in acquiring a specific product, used
+      for lead and pipeline tracking.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: rm_id
+    physicalName: rm_id
+    logicalName: RM ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a Relationship Manager assigned to a client.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: message_sent_date
+    physicalName: message_sent_date
+    logicalName: Message Sent Date
+    logicalType: date
+    physicalType: date
+    description: Date on which a marketing communication or notification was sent
+      to the customer.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: open_timestamp
+    physicalName: open_timestamp
+    logicalName: Open Timestamp
+    logicalType: timestamp
+    physicalType: timestamp
+    description: Timestamp at which a case, session, or service request was opened.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: click_timestamp
+    physicalName: click_timestamp
+    logicalName: Click Timestamp
+    logicalType: timestamp
+    physicalType: timestamp
+    description: Timestamp at which a user clicked on a marketing communication or
+      digital touchpoint.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: redemption_timestamp
+    physicalName: redemption_timestamp
+    logicalName: Redemption Timestamp
+    logicalType: timestamp
+    physicalType: timestamp
+    description: Timestamp at which reward points or a voucher were redeemed.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: conversion_flag
+    physicalName: conversion_flag
+    logicalName: Conversion Flag
+    logicalType: boolean
+    physicalType: boolean
+    description: Indicator denoting whether a lead or prospect was successfully converted
+      to a customer.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: conversion_status
+    physicalName: conversion_status
+    logicalName: Conversion Status
+    logicalType: varchar
+    physicalType: varchar
+    description: Current status of a currency conversion or product conversion transaction.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: conversion_date
+    physicalName: conversion_date
+    logicalName: Conversion Date
+    logicalType: date
+    physicalType: date
+    description: Date on which a product, currency, or lead was converted to the next
+      stage.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: drop_reason
+    physicalName: drop_reason
+    logicalName: Drop Reason
+    logicalType: varchar
+    physicalType: varchar
+    description: Reason a customer exited or dropped out of a digital journey or application
+      process.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: converted_product
+    physicalName: converted_product
+    logicalName: Converted Product
+    logicalType: varchar
+    physicalType: varchar
+    description: Product to which a customer was converted following a sales or cross-sell
+      interaction.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: conversion_value
+    physicalName: conversion_value
+    logicalName: Conversion Value
+    logicalType: numeric
+    physicalType: numeric
+    description: Monetary value assigned to a marketing conversion event, such as
+      a product sale.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: segment_id
+    physicalName: segment_id
+    logicalName: Segment ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a customer segment or market segment.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: size
+    physicalName: size
+    logicalName: Size
+    logicalType: numeric
+    physicalType: numeric
+    description: Size measure for an enterprise or asset, such as headcount or total
+      assets.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: campaign_name
+    physicalName: campaign_name
+    logicalName: Campaign Name
+    logicalType: varchar
+    physicalType: varchar
+    description: Human-readable name of the marketing campaign for reporting and display
+      purposes.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: campaign_type
+    physicalName: campaign_type
+    logicalName: Campaign Type
+    logicalType: varchar
+    physicalType: varchar
+    description: Classification of the marketing campaign by objective or channel,
+      such as acquisition, retention, or cross-sell.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: start_date
+    physicalName: start_date
+    logicalName: Start Date
+    logicalType: date
+    physicalType: date
+    description: Date on which a product, contract, campaign, or reporting period
+      begins.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: end_date
+    physicalName: end_date
+    logicalName: End Date
+    logicalType: date
+    physicalType: date
+    description: End date of a product term, campaign, survey wave, or reporting period.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: budget
+    physicalName: budget
+    logicalName: Budget
+    logicalType: numeric
+    physicalType: numeric
+    description: Planned expenditure or revenue target allocated for a campaign, project,
+      or business unit.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: delivery_channel
+    physicalName: delivery_channel
+    logicalName: Delivery Channel
+    logicalType: varchar
+    physicalType: varchar
+    description: Channel through which a product, service, or communication is delivered
+      to the customer.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: product_targeted
+    physicalName: product_targeted
+    logicalName: Product Targeted
+    logicalType: varchar
+    physicalType: varchar
+    description: Product that a marketing campaign or sales initiative is designed
+      to promote.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: objective
+    physicalName: objective
+    logicalName: Objective
+    logicalType: varchar
+    physicalType: varchar
+    description: Stated investment objective or strategic goal for a portfolio, product,
+      or campaign.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: owner_team
+    physicalName: owner_team
+    logicalName: Owner Team
+    logicalType: varchar
+    physicalType: varchar
+    description: Business team or unit responsible for managing a data product, system,
+      or portfolio.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: customer_segment
+    physicalName: customer_segment
+    logicalName: Customer Segment
+    logicalType: varchar
+    physicalType: varchar
+    description: Business-defined segment to which a customer is assigned, such as
+      mass, affluent, or HNI.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: targeting_rules
+    physicalName: targeting_rules
+    logicalName: Targeting Rules
+    logicalType: varchar
+    physicalType: varchar
+    description: Rules used to determine which customers or segments are targeted
+      by a campaign or offer.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: risk_profile
+    physicalName: risk_profile
+    logicalName: Risk Profile
+    logicalType: varchar
+    physicalType: varchar
+    description: Classification of a customer or portfolio by risk appetite or risk
+      tolerance level.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: consent_status
+    physicalName: consent_status
+    logicalName: Consent Status
+    logicalType: varchar
+    physicalType: varchar
+    description: Current status of a data-sharing consent, such as active, revoked,
+      or expired.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: demographics
+    physicalName: demographics
+    logicalName: Demographics
+    logicalType: varchar
+    physicalType: varchar
+    description: Demographic attributes of a survey respondent or customer segment,
+      including age, income, and region.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: delivery_status
+    physicalName: delivery_status
+    logicalName: Delivery Status
+    logicalType: varchar
+    physicalType: varchar
+    description: Current delivery status of a communication, product, or service,
+      such as delivered, pending, or failed.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: opened_flag
+    physicalName: opened_flag
+    logicalName: Opened Flag
+    logicalType: boolean
+    physicalType: boolean
+    description: Indicator denoting whether a marketing email or notification was
+      opened by the recipient.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: clicked_flag
+    physicalName: clicked_flag
+    logicalName: Clicked Flag
+    logicalType: boolean
+    physicalType: boolean
+    description: Indicator denoting whether a marketing email or digital message was
+      clicked by the recipient.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: converted_flag
+    physicalName: converted_flag
+    logicalName: Converted Flag
+    logicalType: boolean
+    physicalType: boolean
+    description: Indicator denoting whether a prospect or lead has been converted
+      into an active customer.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: opt_out_flag
+    physicalName: opt_out_flag
+    logicalName: Opt Out Flag
+    logicalType: boolean
+    physicalType: boolean
+    description: Indicator that a customer has opted out of a particular communication
+      or data-sharing activity.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: channel_id
+    physicalName: channel_id
+    logicalName: Channel ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for the banking channel through which a transaction
+      or interaction occurred.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: channel_type
+    physicalName: channel_type
+    logicalName: Channel Type
+    logicalType: varchar
+    physicalType: varchar
+    description: Type of banking channel used, such as branch, ATM, internet banking,
+      mobile app, or contact center.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: description
+    physicalName: description
+    logicalName: Description
+    logicalType: varchar
+    physicalType: varchar
+    description: Free-text description of the entity, product, or attribute providing
+      human-readable context.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: touchpoint_id
+    physicalName: touchpoint_id
+    logicalName: Touchpoint ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a marketing touchpoint or customer interaction
+      event.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: name
+    physicalName: name
+    logicalName: Name
+    logicalType: varchar
+    physicalType: varchar
+    description: Full name of the customer, entity, or record subject.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: path
+    physicalName: path
+    logicalName: Path
+    logicalType: varchar
+    physicalType: varchar
+    description: Navigation path taken by a user through a digital application or
+      IVR system.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: event_type
+    physicalName: event_type
+    logicalName: Event Type
+    logicalType: varchar
+    physicalType: varchar
+    description: Classification of the event by type, such as login, payment, alert,
+      or complaint.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: journey_id
+    physicalName: journey_id
+    logicalName: Journey ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a customer digital journey or onboarding workflow.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: start_time
+    physicalName: start_time
+    logicalName: Start Time
+    logicalType: varchar
+    physicalType: varchar
+    description: Start time of a session, shift, or operational window.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: end_time
+    physicalName: end_time
+    logicalName: End Time
+    logicalType: varchar
+    physicalType: varchar
+    description: End time of a session, interaction, or operational window.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: outage_id
+    physicalName: outage_id
+    logicalName: Outage ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a system or service outage event recorded in
+      the operations log.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: severity
+    physicalName: severity
+    logicalName: Severity
+    logicalType: varchar
+    physicalType: varchar
+    description: Severity level of an incident, complaint, or breach, used to prioritise
+      remediation.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: root_cause
+    physicalName: root_cause
+    logicalName: Root Cause
+    logicalType: varchar
+    physicalType: varchar
+    description: Description of the underlying root cause of a failure, incident,
+      or complaint.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: impacted_regions
+    physicalName: impacted_regions
+    logicalName: Impacted Regions
+    logicalType: varchar
+    physicalType: varchar
+    description: List of geographic regions affected by an outage, incident, or regulatory
+      change.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: sla_id
+    physicalName: sla_id
+    logicalName: Sla ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a service level agreement applicable to a product
+      or case.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: metric
+    physicalName: metric
+    logicalName: Metric
+    logicalType: varchar
+    physicalType: varchar
+    description: Name or code of the performance indicator, ESG measure, or operational
+      metric being reported.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: target
+    physicalName: target
+    logicalName: Target
+    logicalType: varchar
+    physicalType: varchar
+    description: Target value or goal set for a campaign, performance metric, or business
+      objective.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: consent_id
+    physicalName: consent_id
+    logicalName: Consent ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a data-sharing consent granted by a customer
+      under open-banking or GDPR frameworks.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: institution_id
+    physicalName: institution_id
+    logicalName: Institution ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a financial institution involved in a transaction
+      or regulatory report.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: scope
+    physicalName: scope
+    logicalName: Scope
+    logicalType: varchar
+    physicalType: varchar
+    description: Scope of a regulatory report, ESG disclosure, or data extraction,
+      defining included entities or boundaries.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: expiry
+    physicalName: expiry
+    logicalName: Expiry
+    logicalType: varchar
+    physicalType: varchar
+    description: Expiration date or period of a product, consent, or financial instrument.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: ext_acct_id
+    physicalName: ext_acct_id
+    logicalName: Ext Acct ID
+    logicalType: bigint
+    physicalType: bigint
+    description: External account identifier used to reference a customer account
+      at another institution.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: account_type
+    physicalName: account_type
+    logicalName: Account Type
+    logicalType: numeric
+    physicalType: numeric
+    description: Classification of the bank account by product category, such as savings,
+      current, overdraft, or loan account.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: masked_number
+    physicalName: masked_number
+    logicalName: Masked Number
+    logicalType: varchar
+    physicalType: varchar
+    description: Partially obscured card or account number retaining only the last
+      four digits for display purposes.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: ext_txn_id
+    physicalName: ext_txn_id
+    logicalName: Ext Txn ID
+    logicalType: bigint
+    physicalType: bigint
+    description: External transaction identifier assigned by a third-party system
+      or payment network.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: as_of_date
+    physicalName: as_of_date
+    logicalName: As Of Date
+    logicalType: date
+    physicalType: date
+    description: Reference date to which a snapshot, valuation, or regulatory report
+      pertains.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: available_balance
+    physicalName: available_balance
+    logicalName: Available Balance
+    logicalType: numeric
+    physicalType: numeric
+    description: Amount in the account that is immediately available for withdrawal
+      or payment, net of holds and pending transactions.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: current_balance
+    physicalName: current_balance
+    logicalName: Current Balance
+    logicalType: numeric
+    physicalType: numeric
+    description: Most recent balance on an account, reflecting all posted transactions
+      up to the current date.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: access_id
+    physicalName: access_id
+    logicalName: Access ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for an access event or permission grant record
+      in the system.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: tpp_id
+    physicalName: tpp_id
+    logicalName: Tpp ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a Third-Party Provider registered under open-banking
+      regulations.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: data_elements_accessed
+    physicalName: data_elements_accessed
+    logicalName: Data Elements Accessed
+    logicalType: varchar
+    physicalType: varchar
+    description: List of data fields or categories accessed by a third-party application
+      under an open-banking consent.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: ts
+    physicalName: ts
+    logicalName: Ts
+    logicalType: varchar
+    physicalType: varchar
+    description: Generic timestamp field recording when a record was created, updated,
+      or observed.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: ip
+    physicalName: ip
+    logicalName: IP
+    logicalType: varchar
+    physicalType: varchar
+    description: IP address associated with a network event or digital session.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: country
+    physicalName: country
+    logicalName: Country
+    logicalType: numeric
+    physicalType: numeric
+    description: Country associated with a customer, branch, transaction, or regulatory
+      jurisdiction.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: bic
+    physicalName: bic
+    logicalName: BIC
+    logicalType: varchar
+    physicalType: varchar
+    description: Bank Identifier Code identifying the financial institution in SWIFT
+      messaging and cross-border payments.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: branch_id
+    physicalName: branch_id
+    logicalName: Branch ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a bank branch, used to associate transactions
+      and customer interactions with a physical location.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: branch_name
+    physicalName: branch_name
+    logicalName: Branch Name
+    logicalType: varchar
+    physicalType: varchar
+    description: Name of the bank branch, used for display and routing purposes.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: ifsc_code
+    physicalName: ifsc_code
+    logicalName: IFSC Code
+    logicalType: varchar
+    physicalType: varchar
+    description: Indian Financial System Code identifying a specific bank branch in
+      NEFT and RTGS payment routing.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: branch_type
+    physicalName: branch_type
+    logicalName: Branch Type
+    logicalType: varchar
+    physicalType: varchar
+    description: Classification of the branch by service type, such as full-service,
+      mini-branch, or digital kiosk.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: branch_status
+    physicalName: branch_status
+    logicalName: Branch Status
+    logicalType: varchar
+    physicalType: varchar
+    description: Operational status of the branch, such as open, temporarily closed,
+      or permanently closed.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: address
+    physicalName: address
+    logicalName: Address
+    logicalType: varchar
+    physicalType: varchar
+    description: Postal or registered address of the customer, including street, city,
+      state, and postal code fields.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: pii
+    examples: []
+    logicalTypeOptions: {}
+  - name: pincode
+    physicalName: pincode
+    logicalName: Pincode
+    logicalType: varchar
+    physicalType: varchar
+    description: Postal or PIN code associated with a customer's address or branch
+      location.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: circle_name
+    physicalName: circle_name
+    logicalName: Circle Name
+    logicalType: varchar
+    physicalType: varchar
+    description: Geographic or administrative circle name used for branch or ATM network
+      classification.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: region_name
+    physicalName: region_name
+    logicalName: Region Name
+    logicalType: varchar
+    physicalType: varchar
+    description: Name of a geographic region used for reporting, analytics, or operational
+      segmentation.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: zone_name
+    physicalName: zone_name
+    logicalName: Zone Name
+    logicalType: varchar
+    physicalType: varchar
+    description: Geographic zone or area name used for ATM, branch, or operational
+      segmentation.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: employee_id
+    physicalName: employee_id
+    logicalName: Employee ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for an employee within the bank's HR and operational
+      systems.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: employee_name
+    physicalName: employee_name
+    logicalName: Employee Name
+    logicalType: varchar
+    physicalType: varchar
+    description: Full name of the employee, used for display and attribution in reports.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: pii
+    examples: []
+    logicalTypeOptions: {}
+  - name: employee_role
+    physicalName: employee_role
+    logicalName: Employee Role
+    logicalType: varchar
+    physicalType: varchar
+    description: Job role or designation of the employee relevant to a transaction,
+      review, or customer interaction.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: contact
+    physicalName: contact
+    logicalName: Contact
+    logicalType: varchar
+    physicalType: varchar
+    description: Primary contact person or channel for a business customer, used for
+      relationship management.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: pii
+    examples: []
+    logicalTypeOptions: {}
+  - name: assigned_since
+    physicalName: assigned_since
+    logicalName: Assigned Since
+    logicalType: varchar
+    physicalType: varchar
+    description: Date from which an agent or relationship manager has been assigned
+      to the account or case.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: services
+    physicalName: services
+    logicalName: Services
+    logicalType: varchar
+    physicalType: varchar
+    description: List or value of services rendered by a business in the context of
+      balance-of-payments or enterprise data.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  foreignKeys: []
+  transform:
+    grouping_keys:
+    - interaction_id
+    scd_policy:
+      type: scd2
+customProperties:
+  feasibility:
+    schema_version: '1.0'
+    spec_classification: confidential
+    cadence: ''
+    freshness_history: scd2
+    freshness_description: ''
+    grain_keys:
+    - interaction_id
+    grain_description: ''
+    allowed_derivations:
+    - rename
+    - cast
+    composition:
+      join_keys:
+      - customer_id
+      composed_of:
+      - src_internet_banking
+      - src_mobile_banking
+      - src_contact_center_interactions
+      - src_atm
+      - src_marketing_execution_and_conversion_log
+      - src_campaign_management
+      - src_channel
+      - src_open_banking
+      - src_branch_master
+      description: Assembled by joining the composing source products on shared identity
+        keys.
+    attr_derivations:
+      amount:
+      - currency_normalize
+      refund_amount:
+      - currency_normalize
+      conversion_value:
+      - currency_normalize
+      available_balance:
+      - currency_normalize
+      current_balance:
+      - currency_normalize
+productKind: aggregate
+sourceSpecId: agg_interaction_360

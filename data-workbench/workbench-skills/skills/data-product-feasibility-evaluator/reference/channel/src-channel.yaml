@@ -1,0 +1,173 @@
+spec_id: src_channel
+name: Channel
+domain: Channel
+product_kind: source
+description: Reference and telemetry for bank channels and touchpoints.
+schema_version: '1.0'
+classification: internal
+grain:
+  keys:
+  - channel_id
+  description: ''
+freshness:
+  history: current
+  cadence: ''
+  description: ''
+allowed_derivations:
+- rename
+- cast
+attributes:
+- name: channel_id
+  type: bigint
+  concept: Channel ID
+  description: Unique numeric identifier for a bank channel (e.g. branch, ATM, mobile app, web), used as the primary key linking events and touchpoints to their originating channel.
+  required: true
+  is_key: true
+  classification: internal
+- name: channel_type
+  type: varchar
+  concept: Channel Type
+  description: Categorical label classifying the channel by mode of delivery, such as branch, digital, ATM, call center, or self-service kiosk.
+  required: true
+  is_key: false
+  classification: internal
+- name: description
+  type: varchar
+  concept: Description
+  description: Free-text narrative describing the purpose or characteristics of the channel or touchpoint.
+  required: false
+  is_key: false
+  classification: internal
+- name: touchpoint_id
+  type: bigint
+  concept: Touchpoint ID
+  description: Unique identifier for a specific customer interaction point within a channel, such as a page, screen, terminal, or desk.
+  required: true
+  is_key: true
+  classification: internal
+- name: name
+  type: varchar
+  concept: Name
+  description: Human-readable display name of the touchpoint or channel, used for reporting and labeling in dashboards.
+  required: true
+  is_key: false
+  classification: internal
+- name: path
+  type: varchar
+  concept: Path
+  description: The navigation or URL path the customer traversed to reach a touchpoint, capturing the digital or physical route within the channel.
+  required: false
+  is_key: false
+  classification: internal
+- name: event_id
+  type: bigint
+  concept: Event ID
+  description: Unique identifier for a discrete channel event (e.g. page view, button click, transaction attempt), enabling event-level telemetry analysis.
+  required: true
+  is_key: true
+  classification: internal
+- name: event_type
+  type: varchar
+  concept: Event Type
+  description: Category of the channel event, such as login, page_view, transaction_initiated, or session_timeout.
+  required: true
+  is_key: false
+  classification: internal
+- name: timestamp
+  type: timestamp
+  concept: Timestamp
+  description: The exact date and time at which the channel event occurred, used for session and journey time-series analysis.
+  required: false
+  is_key: false
+  classification: internal
+- name: journey_id
+  type: bigint
+  concept: Journey ID
+  description: Unique identifier grouping all events and touchpoints belonging to a single end-to-end customer journey (e.g. a loan application or onboarding session).
+  required: true
+  is_key: true
+  classification: internal
+- name: customer_id
+  type: bigint
+  concept: Customer ID
+  description: The unique identifier linking the channel journey and events to a specific bank customer's profile.
+  required: true
+  is_key: true
+  classification: internal
+- name: start_time
+  type: varchar
+  concept: Start Time
+  description: The timestamp marking when a customer journey or touchpoint interaction began.
+  required: false
+  is_key: false
+  classification: internal
+- name: end_time
+  type: varchar
+  concept: End Time
+  description: The timestamp marking when a customer journey or touchpoint interaction concluded.
+  required: false
+  is_key: false
+  classification: internal
+- name: outage_id
+  type: bigint
+  concept: Outage ID
+  description: Unique identifier for a recorded channel outage or service disruption incident.
+  required: true
+  is_key: true
+  classification: internal
+- name: start_ts
+  type: timestamp
+  concept: Start Ts
+  description: The precise timestamp at which the channel outage or downtime period began.
+  required: false
+  is_key: false
+  classification: internal
+- name: end_ts
+  type: timestamp
+  concept: End Ts
+  description: The precise timestamp at which the channel outage or downtime period was resolved.
+  required: false
+  is_key: false
+  classification: internal
+- name: severity
+  type: varchar
+  concept: Severity
+  description: Categorical rating of the impact level of a channel outage, such as low, medium, high, or critical.
+  required: false
+  is_key: false
+  classification: internal
+- name: root_cause
+  type: varchar
+  concept: Root Cause
+  description: Free-text or coded description identifying the underlying cause of a channel outage or service disruption.
+  required: false
+  is_key: false
+  classification: internal
+- name: impacted_regions
+  type: varchar
+  concept: Impacted Regions
+  description: Comma-separated or encoded list of geographic regions or branch areas affected by a channel outage.
+  required: false
+  is_key: false
+  classification: internal
+- name: sla_id
+  type: bigint
+  concept: Sla ID
+  description: Unique identifier for a channel service-level agreement definition, linking the channel to its contracted performance targets.
+  required: true
+  is_key: true
+  classification: internal
+- name: metric
+  type: varchar
+  concept: Metric
+  description: The name of the SLA performance measure being tracked, such as availability, response_time, or throughput.
+  required: false
+  is_key: false
+  classification: internal
+- name: target
+  type: varchar
+  concept: Target
+  description: The contractual target value or threshold for the SLA metric, expressed as a percentage, seconds, or count.
+  required: false
+  is_key: false
+  classification: internal

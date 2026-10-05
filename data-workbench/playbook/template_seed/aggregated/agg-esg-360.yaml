@@ -1,0 +1,1781 @@
+apiVersion: v3.1.0
+kind: DataContract
+id: template:aggregated:agg-esg-360
+name: ESG 360
+version: 1.0.0
+status: draft
+domain: Aggregated
+description: Aggregated environmental, social and governance ratings, disclosures
+  and metrics for portfolio assessment and reporting.
+schema:
+- name: ESG 360
+  physicalName: esg_360
+  physicalType: table
+  description: Aggregated environmental, social and governance ratings, disclosures
+    and metrics for portfolio assessment and reporting.
+  properties:
+  - name: issuer_id
+    physicalName: issuer_id
+    logicalName: Issuer ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for the entity that issued a security, card, or
+      financial instrument.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: name
+    physicalName: name
+    logicalName: Name
+    logicalType: varchar
+    physicalType: varchar
+    description: Full name of the customer, entity, or record subject.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: country
+    physicalName: country
+    logicalName: Country
+    logicalType: numeric
+    physicalType: numeric
+    description: Country associated with a customer, branch, transaction, or regulatory
+      jurisdiction.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: sector
+    physicalName: sector
+    logicalName: Sector
+    logicalType: varchar
+    physicalType: varchar
+    description: Economic or industry sector associated with a corporate customer,
+      issuer, or market data point.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: rating_id
+    physicalName: rating_id
+    logicalName: Rating ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a credit rating record from an internal or
+      external rating source.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: provider
+    physicalName: provider
+    logicalName: Provider
+    logicalType: varchar
+    physicalType: varchar
+    description: Third-party service provider or data provider associated with a product
+      or service.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: score
+    physicalName: score
+    logicalName: Score
+    logicalType: numeric
+    physicalType: numeric
+    description: Numeric score assigned to a customer, portfolio, or process for risk,
+      quality, or performance assessment.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: grade
+    physicalName: grade
+    logicalName: Grade
+    logicalType: varchar
+    physicalType: varchar
+    description: Risk or credit grade assigned to a borrower, instrument, or portfolio
+      based on assessment criteria.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: date
+    physicalName: date
+    logicalName: Date
+    logicalType: date
+    physicalType: date
+    description: Calendar date associated with a record, event, or observation.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: metric_id
+    physicalName: metric_id
+    logicalName: Metric ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a performance or ESG metric tracked for a company
+      or portfolio.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: category
+    physicalName: category
+    logicalName: Category
+    logicalType: varchar
+    physicalType: varchar
+    description: Classification category for a transaction, product, or entity, providing
+      a standard grouping for analytics.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: value
+    physicalName: value
+    logicalName: Value
+    logicalType: numeric
+    physicalType: numeric
+    description: Generic value field representing a monetary amount, metric reading,
+      or scored attribute.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: period
+    physicalName: period
+    logicalName: Period
+    logicalType: varchar
+    physicalType: varchar
+    description: Reporting or measurement period, such as a month, quarter, or fiscal
+      year.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: event_id
+    physicalName: event_id
+    logicalName: Event ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a discrete system, user, or business event.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: severity
+    physicalName: severity
+    logicalName: Severity
+    logicalType: varchar
+    physicalType: varchar
+    description: Severity level of an incident, complaint, or breach, used to prioritise
+      remediation.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: start_date
+    physicalName: start_date
+    logicalName: Start Date
+    logicalType: date
+    physicalType: date
+    description: Date on which a product, contract, campaign, or reporting period
+      begins.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: end_date
+    physicalName: end_date
+    logicalName: End Date
+    logicalType: date
+    physicalType: date
+    description: End date of a product term, campaign, survey wave, or reporting period.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: source_id
+    physicalName: source_id
+    logicalName: Source ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for the source system or data source from which
+      a record originates.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: refresh_frequency
+    physicalName: refresh_frequency
+    logicalName: Refresh Frequency
+    logicalType: varchar
+    physicalType: varchar
+    description: Frequency at which a data set, score, or consent is refreshed or
+      updated.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: customer_id
+    physicalName: customer_id
+    logicalName: Customer ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique numeric identifier for a customer record, serving as the primary
+      join key across all customer-related entities.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: industry
+    physicalName: industry
+    logicalName: Industry
+    logicalType: varchar
+    physicalType: varchar
+    description: Industry sector classification of a corporate customer or issuer,
+      such as manufacturing or financial services.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: registration_date
+    physicalName: registration_date
+    logicalName: Registration Date
+    logicalType: date
+    physicalType: date
+    description: Date on which a customer, device, or mandate was registered in the
+      system.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: credit_score
+    physicalName: credit_score
+    logicalName: Credit Score
+    logicalType: numeric
+    physicalType: numeric
+    description: Internally computed or bureau-sourced credit score reflecting the
+      customer's probability of default.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: loan_id
+    physicalName: loan_id
+    logicalName: Loan ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a loan account, serving as the primary key
+      for all loan-related records.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: loan_type
+    physicalName: loan_type
+    logicalName: Loan Type
+    logicalType: varchar
+    physicalType: varchar
+    description: Classification of the loan by product type, such as home loan, personal
+      loan, or vehicle loan.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: principal_amount
+    physicalName: principal_amount
+    logicalName: Principal Amount
+    logicalType: numeric
+    physicalType: numeric
+    description: Original outstanding principal balance of a loan, excluding accrued
+      interest.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: interest_rate
+    physicalName: interest_rate
+    logicalName: Interest Rate
+    logicalType: numeric
+    physicalType: numeric
+    description: Annual percentage rate of interest applicable to a loan, deposit,
+      or financial instrument.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: maturity_date
+    physicalName: maturity_date
+    logicalName: Maturity Date
+    logicalType: date
+    physicalType: date
+    description: Date on which a loan, deposit, or financial instrument is due to
+      be repaid or redeemed.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: collateral_id
+    physicalName: collateral_id
+    logicalName: Collateral ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a collateral asset pledged against a loan or
+      credit facility.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: collateral_type
+    physicalName: collateral_type
+    logicalName: Collateral Type
+    logicalType: varchar
+    physicalType: varchar
+    description: Type of collateral securing a credit facility, such as property,
+      vehicle, fixed deposit, or equity.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: market_value
+    physicalName: market_value
+    logicalName: Market Value
+    logicalType: numeric
+    physicalType: numeric
+    description: Total market value of a position, portfolio, or instrument at current
+      prices.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: status
+    physicalName: status
+    logicalName: Status
+    logicalType: varchar
+    physicalType: varchar
+    description: Current operational or lifecycle status of a record, account, or
+      product.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: covenant_id
+    physicalName: covenant_id
+    logicalName: Covenant ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a financial or non-financial covenant attached
+      to a credit facility.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: covenant_type
+    physicalName: covenant_type
+    logicalName: Covenant Type
+    logicalType: varchar
+    physicalType: varchar
+    description: Type of covenant, such as financial ratio, reporting obligation,
+      or behavioural restriction.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: threshold_value
+    physicalName: threshold_value
+    logicalName: Threshold Value
+    logicalType: numeric
+    physicalType: numeric
+    description: Numeric threshold beyond which an alert, breach, or exception is
+      triggered.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: effective_date
+    physicalName: effective_date
+    logicalName: Effective Date
+    logicalType: date
+    physicalType: date
+    description: Date from which a rate change, policy update, or agreement takes
+      effect.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: breach_flag
+    physicalName: breach_flag
+    logicalName: Breach Flag
+    logicalType: boolean
+    physicalType: boolean
+    description: Indicator denoting that a risk limit, regulatory threshold, or covenant
+      condition has been breached.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: facility_id
+    physicalName: facility_id
+    logicalName: Facility ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a credit facility or loan arrangement granted
+      to a borrower.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: facility_type
+    physicalName: facility_type
+    logicalName: Facility Type
+    logicalType: varchar
+    physicalType: varchar
+    description: Type of credit facility, such as term loan, revolving credit, or
+      overdraft.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: limit_amount
+    physicalName: limit_amount
+    logicalName: Limit Amount
+    logicalType: numeric
+    physicalType: numeric
+    description: Monetary limit set on a credit facility, transaction, or account
+      feature.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: utilization_percentage
+    physicalName: utilization_percentage
+    logicalName: Utilization Percentage
+    logicalType: numeric
+    physicalType: numeric
+    description: Percentage of a credit limit or capacity that has been utilised.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: disbursement_id
+    physicalName: disbursement_id
+    logicalName: Disbursement ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a loan disbursement event.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: disbursement_date
+    physicalName: disbursement_date
+    logicalName: Disbursement Date
+    logicalType: date
+    physicalType: date
+    description: Date on which the loan amount was disbursed to the borrower's account.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: amount
+    physicalName: amount
+    logicalName: Amount
+    logicalType: numeric
+    physicalType: numeric
+    description: Monetary value associated with a transaction, payment, or financial
+      event, denominated in the account's base currency.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: payment_method
+    physicalName: payment_method
+    logicalName: Payment Method
+    logicalType: varchar
+    physicalType: varchar
+    description: Method used to make a payment, such as card, bank transfer, or cash.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: portfolio_id
+    physicalName: portfolio_id
+    logicalName: Portfolio ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for an investment portfolio managed by or on behalf
+      of a client.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: account_id
+    physicalName: account_id
+    logicalName: Account ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for the bank account linked to a product or transaction,
+      used as a join key to account-level records.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: base_currency
+    physicalName: base_currency
+    logicalName: Base Currency
+    logicalType: varchar
+    physicalType: varchar
+    description: Primary currency in which an account, portfolio, or financial instrument
+      is denominated.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: inception_date
+    physicalName: inception_date
+    logicalName: Inception Date
+    logicalType: date
+    physicalType: date
+    description: Date on which a fund, portfolio, or financial product was launched
+      or opened.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: risk_profile
+    physicalName: risk_profile
+    logicalName: Risk Profile
+    logicalType: varchar
+    physicalType: varchar
+    description: Classification of a customer or portfolio by risk appetite or risk
+      tolerance level.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: suitability_status
+    physicalName: suitability_status
+    logicalName: Suitability Status
+    logicalType: varchar
+    physicalType: varchar
+    description: Suitability assessment status indicating whether a product meets
+      the customer's risk profile and objectives.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: position_id
+    physicalName: position_id
+    logicalName: Position ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a specific investment position held within
+      a portfolio.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: instrument_id
+    physicalName: instrument_id
+    logicalName: Instrument ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a financial instrument such as a bond, equity,
+      or derivative.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: quantity
+    physicalName: quantity
+    logicalName: Quantity
+    logicalType: varchar
+    physicalType: varchar
+    description: Number of units of a financial instrument, product, or asset.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: cost
+    physicalName: cost
+    logicalName: Cost
+    logicalType: numeric
+    physicalType: numeric
+    description: Cost incurred for a service, product, or operational activity in
+      the reporting period.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: market_price
+    physicalName: market_price
+    logicalName: Market Price
+    logicalType: numeric
+    physicalType: numeric
+    description: Current market price of a traded financial instrument.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: order_id
+    physicalName: order_id
+    logicalName: Order ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a trade, purchase, or service order.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: side
+    physicalName: side
+    logicalName: Side
+    logicalType: varchar
+    physicalType: varchar
+    description: Side of a trade indicating whether the institution is buyer or seller.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: price
+    physicalName: price
+    logicalName: Price
+    logicalType: numeric
+    physicalType: numeric
+    description: Current or transaction price of a financial instrument, good, or
+      service.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: timestamp
+    physicalName: timestamp
+    logicalName: Timestamp
+    logicalType: timestamp
+    physicalType: timestamp
+    description: Date and time at which an event, transaction, or record was created
+      or updated.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: trade_id
+    physicalName: trade_id
+    logicalName: Trade ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a financial trade order or execution record.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: execution_price
+    physicalName: execution_price
+    logicalName: Execution Price
+    logicalType: numeric
+    physicalType: numeric
+    description: Actual price at which a trade order was executed in the market.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: execution_time
+    physicalName: execution_time
+    logicalName: Execution Time
+    logicalType: varchar
+    physicalType: varchar
+    description: Timestamp at which a trade or transaction order was executed.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: perf_id
+    physicalName: perf_id
+    logicalName: Perf ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a performance measurement record or benchmark
+      comparison.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: return
+    physicalName: return
+    logicalName: Return
+    logicalType: varchar
+    physicalType: varchar
+    description: Return on investment or return percentage of a portfolio or fund
+      over a period.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: benchmark
+    physicalName: benchmark
+    logicalName: Benchmark
+    logicalType: varchar
+    physicalType: varchar
+    description: Reference index or rate against which portfolio performance or instrument
+      pricing is measured.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: ca_id
+    physicalName: ca_id
+    logicalName: Ca ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a corporate action event affecting a security,
+      such as a dividend, split, or merger.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: type
+    physicalName: type
+    logicalName: Type
+    logicalType: varchar
+    physicalType: varchar
+    description: Generic type or classification field for the entity or event.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: record_date
+    physicalName: record_date
+    logicalName: Record Date
+    logicalType: date
+    physicalType: date
+    description: Date used to determine eligibility for a corporate action, dividend,
+      or entitlement.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: ex_date
+    physicalName: ex_date
+    logicalName: Ex Date
+    logicalType: date
+    physicalType: date
+    description: Ex-dividend or ex-rights date for a corporate action, from which
+      new buyers are no longer entitled.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: payable_date
+    physicalName: payable_date
+    logicalName: Payable Date
+    logicalType: date
+    physicalType: date
+    description: Date on which a dividend, coupon, or payment is due to be paid to
+      eligible holders.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: fee_id
+    physicalName: fee_id
+    logicalName: Fee ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a fee or charge record applied to an account
+      or transaction.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: mgmt_fee
+    physicalName: mgmt_fee
+    logicalName: Mgmt Fee
+    logicalType: numeric
+    physicalType: numeric
+    description: Annual management fee charged by a fund or portfolio manager as a
+      percentage of assets under management.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: advisory_fee
+    physicalName: advisory_fee
+    logicalName: Advisory Fee
+    logicalType: numeric
+    physicalType: numeric
+    description: Fee charged by the bank or relationship manager for financial advisory
+      services rendered to the client.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: brokerage_fee
+    physicalName: brokerage_fee
+    logicalName: Brokerage Fee
+    logicalType: numeric
+    physicalType: numeric
+    description: Fee charged by the brokerage or bank for executing a securities trade
+      on behalf of the client.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: lc_id
+    physicalName: lc_id
+    logicalName: Lc ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a Letter of Credit issued in a trade finance
+      transaction.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: applicant_id
+    physicalName: applicant_id
+    logicalName: Applicant ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a loan or product applicant, linking the application
+      to a customer record.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: beneficiary_id
+    physicalName: beneficiary_id
+    logicalName: Beneficiary ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for the beneficiary of a payment or funds transfer
+      instruction.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: currency
+    physicalName: currency
+    logicalName: Currency
+    logicalType: varchar
+    physicalType: varchar
+    description: ISO 4217 currency code in which a monetary amount or instrument is
+      denominated.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: issue_date
+    physicalName: issue_date
+    logicalName: Issue Date
+    logicalType: date
+    physicalType: date
+    description: Date on which a card, bond, or document was issued.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: expiry_date
+    physicalName: expiry_date
+    logicalName: Expiry Date
+    logicalType: date
+    physicalType: date
+    description: Date on which a card, offer, consent, or financial instrument expires
+      and becomes invalid.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: guarantee_id
+    physicalName: guarantee_id
+    logicalName: Guarantee ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a guarantee or surety arrangement linked to
+      a credit facility.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: doc_id
+    physicalName: doc_id
+    logicalName: Doc ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a document submitted as part of KYC, loan application,
+      or compliance verification.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: received_date
+    physicalName: received_date
+    logicalName: Received Date
+    logicalType: date
+    physicalType: date
+    description: Date on which a document, payment, or communication was received.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: discrepancy_flag
+    physicalName: discrepancy_flag
+    logicalName: Discrepancy Flag
+    logicalType: boolean
+    physicalType: boolean
+    description: Indicator denoting a mismatch or reconciliation discrepancy found
+      in financial or operational records.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: pii
+    examples: []
+    logicalTypeOptions: {}
+  - name: drawee_id
+    physicalName: drawee_id
+    logicalName: Drawee ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Identifier of the party on whom a cheque or trade finance instrument
+      is drawn.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: presenting_bank
+    physicalName: presenting_bank
+    logicalName: Presenting Bank
+    logicalType: varchar
+    physicalType: varchar
+    description: Bank that presents a cheque or trade finance document for acceptance
+      or payment.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: due_date
+    physicalName: due_date
+    logicalName: Due Date
+    logicalType: date
+    physicalType: date
+    description: Date by which a payment, document submission, or action must be completed
+      to avoid penalty.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: shipment_id
+    physicalName: shipment_id
+    logicalName: Shipment ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a trade finance shipment referenced in a letter
+      of credit.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: vessel
+    physicalName: vessel
+    logicalName: Vessel
+    logicalType: varchar
+    physicalType: varchar
+    description: Name or identifier of the vessel transporting goods in a trade finance
+      shipment.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: port_of_loading
+    physicalName: port_of_loading
+    logicalName: Port Of Loading
+    logicalType: varchar
+    physicalType: varchar
+    description: Port at which goods are loaded for shipment in a trade finance transaction.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: port_of_discharge
+    physicalName: port_of_discharge
+    logicalName: Port Of Discharge
+    logicalType: varchar
+    physicalType: varchar
+    description: Port at which goods are unloaded in a trade finance shipment.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: incoterm
+    physicalName: incoterm
+    logicalName: Incoterm
+    logicalType: varchar
+    physicalType: varchar
+    description: International commercial term defining the responsibilities of buyer
+      and seller in a trade finance transaction.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: bill_id
+    physicalName: bill_id
+    logicalName: Bill ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a billing record or invoice generated for a
+      customer account.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: settlement_id
+    physicalName: settlement_id
+    logicalName: Settlement ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a settlement event or clearing batch.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: method
+    physicalName: method
+    logicalName: Method
+    logicalType: varchar
+    physicalType: varchar
+    description: Method used for a payment, calculation, or process.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: charges
+    physicalName: charges
+    logicalName: Charges
+    logicalType: numeric
+    physicalType: numeric
+    description: Total charges or fees applied to an account or transaction within
+      the reporting period.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: reimbursement_bank
+    physicalName: reimbursement_bank
+    logicalName: Reimbursement Bank
+    logicalType: varchar
+    physicalType: varchar
+    description: Bank responsible for reimbursing a trade finance payment.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: survey_id
+    physicalName: survey_id
+    logicalName: Survey ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a customer or enterprise survey.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: wave
+    physicalName: wave
+    logicalName: Wave
+    logicalType: varchar
+    physicalType: varchar
+    description: Survey wave or data collection cycle identifier for a longitudinal
+      study.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: frame_source
+    physicalName: frame_source
+    logicalName: Frame Source
+    logicalType: varchar
+    physicalType: varchar
+    description: Source or methodology used to define the survey sampling frame.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: strata
+    physicalName: strata
+    logicalName: Strata
+    logicalType: varchar
+    physicalType: varchar
+    description: Survey stratum or sub-group used in stratified sampling methodology.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: sample_weight
+    physicalName: sample_weight
+    logicalName: Sample Weight
+    logicalType: varchar
+    physicalType: varchar
+    description: Statistical weighting factor applied to a survey observation to correct
+      for sampling bias.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: enterprise_id
+    physicalName: enterprise_id
+    logicalName: Enterprise ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for an enterprise or corporate entity in a business
+      survey or client data set.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: size_class
+    physicalName: size_class
+    logicalName: Size Class
+    logicalType: numeric
+    physicalType: numeric
+    description: Classification of an enterprise by size category, such as micro,
+      small, medium, or large.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: region
+    physicalName: region
+    logicalName: Region
+    logicalType: varchar
+    physicalType: varchar
+    description: Geographic region associated with a customer, branch, or market data
+      point.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: sales
+    physicalName: sales
+    logicalName: Sales
+    logicalType: varchar
+    physicalType: varchar
+    description: Total sales value or volume reported by a business unit or enterprise.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: output_volume
+    physicalName: output_volume
+    logicalName: Output Volume
+    logicalType: varchar
+    physicalType: varchar
+    description: Volume of output produced by a business process, used in operational
+      or productivity reporting.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: exports
+    physicalName: exports
+    logicalName: Exports
+    logicalType: varchar
+    physicalType: varchar
+    description: Value or volume of goods or services exported, as reported in macro-economic
+      or balance-of-payments data.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: imports
+    physicalName: imports
+    logicalName: Imports
+    logicalType: varchar
+    physicalType: varchar
+    description: Value or volume of goods or services imported, as reported in macro-economic
+      or balance-of-payments data.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: inventories
+    physicalName: inventories
+    logicalName: Inventories
+    logicalType: varchar
+    physicalType: varchar
+    description: Value of inventory holdings reported by an enterprise in a balance
+      sheet or survey.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: price_indices
+    physicalName: price_indices
+    logicalName: Price Indices
+    logicalType: numeric
+    physicalType: numeric
+    description: Composite indices tracking the price levels of goods and services
+      for economic analysis.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: unit_values
+    physicalName: unit_values
+    logicalName: Unit Values
+    logicalType: numeric
+    physicalType: numeric
+    description: Net asset value per unit of a mutual fund or investment product.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: wage_costs
+    physicalName: wage_costs
+    logicalName: Wage Costs
+    logicalType: numeric
+    physicalType: numeric
+    description: Total wage and salary costs reported by an enterprise in a survey
+      or financial report.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: input_costs
+    physicalName: input_costs
+    logicalName: Input Costs
+    logicalType: numeric
+    physicalType: numeric
+    description: Raw material and input costs reported by an enterprise, used in macro-economic
+      survey analysis.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: headcount
+    physicalName: headcount
+    logicalName: Headcount
+    logicalType: numeric
+    physicalType: numeric
+    description: Number of employees in a business unit or enterprise, reported as
+      a staffing metric.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: hours
+    physicalName: hours
+    logicalName: Hours
+    logicalType: varchar
+    physicalType: varchar
+    description: Number of hours associated with a service, shift, or operational
+      metric.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: capex_amount
+    physicalName: capex_amount
+    logicalName: Capex Amount
+    logicalType: numeric
+    physicalType: numeric
+    description: Capital expenditure amount reported by a corporate entity in a given
+      period, used in financial analysis.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: asset_type
+    physicalName: asset_type
+    logicalName: Asset Type
+    logicalType: varchar
+    physicalType: varchar
+    description: Classification of a financial or physical asset, such as equity,
+      fixed income, real estate, or commodity.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: next_3_6_12m_outlook_indicators
+    physicalName: next_3_6_12m_outlook_indicators
+    logicalName: Next 3 6 12m Outlook Indicators
+    logicalType: varchar
+    physicalType: varchar
+    description: Forward-looking indicator flags for a portfolio or entity's expected
+      performance over 3, 6, and 12-month horizons.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: mode
+    physicalName: mode
+    logicalName: Mode
+    logicalType: varchar
+    physicalType: varchar
+    description: Mode of a payment or transaction, such as NEFT, RTGS, IMPS, or UPI.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: response_status
+    physicalName: response_status
+    logicalName: Response Status
+    logicalType: varchar
+    physicalType: varchar
+    description: Status of a response to an enquiry, complaint, or request, such as
+      sent or acknowledged.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: imputation_flag
+    physicalName: imputation_flag
+    logicalName: Imputation Flag
+    logicalType: boolean
+    physicalType: boolean
+    description: Indicator that a missing value has been statistically imputed rather
+      than directly observed.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: confidentiality_key
+    physicalName: confidentiality_key
+    logicalName: Confidentiality Key
+    logicalType: varchar
+    physicalType: varchar
+    description: Encryption or access-control key used to protect confidential data
+      fields in the record.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  foreignKeys: []
+  transform:
+    grouping_keys:
+    - issuer_id
+    scd_policy:
+      type: scd2
+customProperties:
+  feasibility:
+    schema_version: '1.0'
+    spec_classification: confidential
+    cadence: ''
+    freshness_history: scd2
+    freshness_description: ''
+    grain_keys:
+    - issuer_id
+    grain_description: ''
+    allowed_derivations:
+    - rename
+    - cast
+    composition:
+      join_keys:
+      - customer_id
+      - account_id
+      composed_of:
+      - src_esg_ratings
+      - src_corporate_loans
+      - src_wealth_product
+      - src_trade_finance
+      - src_enterprise_surveys
+      description: Assembled by joining the composing source products on shared identity
+        keys.
+    attr_derivations:
+      value:
+      - currency_normalize
+      principal_amount:
+      - currency_normalize
+      market_value:
+      - currency_normalize
+      threshold_value:
+      - currency_normalize
+      limit_amount:
+      - currency_normalize
+      amount:
+      - currency_normalize
+      mgmt_fee:
+      - currency_normalize
+      advisory_fee:
+      - currency_normalize
+      brokerage_fee:
+      - currency_normalize
+      charges:
+      - currency_normalize
+      unit_values:
+      - currency_normalize
+      capex_amount:
+      - currency_normalize
+productKind: aggregate
+sourceSpecId: agg_esg_360

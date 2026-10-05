@@ -1,0 +1,1773 @@
+spec_id: agg_customer_360
+name: Customer 360
+domain: Aggregated
+product_kind: aggregate
+description: Unified view of customer identifiers, demographics, relationships, products, balances and transactions for analytics
+  and servicing.
+schema_version: '1.0'
+classification: confidential
+grain:
+  keys:
+  - customer_id
+  description: ''
+freshness:
+  history: scd2
+  cadence: ''
+  description: ''
+allowed_derivations:
+- rename
+- cast
+attributes:
+- name: customer_id
+  type: bigint
+  concept: Customer ID
+  required: true
+  is_key: true
+  classification: internal
+  description: Unique numeric identifier for a customer record, serving as the primary join key across all customer-related
+    entities.
+- name: name
+  type: varchar
+  concept: Name
+  required: true
+  is_key: false
+  classification: internal
+  description: Full name of the customer, entity, or record subject.
+- name: gender
+  type: varchar
+  concept: Gender
+  required: false
+  is_key: false
+  classification: internal
+  description: Gender of the customer or survey respondent, used for demographic segmentation.
+- name: pan_and_aadhaar_number
+  type: varchar
+  concept: PAN And Aadhaar Number
+  required: false
+  is_key: false
+  classification: pii
+  description: Tokenised or masked PAN (Permanent Account Number) and Aadhaar number for identity verification.
+- name: customer_type
+  type: varchar
+  concept: Customer Type
+  required: true
+  is_key: false
+  classification: internal
+  description: Classification of the customer as individual, joint, corporate, or institutional.
+- name: citizenship_country
+  type: numeric
+  concept: Citizenship Country
+  required: false
+  is_key: false
+  classification: internal
+  description: Country of citizenship of the customer, used for KYC, tax residency, and regulatory classification.
+- name: onboarded_date
+  type: date
+  concept: Onboarded Date
+  required: true
+  is_key: false
+  classification: internal
+  description: Date on which a customer or relationship was onboarded to the bank.
+- name: onborading_channel
+  type: varchar
+  concept: Onborading Channel
+  required: false
+  is_key: false
+  classification: internal
+  description: Channel through which a customer was onboarded, such as branch, digital, or direct sales.
+- name: mobile_number
+  type: varchar
+  concept: Mobile Number
+  required: false
+  is_key: false
+  classification: pii
+  description: Mobile phone number of the customer, used for authentication, communication, and OTP delivery.
+- name: email
+  type: varchar
+  concept: Email
+  required: false
+  is_key: false
+  classification: pii
+  description: Email address of the customer or contact, used for communication and identity verification.
+- name: address
+  type: varchar
+  concept: Address
+  required: false
+  is_key: false
+  classification: pii
+  description: Postal or registered address of the customer, including street, city, state, and postal code fields.
+- name: language
+  type: varchar
+  concept: Language
+  required: false
+  is_key: false
+  classification: internal
+  description: Language preferred by the customer for communications, or language of a survey instrument.
+- name: communication_channel_pref
+  type: varchar
+  concept: Communication Channel Pref
+  required: false
+  is_key: false
+  classification: internal
+  description: Customer's preferred channel for receiving communications, such as email, SMS, or post.
+- name: marketing_opt_in_flags
+  type: varchar
+  concept: Marketing Opt In Flags
+  required: false
+  is_key: false
+  classification: internal
+  description: Set of flags indicating a customer's opt-in or opt-out preferences for different marketing channels.
+- name: accessibility_needs
+  type: varchar
+  concept: Accessibility Needs
+  required: false
+  is_key: false
+  classification: internal
+  description: Recorded accessibility requirements or special accommodations needed by the customer, such as large print or
+    audio formats.
+- name: kyc_id
+  type: bigint
+  concept: KYC ID
+  required: true
+  is_key: true
+  classification: internal
+  description: Unique identifier for a KYC (Know Your Customer) verification record for a customer.
+- name: document_type
+  type: varchar
+  concept: Document Type
+  required: true
+  is_key: false
+  classification: internal
+  description: Classification of a submitted document by type, such as passport, utility bill, or income proof.
+- name: kyc_status
+  type: varchar
+  concept: KYC Status
+  required: true
+  is_key: false
+  classification: internal
+  description: Current status of a customer's KYC verification, such as verified, pending, or expired.
+- name: verifcation_date
+  type: date
+  concept: Verifcation Date
+  required: true
+  is_key: false
+  classification: internal
+  description: Date on which a document or identity was verified.
+- name: mapping_id
+  type: bigint
+  concept: Mapping ID
+  required: true
+  is_key: true
+  classification: internal
+  description: Unique identifier for a data mapping or account linkage record.
+- name: product_type
+  type: varchar
+  concept: Product Type
+  required: true
+  is_key: false
+  classification: internal
+  description: Category of the product by functional type, such as savings, lending, investment, or insurance.
+- name: account_number
+  type: numeric
+  concept: Account Number
+  required: false
+  is_key: false
+  classification: pii
+  description: Masked or full account number assigned by the bank, used for customer-facing references and inter-bank settlement
+    routing.
+- name: load_id
+  type: bigint
+  concept: Load ID
+  required: true
+  is_key: true
+  classification: internal
+  description: Unique identifier for a data load batch, used for lineage and reconciliation.
+- name: card_number
+  type: varchar
+  concept: Card Number
+  required: false
+  is_key: false
+  classification: pii
+  description: Masked or tokenised card number used to identify the card in transaction and statement records.
+- name: product_status
+  type: varchar
+  concept: Product Status
+  required: true
+  is_key: false
+  classification: internal
+  description: Current lifecycle status of a product, such as active, discontinued, or under review.
+- name: start_date
+  type: date
+  concept: Start Date
+  required: true
+  is_key: false
+  classification: internal
+  description: Date on which a product, contract, campaign, or reporting period begins.
+- name: maturity_date
+  type: date
+  concept: Maturity Date
+  required: true
+  is_key: false
+  classification: internal
+  description: Date on which a loan, deposit, or financial instrument is due to be repaid or redeemed.
+- name: household_id_group_id
+  type: bigint
+  concept: Household ID Group ID
+  required: true
+  is_key: true
+  classification: internal
+  description: Identifier for a household or relationship group linking individual customers who share the same address or
+    economic unit.
+- name: rm_id
+  type: bigint
+  concept: RM ID
+  required: true
+  is_key: true
+  classification: internal
+  description: Unique identifier for a Relationship Manager assigned to a client.
+- name: rn_name
+  type: varchar
+  concept: Rn Name
+  required: true
+  is_key: false
+  classification: internal
+  description: Name of the relationship network or unit to which a customer belongs.
+- name: assigned_on
+  type: varchar
+  concept: Assigned On
+  required: false
+  is_key: false
+  classification: internal
+  description: Date on which a collections case, task, or customer relationship was assigned to an agent or RM.
+- name: servicing_branch
+  type: varchar
+  concept: Servicing Branch
+  required: false
+  is_key: false
+  classification: internal
+  description: Branch responsible for servicing a loan, account, or customer relationship.
+- name: nominee_id
+  type: bigint
+  concept: Nominee ID
+  required: true
+  is_key: true
+  classification: internal
+  description: Unique identifier for a nominee registered on a financial account or insurance policy.
+- name: linked_acc_number
+  type: varchar
+  concept: Linked Acc Number
+  required: false
+  is_key: false
+  classification: internal
+  description: Account number of a linked account, such as a sweep account or linked savings account.
+- name: nominee_name
+  type: varchar
+  concept: Nominee Name
+  required: true
+  is_key: false
+  classification: pii
+  description: Name of the nominee designated to receive benefits or account funds in the event of the account holder's death.
+- name: relationship_to_customer
+  type: varchar
+  concept: Relationship To Customer
+  required: false
+  is_key: false
+  classification: internal
+  description: Nature of the relationship between a related party or nominee and the primary account holder.
+- name: share
+  type: varchar
+  concept: Share
+  required: false
+  is_key: false
+  classification: internal
+  description: Portion or percentage share of an asset, market, or metric attributable to an entity.
+- name: account_id
+  type: bigint
+  concept: Account ID
+  required: true
+  is_key: true
+  classification: internal
+  description: Unique identifier for the bank account linked to a product or transaction, used as a join key to account-level
+    records.
+- name: product_code
+  type: varchar
+  concept: Product Code
+  required: false
+  is_key: false
+  classification: internal
+  description: Alphanumeric code uniquely identifying a financial product in the bank's product catalogue.
+- name: opened_date
+  type: date
+  concept: Opened Date
+  required: true
+  is_key: false
+  classification: internal
+  description: Date on which an account or product was opened.
+- name: status
+  type: varchar
+  concept: Status
+  required: true
+  is_key: false
+  classification: internal
+  description: Current operational or lifecycle status of a record, account, or product.
+- name: currency
+  type: varchar
+  concept: Currency
+  required: true
+  is_key: false
+  classification: internal
+  description: ISO 4217 currency code in which a monetary amount or instrument is denominated.
+- name: interest_rate
+  type: numeric
+  concept: Interest Rate
+  required: true
+  is_key: false
+  classification: internal
+  description: Annual percentage rate of interest applicable to a loan, deposit, or financial instrument.
+- name: min_balance
+  type: numeric
+  concept: Min Balance
+  required: true
+  is_key: false
+  classification: internal
+  derivations:
+  - currency_normalize
+  description: Minimum required balance that must be maintained in an account to avoid charges or penalties.
+- name: overdraft_limit
+  type: numeric
+  concept: Overdraft Limit
+  required: true
+  is_key: false
+  classification: internal
+  derivations:
+  - currency_normalize
+  description: Maximum overdraft amount permitted on an account, set by the bank based on creditworthiness.
+- name: lien_flag
+  type: boolean
+  concept: Lien Flag
+  required: false
+  is_key: false
+  classification: internal
+  description: Indicator that a lien or encumbrance has been registered against a collateral asset.
+- name: snapshot_date
+  type: date
+  concept: Snapshot Date
+  required: true
+  is_key: false
+  classification: internal
+  description: Date as of which a point-in-time snapshot of data was captured.
+- name: ledger_balance
+  type: numeric
+  concept: Ledger Balance
+  required: true
+  is_key: false
+  classification: internal
+  derivations:
+  - currency_normalize
+  description: Balance recorded in the bank's internal ledger for an account at a specific point in time.
+- name: available_balance
+  type: numeric
+  concept: Available Balance
+  required: true
+  is_key: false
+  classification: internal
+  derivations:
+  - currency_normalize
+  description: Amount in the account that is immediately available for withdrawal or payment, net of holds and pending transactions.
+- name: float_amount
+  type: numeric
+  concept: Float Amount
+  required: true
+  is_key: false
+  classification: internal
+  derivations:
+  - currency_normalize
+  description: Monetary amount in transit between a debit from one account and credit to another.
+- name: uncollected_funds
+  type: varchar
+  concept: Uncollected Funds
+  required: false
+  is_key: false
+  classification: internal
+  description: Funds deposited but not yet cleared and available for withdrawal.
+- name: txn_id
+  type: bigint
+  concept: Txn ID
+  required: true
+  is_key: true
+  classification: internal
+  description: Unique identifier for a payment card transaction.
+- name: txn_date
+  type: date
+  concept: Txn Date
+  required: true
+  is_key: false
+  classification: internal
+  description: Date on which a payment card transaction was processed.
+- name: post_date
+  type: date
+  concept: Post Date
+  required: true
+  is_key: false
+  classification: internal
+  description: Date on which a transaction was posted to the account ledger.
+- name: amount
+  type: numeric
+  concept: Amount
+  required: true
+  is_key: false
+  classification: internal
+  derivations:
+  - currency_normalize
+  description: Monetary value associated with a transaction, payment, or financial event, denominated in the account's base
+    currency.
+- name: txn_type
+  type: varchar
+  concept: Txn Type
+  required: true
+  is_key: false
+  classification: internal
+  description: Type of card transaction, such as purchase, cash advance, or balance transfer.
+- name: channel
+  type: varchar
+  concept: Channel
+  required: false
+  is_key: false
+  classification: internal
+  description: Banking channel through which the interaction, transaction, or service was delivered.
+- name: counterparty_info
+  type: numeric
+  concept: Counterparty Info
+  required: false
+  is_key: false
+  classification: internal
+  description: Information about the counterparty in a financial transaction, including name, institution, and identifier.
+- name: narration
+  type: numeric
+  concept: Narration
+  required: false
+  is_key: false
+  classification: internal
+  description: Free-text narration describing the purpose or details of a transaction.
+- name: fee_id
+  type: bigint
+  concept: Fee ID
+  required: true
+  is_key: true
+  classification: internal
+  description: Unique identifier for a fee or charge record applied to an account or transaction.
+- name: fee_type
+  type: numeric
+  concept: Fee Type
+  required: true
+  is_key: false
+  classification: internal
+  derivations:
+  - currency_normalize
+  description: Classification of a fee by type, such as processing fee, annual charge, or penalty.
+- name: accrual_ts
+  type: timestamp
+  concept: Accrual Ts
+  required: false
+  is_key: false
+  classification: internal
+  description: Timestamp at which interest or fees were accrued to the account balance.
+- name: mandate_id
+  type: bigint
+  concept: Mandate ID
+  required: true
+  is_key: true
+  classification: internal
+  description: Unique identifier for a standing instruction or direct debit mandate registered by a customer.
+- name: type
+  type: varchar
+  concept: Type
+  required: true
+  is_key: false
+  classification: internal
+  description: Generic type or classification field for the entity or event.
+- name: beneficiary_id
+  type: bigint
+  concept: Beneficiary ID
+  required: true
+  is_key: true
+  classification: internal
+  description: Unique identifier for the beneficiary of a payment or funds transfer instruction.
+- name: frequency
+  type: varchar
+  concept: Frequency
+  required: false
+  is_key: false
+  classification: internal
+  description: Frequency of a scheduled event, payment, or reporting cycle, such as monthly, quarterly, or weekly.
+- name: cheque_number_masked
+  type: varchar
+  concept: Cheque Number Masked
+  required: false
+  is_key: false
+  classification: internal
+  description: Masked cheque number for a paper instrument, used for identification while protecting full account details.
+- name: issue_date
+  type: date
+  concept: Issue Date
+  required: true
+  is_key: false
+  classification: internal
+  description: Date on which a card, bond, or document was issued.
+- name: clear_date
+  type: date
+  concept: Clear Date
+  required: true
+  is_key: false
+  classification: internal
+  description: Date on which a cheque or payment instrument was cleared through the banking system.
+- name: stop_payment_flag
+  type: boolean
+  concept: Stop Payment Flag
+  required: false
+  is_key: false
+  classification: internal
+  description: Indicator that a stop-payment instruction has been placed on a cheque or payment.
+- name: statement_id
+  type: bigint
+  concept: Statement ID
+  required: true
+  is_key: true
+  classification: internal
+  description: Unique identifier for a monthly or periodic account statement.
+- name: period_start_end
+  type: varchar
+  concept: Period Start End
+  required: false
+  is_key: false
+  classification: internal
+  description: Start and end dates of a reporting period or measurement window.
+- name: opening_balance
+  type: numeric
+  concept: Opening Balance
+  required: true
+  is_key: false
+  classification: internal
+  derivations:
+  - currency_normalize
+  description: Account balance at the beginning of a statement cycle or reporting period.
+- name: closing_balance
+  type: numeric
+  concept: Closing Balance
+  required: true
+  is_key: false
+  classification: internal
+  derivations:
+  - currency_normalize
+  description: Account balance at the end of a statement cycle or reporting period.
+- name: card_id
+  type: bigint
+  concept: Card ID
+  required: true
+  is_key: true
+  classification: internal
+  description: Unique identifier for a payment card issued to a customer, serving as the primary key for all card-related
+    records.
+- name: card_type
+  type: varchar
+  concept: Card Type
+  required: true
+  is_key: false
+  classification: internal
+  description: Category of payment card by product tier or type, such as classic, gold, platinum, or corporate.
+- name: card_status
+  type: varchar
+  concept: Card Status
+  required: true
+  is_key: false
+  classification: internal
+  description: Current status of the card, such as active, blocked, expired, or hotlisted.
+- name: expiry_date
+  type: date
+  concept: Expiry Date
+  required: true
+  is_key: false
+  classification: internal
+  description: Date on which a card, offer, consent, or financial instrument expires and becomes invalid.
+- name: credit_limit
+  type: numeric
+  concept: Credit Limit
+  required: true
+  is_key: false
+  classification: internal
+  derivations:
+  - currency_normalize
+  description: Maximum credit amount available on a credit card or overdraft account, set by the bank based on creditworthiness.
+- name: usage_limit
+  type: numeric
+  concept: Usage Limit
+  required: true
+  is_key: false
+  classification: internal
+  derivations:
+  - currency_normalize
+  description: Transactional usage limit set on a card, which may differ from the credit limit.
+- name: account_type
+  type: numeric
+  concept: Account Type
+  required: true
+  is_key: false
+  classification: internal
+  description: Classification of the bank account by product category, such as savings, current, overdraft, or loan account.
+- name: account_status
+  type: numeric
+  concept: Account Status
+  required: true
+  is_key: false
+  classification: internal
+  description: Current operational state of the bank account, such as active, dormant, closed, or frozen.
+- name: account_balance
+  type: numeric
+  concept: Account Balance
+  required: true
+  is_key: false
+  classification: internal
+  derivations:
+  - currency_normalize
+  description: Current net balance of the bank account, reflecting all posted credits and debits as of the reporting timestamp.
+- name: merchant
+  type: varchar
+  concept: Merchant
+  required: false
+  is_key: false
+  classification: internal
+  description: Name or identifier of the merchant at which a card transaction was made.
+- name: billing_month
+  type: varchar
+  concept: Billing Month
+  required: false
+  is_key: false
+  classification: internal
+  description: Calendar month to which a billing statement or credit card cycle relates.
+- name: cycle_start_date
+  type: date
+  concept: Cycle Start Date
+  required: true
+  is_key: false
+  classification: internal
+  description: Start date of a billing or interest cycle for a credit card or loan account.
+- name: cycle_end_date
+  type: date
+  concept: Cycle End Date
+  required: true
+  is_key: false
+  classification: internal
+  description: End date of a billing or interest cycle for a credit card or loan account.
+- name: starting_balance
+  type: numeric
+  concept: Starting Balance
+  required: true
+  is_key: false
+  classification: internal
+  derivations:
+  - currency_normalize
+  description: Account or portfolio balance at the start of a reporting period.
+- name: statement_balance
+  type: numeric
+  concept: Statement Balance
+  required: true
+  is_key: false
+  classification: internal
+  derivations:
+  - currency_normalize
+  description: Total balance shown on a credit card or account statement for a billing cycle.
+- name: due_date
+  type: date
+  concept: Due Date
+  required: true
+  is_key: false
+  classification: internal
+  description: Date by which a payment, document submission, or action must be completed to avoid penalty.
+- name: reward_id
+  type: bigint
+  concept: Reward ID
+  required: true
+  is_key: true
+  classification: internal
+  description: Unique identifier for a reward or loyalty programme transaction.
+- name: points
+  type: numeric
+  concept: Points
+  required: false
+  is_key: false
+  classification: internal
+  description: Number of reward or loyalty points accrued on a customer's account.
+- name: points_accured_date
+  type: date
+  concept: Points Accured Date
+  required: true
+  is_key: false
+  classification: internal
+  description: Date on which reward points were accrued to a customer's loyalty account.
+- name: points_expiry_date
+  type: date
+  concept: Points Expiry Date
+  required: true
+  is_key: false
+  classification: internal
+  description: Date on which accrued reward points expire if not redeemed.
+- name: charge_id
+  type: bigint
+  concept: Charge ID
+  required: true
+  is_key: true
+  classification: internal
+  description: Unique identifier for a fee or charge applied to an account.
+- name: charge_type
+  type: varchar
+  concept: Charge Type
+  required: true
+  is_key: false
+  classification: internal
+  description: Classification of the charge by type, such as annual fee, late payment fee, or service charge.
+- name: date
+  type: date
+  concept: Date
+  required: true
+  is_key: false
+  classification: internal
+  description: Calendar date associated with a record, event, or observation.
+- name: service_id
+  type: bigint
+  concept: Service ID
+  required: true
+  is_key: true
+  classification: internal
+  description: Unique identifier for a banking service or product feature.
+- name: activity_type
+  type: varchar
+  concept: Activity Type
+  required: true
+  is_key: false
+  classification: internal
+  description: Classification of the activity, such as login, transaction, complaint, or inquiry.
+- name: activity_date
+  type: date
+  concept: Activity Date
+  required: true
+  is_key: false
+  classification: internal
+  description: Calendar date on which a customer activity, transaction, or system event occurred.
+- name: activity_desc
+  type: varchar
+  concept: Activity Desc
+  required: false
+  is_key: false
+  classification: internal
+  description: Free-text or coded description of the customer activity or interaction event.
+- name: resolution_date
+  type: date
+  concept: Resolution Date
+  required: true
+  is_key: false
+  classification: internal
+  description: Date on which a complaint, dispute, or exception was resolved.
+- name: card_face_value
+  type: numeric
+  concept: Card Face Value
+  required: true
+  is_key: false
+  classification: internal
+  derivations:
+  - currency_normalize
+  description: Nominal or face value loaded onto a prepaid card at issuance or top-up.
+- name: verification_date
+  type: date
+  concept: Verification Date
+  required: true
+  is_key: false
+  classification: internal
+  description: Date on which a KYC document, identity, or credential was verified.
+- name: usage_id
+  type: bigint
+  concept: Usage ID
+  required: true
+  is_key: true
+  classification: internal
+  description: Unique identifier for a product usage or service consumption event.
+- name: location
+  type: varchar
+  concept: Location
+  required: false
+  is_key: false
+  classification: internal
+  description: Geographic location of a branch, ATM, customer, or event.
+- name: timestamp
+  type: timestamp
+  concept: Timestamp
+  required: false
+  is_key: false
+  classification: internal
+  description: Date and time at which an event, transaction, or record was created or updated.
+- name: contact_info
+  type: varchar
+  concept: Contact Info
+  required: false
+  is_key: false
+  classification: pii
+  description: Contact details for the customer, including phone number, email address, and preferred contact method.
+- name: credit_score
+  type: numeric
+  concept: Credit Score
+  required: true
+  is_key: false
+  classification: internal
+  description: Internally computed or bureau-sourced credit score reflecting the customer's probability of default.
+- name: loan_id
+  type: bigint
+  concept: Loan ID
+  required: true
+  is_key: true
+  classification: internal
+  description: Unique identifier for a loan account, serving as the primary key for all loan-related records.
+- name: product
+  type: varchar
+  concept: Product
+  required: false
+  is_key: false
+  classification: internal
+  description: Financial product or service associated with the record, such as a loan, deposit, or card.
+- name: sanction_amount
+  type: numeric
+  concept: Sanction Amount
+  required: true
+  is_key: false
+  classification: internal
+  derivations:
+  - currency_normalize
+  description: Total loan amount sanctioned by the bank credit committee.
+- name: disbursed_amount
+  type: numeric
+  concept: Disbursed Amount
+  required: true
+  is_key: false
+  classification: internal
+  derivations:
+  - currency_normalize
+  description: Actual monetary amount disbursed to the borrower after loan approval and processing.
+- name: rate_type
+  type: varchar
+  concept: Rate Type
+  required: true
+  is_key: false
+  classification: internal
+  description: Classification of an interest rate as fixed or floating.
+- name: spread
+  type: numeric
+  concept: Spread
+  required: false
+  is_key: false
+  classification: internal
+  description: Spread charged above a benchmark rate on a floating-rate loan, or bid-ask spread on a traded instrument.
+- name: emi_amount
+  type: numeric
+  concept: Emi Amount
+  required: true
+  is_key: false
+  classification: internal
+  derivations:
+  - currency_normalize
+  description: Equated monthly instalment amount payable by the borrower, covering principal and interest components.
+- name: tenor
+  type: varchar
+  concept: Tenor
+  required: false
+  is_key: false
+  classification: internal
+  description: Duration of a loan, deposit, or financial instrument from origination to maturity.
+- name: collateral_id
+  type: bigint
+  concept: Collateral ID
+  required: true
+  is_key: true
+  classification: internal
+  description: Unique identifier for a collateral asset pledged against a loan or credit facility.
+- name: identifier
+  type: varchar
+  concept: Identifier
+  required: false
+  is_key: false
+  classification: internal
+  description: General-purpose identifier for an entity, document, or record.
+- name: valuation_amount
+  type: numeric
+  concept: Valuation Amount
+  required: true
+  is_key: false
+  classification: internal
+  derivations:
+  - currency_normalize
+  description: Assessed or market value of a collateral asset or financial instrument.
+- name: valuation_date
+  type: date
+  concept: Valuation Date
+  required: true
+  is_key: false
+  classification: internal
+  description: Date on which a collateral asset or portfolio was valued.
+- name: ltv
+  type: varchar
+  concept: LTV
+  required: false
+  is_key: false
+  classification: internal
+  description: Loan-to-Value ratio expressing the loan amount as a percentage of the collateral's assessed value.
+- name: lien_charge_details
+  type: varchar
+  concept: Lien Charge Details
+  required: false
+  is_key: false
+  classification: internal
+  description: Details of liens, charges, or encumbrances placed on collateral assets securing a credit facility.
+- name: insurance_policy_id
+  type: bigint
+  concept: Insurance Policy ID
+  required: true
+  is_key: true
+  classification: internal
+  description: Unique identifier for an insurance policy linked to a loan or financial product.
+- name: schedule_id
+  type: bigint
+  concept: Schedule ID
+  required: true
+  is_key: true
+  classification: internal
+  description: Unique identifier for a loan repayment schedule or operational task schedule.
+- name: installment_no
+  type: varchar
+  concept: Installment No
+  required: false
+  is_key: false
+  classification: internal
+  description: Sequential number of an instalment in a loan repayment schedule.
+- name: principal_component
+  type: varchar
+  concept: Principal Component
+  required: false
+  is_key: false
+  classification: internal
+  description: Portion of an instalment payment attributable to the repayment of principal.
+- name: interest_component
+  type: varchar
+  concept: Interest Component
+  required: false
+  is_key: false
+  classification: internal
+  description: Portion of an instalment payment attributable to interest, as opposed to principal repayment.
+- name: paid_flag
+  type: boolean
+  concept: Paid Flag
+  required: false
+  is_key: false
+  classification: internal
+  description: Indicator denoting whether an instalment or invoice has been paid.
+- name: processing_fee
+  type: numeric
+  concept: Processing Fee
+  required: false
+  is_key: false
+  classification: internal
+  derivations:
+  - currency_normalize
+  description: Fee charged by the bank for processing a loan application or transaction.
+- name: prepayment_penalty
+  type: varchar
+  concept: Prepayment Penalty
+  required: false
+  is_key: false
+  classification: internal
+  description: Fee charged for repaying a loan before its scheduled maturity date.
+- name: late_fee
+  type: numeric
+  concept: Late Fee
+  required: false
+  is_key: false
+  classification: internal
+  derivations:
+  - currency_normalize
+  description: Fee charged when a minimum payment is not received by the due date on a credit account.
+- name: days_past_due
+  type: varchar
+  concept: Days Past Due
+  required: false
+  is_key: false
+  classification: internal
+  description: Number of calendar days by which a loan payment is overdue, used to classify delinquency severity.
+- name: bucket
+  type: varchar
+  concept: Bucket
+  required: false
+  is_key: false
+  classification: internal
+  description: Collections delinquency bucket categorising a loan by its days-past-due range, such as 0–30, 31–60, or 90+
+    days.
+- name: legal_stage
+  type: varchar
+  concept: Legal Stage
+  required: false
+  is_key: false
+  classification: internal
+  description: Current legal stage of a collections case, such as pre-litigation, litigation, or execution.
+- name: promise_to_pay_date
+  type: date
+  concept: Promise To Pay Date
+  required: true
+  is_key: false
+  classification: internal
+  description: Date committed by a customer during a collections interaction to make a payment.
+- name: repossession_flag
+  type: boolean
+  concept: Repossession Flag
+  required: false
+  is_key: false
+  classification: internal
+  description: Indicator that collateral has been repossessed following loan default.
+- name: program_id
+  type: bigint
+  concept: Program ID
+  required: true
+  is_key: true
+  classification: internal
+  description: Unique identifier for a loyalty, rewards, or compliance programme.
+- name: moratorium_period
+  type: varchar
+  concept: Moratorium Period
+  required: false
+  is_key: false
+  classification: internal
+  description: Period during which a borrower is permitted to defer loan repayments, typically at loan inception.
+- name: revised_tenor
+  type: varchar
+  concept: Revised Tenor
+  required: false
+  is_key: false
+  classification: internal
+  description: Updated tenor of a loan following a restructuring or refinancing event.
+- name: modification_date
+  type: date
+  concept: Modification Date
+  required: true
+  is_key: false
+  classification: internal
+  description: Date on which a record, contract, or loan term was most recently modified.
+- name: loan_type
+  type: varchar
+  concept: Loan Type
+  required: true
+  is_key: false
+  classification: internal
+  description: Classification of the loan by product type, such as home loan, personal loan, or vehicle loan.
+- name: principal_amount
+  type: numeric
+  concept: Principal Amount
+  required: true
+  is_key: false
+  classification: internal
+  derivations:
+  - currency_normalize
+  description: Original outstanding principal balance of a loan, excluding accrued interest.
+- name: repayment_id
+  type: bigint
+  concept: Repayment ID
+  required: true
+  is_key: true
+  classification: internal
+  description: Unique identifier for a loan repayment event.
+- name: repayment_date
+  type: date
+  concept: Repayment Date
+  required: true
+  is_key: false
+  classification: internal
+  description: Date on which a loan repayment was made or is scheduled.
+- name: payment_method
+  type: varchar
+  concept: Payment Method
+  required: false
+  is_key: false
+  classification: internal
+  description: Method used to make a payment, such as card, bank transfer, or cash.
+- name: disbursement_id
+  type: bigint
+  concept: Disbursement ID
+  required: true
+  is_key: true
+  classification: internal
+  description: Unique identifier for a loan disbursement event.
+- name: disbursement_date
+  type: date
+  concept: Disbursement Date
+  required: true
+  is_key: false
+  classification: internal
+  description: Date on which the loan amount was disbursed to the borrower's account.
+- name: method
+  type: varchar
+  concept: Method
+  required: false
+  is_key: false
+  classification: internal
+  description: Method used for a payment, calculation, or process.
+- name: dpd
+  type: varchar
+  concept: Dpd
+  required: false
+  is_key: false
+  classification: internal
+  description: Days-past-due count for a loan or credit account, used to classify repayment delinquency.
+- name: application_id
+  type: bigint
+  concept: Application ID
+  required: true
+  is_key: true
+  classification: internal
+  description: Unique identifier for a product or loan application submitted by a customer.
+- name: scorecards
+  type: numeric
+  concept: Scorecards
+  required: true
+  is_key: false
+  classification: internal
+  description: Set of scorecards used to assess credit risk, operational performance, or ESG compliance.
+- name: decision
+  type: varchar
+  concept: Decision
+  required: false
+  is_key: false
+  classification: internal
+  description: Final decision outcome recorded for an application, override, or credit assessment.
+- name: reasons
+  type: varchar
+  concept: Reasons
+  required: false
+  is_key: false
+  classification: internal
+  description: List of reasons associated with a decision, exception, or outcome.
+- name: overrides
+  type: varchar
+  concept: Overrides
+  required: false
+  is_key: false
+  classification: internal
+  description: Set of manual overrides applied to a model output, policy rule, or system-generated value.
+- name: origination_fee
+  type: numeric
+  concept: Origination Fee
+  required: false
+  is_key: false
+  classification: internal
+  derivations:
+  - currency_normalize
+  description: One-time fee charged by the bank at the time a loan is originated.
+- name: foreclosure_charges
+  type: numeric
+  concept: Foreclosure Charges
+  required: false
+  is_key: false
+  classification: internal
+  derivations:
+  - currency_normalize
+  description: Fees charged to a borrower for early closure or prepayment of a loan before its maturity date.
+- name: industry
+  type: varchar
+  concept: Industry
+  required: false
+  is_key: false
+  classification: internal
+  description: Industry sector classification of a corporate customer or issuer, such as manufacturing or financial services.
+- name: registration_date
+  type: date
+  concept: Registration Date
+  required: true
+  is_key: false
+  classification: internal
+  description: Date on which a customer, device, or mandate was registered in the system.
+- name: collateral_type
+  type: varchar
+  concept: Collateral Type
+  required: true
+  is_key: false
+  classification: internal
+  description: Type of collateral securing a credit facility, such as property, vehicle, fixed deposit, or equity.
+- name: market_value
+  type: numeric
+  concept: Market Value
+  required: true
+  is_key: false
+  classification: internal
+  derivations:
+  - currency_normalize
+  description: Total market value of a position, portfolio, or instrument at current prices.
+- name: covenant_id
+  type: bigint
+  concept: Covenant ID
+  required: true
+  is_key: true
+  classification: internal
+  description: Unique identifier for a financial or non-financial covenant attached to a credit facility.
+- name: covenant_type
+  type: varchar
+  concept: Covenant Type
+  required: true
+  is_key: false
+  classification: internal
+  description: Type of covenant, such as financial ratio, reporting obligation, or behavioural restriction.
+- name: threshold_value
+  type: numeric
+  concept: Threshold Value
+  required: true
+  is_key: false
+  classification: internal
+  derivations:
+  - currency_normalize
+  description: Numeric threshold beyond which an alert, breach, or exception is triggered.
+- name: effective_date
+  type: date
+  concept: Effective Date
+  required: true
+  is_key: false
+  classification: internal
+  description: Date from which a rate change, policy update, or agreement takes effect.
+- name: breach_flag
+  type: boolean
+  concept: Breach Flag
+  required: false
+  is_key: false
+  classification: internal
+  description: Indicator denoting that a risk limit, regulatory threshold, or covenant condition has been breached.
+- name: facility_id
+  type: bigint
+  concept: Facility ID
+  required: true
+  is_key: true
+  classification: internal
+  description: Unique identifier for a credit facility or loan arrangement granted to a borrower.
+- name: facility_type
+  type: varchar
+  concept: Facility Type
+  required: true
+  is_key: false
+  classification: internal
+  description: Type of credit facility, such as term loan, revolving credit, or overdraft.
+- name: limit_amount
+  type: numeric
+  concept: Limit Amount
+  required: true
+  is_key: false
+  classification: internal
+  derivations:
+  - currency_normalize
+  description: Monetary limit set on a credit facility, transaction, or account feature.
+- name: utilization_percentage
+  type: numeric
+  concept: Utilization Percentage
+  required: false
+  is_key: false
+  classification: internal
+  description: Percentage of a credit limit or capacity that has been utilised.
+- name: portfolio_id
+  type: bigint
+  concept: Portfolio ID
+  required: true
+  is_key: true
+  classification: internal
+  description: Unique identifier for an investment portfolio managed by or on behalf of a client.
+- name: base_currency
+  type: varchar
+  concept: Base Currency
+  required: true
+  is_key: false
+  classification: internal
+  description: Primary currency in which an account, portfolio, or financial instrument is denominated.
+- name: inception_date
+  type: date
+  concept: Inception Date
+  required: true
+  is_key: false
+  classification: internal
+  description: Date on which a fund, portfolio, or financial product was launched or opened.
+- name: risk_profile
+  type: varchar
+  concept: Risk Profile
+  required: false
+  is_key: false
+  classification: internal
+  description: Classification of a customer or portfolio by risk appetite or risk tolerance level.
+- name: suitability_status
+  type: varchar
+  concept: Suitability Status
+  required: true
+  is_key: false
+  classification: internal
+  description: Suitability assessment status indicating whether a product meets the customer's risk profile and objectives.
+- name: position_id
+  type: bigint
+  concept: Position ID
+  required: true
+  is_key: true
+  classification: internal
+  description: Unique identifier for a specific investment position held within a portfolio.
+- name: instrument_id
+  type: bigint
+  concept: Instrument ID
+  required: true
+  is_key: true
+  classification: internal
+  description: Unique identifier for a financial instrument such as a bond, equity, or derivative.
+- name: quantity
+  type: varchar
+  concept: Quantity
+  required: false
+  is_key: false
+  classification: internal
+  description: Number of units of a financial instrument, product, or asset.
+- name: cost
+  type: numeric
+  concept: Cost
+  required: false
+  is_key: false
+  classification: internal
+  description: Cost incurred for a service, product, or operational activity in the reporting period.
+- name: market_price
+  type: numeric
+  concept: Market Price
+  required: false
+  is_key: false
+  classification: internal
+  description: Current market price of a traded financial instrument.
+- name: order_id
+  type: bigint
+  concept: Order ID
+  required: true
+  is_key: true
+  classification: internal
+  description: Unique identifier for a trade, purchase, or service order.
+- name: side
+  type: varchar
+  concept: Side
+  required: false
+  is_key: false
+  classification: internal
+  description: Side of a trade indicating whether the institution is buyer or seller.
+- name: price
+  type: numeric
+  concept: Price
+  required: false
+  is_key: false
+  classification: internal
+  description: Current or transaction price of a financial instrument, good, or service.
+- name: trade_id
+  type: bigint
+  concept: Trade ID
+  required: true
+  is_key: true
+  classification: internal
+  description: Unique identifier for a financial trade order or execution record.
+- name: execution_price
+  type: numeric
+  concept: Execution Price
+  required: false
+  is_key: false
+  classification: internal
+  description: Actual price at which a trade order was executed in the market.
+- name: execution_time
+  type: varchar
+  concept: Execution Time
+  required: false
+  is_key: false
+  classification: internal
+  description: Timestamp at which a trade or transaction order was executed.
+- name: perf_id
+  type: bigint
+  concept: Perf ID
+  required: true
+  is_key: true
+  classification: internal
+  description: Unique identifier for a performance measurement record or benchmark comparison.
+- name: period
+  type: varchar
+  concept: Period
+  required: false
+  is_key: false
+  classification: internal
+  description: Reporting or measurement period, such as a month, quarter, or fiscal year.
+- name: return
+  type: varchar
+  concept: Return
+  required: false
+  is_key: false
+  classification: internal
+  description: Return on investment or return percentage of a portfolio or fund over a period.
+- name: benchmark
+  type: varchar
+  concept: Benchmark
+  required: false
+  is_key: false
+  classification: internal
+  description: Reference index or rate against which portfolio performance or instrument pricing is measured.
+- name: ca_id
+  type: bigint
+  concept: Ca ID
+  required: true
+  is_key: true
+  classification: internal
+  description: Unique identifier for a corporate action event affecting a security, such as a dividend, split, or merger.
+- name: record_date
+  type: date
+  concept: Record Date
+  required: true
+  is_key: false
+  classification: internal
+  description: Date used to determine eligibility for a corporate action, dividend, or entitlement.
+- name: ex_date
+  type: date
+  concept: Ex Date
+  required: true
+  is_key: false
+  classification: internal
+  description: Ex-dividend or ex-rights date for a corporate action, from which new buyers are no longer entitled.
+- name: payable_date
+  type: date
+  concept: Payable Date
+  required: true
+  is_key: false
+  classification: internal
+  description: Date on which a dividend, coupon, or payment is due to be paid to eligible holders.
+- name: mgmt_fee
+  type: numeric
+  concept: Mgmt Fee
+  required: false
+  is_key: false
+  classification: internal
+  derivations:
+  - currency_normalize
+  description: Annual management fee charged by a fund or portfolio manager as a percentage of assets under management.
+- name: advisory_fee
+  type: numeric
+  concept: Advisory Fee
+  required: false
+  is_key: false
+  classification: internal
+  derivations:
+  - currency_normalize
+  description: Fee charged by the bank or relationship manager for financial advisory services rendered to the client.
+- name: brokerage_fee
+  type: numeric
+  concept: Brokerage Fee
+  required: false
+  is_key: false
+  classification: internal
+  derivations:
+  - currency_normalize
+  description: Fee charged by the brokerage or bank for executing a securities trade on behalf of the client.
+- name: txn_initiation_and_completion_timestamp
+  type: timestamp
+  concept: Txn Initiation And Completion Timestamp
+  required: false
+  is_key: false
+  classification: internal
+  description: Timestamps marking the initiation and completion of a payment card transaction.
+- name: initiating_bank
+  type: varchar
+  concept: Initiating Bank
+  required: false
+  is_key: false
+  classification: internal
+  description: Financial institution that initiated a payment or fund transfer instruction.
+- name: receiving_bank
+  type: varchar
+  concept: Receiving Bank
+  required: false
+  is_key: false
+  classification: internal
+  description: Financial institution receiving a payment or fund transfer.
+- name: participant_id
+  type: bigint
+  concept: Participant ID
+  required: true
+  is_key: true
+  classification: pii
+  description: Unique identifier for a participant in a payment network, survey, or market study.
+- name: transaction_id
+  type: bigint
+  concept: Transaction ID
+  required: true
+  is_key: true
+  classification: internal
+  description: Unique identifier for a financial transaction, used as the primary key for transaction records.
+- name: role
+  type: varchar
+  concept: Role
+  required: false
+  is_key: false
+  classification: internal
+  description: Role or designation of a participant in a transaction, workflow, or system.
+- name: participant_type
+  type: varchar
+  concept: Participant Type
+  required: true
+  is_key: false
+  classification: pii
+  description: Classification of a participant by role, such as payer, payee, or intermediary.
+- name: identifier_type
+  type: varchar
+  concept: Identifier Type
+  required: true
+  is_key: false
+  classification: internal
+  description: Classification of an identifier by type, such as national ID, passport, or tax reference.
+- name: channel_type
+  type: varchar
+  concept: Channel Type
+  required: true
+  is_key: false
+  classification: internal
+  description: Type of banking channel used, such as branch, ATM, internet banking, mobile app, or contact center.
+- name: device_type
+  type: varchar
+  concept: Device Type
+  required: true
+  is_key: false
+  classification: internal
+  description: Type of device used by the customer, such as smartphone, tablet, or desktop.
+- name: app_name
+  type: varchar
+  concept: App Name
+  required: true
+  is_key: false
+  classification: internal
+  description: Name of the mobile or web application from which a customer interaction or transaction originated.
+- name: settlement_date
+  type: date
+  concept: Settlement Date
+  required: true
+  is_key: false
+  classification: internal
+  description: Date on which a payment or trade was settled between counterparties.
+- name: settlement_status
+  type: varchar
+  concept: Settlement Status
+  required: true
+  is_key: false
+  classification: internal
+  description: Status of a payment settlement, such as settled, pending, or failed.
+- name: settlement_mode
+  type: varchar
+  concept: Settlement Mode
+  required: false
+  is_key: false
+  classification: internal
+  description: Mode of settlement for a payment, such as RTGS, NEFT, or SWIFT.
+- name: reconciliation_status
+  type: varchar
+  concept: Reconciliation Status
+  required: true
+  is_key: false
+  classification: internal
+  description: Status of a reconciliation check between source and target records, such as matched or open.
+- name: merchant_id
+  type: bigint
+  concept: Merchant ID
+  required: true
+  is_key: true
+  classification: internal
+  description: Unique identifier for a merchant in the card network, used to track merchant-level transaction volumes.
+- name: settlement_bank
+  type: varchar
+  concept: Settlement Bank
+  required: false
+  is_key: false
+  classification: internal
+  description: Bank responsible for settling funds in a payment clearing cycle.
+- name: merchant_category_code
+  type: varchar
+  concept: Merchant Category Code
+  required: false
+  is_key: false
+  classification: internal
+  description: Four-digit ISO code identifying the category of goods or services offered by a merchant.
+- name: source_and_destination_country
+  type: numeric
+  concept: Source And Destination Country
+  required: false
+  is_key: false
+  classification: internal
+  description: Countries of origin and destination for a cross-border payment or trade transaction.
+- name: currency_pair
+  type: varchar
+  concept: Currency Pair
+  required: true
+  is_key: false
+  classification: internal
+  description: Two-currency combination for which an exchange rate is quoted, such as EUR/USD or GBP/INR.
+- name: fx_rate
+  type: numeric
+  concept: FX Rate
+  required: true
+  is_key: false
+  classification: internal
+  description: Exchange rate applied to convert one currency to another in a transaction or valuation.
+- name: purpose_code_education
+  type: varchar
+  concept: Purpose Code Education
+  required: false
+  is_key: false
+  classification: internal
+  description: Purpose code specific to education-related cross-border payments under foreign exchange regulations.
+- name: family
+  type: varchar
+  concept: Family
+  required: false
+  is_key: false
+  classification: internal
+  description: Family grouping or household relationship classification of the customer.
+- name: investment
+  type: varchar
+  concept: Investment
+  required: false
+  is_key: false
+  classification: internal
+  description: Value of capital investment made by an enterprise in fixed assets or financial instruments.
+- name: exception_id
+  type: bigint
+  concept: Exception ID
+  required: true
+  is_key: true
+  classification: internal
+  description: Unique identifier for an exception or alert raised in a risk or compliance workflow.
+- name: exception_type
+  type: varchar
+  concept: Exception Type
+  required: true
+  is_key: false
+  classification: internal
+  description: Classification of the exception by type, such as AML alert, limit breach, or data quality issue.
+- name: raised_by
+  type: varchar
+  concept: Raised By
+  required: false
+  is_key: false
+  classification: internal
+  description: Identifier of the user or system that raised an alert, complaint, or exception.
+- name: resolution_time
+  type: varchar
+  concept: Resolution Time
+  required: false
+  is_key: false
+  classification: internal
+  description: Time taken to resolve a complaint, case, or incident.
+- name: resolution_outcome
+  type: varchar
+  concept: Resolution Outcome
+  required: false
+  is_key: false
+  classification: internal
+  description: Outcome of a resolved case, such as resolved in favour of customer or upheld.
+- name: payment_purpose
+  type: varchar
+  concept: Payment Purpose
+  required: false
+  is_key: false
+  classification: internal
+  description: Declared purpose of a payment, used for AML screening and regulatory reporting.
+- name: p2p_or_p2m_amount_transactions
+  type: numeric
+  concept: P2p Or P2m Amount Transactions
+  required: true
+  is_key: false
+  classification: internal
+  derivations:
+  - currency_normalize
+  description: Aggregated amount and count of peer-to-peer or peer-to-merchant payment transactions.
+- name: party_id
+  type: bigint
+  concept: Party ID
+  required: true
+  is_key: true
+  classification: internal
+  description: Unique identifier for a party involved in a transaction, contract, or legal proceeding.
+- name: external_id
+  type: bigint
+  concept: External ID
+  required: true
+  is_key: true
+  classification: internal
+  description: Identifier assigned by an external system, used for cross-system reconciliation.
+- name: mcc
+  type: varchar
+  concept: Mcc
+  required: false
+  is_key: false
+  classification: internal
+  description: Merchant Category Code (MCC) assigned by the card scheme to classify the merchant's business type.
+- name: country
+  type: numeric
+  concept: Country
+  required: false
+  is_key: false
+  classification: internal
+  description: Country associated with a customer, branch, transaction, or regulatory jurisdiction.
+- name: posting_id
+  type: bigint
+  concept: Posting ID
+  required: true
+  is_key: true
+  classification: internal
+  description: Unique identifier for a ledger posting or accounting entry.
+- name: gl_account
+  type: numeric
+  concept: Gl Account
+  required: false
+  is_key: false
+  classification: internal
+  description: General ledger account code to which a transaction or financial event is posted.
+- name: debit_credit
+  type: varchar
+  concept: Debit Credit
+  required: false
+  is_key: false
+  classification: internal
+  description: Indicator specifying whether a transaction is a debit or credit on the account.
+- name: ref_id
+  type: bigint
+  concept: Ref ID
+  required: true
+  is_key: true
+  classification: internal
+  description: Reference identifier linking a record to a related entity, transaction, or external system.
+- name: source_system
+  type: varchar
+  concept: Source System
+  required: false
+  is_key: false
+  classification: internal
+  description: Name or code of the operational or transactional system that is the authoritative source of a record.
+- name: source_key
+  type: varchar
+  concept: Source Key
+  required: false
+  is_key: false
+  classification: internal
+  description: Natural key from the source system used to uniquely identify a record in ETL processes.
+composition:
+  composed_of:
+  - src_customer_data_product
+  - src_savings_checking_current_account
+  - src_credit_card
+  - src_debit_card
+  - src_prepaid_card
+  - src_secured_loans
+  - src_unsecured_loans
+  - src_corporate_loans
+  - src_wealth_product
+  - src_payments_data_product
+  - src_transaction_master
+  join_keys:
+  - customer_id
+  - account_id
+  description: Assembled by joining the composing source products on shared identity keys.

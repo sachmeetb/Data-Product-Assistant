@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+#
+# Data Workbench dev manager — now a THIN WRAPPER around the `dwb` launcher CLI,
+# kept for muscle memory. It translates the old verbs into `dwb` host-mode
+# commands. Prefer `./dwb` directly for the full surface (compose mode, sample
+# DBs, quick-connect, reset). See `./dwb --help`.
+#
+#   ./dev start [backend|frontend]   -> ./dwb up --mode host   (targets ignored)
+#   ./dev stop                       -> ./dwb down
+#   ./dev restart [backend|frontend] -> ./dwb restart [target]
+#   ./dev status                     -> ./dwb status
+#   ./dev logs [backend|frontend]    -> ./dwb logs [target]
+#   ./dev check                      -> ./dwb doctor
+set -euo pipefail
+ROOT="$(cd "$(dirname "$0")" && pwd)"
+cmd="${1:-help}"
+target="${2:-}"
+
+case "$cmd" in
+    start)   exec "$ROOT/dwb" up --mode host ;;
+    stop)    exec "$ROOT/dwb" down ;;
+    restart) exec "$ROOT/dwb" restart "${target:-all}" ;;
+    status)  exec "$ROOT/dwb" status ;;
+    logs)    exec "$ROOT/dwb" logs "${target:-all}" ;;
+    check)   exec "$ROOT/dwb" doctor ;;
+    help|--help|-h|"")
+        echo "This ./dev wrapper now forwards to the dwb launcher (host mode)."
+        echo "Run './dwb --help' for the full command surface."
+        echo ""
+        echo "  ./dev start                -> ./dwb up --mode host"
+        echo "  ./dev stop                 -> ./dwb down"
+        echo "  ./dev restart [backend|frontend]"
+        echo "  ./dev status | logs | check"
+        ;;
+    *) echo "Unknown command: $cmd (try ./dev help or ./dwb --help)"; exit 1 ;;
+esac
