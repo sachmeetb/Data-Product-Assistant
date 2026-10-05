@@ -43,6 +43,7 @@
       AlertTriangle: 'alert-triangle',
       Sparkles: 'sparkles',
       Layers: 'layers',
+      Database: 'database',
       Shield: 'shield',
       Loader2: 'loader-circle',
       ArrowRight: 'arrow-right',
@@ -99,8 +100,8 @@
     const Icons = Object.fromEntries(Object.keys(ICON_KEY).map(n => [n, makeIcon(n)]));
     const { 
       Shield, Loader2, CheckCircle2, ArrowRight, ArrowUpRight, 
-      Layers, Sparkles, ExternalLink, Maximize2, RefreshCw, 
-      LogOut, Lock, AlertTriangle 
+      Layers, Sparkles, Database, ExternalLink, Maximize2, RefreshCw,
+      LogOut, Lock, AlertTriangle
     } = Icons;
 
     // ─── Accenture Brand Palette ─────────────────────────────────────────────
@@ -135,6 +136,13 @@
         url: "https://proxy-bfsi-silver-frontend-v1-1-743146199.us-central1.run.app/",
         gradient: "linear-gradient(135deg, #1E293B 0%, #334155 100%)",
         icon: Layers
+      },
+      {
+        id: "bronze",
+        title: "Bronze Product Assistant (Banking)",
+        url: "https://proxy-bfsi-bronze-frontend-v1-1-743146199.us-central1.run.app",
+        gradient: "linear-gradient(135deg, #3B2416 0%, #7C4A2D 50%, #B87333 100%)",
+        icon: Database
       }
     ];
 
@@ -455,7 +463,7 @@
           </div>
 
           {/* 2 Clean Clickable Product Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
             {PRODUCTS.map((prod) => {
               const IconCmp = prod.icon;
               return (

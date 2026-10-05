@@ -21,6 +21,7 @@ import asyncio
 import json
 import logging
 import os
+import re
 import uuid
 from datetime import datetime
 from pathlib import Path
@@ -292,6 +293,148 @@ async def publish_session(session_id: str, body: PublishRequest):
     store.set(session_id, session)
 
     return {"session_id": session_id, **report}
+
+
+# ── Data Contract commit + Knowledge Catalog registration ─────────────────────
+
+class ContractCommitRequest(BaseModel):
+    contract: dict = Field(..., description="Data contract object from the UI")
+    session_id: Optional[str] = Field(None, description="Session to pull DDL from for BQ publish")
+
+
+@app.post("/v1/data-contract/commit")
+async def commit_data_contract(body: ContractCommitRequest):
+    """Commit a data contract: publish DDL to BigQuery, register in Dataplex Knowledge Catalog.
+
+    Returns kc_url — the direct GCP console link for the registered data product.
+    Returns bq_url — the BigQuery dataset console link.
+    Bronze tables are registered as a KC data product under the bronze dataset.
+    """
+    project_id = os.environ.get("GCP_PROJECT_ID", "")
+    location = os.environ.get("GCP_LOCATION", "us-central1")
+    bq_dataset = os.environ.get("BQ_BRONZE_DATASET", "banking_bronze")
+
+    contract = body.contract
+    info = contract.get("info", {})
+    contract_id = contract.get("id", "urn:datacontract:banking_bronze:unknown")
+
+    # Derive a Dataplex-compatible id: lowercase, hyphens, max 63 chars
+    kc_id = re.sub(r"[^a-z0-9]+", "-", contract_id.lower()).strip("-")[:63].rstrip("-")
+
+    result: dict = {
+        "status": "committed",
+        "contract_id": contract_id,
+        "bq_result": None,
+        "kc_result": None,
+        "kc_url": None,
+        "bq_url": None,
+    }
+
+    # 1. Publish DDL to BigQuery when the session has one
+    if body.session_id:
+        session = store.get(body.session_id)
+        if session and session.get("ddl_script"):
+            publisher = BigQueryPublisher(mode="auto")
+            bq_report = await asyncio.to_thread(publisher.publish, session["ddl_script"])
+            result["bq_result"] = bq_report
+
+    if project_id:
+        result["bq_url"] = (
+            f"https://console.cloud.google.com/bigquery"
+            f"?project={project_id}&p={project_id}&d={bq_dataset}&page=dataset"
+        )
+
+    # 2. Register in Dataplex Knowledge Catalog
+    if not project_id:
+        result["kc_result"] = {"status": "skipped", "reason": "GCP_PROJECT_ID not set"}
+        return result
+
+    try:
+        import google.auth
+        import google.auth.transport.requests
+        import requests as _http
+
+        credentials, _ = google.auth.default(
+            scopes=["https://www.googleapis.com/auth/cloud-platform"]
+        )
+        credentials.refresh(google.auth.transport.requests.Request())
+        headers = {
+            "Authorization": f"Bearer {credentials.token}",
+            "Content-Type": "application/json",
+        }
+
+        api_root = "https://dataplex.googleapis.com/v1"
+
+        # Build asset list from contract models (max 50 per KC limit)
+        models = contract.get("models", {})
+        assets = []
+        for table_name, model_def in list(models.items())[:50]:
+            physical = model_def.get("physicalName", f"{bq_dataset}.{table_name}")
+            parts = physical.split(".")
+            dataset_name = parts[0] if len(parts) >= 2 else bq_dataset
+            tbl = parts[-1]
+            asset_id = re.sub(r"[^a-z0-9]+", "-", tbl.lower()).strip("-")
+            assets.append({
+                "asset_id": asset_id,
+                "resource": (
+                    f"//bigquery.googleapis.com/projects/{project_id}"
+                    f"/datasets/{dataset_name}/tables/{tbl}"
+                ),
+            })
+
+        # Create the data product (409 = already exists, treat as success)
+        create_url = (
+            f"{api_root}/projects/{project_id}/locations/{location}"
+            f"/dataProducts?data_product_id={kc_id}"
+        )
+        product_body = {
+            "display_name": info.get("title", "Bronze Data Contract"),
+            "description": info.get("description", ""),
+            "owner_emails": [],
+        }
+        create_resp = await asyncio.to_thread(
+            lambda: _http.post(create_url, json=product_body, headers=headers, timeout=30)
+        )
+
+        if create_resp.status_code not in (200, 201, 409):
+            result["kc_result"] = {
+                "status": "failed",
+                "http_status": create_resp.status_code,
+                "error": create_resp.text[:300],
+            }
+            return result
+
+        # Register each BigQuery table as a data asset
+        registered = []
+        for asset in assets:
+            asset_url = (
+                f"{api_root}/projects/{project_id}/locations/{location}"
+                f"/dataProducts/{kc_id}/dataAssets?data_asset_id={asset['asset_id']}"
+            )
+            ar = await asyncio.to_thread(
+                lambda u=asset_url, a=asset: _http.post(
+                    u, json={"resource": a["resource"]}, headers=headers, timeout=30
+                )
+            )
+            if ar.status_code in (200, 201, 409):
+                registered.append(asset["asset_id"])
+
+        result["kc_result"] = {
+            "status": "registered",
+            "data_product_id": kc_id,
+            "assets_registered": len(registered),
+        }
+        result["kc_url"] = (
+            f"https://console.cloud.google.com/dataplex/products"
+            f"/projects/{project_id}/locations/{location}"
+            f"/dataProducts/{kc_id}?project={project_id}"
+        )
+
+    except Exception as exc:
+        log.warning("Knowledge Catalog registration failed: %s", exc)
+        result["kc_result"] = {"status": "error", "error": str(exc)}
+
+    return result
 
 
 # ── Quick-run endpoint ────────────────────────────────────────────────────────

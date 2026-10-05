@@ -7,4 +7,4 @@ COPY . .
 ENV PORT=8080
 EXPOSE 8080
 # --workers 1: InMemorySessionService is in-process; Cloud Run scales via instances, not workers
-CMD ["uvicorn", "server:app", "--host", "0.0.0.0", "--port", "8080", "--workers", "1"]
+CMD ["uvicorn", "server:app", "--host", "0.0.0.0", "--port", "8080", "--workers", "1", "--timeout-keep-alive", "1800"]

@@ -83,7 +83,7 @@ def run_bq_query(sql: str, project: str | None = None, location: str | None = No
     loc = location or _BQ_LOCATION
     try:
         job = client.query(sql, location=loc)
-        rows = list(job.result())  # blocks until done; raises on error
+        rows = list(job.result(timeout=1800))  # 30 min cap for large DDL/DML jobs
         return {
             "rows": [dict(r) for r in rows],
             "total_rows": job.result().total_rows if hasattr(job.result(), "total_rows") else len(rows),

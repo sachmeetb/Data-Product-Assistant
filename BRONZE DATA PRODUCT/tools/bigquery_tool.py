@@ -144,7 +144,7 @@ class BigQueryPublisher:
         client = self._get_client()
         try:
             job = client.query(sql)
-            job.result()
+            job.result(timeout=1800)  # 30 min cap for DDL/DML jobs
             return {"ok": True}
         except GoogleAPIError as exc:
             return {"ok": False, "error": str(exc)}
@@ -253,7 +253,7 @@ class BigQueryPublisher:
         try:
             client = self._get_client()
             sql = f"SELECT * FROM `{table_ref}` LIMIT {limit}"
-            rows = list(client.query(sql).result())
+            rows = list(client.query(sql).result(timeout=1800))
             if not rows:
                 return {"columns": [], "rows": []}
             columns = list(rows[0].keys())
