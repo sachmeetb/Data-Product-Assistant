@@ -65,7 +65,7 @@ export default function ChatPane({
   const inputPlaceholder = hasChips
     ? 'Tap a chip above to respond…'
     : sending || !messages.find(m => m.startingPoint)
-      ? 'Message Bronze Agent...'
+      ? 'Describe an incoming data source or feed (e.g. Kafka card stream, Temenos batch, KYC scans)...'
       : 'Pick a starting point above to begin…'
 
   return (

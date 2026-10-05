@@ -696,7 +696,7 @@ async def _handle_chat(body: ChatRequest, session_id: str):
                 missing_list = "\n".join([f"- **{m.replace('_', ' ').title()}**" for m in missing]) if missing else "- **Bank Name & Primary Region**\n- **Banking Type (Retail / Corporate)**"
                 agent_text = (
                     f"Welcome to **Bronze Agent**!\n\n"
-                    f"To design an accurate Bronze Schema, please provide your **Bank Profile** details:\n\n"
+                    f"To design your Bronze landing schema and data contract, please specify your **incoming data source systems** and institution profile:\n\n"
                     f"{missing_list}"
                 )
 

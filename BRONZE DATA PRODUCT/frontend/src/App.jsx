@@ -18,7 +18,7 @@ function ts() {
 export default function App() {
   const [messages, setMessages]           = useState([{
     id: 0, role: 'agent', agent: 'Bronze Agent',
-    text: "Welcome to **Bronze Agent**! Please enter your data domain requirements, or upload a file with your requirements.",
+    text: "Welcome to **Bronze Agent**! Please describe your **incoming data sources** (e.g., Core Banking feeds, Mainframe COBOL copybooks, Real-time Kafka streams, KYC Document stores, SAP ERP), or upload a source specification file.",
     chips: [], loading: false, time: ts(), startingPoint: false,
   }])
   const [sessionId, setSessionId]             = useState(null)
