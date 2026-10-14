@@ -13,7 +13,7 @@ export const PRODUCTS = [
   },
   {
     id: "silver",
-    title: "Silver Product Assistant (Banking)",
+    title: "Silver Product Assistant (Multi-Industry)",
     url: "https://proxy-bfsi-silver-frontend-v1-1-743146199.us-central1.run.app/",
     gradient: "linear-gradient(135deg, #1E293B 0%, #334155 100%)"
   }

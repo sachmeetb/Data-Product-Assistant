@@ -195,3 +195,31 @@ governance:
   retention:
     period: "7_YEARS"
     statutory_mandate: "BANKING_COMPLIANCE_ARCHIVAL_ACT"
+
+lineage:
+  upstream_sources:
+    - system_id: "${SOURCE_SYSTEM_CODE}"
+      layer: "BRONZE"
+      dataset: "raw_bronze"
+      table: "${SOURCE_TABLE_NAME}"
+      feed_type: "CDC_STREAM"
+      extraction_frequency: "HOURLY"
+  entity_lineage:
+    - target_table: "${TARGET_SCHEMA}.${TARGET_TABLE_NAME}"
+      source_tables:
+        - "raw_bronze.${SOURCE_TABLE_NAME}"
+      join_type: "PRIMARY_SOURCE"
+      column_mappings:
+        - target_column: "surrogate_key"
+          source_expression: "SHA256(CONCAT(${SOURCE_TABLE_NAME}.${NATURAL_BUSINESS_KEY}, '${SOURCE_SYSTEM_CODE}'))"
+          transformation_type: "HASH_DETERMINISTIC"
+        - target_column: "${FIELD_NAME}"
+          source_expression: "${SOURCE_TABLE_NAME}.${SOURCE_FIELD_NAME}"
+          transformation_type: "DIRECT_PASS_CLEANSED"
+        - target_column: "record_hash"
+          source_expression: "SHA256(TO_JSON_STRING(${TARGET_TABLE_NAME}))"
+          transformation_type: "CDC_RECORD_HASH"
+  downstream_consumers:
+    - consumer_product_id: "GOLD-DP-ANALYTICS-001"
+      layer: "GOLD"
+      intended_use: "Enterprise Analytics, Executive Dashboards, and Regulatory Filings"

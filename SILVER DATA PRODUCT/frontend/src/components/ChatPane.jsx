@@ -10,6 +10,7 @@ export default function ChatPane({
   allowUpload, onUpload, uploading,
   pendingFile, onUseFile, onDismissFile,
   editFormOpen, requirementData, glossaryData, onEditSubmit, onEditClose,
+  onOpenNavigator,
 }) {
   const bottomRef = useRef(null)
   const [downloading, setDownloading] = useState(false)
@@ -65,22 +66,38 @@ export default function ChatPane({
   const inputPlaceholder = hasChips
     ? 'Tap a chip above to respond…'
     : sending || !messages.find(m => m.startingPoint)
-      ? 'Message DATA DOMAIN SILVER AGENT...'
+      ? 'Message Silver Data Product Assistant...'
       : 'Pick a starting point above to begin…'
 
   return (
     <main className="chat">
       <header className="chat-header">
         <div className="chat-header-left">
-          <div className="da-avatar">DA</div>
+          <div className="da-avatar" style={{ background: '#7500C0' }}>SA</div>
           <div>
             <div className="chat-title">
-              DATA DOMAIN SILVER AGENT <span className="online-dot" />
+              Silver Data Product Assistant <span className="online-dot" />
             </div>
-            <div className="chat-subtitle">Powered by Enterprise Data Domain Architecture &amp; BigQuery</div>
+            <div className="chat-subtitle">Conformed Multi-Industry Models, ODCS Contracts &amp; Lineage</div>
           </div>
         </div>
         <div className="header-actions">
+          {onOpenNavigator && (
+            <button
+              className="header-download-btn"
+              onClick={onOpenNavigator}
+              title="Open Hierarchical Domain & Schema Navigator"
+              style={{
+                background: '#FAF5FF',
+                color: '#7500C0',
+                border: '1px solid #D8B4FE',
+                fontWeight: 700,
+              }}
+            >
+              <span style={{ fontSize: 13, marginRight: 4 }}>🌲</span>
+              Domain Navigator
+            </button>
+          )}
           {messages.some(m => m.data_contract_view) && (
             <button
               className="header-download-btn"
