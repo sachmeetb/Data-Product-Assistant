@@ -9,7 +9,7 @@ export default function LoginScreen({ onSignIn }) {
   const quickPresets = [
     { label: "R Yuva Kishore", email: "r.yuva.kishore@accenture.com", role: "Lead Data Architect" },
     { label: "Sarah Jenkins", email: "sarah.jenkins@accenture.com", role: "Campaign Manager" },
-    { label: "Alex Rivera", email: "alex.rivera@accenture.com", role: "Data Product Owner" }
+    { label: "Tony D Giordano", email: "tony.d.giordano@accenture.com", role: "Data Product Owner" }
   ];
 
   const submit = (targetEmail) => {
@@ -73,11 +73,15 @@ export default function LoginScreen({ onSignIn }) {
             <div className="mt-6 space-y-2.5">
               <div className="flex items-center gap-2 text-xs text-purple-200">
                 <CheckCircle2 size={13} className="text-[#FF6B00]" />
-                <span>Gold Product Assistant (BP - Product)</span>
+                <span>Bronze Product Assistant</span>
               </div>
               <div className="flex items-center gap-2 text-xs text-purple-200">
                 <CheckCircle2 size={13} className="text-[#FF6B00]" />
-                <span>Silver Product Assistant (Banking)</span>
+                <span>Silver Product Assistant (Multi-Industry)</span>
+              </div>
+              <div className="flex items-center gap-2 text-xs text-purple-200">
+                <CheckCircle2 size={13} className="text-[#FF6B00]" />
+                <span>Gold Product Assistant</span>
               </div>
             </div>
           </div>
@@ -184,7 +188,7 @@ export default function LoginScreen({ onSignIn }) {
           </div>
 
           <div className="mt-6 pt-4 border-t border-gray-100 flex items-center justify-between text-[11px] text-gray-400">
-            <span>Accenture BFSI Practice</span>
+            <span>Accenture Practice</span>
             <a href="mailto:support@accenture.com" className="text-purple-600 hover:underline">IT Help Desk</a>
           </div>
         </div>

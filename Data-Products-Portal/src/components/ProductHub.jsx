@@ -1,6 +1,12 @@
 import React from 'react';
 import { PRODUCTS } from '../App.jsx';
-import { Sparkles, Layers, ArrowUpRight, Maximize2, ExternalLink } from 'lucide-react';
+import { Sparkles, Layers, Database, ArrowUpRight, Maximize2, ExternalLink } from 'lucide-react';
+
+const PRODUCT_ICONS = {
+  bronze: Database,
+  silver: Layers,
+  gold: Sparkles
+};
 
 export default function ProductHub({ onSelectProduct }) {
   return (
@@ -18,11 +24,10 @@ export default function ProductHub({ onSelectProduct }) {
         </p>
       </div>
 
-      {/* 2 Clean Clickable Product Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+      {/* 3 Clean Clickable Product Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto">
         {PRODUCTS.map((prod) => {
-          const isSilver = prod.id === "silver";
-          const IconCmp = isSilver ? Layers : Sparkles;
+          const IconCmp = PRODUCT_ICONS[prod.id] || Sparkles;
           return (
             <div
               key={prod.id}

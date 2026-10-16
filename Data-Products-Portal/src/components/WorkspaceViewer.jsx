@@ -1,6 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { PRODUCTS } from '../App.jsx';
-import { ArrowRight, RefreshCw, ExternalLink, Loader2, ArrowUpRight, Layers, Sparkles } from 'lucide-react';
+import { ArrowRight, RefreshCw, ExternalLink, Loader2, ArrowUpRight, Layers, Sparkles, Database } from 'lucide-react';
+
+const PRODUCT_ICONS = {
+  bronze: Database,
+  silver: Layers,
+  gold: Sparkles
+};
 
 export default function WorkspaceViewer({ currentProduct, onSwitchProduct, onBackToHub }) {
   const [isLoading, setIsLoading] = useState(true);
@@ -36,7 +42,7 @@ export default function WorkspaceViewer({ currentProduct, onSwitchProduct, onBac
             <span className="text-xs text-gray-400 font-medium hidden sm:inline">Active Product:</span>
             <div className="flex bg-gray-100 p-0.5 rounded-lg text-xs">
               {PRODUCTS.map(p => {
-                const IconCmp = p.id === "silver" ? Layers : Sparkles;
+                const IconCmp = PRODUCT_ICONS[p.id] || Sparkles;
                 return (
                   <button
                     key={p.id}
