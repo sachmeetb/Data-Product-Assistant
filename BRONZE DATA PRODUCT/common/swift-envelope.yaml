@@ -1,0 +1,39 @@
+# common/swift-envelope.yaml
+# Common block for SWIFT FIN MT & ISO 20022 MX Payment message envelopes
+$schema: "http://json-schema.org/draft-07/schema#"
+title: "SWIFT & Faster Payments Envelope Block"
+type: object
+required:
+  - message_format
+  - message_type
+  - uetr
+properties:
+  message_format:
+    type: string
+    description: "Format family: SWIFT_MT, SWIFT_MX_ISO20022, or UK_FPS_ISO8583."
+    example: "SWIFT_MX_ISO20022"
+  message_type:
+    type: string
+    description: "Standard message identifier (e.g. MT103, MT940, pacs.008.001.08, camt.053.001.08)."
+    example: "pacs.008.001.08"
+  sender_bic:
+    type: string
+    description: "Sender ISO 9362 Business Identifier Code (BIC8 / BIC11)."
+    example: "BARCGB22XXX"
+  receiver_bic:
+    type: string
+    description: "Receiver ISO 9362 Business Identifier Code (BIC8 / BIC11)."
+    example: "APEXUS33XXX"
+  uetr:
+    type: string
+    description: "Unique End-to-End Transaction Reference (UETR / UUID v4)."
+    example: "f81d4fae-7dec-11d0-a765-00a0c91e6bf6"
+  interbank_settlement_date:
+    type: string
+    format: "date"
+    description: "Value Date / Interbank Settlement Date for the funds transfer."
+    example: "2026-09-28"
+  raw_message_payload:
+    type: string
+    description: "Full unprocessed raw FIN text or XML block string."
+    example: "{1:F01APEXUS33AXXX0000000000}{2:I103BARCGB22XXXXN}{4:...}"

@@ -29,14 +29,15 @@ You will receive in `<context>`:
 | BRZ004 | All table/column names are snake_case (pattern: `^[a-z][a-z0-9_]*$`) | ERROR |
 | BRZ005 | Bronze table names start with `brz_` or `raw_` | ERROR |
 
-### BigQuery Syntax Checks (BQ001–BQ004)
+### BigQuery & BigLake Iceberg Syntax Checks (BQ001–BQ005)
 
 | ID | Check | Severity |
 |---|---|---|
-| BQ001 | No Databricks syntax: USING DELTA, TBLPROPERTIES, LOCATION 'dbfs, PARTITIONED BY | ERROR |
+| BQ001 | No Databricks proprietary syntax: USING DELTA, TBLPROPERTIES, LOCATION 'dbfs' | ERROR |
 | BQ002 | Qualified table names are backtick-quoted in DDL | WARNING |
-| BQ003 | Landing tables use PARTITION BY DATE(ingest_ts) | WARNING |
-| BQ004 | Every CREATE TABLE statement ends with a semicolon | ERROR |
+| BQ003 | Landing tables use PARTITION BY DATE(ingest_ts) or Iceberg format options | WARNING |
+| BQ004 | Every CREATE TABLE or CREATE EXTERNAL TABLE statement ends with a semicolon | ERROR |
+| BQ005 | When format = 'ICEBERG' is used, options include table_retention_days (2555 days / 7 years) and valid GCS URI | WARNING |
 
 ### Bronze Quality Rules (BRZ-DQ)
 

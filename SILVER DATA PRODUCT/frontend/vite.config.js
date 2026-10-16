@@ -4,10 +4,13 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   server: {
+    port: 5173,
     proxy: {
-      '/chat':   'http://localhost:8000',
-      '/upload': 'http://localhost:8000',
-      '/files':  'http://localhost:8000',
+      '/chat': 'http://localhost:8080',
+      '/upload': 'http://localhost:8080',
+      '/files': 'http://localhost:8080',
+      '/catalog': 'http://localhost:8080',
+      '/health': 'http://localhost:8080',
     },
   },
   build: {

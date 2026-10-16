@@ -26,22 +26,35 @@ raw_payload_hash     STRING    REQUIRED   — Deterministic hash of raw data for
 Look up every other selected block. For each block, add its columns to the table. Examples:
 - `source-identifier`: `source_system_id STRING`, `feed_id STRING`, `sequence_number INT64`
 - `file-metadata`: `file_size INT64`, `row_count INT64`, `file_creation_ts TIMESTAMP`
-- `raw-payload`: `raw_data STRING`
+- `raw-payload`: `raw_data STRING` (or `raw_payload JSON`)
 - `quality-flags`: `parse_error_flag BOOL`, `malformed_record_flag BOOL`
 - `lineage-tracking`: `source_topic STRING`, `source_offset INT64`, `kafka_partition INT64`
 - `temporal`: `extraction_start_ts TIMESTAMP`, `extraction_end_ts TIMESTAMP`
+- `mainframe-copybook`: `copybook_name STRING`, `record_format STRING`, `encoding STRING`, `record_byte_length INT64`, `raw_record_payload STRING`
+- `swift-envelope`: `message_format STRING`, `message_type STRING`, `sender_bic STRING`, `receiver_bic STRING`, `uetr STRING`, `interbank_settlement_date DATE`, `raw_message_payload STRING`
+- `sap-idoc-metadata`: `sap_client STRING`, `sap_extractor_type STRING`, `idoc_number STRING`, `change_operation STRING`, `sap_timestamp TIMESTAMP`
+- `api-crm-metadata`: `api_source STRING`, `sfdc_object_name STRING`, `cdc_change_type STRING`, `api_replay_id STRING`, `api_version STRING`
+- `unstructured-object-metadata`: `file_uri STRING`, `mime_type STRING`, `file_size_bytes INT64`, `sha256_hash STRING`, `document_type STRING`, `customer_id_ref STRING`, `classification STRING`, `extracted_text_payload STRING`, `ocr_confidence_score FLOAT64`
 
-### Step 3 — Add raw columns
+### Step 3 — Add raw source columns with 100% fidelity
 
-After the block columns, add the `raw_columns` listed in the SourceScope. These are raw schema columns parsed minimally (usually STRING) preserving the source format.
+After the block columns, add the `raw_columns` listed in the SourceScope. These are raw schema columns parsed with 100% source fidelity, preserving source names, data types, and copybook attributes (`pic_clause`, `start_byte`, `length`). Tag sensitive columns (`is_pii: true`).
 
 ---
 
-## Partitioning, Clustering, and Schema Enforcement
+## Lakehouse Multi-Modal Storage, Table Formats & Retention
 
-- **Partitioning strategy:** Always by ingest date (`ingest_ts`).
-- **Clustering strategy:** Always by source system or natural keys (`source_system_id`, `ingest_batch_id`).
-- **Schema enforcement mode:** `PERMISSIVE_WITH_AUDIT` — meaning we capture everything, and flag errors rather than fail.
+- **Structured & Streaming Tabular Feeds:** Google Data Lake (GCS) + BigLake Apache Iceberg (`TYPE = 'ICEBERG'`).
+- **Unstructured Binary Feeds (PDFs, Images, Audio, Scans):** Google Data Lake (GCS) + BigLake Object Tables (`WITH CONNECTION ... OPTIONS (object_metadata = 'DIRECTORY')`).
+- **Table Storage URIs:**
+  - Tabular: `gs://<bank_code>-data-lake-bronze/<source_system>/<table_name>/`
+  - Unstructured: `gs://<bank_code>-data-lake-bronze/unstructured/<source_system>/<table_name>/`
+- **Partitioning Strategy:**
+  - Tabular & Streaming: Always partitioned by ingest date: `PARTITION BY DATE(ingest_ts)`.
+  - Unstructured: Governed via directory prefixes and GCS lifecycle metadata.
+- **Clustering Strategy:** Clustered by `source_system` and primary key / `ingest_batch_id`.
+- **Regulatory Retention Policy:** 7 Years (`table_retention_days = 2555`) to comply with Basel III, PRA, FCA, and GDPR financial audit obligations.
+- **Schema Enforcement Mode:** `PERMISSIVE_WITH_AUDIT` — preserve all raw incoming fields and flag malformed records rather than failing pipeline runs.
 
 ---
 

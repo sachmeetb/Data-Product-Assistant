@@ -1,0 +1,48 @@
+# common/unstructured-object-metadata.yaml
+# Common block for BigLake Object Tables & Unstructured Data Landing (e.g. KYC PDFs, TIFF/JPEG scans, Loan Contracts, Audio transcripts)
+$schema: "http://json-schema.org/draft-07/schema#"
+title: "Unstructured Object Table Landing Block"
+type: object
+required:
+  - file_uri
+  - mime_type
+  - file_size_bytes
+  - sha256_hash
+  - document_type
+properties:
+  file_uri:
+    type: string
+    description: "Fully-qualified Google Cloud Storage URI (gs://<bucket>/bronze/unstructured/...)."
+    example: "gs://aib-data-lake-bronze/unstructured/kyc_passports/2026/09/cust_9901_passport.pdf"
+  mime_type:
+    type: string
+    description: "IANA MIME media type of the landed object (e.g. application/pdf, image/tiff, audio/wav, text/plain)."
+    example: "application/pdf"
+  file_size_bytes:
+    type: integer
+    description: "Binary byte length of the raw landed object."
+    example: 1048576
+  sha256_hash:
+    type: string
+    description: "Cryptographic SHA-256 integrity hash of the raw binary payload."
+    example: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  document_type:
+    type: string
+    description: "Banking classification: KYC_IDENTITY_DOCUMENT, MORTGAGE_DEED, LOAN_AGREEMENT, DISPUTE_LETTER, STATEMENT_ARCHIVE."
+    example: "KYC_IDENTITY_DOCUMENT"
+  customer_id_ref:
+    type: string
+    description: "Associated customer or account reference identifier if extracted or supplied in filename."
+    example: "CUST_9901"
+  classification:
+    type: string
+    description: "Security and data privacy tier: PII_CONFIDENTIAL, RESTRICTED_FINANCIAL, or INTERNAL."
+    example: "PII_CONFIDENTIAL"
+  extracted_text_payload:
+    type: string
+    description: "Extracted OCR text or full transcription content parsed from the binary object."
+    example: "UNITED KINGDOM OF GREAT BRITAIN AND NORTHERN IRELAND PASSPORT..."
+  ocr_confidence_score:
+    type: number
+    description: "Automated OCR extraction confidence level (0.00 to 1.00)."
+    example: 0.98

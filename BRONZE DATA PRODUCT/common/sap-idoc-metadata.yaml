@@ -1,0 +1,30 @@
+# common/sap-idoc-metadata.yaml
+# Common block for SAP ERP, S/4HANA, IDoc, and SLT replication metadata
+$schema: "http://json-schema.org/draft-07/schema#"
+title: "SAP Replication & Change Capture Metadata Block"
+type: object
+required:
+  - sap_client
+  - sap_extractor_type
+properties:
+  sap_client:
+    type: string
+    description: "SAP Client identifier (MANDT, e.g. 100, 300, 500)."
+    example: "100"
+  sap_extractor_type:
+    type: string
+    description: "Replication mechanism: SAP_SLT_CDC, SAP_IDOC, SAP_ODP_EXTRACTOR, or RFC_DIRECT."
+    example: "SAP_SLT_CDC"
+  idoc_number:
+    type: string
+    description: "SAP Intermediate Document (IDoc) 16-digit transmission number if ingested via IDoc."
+    example: "0000000010928374"
+  change_operation:
+    type: string
+    description: "CDC operational flag (I=Insert, U=Update, D=Delete) from SLT / trigger."
+    example: "I"
+  sap_timestamp:
+    type: string
+    format: "date-time"
+    description: "SAP system UTC timestamp of document creation or modification."
+    example: "2026-09-28T09:15:00Z"

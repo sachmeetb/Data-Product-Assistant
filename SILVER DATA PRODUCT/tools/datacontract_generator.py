@@ -122,18 +122,92 @@ def generate_data_contract_dict(
         else "governance baseline"
     )
 
+    org_name = (
+        bank_profile.get("org_name")
+        or bank_profile.get("bank_name")
+        or "Enterprise Organization"
+    )
+    industry = (
+        bank_profile.get("industry")
+        or structured_req.get("industry")
+        or "banking"
+    )
+    target_dataset = f"{industry}_silver" if industry != "banking" else "banking_silver"
+
+    # Build Lineage Specification (Upstream Bronze -> Silver Conformed -> Downstream Gold)
+    raw_sources = (
+        structured_req.get("data_sources")
+        or structured_req.get("source_systems")
+        or ["raw_bronze.master_feed", "raw_bronze.events_stream"]
+    )
+    upstream_sources = []
+    for idx, s in enumerate(raw_sources):
+        s_name = s if isinstance(s, str) else s.get("source_name", f"Bronze_Source_{idx+1}")
+        upstream_sources.append({
+            "system": s_name,
+            "layer": "BRONZE",
+            "type": "CDC_STREAM" if "stream" in s_name.lower() or "event" in s_name.lower() else "BATCH_FILE",
+            "frequency": "HOURLY" if "stream" in s_name.lower() else "DAILY",
+        })
+
+    entity_lineage = []
+    for tname, mdef in models.items():
+        src_table = f"raw_bronze.{tname.replace('slv_', 'src_')}"
+        col_mappings = []
+        for fname, fdef in (mdef.get("fields") or {}).items():
+            trans_logic = "DIRECT_PASS"
+            if fdef.get("primary"):
+                trans_logic = "SHA256_SURROGATE_HASH(natural_key, source_system)"
+            elif "timestamp" in str(fdef.get("type", "")).lower():
+                trans_logic = "PARSE_TIMESTAMP_UTC(source_ts)"
+            elif "numeric" in str(fdef.get("type", "")).lower():
+                trans_logic = "CAST_NUMERIC(ROUND(source_amount, 2))"
+            elif fdef.get("pii"):
+                trans_logic = "MASK_LAST_4(UPPER(TRIM(source_val)))"
+            else:
+                trans_logic = "TRIM_CLEANSE(source_val)"
+
+            col_mappings.append({
+                "target_column": fname,
+                "source_column": f"{src_table}.{fname}",
+                "transformation": trans_logic,
+            })
+            # Also attach transformSourceObjects & transformLogic for ODCS schema compliance
+            fdef["transformSourceObjects"] = [src_table]
+            fdef["transformLogic"] = trans_logic
+
+        entity_lineage.append({
+            "target_table": mdef.get("physicalName", f"{target_dataset}.{tname}"),
+            "source_tables": [src_table],
+            "join_type": "PRIMARY_SOURCE",
+            "column_lineage": col_mappings,
+        })
+
+    lineage_block = {
+        "upstream_sources": upstream_sources,
+        "entity_lineage": entity_lineage,
+        "downstream_consumers": [
+            {
+                "consumer_role": structured_req.get("consumer_role", "Domain Analytics & Governance Team"),
+                "intended_layer": "GOLD",
+                "use_case": use_case,
+            }
+        ],
+    }
+
     contract = {
         "dataContractSpecification": "0.9.3",
-        "id": f"urn:datacontract:banking_silver:{domain}",
+        "id": f"urn:datacontract:{target_dataset}:{domain}",
         "info": {
             "title": f"{use_case} — Data Contract",
             "version": "1.0.0",
             "status": "ACTIVE",
-            "description": f"Official Silver Layer Data Contract for {bank_name} {standards_desc}.",
+            "description": f"Official Silver Layer Data Contract for {org_name} {standards_desc}.",
             "domain": domain,
-            "owner": f"{bank_name} Data Governance & Architecture Team",
+            "industry": industry,
+            "owner": f"{org_name} Data Governance & Architecture Team",
             "standards": standards_list,
-            "target_dataset": "banking_silver",
+            "target_dataset": target_dataset,
         },
         "servicelevels": {
             "freshness": {
@@ -151,6 +225,7 @@ def generate_data_contract_dict(
         },
         "models": models,
         "quality": quality_rules,
+        "lineage": lineage_block,
     }
     return contract
 

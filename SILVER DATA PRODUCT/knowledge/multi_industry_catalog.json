@@ -1,0 +1,661 @@
+{
+  "version": "2.0.0",
+  "description": "Enterprise Multi-Industry Domain Catalog and Canonical Hierarchy for Silver-layer Schema Generation",
+  "industries": [
+    {
+      "id": "banking",
+      "name": "Banking & Financial Services",
+      "icon": "🏦",
+      "description": "BIAN and ISO 20022 aligned canonical Silver data models for commercial, retail, and corporate financial institutions.",
+      "subtypes": [
+        {
+          "id": "retail_banking",
+          "name": "Retail Banking",
+          "description": "Consumer banking, checking, savings, mortgages, cards, and personal loans."
+        },
+        {
+          "id": "commercial_banking",
+          "name": "Commercial & Corporate Banking",
+          "description": "Corporate cash management, trade finance, syndicated credit facilities, and treasury."
+        },
+        {
+          "id": "wealth_management",
+          "name": "Wealth & Asset Management",
+          "description": "Private banking, portfolio management, trust accounts, and advisory services."
+        },
+        {
+          "id": "investment_banking",
+          "name": "Investment Banking & Capital Markets",
+          "description": "Securities underwriting, institutional trading, derivatives, and settlement."
+        }
+      ],
+      "domains": [
+        {
+          "name": "core_banking",
+          "display_name": "Core Banking & Accounts",
+          "description": "Canonical accounts, deposits, daily balances, and general ledger structures.",
+          "status": "green",
+          "color": "#0f766e",
+          "standards": ["BIAN v12", "ISO 20022", "FIBO"],
+          "entity_count": 3,
+          "entities": {
+            "slv_customer": {
+              "type": "dimension",
+              "grain": "one row per customer",
+              "description": "Conformed Customer 360 Dimension",
+              "columns": [
+                {"name": "surrogate_key", "data_type": "STRING", "is_pk": true, "nullable": false, "description": "Deterministic SHA-256 Surrogate Key"},
+                {"name": "customer_id", "data_type": "STRING", "is_pk": false, "nullable": false, "description": "Master Customer Identifier"},
+                {"name": "customer_name", "data_type": "STRING", "is_pk": false, "nullable": false, "pii": true, "description": "Full Legal Name"},
+                {"name": "party_type", "data_type": "STRING", "is_pk": false, "nullable": false, "description": "INDIVIDUAL, CORPORATE, or SOLE_PROPRIETOR"},
+                {"name": "kyc_status", "data_type": "STRING", "is_pk": false, "nullable": false, "description": "AML/KYC Status: VERIFIED, PENDING, EXPIRED"},
+                {"name": "country_code", "data_type": "STRING", "is_pk": false, "nullable": false, "description": "ISO 3166-1 alpha-2 country code"}
+              ]
+            },
+            "slv_account": {
+              "type": "dimension",
+              "grain": "one row per deposit account",
+              "description": "Conformed Deposit Account Dimension",
+              "columns": [
+                {"name": "surrogate_key", "data_type": "STRING", "is_pk": true, "nullable": false, "description": "Deterministic Account Key"},
+                {"name": "account_id", "data_type": "STRING", "is_pk": false, "nullable": false, "description": "Core Banking Account Identifier"},
+                {"name": "customer_id", "data_type": "STRING", "is_pk": false, "fk_ref": "slv_customer", "nullable": false, "description": "Foreign Key to slv_customer"},
+                {"name": "account_type_cd", "data_type": "STRING", "is_pk": false, "nullable": false, "description": "CHECKING, SAVINGS, TERM_DEPOSIT"},
+                {"name": "currency_code", "data_type": "STRING", "is_pk": false, "nullable": false, "description": "ISO 4217 Currency Code"},
+                {"name": "current_balance", "data_type": "NUMERIC", "is_pk": false, "nullable": false, "description": "Closing Ledger Balance"}
+              ]
+            },
+            "slv_account_balance_daily": {
+              "type": "aggregate",
+              "grain": "one row per account per calendar date",
+              "description": "Daily Snapshot Account Balance & Accruals",
+              "columns": [
+                {"name": "surrogate_key", "data_type": "STRING", "is_pk": true, "nullable": false, "description": "Surrogate Balance Key"},
+                {"name": "account_id", "data_type": "STRING", "is_pk": false, "fk_ref": "slv_account", "nullable": false, "description": "Account Reference"},
+                {"name": "snapshot_date", "data_type": "DATE", "is_pk": false, "nullable": false, "description": "Calendar Snapshot Date"},
+                {"name": "closing_balance", "data_type": "NUMERIC", "is_pk": false, "nullable": false, "description": "Daily Closing Ledger Balance"},
+                {"name": "available_balance", "data_type": "NUMERIC", "is_pk": false, "nullable": false, "description": "Usable Funds After Holds"},
+                {"name": "interest_accrued_mtd", "data_type": "NUMERIC", "is_pk": false, "nullable": true, "description": "Month-to-Date Accrued Interest"}
+              ]
+            }
+          }
+        },
+        {
+          "name": "payments",
+          "display_name": "Payments & Transfers (ISO 20022)",
+          "description": "Domestic, wire, SWIFT, SEPA, and real-time payment events and instructions.",
+          "status": "green",
+          "color": "#0891b2",
+          "standards": ["ISO 20022", "BIAN v12", "FedNow"],
+          "entity_count": 3,
+          "entities": {
+            "slv_payment_instruction": {
+              "type": "dimension",
+              "grain": "one row per payment order",
+              "description": "Conformed Payment Order Header",
+              "columns": [
+                {"name": "payment_id", "data_type": "STRING", "is_pk": true, "nullable": false, "description": "End-to-End Payment Reference"},
+                {"name": "debtor_account_id", "data_type": "STRING", "is_pk": false, "nullable": false, "description": "Originating Debtor Account"},
+                {"name": "creditor_account_id", "data_type": "STRING", "is_pk": false, "nullable": false, "description": "Receiving Creditor Account"},
+                {"name": "instructed_amount", "data_type": "NUMERIC", "is_pk": false, "nullable": false, "description": "Instructed Transfer Amount"},
+                {"name": "currency_code", "data_type": "STRING", "is_pk": false, "nullable": false, "description": "ISO 4217 Currency"},
+                {"name": "payment_rail", "data_type": "STRING", "is_pk": false, "nullable": false, "description": "ACH, WIRE, SEPA_INSTANT, FEDNOW"}
+              ]
+            },
+            "slv_payment_event": {
+              "type": "event",
+              "grain": "one row per payment execution/settlement event",
+              "description": "Lifecycle Payment Processing Event",
+              "columns": [
+                {"name": "event_id", "data_type": "STRING", "is_pk": true, "nullable": false, "description": "Unique Execution Event ID"},
+                {"name": "payment_id", "data_type": "STRING", "is_pk": false, "fk_ref": "slv_payment_instruction", "nullable": false, "description": "Payment Order Reference"},
+                {"name": "event_type", "data_type": "STRING", "is_pk": false, "nullable": false, "description": "INITIATED, CLEARED, SETTLED, REJECTED"},
+                {"name": "settlement_ts", "data_type": "TIMESTAMP", "is_pk": false, "nullable": false, "description": "Event Timestamp"}
+              ]
+            },
+            "slv_clearing_reconciliation": {
+              "type": "aggregate",
+              "grain": "one row per clearing batch",
+              "description": "Daily Clearing Network Net Settlement Batch",
+              "columns": [
+                {"name": "batch_id", "data_type": "STRING", "is_pk": true, "nullable": false, "description": "Clearing Batch ID"},
+                {"name": "clearing_house_code", "data_type": "STRING", "is_pk": false, "nullable": false, "description": "ACH, EBA, TARGET2"},
+                {"name": "net_settlement_amount", "data_type": "NUMERIC", "is_pk": false, "nullable": false, "description": "Net Batch Position"},
+                {"name": "batch_status", "data_type": "STRING", "is_pk": false, "nullable": false, "description": "SETTLED / BALANCED"}
+              ]
+            }
+          }
+        },
+        {
+          "name": "cards",
+          "display_name": "Credit & Debit Cards",
+          "description": "Card tokens, merchant authorizations, settlement facts, and fraud classifications.",
+          "status": "green",
+          "color": "#6366f1",
+          "standards": ["PCI-DSS", "EMVCo", "ISO 8583"],
+          "entity_count": 3,
+          "entities": {
+            "slv_card_account": {
+              "type": "dimension",
+              "grain": "one row per issued payment card token",
+              "description": "Masked Payment Card Dimension",
+              "columns": [
+                {"name": "card_token", "data_type": "STRING", "is_pk": true, "nullable": false, "description": "PCI-compliant Tokenized Card Key"},
+                {"name": "account_id", "data_type": "STRING", "is_pk": false, "nullable": false, "description": "Primary Linked Deposit/Credit Account"},
+                {"name": "masked_pan", "data_type": "STRING", "is_pk": false, "nullable": false, "description": "Last 4 Digits Format: ************1234"},
+                {"name": "card_type", "data_type": "STRING", "is_pk": false, "nullable": false, "description": "VISA_CREDIT, MC_DEBIT, PREPAID"},
+                {"name": "card_status", "data_type": "STRING", "is_pk": false, "nullable": false, "description": "ACTIVE, BLOCKED, EXPIRED"}
+              ]
+            },
+            "slv_card_transaction": {
+              "type": "event",
+              "grain": "one row per card authorization/clearing swipe",
+              "description": "Card Authorization Event",
+              "columns": [
+                {"name": "auth_id", "data_type": "STRING", "is_pk": true, "nullable": false, "description": "Authorization Confirmation Number"},
+                {"name": "card_token", "data_type": "STRING", "is_pk": false, "fk_ref": "slv_card_account", "nullable": false, "description": "Token FK"},
+                {"name": "merchant_name", "data_type": "STRING", "is_pk": false, "nullable": false, "description": "Acquiring Merchant Name"},
+                {"name": "mcc_code", "data_type": "STRING", "is_pk": false, "nullable": false, "description": "Merchant Category Code (MCC)"},
+                {"name": "auth_amount", "data_type": "NUMERIC", "is_pk": false, "nullable": false, "description": "Authorized Transaction Amount"},
+                {"name": "auth_ts", "data_type": "TIMESTAMP", "is_pk": false, "nullable": false, "description": "Authorization Timestamp"}
+              ]
+            },
+            "slv_merchant": {
+              "type": "dimension",
+              "grain": "one row per merchant entity",
+              "description": "Merchant Master Profile & Category",
+              "columns": [
+                {"name": "merchant_id", "data_type": "STRING", "is_pk": true, "nullable": false, "description": "Acquirer Merchant ID"},
+                {"name": "legal_merchant_name", "data_type": "STRING", "is_pk": false, "nullable": false, "description": "Merchant Legal Name"},
+                {"name": "mcc_group", "data_type": "STRING", "is_pk": false, "nullable": false, "description": "AIRLINES, GROCERY, FUEL, RESTAURANT"},
+                {"name": "merchant_country", "data_type": "STRING", "is_pk": false, "nullable": false, "description": "ISO Country Code"}
+              ]
+            }
+          }
+        },
+        {
+          "name": "lending",
+          "display_name": "Mortgages & Consumer Loans",
+          "description": "Loan facilities, collateral assets, repayment amortization, and delinquency tracking.",
+          "status": "green",
+          "color": "#d97706",
+          "standards": ["MISMO", "BIAN v12", "IFRS 9"],
+          "entity_count": 3,
+          "entities": {
+            "slv_loan_facility": {
+              "type": "dimension",
+              "grain": "one row per loan agreement",
+              "description": "Conformed Credit & Loan Facility",
+              "columns": [
+                {"name": "loan_id", "data_type": "STRING", "is_pk": true, "nullable": false, "description": "Loan Facility Contract Identifier"},
+                {"name": "borrower_customer_id", "data_type": "STRING", "is_pk": false, "nullable": false, "description": "Primary Borrower Customer ID"},
+                {"name": "loan_product_type", "data_type": "STRING", "is_pk": false, "nullable": false, "description": "RESIDENTIAL_MORTGAGE, AUTO_LOAN, COMMERCIAL_TERM"},
+                {"name": "original_principal_amt", "data_type": "NUMERIC", "is_pk": false, "nullable": false, "description": "Original Sanctioned Principal"},
+                {"name": "outstanding_balance_amt", "data_type": "NUMERIC", "is_pk": false, "nullable": false, "description": "Current Outstanding Principal"},
+                {"name": "interest_rate_pct", "data_type": "NUMERIC", "is_pk": false, "nullable": false, "description": "Nominal Annual Percentage Rate (APR)"}
+              ]
+            },
+            "slv_collateral": {
+              "type": "dimension",
+              "grain": "one row per pledged collateral asset",
+              "description": "Secured Collateral Property or Asset",
+              "columns": [
+                {"name": "collateral_id", "data_type": "STRING", "is_pk": true, "nullable": false, "description": "Collateral Property ID"},
+                {"name": "loan_id", "data_type": "STRING", "is_pk": false, "fk_ref": "slv_loan_facility", "nullable": false, "description": "Secured Loan FK"},
+                {"name": "collateral_type", "data_type": "STRING", "is_pk": false, "nullable": false, "description": "REAL_ESTATE, VEHICLE, CASH_DEPOSIT, SECURITIES"},
+                {"name": "appraised_value_amt", "data_type": "NUMERIC", "is_pk": false, "nullable": false, "description": "Independent Appraised Valuation"},
+                {"name": "valuation_date", "data_type": "DATE", "is_pk": false, "nullable": false, "description": "Last Valuation Date"}
+              ]
+            },
+            "slv_repayment_schedule": {
+              "type": "event",
+              "grain": "one row per installment schedule",
+              "description": "Scheduled & Realized Loan Repayment Installments",
+              "columns": [
+                {"name": "installment_id", "data_type": "STRING", "is_pk": true, "nullable": false, "description": "Installment Schedule Number"},
+                {"name": "loan_id", "data_type": "STRING", "is_pk": false, "fk_ref": "slv_loan_facility", "nullable": false, "description": "Loan Contract FK"},
+                {"name": "due_date", "data_type": "DATE", "is_pk": false, "nullable": false, "description": "Payment Due Date"},
+                {"name": "scheduled_principal_amt", "data_type": "NUMERIC", "is_pk": false, "nullable": false, "description": "Principal Due Portion"},
+                {"name": "scheduled_interest_amt", "data_type": "NUMERIC", "is_pk": false, "nullable": false, "description": "Interest Due Portion"},
+                {"name": "payment_status", "data_type": "STRING", "is_pk": false, "nullable": false, "description": "PAID, CURRENT, DELINQUENT_30, DELINQUENT_60"}
+              ]
+            }
+          }
+        },
+        {
+          "name": "customer_360",
+          "display_name": "Customer 360 & KYC/AML",
+          "description": "Comprehensive customer master, identity resolution, PEP screening, and risk scores.",
+          "status": "green",
+          "color": "#059669",
+          "standards": ["FATF", "GDPR", "BCBS 239"],
+          "entity_count": 3,
+          "entities": {
+            "slv_party": {
+              "type": "dimension",
+              "grain": "one row per legal party",
+              "description": "Conformed Legal Entity / Individual",
+              "columns": [
+                {"name": "party_id", "data_type": "STRING", "is_pk": true, "nullable": false, "description": "Master Party Identifier"},
+                {"name": "party_type", "data_type": "STRING", "is_pk": false, "nullable": false, "description": "INDIVIDUAL, CORPORATE, TRUST"},
+                {"name": "tax_id_masked", "data_type": "STRING", "is_pk": false, "nullable": false, "description": "Masked SSN / EIN / Tax ID"},
+                {"name": "birth_or_incorp_date", "data_type": "DATE", "is_pk": false, "nullable": true, "description": "Birth or Incorporation Date"},
+                {"name": "pep_flag", "data_type": "BOOL", "is_pk": false, "nullable": false, "description": "Politically Exposed Person Flag"}
+              ]
+            },
+            "slv_kyc_case": {
+              "type": "event",
+              "grain": "one row per KYC compliance case",
+              "description": "Customer Due Diligence & Periodic Refresh Case",
+              "columns": [
+                {"name": "case_id", "data_type": "STRING", "is_pk": true, "nullable": false, "description": "KYC Case Tracking Number"},
+                {"name": "party_id", "data_type": "STRING", "is_pk": false, "fk_ref": "slv_party", "nullable": false, "description": "Party FK"},
+                {"name": "review_type", "data_type": "STRING", "is_pk": false, "nullable": false, "description": "ONBOARDING, ANNUAL_REFRESH, TRIGGERED_EVENT"},
+                {"name": "decision", "data_type": "STRING", "is_pk": false, "nullable": false, "description": "APPROVED, REJECTED, CONDITIONAL"},
+                {"name": "completed_ts", "data_type": "TIMESTAMP", "is_pk": false, "nullable": false, "description": "Compliance Sign-off Timestamp"}
+              ]
+            },
+            "slv_risk_profile": {
+              "type": "dimension",
+              "grain": "one row per customer risk assessment",
+              "description": "AML Transaction Monitoring Risk Scoring",
+              "columns": [
+                {"name": "risk_profile_id", "data_type": "STRING", "is_pk": true, "nullable": false, "description": "Profile Key"},
+                {"name": "party_id", "data_type": "STRING", "is_pk": false, "fk_ref": "slv_party", "nullable": false, "description": "Party FK"},
+                {"name": "risk_tier", "data_type": "STRING", "is_pk": false, "nullable": false, "description": "LOW, MEDIUM, HIGH, PROHIBITED"},
+                {"name": "risk_score_numeric", "data_type": "NUMERIC", "is_pk": false, "nullable": false, "description": "Composite Risk Score (0-100)"}
+              ]
+            }
+          }
+        },
+        {
+          "name": "compliance_risk",
+          "display_name": "Regulatory & Basel III Risk",
+          "description": "Capital adequacy, Risk-Weighted Assets (RWA), Liquidity Coverage Ratio (LCR), and credit stress.",
+          "status": "green",
+          "color": "#dc2626",
+          "standards": ["Basel III", "Dodd-Frank", "BCBS 239"],
+          "entity_count": 2,
+          "entities": {
+            "slv_capital_adequacy": {
+              "type": "aggregate",
+              "grain": "one row per reporting period per legal entity",
+              "description": "Basel III Tier 1 / Tier 2 Capital & RWA Snapshot",
+              "columns": [
+                {"name": "report_period", "data_type": "DATE", "is_pk": true, "nullable": false, "description": "Reporting Quarter End Date"},
+                {"name": "legal_entity_lei", "data_type": "STRING", "is_pk": true, "nullable": false, "description": "Legal Entity Identifier (LEI)"},
+                {"name": "cet1_capital_amt", "data_type": "NUMERIC", "is_pk": false, "nullable": false, "description": "Common Equity Tier 1 Capital"},
+                {"name": "total_rwa_amt", "data_type": "NUMERIC", "is_pk": false, "nullable": false, "description": "Total Risk-Weighted Assets"},
+                {"name": "cet1_ratio_pct", "data_type": "NUMERIC", "is_pk": false, "nullable": false, "description": "CET1 Capital Ratio (CET1 / RWA)"}
+              ]
+            },
+            "slv_liquidity_ratio": {
+              "type": "aggregate",
+              "grain": "one row per calendar day",
+              "description": "Daily Liquidity Coverage Ratio (LCR) Tracking",
+              "columns": [
+                {"name": "as_of_date", "data_type": "DATE", "is_pk": true, "nullable": false, "description": "Calculation Date"},
+                {"name": "hqla_stock_amt", "data_type": "NUMERIC", "is_pk": false, "nullable": false, "description": "High-Quality Liquid Assets"},
+                {"name": "total_net_cash_outflow_30d", "data_type": "NUMERIC", "is_pk": false, "nullable": false, "description": "30-Day Stressed Net Cash Outflows"},
+                {"name": "lcr_percentage", "data_type": "NUMERIC", "is_pk": false, "nullable": false, "description": "LCR Ratio (Minimum 100%)"}
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "energy_industrial",
+      "name": "Industrial, Water & Hygiene (Ecolab Model)",
+      "icon": "💧",
+      "description": "Industrial data products for water quality analytics, plant hygiene, chemical dispensers, and IoT sensor monitoring.",
+      "subtypes": [
+        {
+          "id": "water_facility_hygiene",
+          "name": "Water & Facility Hygiene (Ecolab Primary)",
+          "description": "Industrial cooling towers, institutional hygiene, food & beverage plant sanitation, and water purification."
+        },
+        {
+          "id": "process_chemicals",
+          "name": "Chemical Formulations & Process Water",
+          "description": "Chemical inventory, automated dosing skids, corrosion inhibitors, and biocide treatment."
+        },
+        {
+          "id": "sustainability_services",
+          "name": "Sustainability & Environmental Audits",
+          "description": "Water conservation tracking, greenhouse gas metrics, wastewater compliance, and energy savings."
+        }
+      ],
+      "domains": [
+        {
+          "name": "water_treatment",
+          "display_name": "Water Treatment & Quality Analytics",
+          "description": "Cooling tower chemistry, pH, conductivity, dissolved solids, biocides, and corrosion monitoring.",
+          "status": "green",
+          "color": "#0284c7",
+          "standards": ["EPA Clean Water Act", "ISO 14001", "NSF International"],
+          "entity_count": 3,
+          "entities": {
+            "slv_water_asset": {
+              "type": "dimension",
+              "grain": "one row per water system asset (cooling tower, boiler, RO unit)",
+              "description": "Industrial Water System Asset Dimension",
+              "columns": [
+                {"name": "asset_id", "data_type": "STRING", "is_pk": true, "nullable": false, "description": "Unique Customer Asset Identifier"},
+                {"name": "facility_id", "data_type": "STRING", "is_pk": false, "nullable": false, "description": "Customer Plant or Facility Code"},
+                {"name": "asset_type", "data_type": "STRING", "is_pk": false, "nullable": false, "description": "COOLING_TOWER, BOILER, REVERSE_OSMOSIS, WASTEWATER_LAGOON"},
+                {"name": "water_loop_capacity_gallons", "data_type": "NUMERIC", "is_pk": false, "nullable": false, "description": "System Recirculation Volume"},
+                {"name": "installed_date", "data_type": "DATE", "is_pk": false, "nullable": true, "description": "Commissioning Date"}
+              ]
+            },
+            "slv_water_quality_test": {
+              "type": "event",
+              "grain": "one row per sample test or automated sensor reading",
+              "description": "Water Quality Parameter Measurement Event",
+              "columns": [
+                {"name": "sample_id", "data_type": "STRING", "is_pk": true, "nullable": false, "description": "Water Sample Reading Reference"},
+                {"name": "asset_id", "data_type": "STRING", "is_pk": false, "fk_ref": "slv_water_asset", "nullable": false, "description": "Asset FK"},
+                {"name": "reading_ts", "data_type": "TIMESTAMP", "is_pk": false, "nullable": false, "description": "Measurement Timestamp"},
+                {"name": "ph_level", "data_type": "NUMERIC", "is_pk": false, "nullable": false, "description": "Water Acidity/Basicity (0-14)"},
+                {"name": "conductivity_microsiemens", "data_type": "NUMERIC", "is_pk": false, "nullable": false, "description": "Electrical Conductivity / Dissolved Salts"},
+                {"name": "free_chlorine_ppm", "data_type": "NUMERIC", "is_pk": false, "nullable": true, "description": "Active Biocide Concentration"},
+                {"name": "turbidity_ntu", "data_type": "NUMERIC", "is_pk": false, "nullable": true, "description": "Water Clarity Index (NTU)"},
+                {"name": "quality_status", "data_type": "STRING", "is_pk": false, "nullable": false, "description": "NORMAL, OUT_OF_SPEC, CRITICAL_ALARM"}
+              ]
+            },
+            "slv_chemical_dosage_event": {
+              "type": "event",
+              "grain": "one row per automated chemical feed dispensing event",
+              "description": "Automated Treatment Chemical Injection Event",
+              "columns": [
+                {"name": "dosage_event_id", "data_type": "STRING", "is_pk": true, "nullable": false, "description": "Dispensing Event UUID"},
+                {"name": "asset_id", "data_type": "STRING", "is_pk": false, "fk_ref": "slv_water_asset", "nullable": false, "description": "Asset Reference"},
+                {"name": "chemical_product_code", "data_type": "STRING", "is_pk": false, "nullable": false, "description": "Ecolab Product SKU (e.g. NALCO 3D TRASAR)"},
+                {"name": "volume_dosed_liters", "data_type": "NUMERIC", "is_pk": false, "nullable": false, "description": "Volume Injected"},
+                {"name": "pump_head_id", "data_type": "STRING", "is_pk": false, "nullable": false, "description": "Controller Pump Identifier"},
+                {"name": "dosage_ts", "data_type": "TIMESTAMP", "is_pk": false, "nullable": false, "description": "Injection Timestamp"}
+              ]
+            }
+          }
+        },
+        {
+          "name": "facility_hygiene",
+          "display_name": "Facility Hygiene & Sanitization",
+          "description": "Food & beverage plant sanitation, Clean-in-Place (CIP) verification, and ATP swab tests.",
+          "status": "green",
+          "color": "#14b8a6",
+          "standards": ["FDA Food Safety Modernization Act", "HACCP", "GFSI"],
+          "entity_count": 2,
+          "entities": {
+            "slv_sanitization_cycle": {
+              "type": "event",
+              "grain": "one row per Clean-In-Place (CIP) wash cycle",
+              "description": "Automated CIP Plant Sanitization Cycle",
+              "columns": [
+                {"name": "cycle_id", "data_type": "STRING", "is_pk": true, "nullable": false, "description": "CIP Execution Cycle ID"},
+                {"name": "line_id", "data_type": "STRING", "is_pk": false, "nullable": false, "description": "Production Line or Tank Circuit"},
+                {"name": "cycle_phase", "data_type": "STRING", "is_pk": false, "nullable": false, "description": "PRE_RINSE, CAUSTIC_WASH, ACID_WASH, SANITIZER_RINSE"},
+                {"name": "wash_temp_celsius", "data_type": "NUMERIC", "is_pk": false, "nullable": false, "description": "Average Wash Temperature"},
+                {"name": "flow_rate_lpm", "data_type": "NUMERIC", "is_pk": false, "nullable": false, "description": "Cleaning Fluid Velocity / Flow Rate"},
+                {"name": "chemical_concentration_pct", "data_type": "NUMERIC", "is_pk": false, "nullable": false, "description": "Sanitizer Strength Percentage"},
+                {"name": "validation_result", "data_type": "STRING", "is_pk": false, "nullable": false, "description": "PASS, INSUFFICIENT_TEMP, UNDER_CONCENTRATED"}
+              ]
+            },
+            "slv_hygiene_audit": {
+              "type": "dimension",
+              "grain": "one row per site hygiene audit report",
+              "description": "Ecolab Specialist Environmental Hygiene Audit",
+              "columns": [
+                {"name": "audit_id", "data_type": "STRING", "is_pk": true, "nullable": false, "description": "Audit Report Number"},
+                {"name": "facility_id", "data_type": "STRING", "is_pk": false, "nullable": false, "description": "Client Site ID"},
+                {"name": "auditor_name", "data_type": "STRING", "is_pk": false, "nullable": false, "description": "Certified Field Specialist"},
+                {"name": "overall_hygiene_score", "data_type": "NUMERIC", "is_pk": false, "nullable": false, "description": "Audit Score Percentage (0-100)"},
+                {"name": "critical_findings_count", "data_type": "INT64", "is_pk": false, "nullable": false, "description": "Open Corrective Action Items"}
+              ]
+            }
+          }
+        },
+        {
+          "name": "equipment_iot",
+          "display_name": "Asset & Equipment Monitoring (IoT)",
+          "description": "Real-time telemetry from smart chemical controllers (3D TRASAR), dispensers, and alarm feeds.",
+          "status": "green",
+          "color": "#eab308",
+          "standards": ["OPC-UA", "MQTT Industrial", "ISO 27001"],
+          "entity_count": 2,
+          "entities": {
+            "slv_industrial_dispenser": {
+              "type": "dimension",
+              "grain": "one row per installed IoT dosing skid or chemical controller",
+              "description": "Connected Dosing System Master Profile",
+              "columns": [
+                {"name": "dispenser_serial_no", "data_type": "STRING", "is_pk": true, "nullable": false, "description": "Hardware Serial Number"},
+                {"name": "controller_model", "data_type": "STRING", "is_pk": false, "nullable": false, "description": "Model Name (e.g. TRASAR 3000)"},
+                {"name": "firmware_version", "data_type": "STRING", "is_pk": false, "nullable": false, "description": "Current Firmware Build"},
+                {"name": "connectivity_status", "data_type": "STRING", "is_pk": false, "nullable": false, "description": "ONLINE, CELLULAR_FALLBACK, OFFLINE"},
+                {"name": "last_heartbeat_ts", "data_type": "TIMESTAMP", "is_pk": false, "nullable": false, "description": "Last Telemetry Ping"}
+              ]
+            },
+            "slv_maintenance_alarm": {
+              "type": "event",
+              "grain": "one row per equipment telemetry alarm condition",
+              "description": "Predictive Equipment Alarm & Anomaly Event",
+              "columns": [
+                {"name": "alarm_id", "data_type": "STRING", "is_pk": true, "nullable": false, "description": "Alarm Incident UUID"},
+                {"name": "dispenser_serial_no", "data_type": "STRING", "is_pk": false, "fk_ref": "slv_industrial_dispenser", "nullable": false, "description": "Controller FK"},
+                {"name": "alarm_code", "data_type": "STRING", "is_pk": false, "nullable": false, "description": "DRY_FEED_DETECTED, HIGH_PRESSURE, SENSOR_DRIFT"},
+                {"name": "severity", "data_type": "STRING", "is_pk": false, "nullable": false, "description": "INFO, WARNING, CRITICAL_SHUTDOWN"},
+                {"name": "triggered_ts", "data_type": "TIMESTAMP", "is_pk": false, "nullable": false, "description": "Trigger Timestamp"}
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "retail",
+      "name": "Retail & Consumer Goods",
+      "icon": "🛒",
+      "description": "Omnichannel retail, customer loyalty, order fulfillment, product catalog, and supply chain conformed models.",
+      "subtypes": [
+        {
+          "id": "ecommerce",
+          "name": "E-Commerce & Digital Marketplace",
+          "description": "Online storefronts, cart checkout, digital payments, and home delivery."
+        },
+        {
+          "id": "omnichannel",
+          "name": "Omnichannel & Department Stores",
+          "description": "BOPIS (buy online pick up in store), POS, inventory visibility, and returns."
+        },
+        {
+          "id": "grocery",
+          "name": "Grocery & Supermarkets",
+          "description": "Perishables, fresh goods replenishment, loyalty club pricing, and scan-and-go."
+        }
+      ],
+      "domains": [
+        {
+          "name": "order_management",
+          "display_name": "Order Management & Fulfillment",
+          "description": "Conformed customer orders, line items, checkout channels, and shipment delivery.",
+          "status": "green",
+          "color": "#ea580c",
+          "standards": ["GS1", "ARTS Retail Standard"],
+          "entity_count": 2,
+          "entities": {
+            "slv_order": {
+              "type": "dimension",
+              "grain": "one row per purchase order header",
+              "description": "Conformed Customer Order Header",
+              "columns": [
+                {"name": "order_id", "data_type": "STRING", "is_pk": true, "nullable": false, "description": "Order Identifier"},
+                {"name": "customer_id", "data_type": "STRING", "is_pk": false, "nullable": false, "description": "Purchaser Customer ID"},
+                {"name": "order_ts", "data_type": "TIMESTAMP", "is_pk": false, "nullable": false, "description": "Placement Timestamp"},
+                {"name": "order_status", "data_type": "STRING", "is_pk": false, "nullable": false, "description": "PLACED, FULFILLED, CANCELLED, RETURNED"},
+                {"name": "order_total_amt", "data_type": "NUMERIC", "is_pk": false, "nullable": false, "description": "Gross Total Amount"},
+                {"name": "currency_code", "data_type": "STRING", "is_pk": false, "nullable": false, "description": "ISO 4217 Currency"}
+              ]
+            },
+            "slv_order_item": {
+              "type": "event",
+              "grain": "one row per line item within an order",
+              "description": "Order Line Item Detail",
+              "columns": [
+                {"name": "order_item_id", "data_type": "STRING", "is_pk": true, "nullable": false, "description": "Line Item Reference"},
+                {"name": "order_id", "data_type": "STRING", "is_pk": false, "fk_ref": "slv_order", "nullable": false, "description": "Order FK"},
+                {"name": "sku_code", "data_type": "STRING", "is_pk": false, "nullable": false, "description": "Stock Keeping Unit Code"},
+                {"name": "quantity", "data_type": "INT64", "is_pk": false, "nullable": false, "description": "Item Count"},
+                {"name": "unit_price_amt", "data_type": "NUMERIC", "is_pk": false, "nullable": false, "description": "Unit Selling Price"}
+              ]
+            }
+          }
+        },
+        {
+          "name": "customer_loyalty",
+          "display_name": "Customer & Loyalty 360",
+          "description": "Retail shopper master, loyalty tier, reward point balance, and omnichannel profile.",
+          "status": "green",
+          "color": "#16a34a",
+          "standards": ["GDPR", "CCPA"],
+          "entity_count": 2,
+          "entities": {
+            "slv_retail_customer": {
+              "type": "dimension",
+              "grain": "one row per shopper",
+              "description": "Retail Customer Master Profile",
+              "columns": [
+                {"name": "customer_id", "data_type": "STRING", "is_pk": true, "nullable": false, "description": "Shopper Master Identifier"},
+                {"name": "email", "data_type": "STRING", "is_pk": false, "nullable": false, "pii": true, "description": "Contact Email"},
+                {"name": "loyalty_tier", "data_type": "STRING", "is_pk": false, "nullable": false, "description": "BRONZE, SILVER, GOLD, PLATINUM"},
+                {"name": "lifetime_spend_amt", "data_type": "NUMERIC", "is_pk": false, "nullable": false, "description": "Cumulative Historical Spend"}
+              ]
+            },
+            "slv_loyalty_point_ledger": {
+              "type": "event",
+              "grain": "one row per loyalty point accrual or redemption",
+              "description": "Rewards Point Accrual & Redemption Ledger",
+              "columns": [
+                {"name": "ledger_entry_id", "data_type": "STRING", "is_pk": true, "nullable": false, "description": "Ledger Transaction ID"},
+                {"name": "customer_id", "data_type": "STRING", "is_pk": false, "fk_ref": "slv_retail_customer", "nullable": false, "description": "Customer FK"},
+                {"name": "points_delta", "data_type": "INT64", "is_pk": false, "nullable": false, "description": "Earned (+) or Redeemed (-) Points"},
+                {"name": "entry_ts", "data_type": "TIMESTAMP", "is_pk": false, "nullable": false, "description": "Posting Timestamp"}
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "automotive",
+      "name": "Automotive & Fleet Mobility",
+      "icon": "🚗",
+      "description": "Connected vehicles, vehicle telematics, fleet telemetry, parts manufacturing, and warranty analytics.",
+      "subtypes": [
+        {
+          "id": "oem_manufacturing",
+          "name": "Automotive OEM & Assembly",
+          "description": "Vehicle VIN creation, factory build specs, assembly line telemetry, and supplier components."
+        },
+        {
+          "id": "connected_fleet",
+          "name": "Connected Fleet & Commercial Mobility",
+          "description": "Commercial trucking, driver behavior, EV battery health, and route efficiency."
+        }
+      ],
+      "domains": [
+        {
+          "name": "vehicle_telematics",
+          "display_name": "Vehicle Telematics & IoT",
+          "description": "GPS tracking, engine RPM, battery state of charge (SoC), diagnostic trouble codes (DTC).",
+          "status": "green",
+          "color": "#4f46e5",
+          "standards": ["ISO 26262", "SAE J1939"],
+          "entity_count": 2,
+          "entities": {
+            "slv_vehicle": {
+              "type": "dimension",
+              "grain": "one row per vehicle chassis (VIN)",
+              "description": "Vehicle Asset Dimension",
+              "columns": [
+                {"name": "vin", "data_type": "STRING", "is_pk": true, "nullable": false, "description": "17-Character Vehicle Identification Number"},
+                {"name": "make", "data_type": "STRING", "is_pk": false, "nullable": false, "description": "Manufacturer Brand"},
+                {"name": "model", "data_type": "STRING", "is_pk": false, "nullable": false, "description": "Model Designation"},
+                {"name": "powertrain_type", "data_type": "STRING", "is_pk": false, "nullable": false, "description": "BEV, PHEV, ICE, HYBRID"},
+                {"name": "manufacture_year", "data_type": "INT64", "is_pk": false, "nullable": false, "description": "Model Year"}
+              ]
+            },
+            "slv_telematics_stream": {
+              "type": "event",
+              "grain": "one row per periodic vehicle IoT beacon",
+              "description": "Real-Time Telematics Ingest Event",
+              "columns": [
+                {"name": "telematics_id", "data_type": "STRING", "is_pk": true, "nullable": false, "description": "Beacon Message ID"},
+                {"name": "vin", "data_type": "STRING", "is_pk": false, "fk_ref": "slv_vehicle", "nullable": false, "description": "Vehicle VIN FK"},
+                {"name": "beacon_ts", "data_type": "TIMESTAMP", "is_pk": false, "nullable": false, "description": "Telemetry Timestamp"},
+                {"name": "speed_kmh", "data_type": "NUMERIC", "is_pk": false, "nullable": false, "description": "Instantaneous Speed"},
+                {"name": "battery_soc_pct", "data_type": "NUMERIC", "is_pk": false, "nullable": true, "description": "State of Charge Percentage (EV)"},
+                {"name": "odometer_km", "data_type": "NUMERIC", "is_pk": false, "nullable": false, "description": "Total Cumulative Odometer"}
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "life_sciences",
+      "name": "Life Sciences & Healthcare",
+      "icon": "🧬",
+      "description": "Clinical studies, patient registry, pharmacovigilance adverse event cases, and regulatory submissions.",
+      "subtypes": [
+        {
+          "id": "pharmaceuticals",
+          "name": "Pharmaceutical Development & CRO",
+          "description": "Clinical trial protocols, investigator sites, patient cohorts, and drug safety."
+        },
+        {
+          "id": "medical_devices",
+          "name": "Medical Devices & Diagnostic Equipment",
+          "description": "510(k) devices, sensor diagnostics, calibration runs, and hospital deployments."
+        }
+      ],
+      "domains": [
+        {
+          "name": "clinical_trials",
+          "display_name": "Clinical Trials Management",
+          "description": "Study protocols, subject recruitment, visit schedules, and clinical trial outcomes.",
+          "status": "green",
+          "color": "#9333ea",
+          "standards": ["CDISC SDTM", "FDA 21 CFR Part 11", "ICH GCP"],
+          "entity_count": 2,
+          "entities": {
+            "slv_clinical_study": {
+              "type": "dimension",
+              "grain": "one row per clinical protocol",
+              "description": "Clinical Trial Study Protocol Master",
+              "columns": [
+                {"name": "study_id", "data_type": "STRING", "is_pk": true, "nullable": false, "description": "Protocol ID (e.g. NCT01234567)"},
+                {"name": "therapeutic_area", "data_type": "STRING", "is_pk": false, "nullable": false, "description": "ONCOLOGY, CARDIOLOGY, IMMUNOLOGY"},
+                {"name": "phase", "data_type": "STRING", "is_pk": false, "nullable": false, "description": "PHASE_I, PHASE_II, PHASE_III, POST_MARKET"},
+                {"name": "target_enrollment_count", "data_type": "INT64", "is_pk": false, "nullable": false, "description": "Planned Patient Cohort Size"}
+              ]
+            },
+            "slv_adverse_event": {
+              "type": "event",
+              "grain": "one row per reported trial subject adverse event",
+              "description": "Clinical Trial Adverse Event Observation",
+              "columns": [
+                {"name": "ae_id", "data_type": "STRING", "is_pk": true, "nullable": false, "description": "Adverse Event Record Key"},
+                {"name": "study_id", "data_type": "STRING", "is_pk": false, "fk_ref": "slv_clinical_study", "nullable": false, "description": "Study FK"},
+                {"name": "subject_token", "data_type": "STRING", "is_pk": false, "nullable": false, "description": "Anonymized Patient Subject ID"},
+                {"name": "meddra_term", "data_type": "STRING", "is_pk": false, "nullable": false, "description": "MedDRA Preferred Medical Term"},
+                {"name": "severity_grade", "data_type": "STRING", "is_pk": false, "nullable": false, "description": "MILD, MODERATE, SEVERE, LIFE_THREATENING"},
+                {"name": "onset_date", "data_type": "DATE", "is_pk": false, "nullable": false, "description": "Adverse Event Onset Date"}
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

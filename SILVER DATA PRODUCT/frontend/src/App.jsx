@@ -3,6 +3,7 @@ import LeftPane from './components/LeftPane'
 import ChatPane from './components/ChatPane'
 import RightPane from './components/RightPane'
 import TweakModal from './components/TweakModal'
+import HierarchicalSelectorModal from './components/HierarchicalSelectorModal'
 import { sendChatMessage, downloadFile, uploadFile } from './api/chat'
 import { DEFAULT_SILVER_CONTRACT } from './components/DataContractCard'
 
@@ -17,9 +18,16 @@ function ts() {
 
 export default function App() {
   const [messages, setMessages]           = useState([{
-    id: 0, role: 'agent', agent: 'DATA DOMAIN SILVER AGENT',
-    text: "Welcome to **DATA DOMAIN SILVER AGENT**! Please enter your data domain requirements, or upload a file with your requirements.",
-    chips: [], loading: false, time: ts(), startingPoint: false,
+    id: 0, role: 'agent', agent: 'Silver Data Product Assistant',
+    text: "Welcome to **Silver Data Product Assistant**! To get started, please select your target **Industry** to explore available canonical domain models, or click **Domain Navigator** to drill down into entities and attributes.",
+    chips: [
+      "Industrial & Water (Ecolab)",
+      "Banking & Financial Services",
+      "Retail & Commerce",
+      "Automotive & Fleet",
+      "Life Sciences",
+    ],
+    loading: false, time: ts(), startingPoint: false,
   }])
   const [sessionId, setSessionId]             = useState(null)
   const [generatedFiles, setGeneratedFiles]   = useState([])
@@ -32,6 +40,7 @@ export default function App() {
   const [glossaryData, setGlossaryData]       = useState(null)
   const [editFormOpen, setEditFormOpen]       = useState(false)
   const [tweakMode, setTweakMode]             = useState(null) // 'er' | 'sttm' | null
+  const [navigatorOpen, setNavigatorOpen]     = useState(false)
 
   const allowUpload = UPLOAD_ALLOWED_STEPS.has(currentStep) && !pendingFile
 
@@ -224,6 +233,7 @@ export default function App() {
         glossaryData={glossaryData}
         onEditSubmit={handleEditSubmit}
         onEditClose={handleEditClose}
+        onOpenNavigator={() => setNavigatorOpen(true)}
       />
       <RightPane generatedFiles={generatedFiles} onDownload={handleDownload} />
       {tweakMode && (
@@ -233,6 +243,11 @@ export default function App() {
           onClose={handleTweakClose}
         />
       )}
+      <HierarchicalSelectorModal
+        isOpen={navigatorOpen}
+        onClose={() => setNavigatorOpen(false)}
+        onApply={(text) => sendMessage(text)}
+      />
     </div>
   )
 }

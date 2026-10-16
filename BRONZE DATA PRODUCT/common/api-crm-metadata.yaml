@@ -1,0 +1,29 @@
+# common/api-crm-metadata.yaml
+# Common block for Salesforce and SaaS REST / CDC / Streaming extracts
+$schema: "http://json-schema.org/draft-07/schema#"
+title: "SaaS API & Salesforce CDC Metadata Block"
+type: object
+required:
+  - api_source
+  - sfdc_object_name
+properties:
+  api_source:
+    type: string
+    description: "SaaS application name (e.g. SALESFORCE_CRM, HUBSPOT, WORKDAY)."
+    example: "SALESFORCE_CRM"
+  sfdc_object_name:
+    type: string
+    description: "Salesforce Standard or Custom Object API name (e.g. Account, Contact, KYC_Verification__c)."
+    example: "Account"
+  cdc_change_type:
+    type: string
+    description: "Change Data Capture event header (CREATE, UPDATE, DELETE, UNDELETE)."
+    example: "CREATE"
+  api_replay_id:
+    type: string
+    description: "Pub/Sub or Streaming API Replay ID for deterministic stream resumption."
+    example: "1029384756"
+  api_version:
+    type: string
+    description: "REST / Bulk API version invoked."
+    example: "v60.0"
