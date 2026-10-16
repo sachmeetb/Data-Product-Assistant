@@ -31,27 +31,34 @@ You select from the Bronze common blocks.
 | `swift-envelope` | message_format, message_type, sender_bic, receiver_bic, uetr, interbank_settlement_date |
 | `sap-idoc-metadata` | sap_client, sap_extractor_type, idoc_number, change_operation, sap_timestamp |
 | `api-crm-metadata` | api_source, sfdc_object_name, cdc_change_type, api_replay_id, api_version |
+| `unstructured-object-metadata` | file_uri, mime_type, file_size_bytes, sha256_hash, document_type, customer_id_ref, classification, extracted_text_payload, ocr_confidence_score |
 
 ---
 
 ## Selection rules
 
 1. **`ingestion-metadata` is mandatory in every Bronze table without exception.**
-2. **For Hogan Deposit System / Mainframe feeds**:
+2. **For Unstructured Feeds (KYC PDFs, scanned IDs, loan contracts, deeds, audio transcripts)**:
+   - Always select: `["ingestion-metadata", "unstructured-object-metadata", "quality-flags", "temporal"]`.
+   - Modality: `UNSTRUCTURED`, target format: `OBJECT_TABLE` (BigLake Object Table on GCS).
+3. **For Streaming Real-Time Feeds (Kafka, Pub/Sub, Faster Payments, card auth fraud streams)**:
+   - Always select: `["ingestion-metadata", "lineage-tracking", "temporal", "quality-flags", "raw-payload"]`.
+   - Modality: `STREAMING_REALTIME`, target format: `ICEBERG`, freshness SLA: `5m`.
+4. **For Hogan Deposit System / Mainframe feeds (Batch Non-Streaming)**:
    - Always select: `["ingestion-metadata", "mainframe-copybook", "quality-flags", "temporal"]`.
    - Preserve COBOL picture clauses and raw byte offsets.
-3. **For SWIFT MT / MX and Faster Payments**:
+5. **For SWIFT MT / MX and Faster Payments**:
    - Always select: `["ingestion-metadata", "swift-envelope", "quality-flags", "temporal"]`.
    - Capture UETR, BICs, and interbank settlement dates.
-4. **For SAP ERP / S/4HANA (FI-CO / General Ledger)**:
+6. **For SAP ERP / S/4HANA (FI-CO / General Ledger)**:
    - Always select: `["ingestion-metadata", "sap-idoc-metadata", "quality-flags", "temporal"]`.
-5. **For Salesforce CRM / KYC events**:
+7. **For Salesforce CRM / KYC events**:
    - Always select: `["ingestion-metadata", "api-crm-metadata", "temporal", "quality-flags"]`.
-6. **For Temenos T24 / Standard Core Banking files**:
+8. **For Temenos T24 / Standard Core Banking files**:
    - Always select: `["ingestion-metadata", "source-identifier", "raw-payload", "file-metadata"]`.
-7. **For CSV / Delimited batch feeds**:
+9. **For CSV / Delimited batch feeds**:
    - Always select: `["ingestion-metadata", "file-metadata", "raw-payload", "quality-flags"]`.
-8. Retain 100% source fidelity: no business transforms, deduplication across entities, or surrogate key generation. Those belong exclusively in the Silver Layer.
+10. Retain 100% source fidelity: no business transforms, deduplication across entities, or surrogate key generation. Those belong exclusively in the Silver Layer.
 
 ---
 

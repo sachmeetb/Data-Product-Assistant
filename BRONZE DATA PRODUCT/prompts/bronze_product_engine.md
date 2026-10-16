@@ -34,6 +34,7 @@ Look up every other selected block. For each block, add its columns to the table
 - `swift-envelope`: `message_format STRING`, `message_type STRING`, `sender_bic STRING`, `receiver_bic STRING`, `uetr STRING`, `interbank_settlement_date DATE`, `raw_message_payload STRING`
 - `sap-idoc-metadata`: `sap_client STRING`, `sap_extractor_type STRING`, `idoc_number STRING`, `change_operation STRING`, `sap_timestamp TIMESTAMP`
 - `api-crm-metadata`: `api_source STRING`, `sfdc_object_name STRING`, `cdc_change_type STRING`, `api_replay_id STRING`, `api_version STRING`
+- `unstructured-object-metadata`: `file_uri STRING`, `mime_type STRING`, `file_size_bytes INT64`, `sha256_hash STRING`, `document_type STRING`, `customer_id_ref STRING`, `classification STRING`, `extracted_text_payload STRING`, `ocr_confidence_score FLOAT64`
 
 ### Step 3 — Add raw source columns with 100% fidelity
 
@@ -41,11 +42,16 @@ After the block columns, add the `raw_columns` listed in the SourceScope. These 
 
 ---
 
-## Lakehouse Storage, Iceberg Format & Regulatory Retention
+## Lakehouse Multi-Modal Storage, Table Formats & Retention
 
-- **Target Storage Engine:** Google Data Lake (GCS) + BigLake Apache Iceberg (`TYPE = 'ICEBERG'`).
-- **Table Storage URI:** `gs://<bank_code>-data-lake-bronze/<source_system>/<table_name>/`
-- **Partitioning Strategy:** Always partitioned by ingest date: `PARTITION BY DATE(ingest_ts)`.
+- **Structured & Streaming Tabular Feeds:** Google Data Lake (GCS) + BigLake Apache Iceberg (`TYPE = 'ICEBERG'`).
+- **Unstructured Binary Feeds (PDFs, Images, Audio, Scans):** Google Data Lake (GCS) + BigLake Object Tables (`WITH CONNECTION ... OPTIONS (object_metadata = 'DIRECTORY')`).
+- **Table Storage URIs:**
+  - Tabular: `gs://<bank_code>-data-lake-bronze/<source_system>/<table_name>/`
+  - Unstructured: `gs://<bank_code>-data-lake-bronze/unstructured/<source_system>/<table_name>/`
+- **Partitioning Strategy:**
+  - Tabular & Streaming: Always partitioned by ingest date: `PARTITION BY DATE(ingest_ts)`.
+  - Unstructured: Governed via directory prefixes and GCS lifecycle metadata.
 - **Clustering Strategy:** Clustered by `source_system` and primary key / `ingest_batch_id`.
 - **Regulatory Retention Policy:** 7 Years (`table_retention_days = 2555`) to comply with Basel III, PRA, FCA, and GDPR financial audit obligations.
 - **Schema Enforcement Mode:** `PERMISSIVE_WITH_AUDIT` — preserve all raw incoming fields and flag malformed records rather than failing pipeline runs.

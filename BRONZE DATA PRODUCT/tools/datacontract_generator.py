@@ -87,12 +87,21 @@ def generate_data_contract_dict(
 
             fields[cname] = field_def
 
-        storage_uri = f"gs://{gcs_bucket}/{source_sys}/{tname}/"
+        is_unstructured = any(k in f"{source_sys} {tname} {use_case}".lower() for k in ["pdf", "unstr", "document", "scan", "passport", "contract", "image", "audio"])
+        is_streaming = any(k in f"{source_sys} {tname} {use_case}".lower() for k in ["stream", "kafka", "pubsub", "realtime", "real-time", "fps", "fraud", "auth"])
+
+        tbl_format = "OBJECT_TABLE" if is_unstructured else "ICEBERG"
+        storage_uri = f"gs://{gcs_bucket}/unstructured/{source_sys}/{tname}/" if is_unstructured else f"gs://{gcs_bucket}/{source_sys}/{tname}/"
+        
         models[tname] = {
             "description": t.get("description", f"Bronze raw entity {tname}"),
             "type": "table",
             "physicalName": f"banking_bronze.{tname}",
-            "tableFormat": "ICEBERG",
+            "tableFormat": tbl_format,
+            "modality": {
+                "structure": "UNSTRUCTURED" if is_unstructured else "STRUCTURED",
+                "cadence": "STREAMING_REALTIME" if is_streaming else "BATCH_SCHEDULED",
+            },
             "storageLocation": storage_uri,
             "partitioning": {
                 "strategy": "DAILY",
@@ -100,6 +109,9 @@ def generate_data_contract_dict(
             },
             "fields": fields,
         }
+
+    is_any_streaming = any(m.get("modality", {}).get("cadence") == "STREAMING_REALTIME" for m in models.values())
+    is_any_unstructured = any(m.get("modality", {}).get("structure") == "UNSTRUCTURED" for m in models.values())
 
     quality_rules = [
         {
@@ -119,25 +131,35 @@ def generate_data_contract_dict(
         {
             "name": "BRZ-DQ-003-PRIMARY-KEY-UNIQUENESS",
             "type": "uniqueness",
-            "description": "Bronze primary landing key (bronze_id) must be strictly unique within the table partition",
-            "column": "bronze_id",
+            "description": "Bronze primary landing key (bronze_id or file_uri) must be strictly unique within the table partition",
+            "column": "file_uri" if is_any_unstructured else "bronze_id",
             "severity": "CRITICAL",
         },
         {
             "name": "BRZ-DQ-004-TIMELINESS-SLA",
             "type": "freshness",
-            "description": "Data must arrive and land within maximum allowable lag of 24 hours from source generation",
-            "maxLag": "24h",
+            "description": "Streaming data must land within 5 minutes; batch data within 24 hours" if is_any_streaming else "Data must arrive and land within maximum allowable lag of 24 hours from source generation",
+            "maxLag": "5m" if is_any_streaming else "24h",
             "severity": "HIGH",
         },
         {
             "name": "BRZ-DQ-005-VOLUME-ANOMALY-BOUNDS",
             "type": "volume",
-            "description": "Daily batch volume must be within +/- 20% of the 30-day moving average",
+            "description": "Daily volume must be within +/- 20% of the moving average",
             "varianceThreshold": "0.20",
             "severity": "MEDIUM",
         },
     ]
+
+    if is_any_unstructured:
+        quality_rules.append({
+            "name": "BRZ-DQ-007-OBJECT-TABLE-INTEGRITY",
+            "type": "custom",
+            "description": "Landed binary file size must be greater than zero bytes and mime_type must be recognized",
+            "mustBe": "file_size_bytes > 0 AND mime_type IS NOT NULL",
+            "severity": "CRITICAL",
+        })
+
 
     contract: Dict[str, Any] = {
         "dataContractSpecification": "2.2.0",
@@ -163,12 +185,23 @@ def generate_data_contract_dict(
                 "connection": f"{bank_profile.get('region', 'eu')}.biglake-iceberg-connection",
                 "storageBucket": gcs_bucket,
             },
+            **({
+                "biglake_object_table": {
+                    "type": "bigquery_biglake",
+                    "tableFormat": "OBJECT_TABLE",
+                    "project": bank_profile.get("project_id", "internal-data-mig"),
+                    "dataset": "banking_bronze",
+                    "location": bank_profile.get("region", "eu"),
+                    "connection": f"{bank_profile.get('region', 'eu')}.biglake-connection",
+                    "storageBucket": f"{gcs_bucket}/unstructured",
+                }
+            } if is_any_unstructured else {}),
         },
         "servicelevels": {
             "freshness": {
-                "cron": "0 4 * * *",
-                "maxLag": "24h",
-                "schedule": "DAILY_BATCH",
+                "cron": "CONTINUOUS_STREAMING" if is_any_streaming else "0 4 * * *",
+                "maxLag": "5m" if is_any_streaming else "24h",
+                "schedule": "STREAMING_REALTIME" if is_any_streaming else "DAILY_BATCH",
                 "timezone": "UTC",
             },
             "retention": {

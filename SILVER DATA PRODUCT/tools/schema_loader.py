@@ -406,3 +406,69 @@ def catalog_to_agent_context() -> str:
         indent=2,
         default=str,
     )
+
+
+# ── Multi-Industry Catalog Accessors ─────────────────────────────────────────
+
+_MULTI_INDUSTRY_FILE = _AGENT_ROOT / "knowledge" / "multi_industry_catalog.json"
+
+
+def get_multi_industry_catalog() -> dict:
+    """Load and return the multi-industry catalog."""
+    if "multi_industry_catalog" in _cache:
+        return _cache["multi_industry_catalog"]
+    if _MULTI_INDUSTRY_FILE.exists():
+        try:
+            with open(_MULTI_INDUSTRY_FILE, encoding="utf-8") as f:
+                data = json.load(f)
+                _cache["multi_industry_catalog"] = data
+                return data
+        except Exception as exc:
+            log.warning("Could not load %s: %s", _MULTI_INDUSTRY_FILE, exc)
+    return {"industries": []}
+
+
+def get_industries() -> list[dict]:
+    """Return summary list of all available industries."""
+    data = get_multi_industry_catalog()
+    return [
+        {
+            "id": ind["id"],
+            "name": ind["name"],
+            "icon": ind.get("icon", "🏢"),
+            "description": ind.get("description", ""),
+            "subtypes": ind.get("subtypes", []),
+            "domain_count": len(ind.get("domains", [])),
+        }
+        for ind in data.get("industries", [])
+    ]
+
+
+def get_industry(industry_id: str) -> Optional[dict]:
+    """Return full industry object by ID."""
+    data = get_multi_industry_catalog()
+    for ind in data.get("industries", []):
+        if ind["id"].lower() == industry_id.lower():
+            return ind
+    return None
+
+
+def get_domains_for_industry(industry_id: str = "banking") -> list[dict]:
+    """Return domain list for a specific industry."""
+    ind = get_industry(industry_id)
+    if not ind:
+        return []
+    return ind.get("domains", [])
+
+
+def get_domain_by_name(domain_name: str) -> Optional[dict]:
+    """Search all industries for a domain by name."""
+    data = get_multi_industry_catalog()
+    for ind in data.get("industries", []):
+        for dom in ind.get("domains", []):
+            if dom["name"].lower() == domain_name.lower():
+                dom_copy = dict(dom)
+                dom_copy["industry_id"] = ind["id"]
+                dom_copy["industry_name"] = ind["name"]
+                return dom_copy
+    return None

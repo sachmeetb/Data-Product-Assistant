@@ -450,13 +450,75 @@ OPTIONS (
     return "\n".join(ddl_statements)
 
 
+def generate_object_table_ddl(
+    product_plan: Dict[str, Any],
+    bank_profile: Dict[str, Any],
+) -> str:
+    """
+    Generate BigLake Object Table external DDL for Unstructured Data Ingestion (PDFs, Images, Audio, Scans).
+    Enforces:
+      - object_metadata = 'DIRECTORY'
+      - BigLake connection (e.g. {region}.biglake-connection)
+      - GCS unstructured prefix (gs://{bucket}/unstructured/...)
+      - 7-year regulatory retention policy
+    """
+    bank_code = bank_profile.get("bank_code", "aib").lower()
+    region = bank_profile.get("region", "eu").lower()
+    gcs_bucket = f"{bank_code}-data-lake-bronze"
+    tables = product_plan.get("tables", [])
+
+    ddl_statements = [
+        f"-- ==============================================================================",
+        f"-- BigLake Object Tables (Unstructured Binary Storage: KYC PDFs, Scans, Audio)",
+        f"-- Institution: {bank_profile.get('bank_name', 'Apex International Bank')} ({bank_code.upper()})",
+        f"-- Target Metastore: BigLake Connection ({region}.biglake-connection)",
+        f"-- Pattern: BigLake Directory Object Table over Cloud Storage",
+        f"-- Retention: 7 Years (2555 Days) Regulatory Compliance (Basel III / PRA / FCA)",
+        f"-- ==============================================================================\n",
+        f"CREATE SCHEMA IF NOT EXISTS `banking_bronze`\nOPTIONS (location = '{region}');\n",
+    ]
+
+    unstructured_tables = [
+        t for t in tables
+        if any(k in f"{t.get('table_name', '')} {t.get('source_system', '')}".lower() for k in ["unstr", "pdf", "doc", "kyc", "contract", "scan", "image", "audio"])
+    ]
+
+    # If no explicitly unstructured tables in plan, generate a template unstructured object table for reference
+    if not unstructured_tables:
+        unstructured_tables = [
+            {
+                "table_name": "brz_unstr_kyc_documents",
+                "source_system": "kyc_repo",
+                "description": "Unstructured KYC Customer Verification Documents (PDF, TIFF, JPEG)",
+            }
+        ]
+
+    for t in unstructured_tables:
+        tname = t.get("table_name", "brz_unstr_documents")
+        src_sys = (t.get("source_system") or "unstructured").lower()
+        storage_uri = f"gs://{gcs_bucket}/unstructured/{src_sys}/*"
+        
+        ddl = f"""CREATE EXTERNAL TABLE IF NOT EXISTS `banking_bronze.{tname}`
+WITH CONNECTION `{region}.biglake-connection`
+OPTIONS (
+  object_metadata = 'DIRECTORY',
+  uris = ['{storage_uri}'],
+  table_retention_days = 2555,
+  description = '{t.get("description", "Bronze BigLake Object Table for raw unstructured binary blobs")}'
+);
+"""
+        ddl_statements.append(ddl)
+
+    return "\n".join(ddl_statements)
+
+
 def generate_dataplex_manifest_json(
     product_plan: Dict[str, Any],
     bank_profile: Dict[str, Any],
 ) -> str:
     """
     Generate brz_dataplex_catalog_manifest.json for Google Cloud Dataplex & Knowledge Catalog.
-    Includes Tag Templates, PII Aspects, and Retention Policy aspects.
+    Includes Tag Templates, PII Aspects, Retention Policy aspects, and multi-modal asset classification.
     """
     bank_name = bank_profile.get("bank_name", "Apex International Bank")
     bank_code = bank_profile.get("bank_code", "AIB").lower()
@@ -467,6 +529,12 @@ def generate_dataplex_manifest_json(
         tname = t.get("table_name", "brz_entity")
         src = t.get("source_system", "CORE")
         
+        is_unstructured = any(k in f"{src} {tname}".lower() for k in ["unstr", "pdf", "doc", "kyc", "contract", "scan", "image", "audio"])
+        is_streaming = any(k in f"{src} {tname}".lower() for k in ["stream", "kafka", "pubsub", "realtime", "real-time", "fps", "fraud", "auth"])
+        
+        asset_type = "BIGLAKE_OBJECT_TABLE" if is_unstructured else "BIGLAKE_ICEBERG_TABLE"
+        subpath = f"unstructured/{src.lower()}/{tname}/" if is_unstructured else f"{src.lower()}/{tname}/"
+        
         pii_columns = [
             c.get("name") for c in t.get("columns", [])
             if c.get("is_pii") or any(kw in c.get("name", "").lower() for kw in ["name", "cust", "tax", "dob", "birth", "iban", "account_num"])
@@ -475,9 +543,13 @@ def generate_dataplex_manifest_json(
         entities.append({
             "entity_id": f"dataplex:banking_bronze:{tname}",
             "display_name": tname,
-            "asset_type": "BIGLAKE_ICEBERG_TABLE",
+            "asset_type": asset_type,
+            "modality": {
+                "structure": "UNSTRUCTURED" if is_unstructured else "STRUCTURED",
+                "cadence": "STREAMING_REALTIME" if is_streaming else "BATCH_SCHEDULED",
+            },
             "schema_location": f"banking_bronze.{tname}",
-            "lakehouse_storage_uri": f"gs://{bank_code}-data-lake-bronze/{src.lower()}/{tname}/",
+            "lakehouse_storage_uri": f"gs://{bank_code}-data-lake-bronze/{subpath}",
             "governance_aspects": {
                 "owner": f"{bank_name} Enterprise Data Integration Team",
                 "source_system": src,
@@ -493,7 +565,7 @@ def generate_dataplex_manifest_json(
                     "gdpr_article_6_lawful_basis": "LEGAL_OBLIGATION_FINANCIAL_REGULATION",
                 },
                 "sla_monitoring": {
-                    "freshness_max_lag": "24h",
+                    "freshness_max_lag": "5m" if is_streaming else "24h",
                     "payload_hash_sha256_audit": True,
                     "volume_anomaly_threshold": "0.20",
                 },

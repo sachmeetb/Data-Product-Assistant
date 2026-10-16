@@ -52,7 +52,7 @@ class BFSIPDFReport(FPDF):
     def header(self):
         self.set_font("Helvetica", "B", 10)
         self.set_text_color(70, 0, 115)  # Dark purple #460073
-        self.cell(0, 8, _clean_pdf_text("DATA DOMAIN SILVER AGENT - BFSI CANONICAL LIBRARY"), new_x="LMARGIN", new_y="NEXT", align="L")
+        self.cell(0, 8, _clean_pdf_text("SILVER DATA PRODUCT ASSISTANT — CANONICAL DOMAIN LIBRARY"), new_x="LMARGIN", new_y="NEXT", align="L")
         self.set_draw_color(194, 163, 255)  # #C2A3FF
         self.set_line_width(0.5)
         self.line(10, 18, 200, 18)
@@ -62,51 +62,54 @@ class BFSIPDFReport(FPDF):
         self.set_y(-15)
         self.set_font("Helvetica", "I", 8)
         self.set_text_color(128, 128, 128)
-        self.cell(0, 10, _clean_pdf_text(f"Page {self.page_no()}/{{nb}} | Confidential - Banking Silver Layer Specification"), align="C")
+        self.cell(0, 10, _clean_pdf_text(f"Page {self.page_no()}/{{nb}} | Confidential — Silver Layer Data Product Specification"), align="C")
 
 
-# ── Stage 1: Bank Profile PDF ──────────────────────────────────────────────────
+# ── Stage 1: Organization & Industry Profile PDF ───────────────────────────────
 
 def generate_bank_profile_pdf(bank_profile: Dict[str, Any]) -> bytes:
     """Generate slv_bank_profile_brief.pdf for Stage 1."""
-    pdf = BFSIPDFReport("Bank Profile Brief")
+    pdf = BFSIPDFReport("Organization Profile Brief")
     pdf.alias_nb_pages()
     pdf.add_page()
 
     # Document Title
     pdf.set_font("Helvetica", "B", 16)
     pdf.set_text_color(70, 0, 115)
-    pdf.cell(0, 10, _clean_pdf_text("Executive Bank Profile & Standards Brief"), new_x="LMARGIN", new_y="NEXT")
+    pdf.cell(0, 10, _clean_pdf_text("Executive Profile & Standards Brief"), new_x="LMARGIN", new_y="NEXT")
 
     pdf.set_font("Helvetica", "", 10)
     pdf.set_text_color(80, 80, 80)
-    pdf.cell(0, 6, _clean_pdf_text("Canonical Banking Architecture & Governance Baseline"), new_x="LMARGIN", new_y="NEXT")
+    pdf.cell(0, 6, _clean_pdf_text("Canonical Domain Architecture & Governance Baseline"), new_x="LMARGIN", new_y="NEXT")
     pdf.ln(4)
 
     # Key Profile Fields Table / Callout
-    bank_name = bank_profile.get("bank_name", "Global BFSI Bank")
-    bank_code = bank_profile.get("bank_code", "BFSI_US")
+    org_name = bank_profile.get("org_name") or bank_profile.get("bank_name", "Global Enterprise")
+    org_code = bank_profile.get("org_code") or bank_profile.get("bank_code", "ENT_US")
+    industry = bank_profile.get("industry", "Banking & Financial Services")
+    subtype = bank_profile.get("industry_subtype") or bank_profile.get("banking_type", "UNIVERSAL")
     region = ", ".join(bank_profile.get("regions", ["Global"]))
-    btype = bank_profile.get("banking_type", "UNIVERSAL")
-    core_sys = bank_profile.get("core_banking_system", "Temenos T24 / Flexcube")
-    products = ", ".join(bank_profile.get("active_products", ["Deposits", "Lending", "Payments"]))
-    frameworks = ", ".join(bank_profile.get("regulatory_frameworks", ["BIAN v12", "ISO 20022", "FIBO", "Basel III"]))
+    core_sys = bank_profile.get("core_banking_system") or bank_profile.get("core_systems", "Enterprise Core ERP / Ingestion Lake")
+    products = ", ".join(bank_profile.get("active_products", ["Core Operations", "Analytics", "Audits"]))
+    frameworks = ", ".join(bank_profile.get("regulatory_frameworks", ["ISO 20022", "GDPR", "Industry Governance"]))
 
     pdf.set_fill_color(230, 220, 255)  # #E6DCFF
     pdf.set_text_color(70, 0, 115)
     pdf.set_font("Helvetica", "B", 11)
-    pdf.cell(0, 8, _clean_pdf_text("  1. Institution Metadata"), new_x="LMARGIN", new_y="NEXT", fill=True)
+    pdf.cell(0, 8, _clean_pdf_text("  1. Institution & Industry Metadata"), new_x="LMARGIN", new_y="NEXT", fill=True)
     pdf.ln(2)
 
     fields = [
-        ("Bank Name", bank_name),
-        ("Bank Code", bank_code),
-        ("Primary Region(s)", region),
-        ("Banking Type", btype),
-        ("Core Banking System", core_sys),
-        ("Active Products", products),
+        ("Organization Name", org_name),
+        ("Organization Code", org_code),
+        ("Industry", industry),
+        ("Industry Subtype", subtype),
+        ("Operating Region(s)", region),
+        ("Core Operating Systems", core_sys),
+        ("Active Products / Services", products),
         ("Regulatory & Governance Standards", frameworks),
     ]
+
 
     pdf.set_font("Helvetica", "", 10)
     pdf.set_text_color(40, 40, 40)

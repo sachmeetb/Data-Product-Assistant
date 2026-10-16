@@ -163,16 +163,16 @@ export const DEFAULT_BRONZE_CONTRACT = {
 
 function generateYamlString(data) {
   const lines = []
-  lines.push(`dataContractSpecification: "${data.dataContractSpecification || '0.9.3'}"`)
-  lines.push(`id: "${data.id || 'urn:datacontract:banking_silver'}"`)
+  lines.push(`dataContractSpecification: "${data.dataContractSpecification || '2.2.0'}"`)
+  lines.push(`id: "${data.id || 'urn:datacontract:banking_bronze'}"`)
   lines.push('info:')
   lines.push(`  title: "${data.info?.title || ''}"`)
   lines.push(`  version: "${data.info?.version || '1.0.0'}"`)
   lines.push(`  status: "${data.info?.status || 'ACTIVE'}"`)
   lines.push(`  description: "${(data.info?.description || '').replace(/"/g, '\\"')}"`)
-  lines.push(`  domain: "${data.info?.domain || ''}"`)
+  lines.push(`  domain: "${data.info?.domain || 'banking_bronze'}"`)
   lines.push(`  owner: "${data.info?.owner || ''}"`)
-  lines.push(`  target_dataset: "${data.info?.target_dataset || 'banking_silver'}"`)
+  lines.push(`  target_dataset: "${data.info?.target_dataset || 'banking_bronze'}"`)
   lines.push('  standards:')
   ;(data.info?.standards || []).forEach(s => {
     lines.push(`    - "${s}"`)
@@ -515,22 +515,35 @@ export default function DataContractCard({ view, onSave, isModal, onClose }) {
             <FileCodeIcon />
           </div>
           <div>
-            <div style={{ fontSize: 13.5, fontWeight: 700, letterSpacing: '0.01em', display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span>{contract.info?.title || 'Silver Layer Data Contract'}</span>
+            <div style={{ fontSize: 13.5, fontWeight: 700, letterSpacing: '0.01em', display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+              <span>{contract.info?.title || 'Bronze Layer Ingestion Data Contract'}</span>
               <span style={{
-                background: '#A100FF',
+                background: '#734600',
                 color: '#ffffff',
                 fontSize: 9.5,
                 padding: '1px 7px',
                 borderRadius: 10,
                 fontWeight: 700,
-                border: '1px solid #C2A3FF',
+                border: '1px solid #FFA366',
               }}>
                 ✎ Editable Mode
               </span>
+              {contract.modality?.modality_label && (
+                <span style={{
+                  background: '#2d1810',
+                  color: '#fcd34d',
+                  fontSize: 9.5,
+                  padding: '1px 7px',
+                  borderRadius: 10,
+                  fontWeight: 700,
+                  border: '1px solid #d97706',
+                }}>
+                  {contract.modality.modality_label}
+                </span>
+              )}
             </div>
             <div style={{ fontSize: 10.5, color: '#E6DCFF', fontFamily: 'monospace', marginTop: 2 }}>
-              {contract.id || 'urn:datacontract:banking_silver'}
+              {contract.id || 'urn:datacontract:banking_bronze'}
             </div>
           </div>
         </div>
@@ -686,27 +699,30 @@ export default function DataContractCard({ view, onSave, isModal, onClose }) {
               <button
                 type="button"
                 onClick={() => {
-                  const mKey = `slv_new_entity_${Date.now().toString().slice(-4)}`
+                  const mKey = `brz_new_entity_${Date.now().toString().slice(-4)}`
                   setContract(prev => ({
                     ...prev,
                     models: {
                       ...prev.models,
                       [mKey]: {
-                        description: 'New Conformed Entity Table',
+                        description: 'New Raw Bronze Ingestion Table',
                         type: 'table',
-                        physicalName: `banking_silver.${mKey}`,
+                        physicalName: `banking_bronze.${mKey}`,
+                        tableFormat: 'ICEBERG',
                         fields: {
-                          surrogate_key: { type: 'string', description: 'Surrogate Primary Key', primary: true, nullable: false },
-                          id: { type: 'string', description: 'Business Identifier', primary: false, nullable: false },
+                          ingest_batch_id: { type: 'string', description: 'Batch Run Identifier', primary: false, nullable: false },
+                          ingest_ts: { type: 'timestamp', description: 'Ingestion Timestamp', primary: false, nullable: false },
+                          raw_payload_hash: { type: 'string', description: 'SHA-256 Payload Hash', primary: false, nullable: false },
+                          bronze_id: { type: 'string', description: 'Deterministic Landing UUID', primary: true, nullable: false },
                         },
                       },
                     },
                   }))
                 }}
                 style={{
-                  background: '#E6DCFF',
-                  color: '#460073',
-                  border: '1px solid #C2A3FF',
+                  background: '#FFE6CC',
+                  color: '#734600',
+                  border: '1px solid #FFA366',
                   borderRadius: 6,
                   padding: '4px 10px',
                   fontSize: 11,
@@ -735,14 +751,29 @@ export default function DataContractCard({ view, onSave, isModal, onClose }) {
                   gap: 8,
                 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1, minWidth: 260 }}>
-                    <span style={{ fontSize: 10.5, fontWeight: 700, color: '#460073', textTransform: 'uppercase' }}>Table:</span>
+                    <span style={{ fontSize: 10.5, fontWeight: 700, color: '#734600', textTransform: 'uppercase' }}>Table:</span>
                     <input
                       type="text"
                       value={modelDef.physicalName || modelName}
                       onChange={e => updateModelDef(modelName, 'physicalName', e.target.value)}
-                      style={{ ...inputStyle, width: 'auto', minWidth: 200, fontFamily: 'monospace', fontWeight: 700, color: '#460073' }}
+                      style={{ ...inputStyle, width: 'auto', minWidth: 200, fontFamily: 'monospace', fontWeight: 700, color: '#734600' }}
                       title="Delete previous value and type physical table name"
                     />
+                    {modelDef.modality?.cadence === 'STREAMING_REALTIME' && (
+                      <span style={{ background: '#ecfdf5', color: '#065f46', border: '1px solid #6ee7b7', padding: '2px 6px', borderRadius: 4, fontSize: 9.5, fontWeight: 700 }}>
+                        ⚡ STREAMING · REALTIME
+                      </span>
+                    )}
+                    {modelDef.modality?.structure === 'UNSTRUCTURED' && (
+                      <span style={{ background: '#fef3c7', color: '#92400e', border: '1px solid #fcd34d', padding: '2px 6px', borderRadius: 4, fontSize: 9.5, fontWeight: 700 }}>
+                        📄 UNSTRUCTURED · OBJECT TABLE
+                      </span>
+                    )}
+                    {(modelDef.tableFormat === 'ICEBERG' && modelDef.modality?.cadence !== 'STREAMING_REALTIME') && (
+                      <span style={{ background: '#fff7ed', color: '#9a3412', border: '1px solid #fdba74', padding: '2px 6px', borderRadius: 4, fontSize: 9.5, fontWeight: 700 }}>
+                        🧊 BATCH · ICEBERG
+                      </span>
+                    )}
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 2, minWidth: 260 }}>
                     <span style={{ fontSize: 10.5, fontWeight: 600, color: '#64748b' }}>Desc:</span>

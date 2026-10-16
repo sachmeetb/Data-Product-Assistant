@@ -39,8 +39,18 @@ export async function sendChatMessage(sessionId, message, { action, fileRefId } 
     }),
   });
   logResponseHeaders('chat', res);
+  if (!res.ok) {
+    const errText = await res.text();
+    let detail = `Error ${res.status}`;
+    try {
+      const errJson = JSON.parse(errText);
+      detail = errJson.detail || detail;
+    } catch {
+      detail = errText || detail;
+    }
+    throw new Error(detail);
+  }
   const data = await res.json();
-  if (!res.ok) throw new Error(data.detail || `Error ${res.status}`);
   return data;
 }
 
