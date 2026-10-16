@@ -162,6 +162,52 @@ export const DEFAULT_SILVER_CONTRACT = {
       severity: 'CRITICAL',
     },
   ],
+  lineage: {
+    upstream_sources: [
+      { system: 'Raw Core Platform / CDC Ingestion', layer: 'BRONZE', type: 'CDC_STREAM', frequency: 'HOURLY' },
+      { system: 'Daily Transaction Clearing Ledger', layer: 'BRONZE', type: 'BATCH_FILE', frequency: 'DAILY' },
+    ],
+    entity_lineage: [
+      {
+        target_table: 'banking_silver.slv_customer',
+        source_tables: ['raw_bronze.src_customer_master'],
+        join_type: 'PRIMARY_SOURCE',
+        column_lineage: [
+          { target_column: 'surrogate_key', source_column: 'raw_bronze.src_customer_master.cust_id', transformation: 'SHA256_SURROGATE_HASH' },
+          { target_column: 'customer_id', source_column: 'raw_bronze.src_customer_master.cust_id', transformation: 'CAST_TO_STRING' },
+          { target_column: 'customer_name', source_column: 'raw_bronze.src_customer_master.cust_name', transformation: 'UPPER(TRIM())' },
+          { target_column: 'kyc_status', source_column: 'raw_bronze.src_customer_master.kyc_stat_cd', transformation: 'MAP_CODE_SET' },
+        ],
+      },
+      {
+        target_table: 'banking_silver.slv_account',
+        source_tables: ['raw_bronze.src_account_ledger'],
+        join_type: 'PRIMARY_SOURCE',
+        column_lineage: [
+          { target_column: 'surrogate_key', source_column: 'raw_bronze.src_account_ledger.acct_no', transformation: 'SHA256_SURROGATE_HASH' },
+          { target_column: 'account_id', source_column: 'raw_bronze.src_account_ledger.acct_no', transformation: 'CAST_TO_STRING' },
+          { target_column: 'customer_id', source_column: 'raw_bronze.src_account_ledger.cust_id', transformation: 'CAST_TO_STRING' },
+          { target_column: 'current_balance', source_column: 'raw_bronze.src_account_ledger.bal_amt', transformation: 'CAST_TO_NUMERIC' },
+        ],
+      },
+      {
+        target_table: 'banking_silver.slv_transaction_event',
+        source_tables: ['raw_bronze.src_transaction_stream'],
+        join_type: 'PRIMARY_SOURCE',
+        column_lineage: [
+          { target_column: 'surrogate_key', source_column: 'raw_bronze.src_transaction_stream.txn_id', transformation: 'SHA256_SURROGATE_HASH' },
+          { target_column: 'transaction_id', source_column: 'raw_bronze.src_transaction_stream.txn_id', transformation: 'CAST_TO_STRING' },
+          { target_column: 'account_id', source_column: 'raw_bronze.src_transaction_stream.acct_no', transformation: 'CAST_TO_STRING' },
+          { target_column: 'txn_amount', source_column: 'raw_bronze.src_transaction_stream.amount', transformation: 'CAST_TO_NUMERIC' },
+          { target_column: 'txn_timestamp', source_column: 'raw_bronze.src_transaction_stream.event_ts', transformation: 'PARSE_TIMESTAMP_UTC' },
+        ],
+      },
+    ],
+    downstream_consumers: [
+      { consumer_role: 'Executive BI & Reporting', intended_layer: 'GOLD', use_case: 'Customer 360 KPIs & Financial Dashboards' },
+      { consumer_role: 'Risk & Compliance Engine', intended_layer: 'GOLD', use_case: 'Basel III & Fraud Detection Aggregations' },
+    ],
+  },
 }
 
 function generateYamlString(data) {
@@ -210,6 +256,13 @@ function generateYamlString(data) {
         lines.push('        pii: true')
         lines.push('        classification: "PII"')
       }
+      if (fDef.transformSourceObjects) {
+        lines.push('        transformSourceObjects:')
+        fDef.transformSourceObjects.forEach(src => lines.push(`          - "${src}"`))
+      }
+      if (fDef.transformLogic) {
+        lines.push(`        transformLogic: "${fDef.transformLogic}"`)
+      }
     })
   })
 
@@ -221,8 +274,48 @@ function generateYamlString(data) {
     if (q.severity) lines.push(`    severity: "${q.severity}"`)
   })
 
+  if (data.lineage) {
+    lines.push('lineage:')
+    if (data.lineage.upstream_sources?.length) {
+      lines.push('  upstream_sources:')
+      data.lineage.upstream_sources.forEach(s => {
+        lines.push(`    - system: "${s.system || ''}"`)
+        lines.push(`      layer: "${s.layer || 'BRONZE'}"`)
+        if (s.type) lines.push(`      type: "${s.type}"`)
+        if (s.frequency) lines.push(`      frequency: "${s.frequency}"`)
+      })
+    }
+    if (data.lineage.entity_lineage?.length) {
+      lines.push('  entity_lineage:')
+      data.lineage.entity_lineage.forEach(el => {
+        lines.push(`    - target_table: "${el.target_table || ''}"`)
+        if (el.source_tables?.length) {
+          lines.push('      source_tables:')
+          el.source_tables.forEach(st => lines.push(`        - "${st}"`))
+        }
+        if (el.column_lineage?.length) {
+          lines.push('      column_lineage:')
+          el.column_lineage.forEach(cl => {
+            lines.push(`        - target_column: "${cl.target_column || ''}"`)
+            lines.push(`          source_column: "${cl.source_column || ''}"`)
+            lines.push(`          transformation: "${cl.transformation || 'DIRECT_PASS'}"`)
+          })
+        }
+      })
+    }
+    if (data.lineage.downstream_consumers?.length) {
+      lines.push('  downstream_consumers:')
+      data.lineage.downstream_consumers.forEach(dc => {
+        lines.push(`    - consumer_role: "${dc.consumer_role || ''}"`)
+        lines.push(`      intended_layer: "${dc.intended_layer || 'GOLD'}"`)
+        lines.push(`      use_case: "${dc.use_case || ''}"`)
+      })
+    }
+  }
+
   return lines.join('\n')
 }
+
 
 export default function DataContractCard({ view, onSave, isModal, onClose }) {
   const [activeTab, setActiveTab] = useState('schema')
@@ -240,6 +333,7 @@ export default function DataContractCard({ view, onSave, isModal, onClose }) {
     if (!base.servicelevels) base.servicelevels = { freshness: {}, availability: {}, retention: {} }
     if (!base.models || Object.keys(base.models).length === 0) base.models = DEFAULT_SILVER_CONTRACT.models
     if (!base.quality || base.quality.length === 0) base.quality = DEFAULT_SILVER_CONTRACT.quality
+    if (!base.lineage) base.lineage = DEFAULT_SILVER_CONTRACT.lineage
 
     // Fill in default placeholders if any empty string exists
     if (!base.info.title) base.info.title = DEFAULT_SILVER_CONTRACT.info.title
@@ -262,9 +356,11 @@ export default function DataContractCard({ view, onSave, isModal, onClose }) {
         servicelevels: { ...DEFAULT_SILVER_CONTRACT.servicelevels, ...(view.servicelevels || {}) },
         models: (view.models && Object.keys(view.models).length > 0) ? view.models : DEFAULT_SILVER_CONTRACT.models,
         quality: (view.quality && view.quality.length > 0) ? view.quality : DEFAULT_SILVER_CONTRACT.quality,
+        lineage: (view.lineage && typeof view.lineage === 'object') ? view.lineage : DEFAULT_SILVER_CONTRACT.lineage,
       }))
     }
   }, [view])
+
 
   // Overview field mutator
   const updateInfo = (field, val) => {
@@ -435,7 +531,130 @@ export default function DataContractCard({ view, onSave, isModal, onClose }) {
     }))
   }
 
+  // Lineage mutators
+  const updateUpstreamSource = (idx, prop, val) => {
+    setContract(prev => {
+      const sources = [...(prev.lineage?.upstream_sources || [])]
+      sources[idx] = { ...sources[idx], [prop]: val }
+      return {
+        ...prev,
+        lineage: { ...(prev.lineage || {}), upstream_sources: sources },
+      }
+    })
+  }
+
+  const addUpstreamSource = () => {
+    setContract(prev => ({
+      ...prev,
+      lineage: {
+        ...(prev.lineage || {}),
+        upstream_sources: [
+          ...(prev.lineage?.upstream_sources || []),
+          { system: 'Raw Source Feed / File', layer: 'BRONZE', type: 'CDC_STREAM', frequency: 'HOURLY' },
+        ],
+      },
+    }))
+  }
+
+  const deleteUpstreamSource = (idx) => {
+    setContract(prev => ({
+      ...prev,
+      lineage: {
+        ...(prev.lineage || {}),
+        upstream_sources: (prev.lineage?.upstream_sources || []).filter((_, i) => i !== idx),
+      },
+    }))
+  }
+
+  const updateColumnLineage = (tableIdx, colIdx, prop, val) => {
+    setContract(prev => {
+      const entityLineage = [...(prev.lineage?.entity_lineage || [])]
+      if (!entityLineage[tableIdx]) return prev
+      const colLineage = [...(entityLineage[tableIdx].column_lineage || [])]
+      colLineage[colIdx] = { ...colLineage[colIdx], [prop]: val }
+      entityLineage[tableIdx] = { ...entityLineage[tableIdx], column_lineage: colLineage }
+      return {
+        ...prev,
+        lineage: { ...(prev.lineage || {}), entity_lineage: entityLineage },
+      }
+    })
+  }
+
+  const addColumnLineage = (tableIdx) => {
+    setContract(prev => {
+      const entityLineage = [...(prev.lineage?.entity_lineage || [])]
+      if (!entityLineage[tableIdx]) return prev
+      const colLineage = [
+        ...(entityLineage[tableIdx].column_lineage || []),
+        { target_column: 'new_attribute', source_column: 'raw_bronze.column', transformation: 'DIRECT_PASS' },
+      ]
+      entityLineage[tableIdx] = { ...entityLineage[tableIdx], column_lineage: colLineage }
+      return {
+        ...prev,
+        lineage: { ...(prev.lineage || {}), entity_lineage: entityLineage },
+      }
+    })
+  }
+
+  const deleteColumnLineage = (tableIdx, colIdx) => {
+    setContract(prev => {
+      const entityLineage = [...(prev.lineage?.entity_lineage || [])]
+      if (!entityLineage[tableIdx]) return prev
+      const colLineage = (entityLineage[tableIdx].column_lineage || []).filter((_, i) => i !== colIdx)
+      entityLineage[tableIdx] = { ...entityLineage[tableIdx], column_lineage: colLineage }
+      return {
+        ...prev,
+        lineage: { ...(prev.lineage || {}), entity_lineage: entityLineage },
+      }
+    })
+  }
+
+  const updateEntityLineage = (idx, prop, val) => {
+    setContract(prev => {
+      const entityLineage = [...(prev.lineage?.entity_lineage || [])]
+      if (!entityLineage[idx]) return prev
+      entityLineage[idx] = { ...entityLineage[idx], [prop]: val }
+      return {
+        ...prev,
+        lineage: { ...(prev.lineage || {}), entity_lineage: entityLineage },
+      }
+    })
+  }
+
+  const addEntityLineage = () => {
+    const firstModel = Object.keys(contract.models || {})[0] || 'silver_entity'
+    setContract(prev => ({
+      ...prev,
+      lineage: {
+        ...(prev.lineage || {}),
+        entity_lineage: [
+          ...(prev.lineage?.entity_lineage || []),
+          {
+            target_table: firstModel,
+            source_table: `raw_bronze_${firstModel}`,
+            join_key: 'id',
+            column_lineage: [
+              { target_column: 'id', source_column: 'id', transformation: 'DIRECT_PASS' },
+              { target_column: 'updated_at', source_column: 'ingest_ts', transformation: 'CURRENT_TIMESTAMP()' },
+            ],
+          },
+        ],
+      },
+    }))
+  }
+
+  const deleteEntityLineage = (idx) => {
+    setContract(prev => ({
+      ...prev,
+      lineage: {
+        ...(prev.lineage || {}),
+        entity_lineage: (prev.lineage?.entity_lineage || []).filter((_, i) => i !== idx),
+      },
+    }))
+  }
+
   // Save Contract
+
   const handleSave = () => {
     const yamlString = generateYamlString(contract)
     const finalized = { ...contract, yaml_text: yamlString }
@@ -635,7 +854,7 @@ export default function DataContractCard({ view, onSave, isModal, onClose }) {
           💡 <strong>Values are pre-filled below:</strong> Click into any text or attribute to edit or delete the previous value.
         </span>
         <span style={{ fontSize: 10.5, color: '#7E22CE', fontWeight: 600 }}>
-          {Object.keys(contract.models || {}).length} Models · {contract.quality?.length || 0} Quality Rules
+          {Object.keys(contract.models || {}).length} Models · {(contract.lineage?.entity_lineage || []).length} Lineage Mappings · {contract.quality?.length || 0} Quality Rules
         </span>
       </div>
 
@@ -649,10 +868,12 @@ export default function DataContractCard({ view, onSave, isModal, onClose }) {
       }}>
         {[
           { id: 'schema', label: `Models & Columns (${Object.keys(contract.models || {}).length})` },
+          { id: 'lineage', label: `Lineage & Provenance` },
           { id: 'quality', label: `Quality Rules (${contract.quality?.length || 0})` },
           { id: 'overview', label: 'Overview & SLAs' },
           { id: 'yaml', label: 'Live YAML Spec' },
         ].map(tab => (
+
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
@@ -898,6 +1119,310 @@ export default function DataContractCard({ view, onSave, isModal, onClose }) {
                 </div>
               </div>
             ))}
+          </div>
+        )}
+
+        {/* =================================================================== */}
+        {/* TAB: LINEAGE & PROVENANCE (ODCS / EDITABLE)                         */}
+        {/* =================================================================== */}
+        {activeTab === 'lineage' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+            {/* Upstream Sources Header & Cards */}
+            <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 8, padding: 14 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                <div>
+                  <h4 style={{ margin: 0, fontSize: 13, fontWeight: 700, color: '#1e293b' }}>
+                    1. Upstream Data Sources (Bronze / Ingestion Layer)
+                  </h4>
+                  <div style={{ fontSize: 11, color: '#64748b', marginTop: 2 }}>
+                    Systems, file feeds, and CDC streams feeding into this Conformed Silver Data Product
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={addUpstreamSource}
+                  style={{
+                    background: '#7500C0',
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: 6,
+                    padding: '5px 12px',
+                    fontSize: 11,
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 4,
+                  }}
+                >
+                  <PlusIcon /> Add Upstream Source
+                </button>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 10 }}>
+                {(contract.lineage?.upstream_sources || []).map((src, idx) => (
+                  <div key={idx} style={{
+                    background: '#ffffff',
+                    border: '1px solid #cbd5e1',
+                    borderRadius: 6,
+                    padding: 10,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 6,
+                    boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontSize: 10, fontWeight: 800, color: '#460073', textTransform: 'uppercase' }}>
+                        Source #{idx + 1}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => deleteUpstreamSource(idx)}
+                        style={{
+                          background: '#fee2e2',
+                          color: '#dc2626',
+                          border: 'none',
+                          borderRadius: 4,
+                          padding: '3px 6px',
+                          cursor: 'pointer',
+                        }}
+                        title="Remove Source"
+                      >
+                        <TrashIcon />
+                      </button>
+                    </div>
+                    <div>
+                      <span style={{ fontSize: 9.5, color: '#64748b', fontWeight: 600 }}>SYSTEM NAME</span>
+                      <input
+                        type="text"
+                        value={src.system || ''}
+                        onChange={e => updateUpstreamSource(idx, 'system', e.target.value)}
+                        style={{ ...inputStyle, width: '100%', marginTop: 2, fontWeight: 600 }}
+                        placeholder="e.g. Core Banking / IoT Telemetry"
+                      />
+                    </div>
+                    <div style={{ display: 'flex', gap: 6 }}>
+                      <div style={{ flex: 1 }}>
+                        <span style={{ fontSize: 9.5, color: '#64748b', fontWeight: 600 }}>LAYER</span>
+                        <input
+                          type="text"
+                          value={src.layer || 'BRONZE'}
+                          onChange={e => updateUpstreamSource(idx, 'layer', e.target.value)}
+                          style={{ ...inputStyle, width: '100%', marginTop: 2 }}
+                        />
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <span style={{ fontSize: 9.5, color: '#64748b', fontWeight: 600 }}>TYPE</span>
+                        <select
+                          value={src.type || 'CDC_STREAM'}
+                          onChange={e => updateUpstreamSource(idx, 'type', e.target.value)}
+                          style={{ ...inputStyle, width: '100%', marginTop: 2 }}
+                        >
+                          <option value="CDC_STREAM">CDC_STREAM</option>
+                          <option value="BATCH_DELTA">BATCH_DELTA</option>
+                          <option value="API_EVENT">API_EVENT</option>
+                          <option value="FILE_EXTRACT">FILE_EXTRACT</option>
+                        </select>
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <span style={{ fontSize: 9.5, color: '#64748b', fontWeight: 600 }}>FREQUENCY</span>
+                        <select
+                          value={src.frequency || 'HOURLY'}
+                          onChange={e => updateUpstreamSource(idx, 'frequency', e.target.value)}
+                          style={{ ...inputStyle, width: '100%', marginTop: 2 }}
+                        >
+                          <option value="REALTIME">REALTIME</option>
+                          <option value="HOURLY">HOURLY</option>
+                          <option value="DAILY">DAILY</option>
+                          <option value="BATCH">BATCH</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Entity & Column Lineage Mapping */}
+            <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 8, padding: 14 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                <div>
+                  <h4 style={{ margin: 0, fontSize: 13, fontWeight: 700, color: '#1e293b' }}>
+                    2. Conformed Entity & Column Transformations (Source → Target Lineage)
+                  </h4>
+                  <div style={{ fontSize: 11, color: '#64748b', marginTop: 2 }}>
+                    Attribute-level mapping, cleaning logic, type conformance, and business hashing rules
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={addEntityLineage}
+                  style={{
+                    background: '#7500C0',
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: 6,
+                    padding: '5px 12px',
+                    fontSize: 11,
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 4,
+                  }}
+                >
+                  <PlusIcon /> Add Entity Lineage
+                </button>
+              </div>
+
+              {(contract.lineage?.entity_lineage || []).length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '24px 0', color: '#64748b', fontSize: 12 }}>
+                  No entity lineage defined yet. Click "Add Entity Lineage" to link Silver tables to upstream Bronze sources.
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                  {(contract.lineage?.entity_lineage || []).map((ent, tableIdx) => (
+                    <div key={tableIdx} style={{
+                      background: '#ffffff',
+                      border: '1px solid #cbd5e1',
+                      borderRadius: 6,
+                      padding: 12,
+                      boxShadow: '0 1px 2px rgba(0,0,0,0.03)',
+                    }}>
+                      {/* Entity Header */}
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10, flexWrap: 'wrap', gap: 8 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <span style={{ fontSize: 11, fontWeight: 800, color: '#460073', background: '#EDE9FE', padding: '2px 8px', borderRadius: 4 }}>
+                            SILVER TARGET:
+                          </span>
+                          <input
+                            type="text"
+                            value={ent.target_table || ''}
+                            onChange={e => updateEntityLineage(tableIdx, 'target_table', e.target.value)}
+                            style={{ ...inputStyle, fontWeight: 700, color: '#0f172a', width: 170 }}
+                            placeholder="Target table"
+                          />
+                          <span style={{ fontSize: 12, fontWeight: 700, color: '#94a3b8' }}>←</span>
+                          <span style={{ fontSize: 11, fontWeight: 800, color: '#0369a1', background: '#e0f2fe', padding: '2px 8px', borderRadius: 4 }}>
+                            BRONZE SOURCE:
+                          </span>
+                          <input
+                            type="text"
+                            value={ent.source_table || ''}
+                            onChange={e => updateEntityLineage(tableIdx, 'source_table', e.target.value)}
+                            style={{ ...inputStyle, fontWeight: 600, color: '#0369a1', width: 170 }}
+                            placeholder="Source table"
+                          />
+                          {ent.join_key !== undefined && (
+                            <span style={{ fontSize: 10, color: '#64748b' }}>
+                              Join Key: <input
+                                type="text"
+                                value={ent.join_key || ''}
+                                onChange={e => updateEntityLineage(tableIdx, 'join_key', e.target.value)}
+                                style={{ ...inputStyle, width: 100, fontSize: 10, display: 'inline-block', padding: '2px 6px' }}
+                              />
+                            </span>
+                          )}
+                        </div>
+
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <button
+                            type="button"
+                            onClick={() => addColumnLineage(tableIdx)}
+                            style={{
+                              background: '#f1f5f9',
+                              color: '#334155',
+                              border: '1px solid #cbd5e1',
+                              borderRadius: 4,
+                              padding: '4px 8px',
+                              fontSize: 10.5,
+                              fontWeight: 600,
+                              cursor: 'pointer',
+                            }}
+                          >
+                            + Add Column Lineage
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => deleteEntityLineage(tableIdx)}
+                            style={{
+                              background: '#fee2e2',
+                              color: '#dc2626',
+                              border: '1px solid #fca5a5',
+                              borderRadius: 4,
+                              padding: '4px 6px',
+                              cursor: 'pointer',
+                            }}
+                            title="Delete Entity Lineage"
+                          >
+                            <TrashIcon />
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Column Lineage Table */}
+                      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11 }}>
+                        <thead>
+                          <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0', textAlign: 'left' }}>
+                            <th style={{ padding: '6px 8px', fontWeight: 700, color: '#475569', width: '28%' }}>Target Column (Silver)</th>
+                            <th style={{ padding: '6px 8px', fontWeight: 700, color: '#475569', width: '28%' }}>Source Column (Bronze)</th>
+                            <th style={{ padding: '6px 8px', fontWeight: 700, color: '#475569' }}>Transformation / Conformance Expression</th>
+                            <th style={{ padding: '6px 8px', textAlign: 'center', width: 40 }}></th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {(ent.column_lineage || []).map((col, colIdx) => (
+                            <tr key={colIdx} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                              <td style={{ padding: '4px 8px' }}>
+                                <input
+                                  type="text"
+                                  value={col.target_column || ''}
+                                  onChange={e => updateColumnLineage(tableIdx, colIdx, 'target_column', e.target.value)}
+                                  style={{ ...inputStyle, width: '100%', fontFamily: 'monospace', fontWeight: 600 }}
+                                />
+                              </td>
+                              <td style={{ padding: '4px 8px' }}>
+                                <input
+                                  type="text"
+                                  value={col.source_column || ''}
+                                  onChange={e => updateColumnLineage(tableIdx, colIdx, 'source_column', e.target.value)}
+                                  style={{ ...inputStyle, width: '100%', fontFamily: 'monospace', color: '#0369a1' }}
+                                />
+                              </td>
+                              <td style={{ padding: '4px 8px' }}>
+                                <input
+                                  type="text"
+                                  value={col.transformation || ''}
+                                  onChange={e => updateColumnLineage(tableIdx, colIdx, 'transformation', e.target.value)}
+                                  style={{ ...inputStyle, width: '100%', fontFamily: 'monospace', color: '#7500C0', background: '#faf5ff' }}
+                                />
+                              </td>
+                              <td style={{ padding: '4px 8px', textAlign: 'center' }}>
+                                <button
+                                  type="button"
+                                  onClick={() => deleteColumnLineage(tableIdx, colIdx)}
+                                  style={{
+                                    background: '#fee2e2',
+                                    color: '#dc2626',
+                                    border: '1px solid #fca5a5',
+                                    borderRadius: 4,
+                                    padding: '2px 5px',
+                                    cursor: 'pointer',
+                                  }}
+                                  title="Delete column mapping"
+                                >
+                                  <TrashIcon />
+                                </button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         )}
 

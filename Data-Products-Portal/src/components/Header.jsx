@@ -22,7 +22,7 @@ export default function Header({ user, onSignOut, activeView, setActiveView, cur
                 Accenture <span className="font-normal text-gray-400">|</span> Data Products Hub
               </div>
               <div className="text-[10.5px] text-gray-400">
-                BFSI Medallion Architecture (Silver & Gold)
+                Bronze, Silver & Gold Product Assistants
               </div>
             </div>
           </button>

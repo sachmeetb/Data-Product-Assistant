@@ -43,6 +43,7 @@
       AlertTriangle: 'alert-triangle',
       Sparkles: 'sparkles',
       Layers: 'layers',
+      Database: 'database',
       Shield: 'shield',
       Loader2: 'loader-circle',
       ArrowRight: 'arrow-right',
@@ -99,7 +100,7 @@
     const Icons = Object.fromEntries(Object.keys(ICON_KEY).map(n => [n, makeIcon(n)]));
     const { 
       Shield, Loader2, CheckCircle2, ArrowRight, ArrowUpRight, 
-      Layers, Sparkles, ExternalLink, Maximize2, RefreshCw, 
+      Layers, Sparkles, Database, ExternalLink, Maximize2, RefreshCw, 
       LogOut, Lock, AlertTriangle 
     } = Icons;
 
@@ -123,18 +124,25 @@
     // ─── Product Definitions ─────────────────────────────────────────────────
     const PRODUCTS = [
       {
-        id: "gold",
-        title: "Gold Product Assistant (BP - Product)",
-        url: "https://proxy-dp-assistant-v2-frontend-preview-743146199.us-central1.run.app",
-        gradient: "linear-gradient(135deg, #451A03 0%, #78350F 50%, #B45309 100%)",
-        icon: Sparkles
+        id: "bronze",
+        title: "Bronze Product Assistant",
+        url: "https://proxy-bfsi-bronze-frontend-v1-1-a74bkpgdzq-uc.a.run.app",
+        gradient: "linear-gradient(135deg, #7C2D12 0%, #9A3412 50%, #C2410C 100%)",
+        icon: Database
       },
       {
         id: "silver",
-        title: "Silver Product Assistant (Banking)",
+        title: "Silver Product Assistant (Multi-Industry)",
         url: "https://proxy-bfsi-silver-frontend-v1-1-743146199.us-central1.run.app/",
         gradient: "linear-gradient(135deg, #1E293B 0%, #334155 100%)",
         icon: Layers
+      },
+      {
+        id: "gold",
+        title: "Gold Product Assistant",
+        url: "https://proxy-dp-assistant-v2-frontend-preview-743146199.us-central1.run.app",
+        gradient: "linear-gradient(135deg, #451A03 0%, #78350F 50%, #B45309 100%)",
+        icon: Sparkles
       }
     ];
 
@@ -147,7 +155,7 @@
       const quickPresets = [
         { label: "R Yuva Kishore", email: "r.yuva.kishore@accenture.com", role: "Lead Data Architect" },
         { label: "Sarah Jenkins", email: "sarah.jenkins@accenture.com", role: "Campaign Manager" },
-        { label: "Alex Rivera", email: "alex.rivera@accenture.com", role: "Data Product Owner" }
+        { label: "Tony D Giordano", email: "tony.d.giordano@accenture.com", role: "Data Product Owner" }
       ];
 
       const submit = (targetEmail) => {
@@ -215,11 +223,15 @@
                 <div className="mt-6 space-y-2.5">
                   <div className="flex items-center gap-2 text-xs text-purple-200">
                     <CheckCircle2 size={13} color={BP.orange} />
-                    <span>Gold Product Assistant (BP - Product)</span>
+                    <span>Bronze Product Assistant</span>
                   </div>
                   <div className="flex items-center gap-2 text-xs text-purple-200">
                     <CheckCircle2 size={13} color={BP.orange} />
-                    <span>Silver Product Assistant (Banking)</span>
+                    <span>Silver Product Assistant (Multi-Industry)</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs text-purple-200">
+                    <CheckCircle2 size={13} color={BP.orange} />
+                    <span>Gold Product Assistant</span>
                   </div>
                 </div>
               </div>
@@ -363,7 +375,7 @@
                     Accenture <span className="font-normal text-gray-400">|</span> Data Products Hub
                   </div>
                   <div className="text-[10.5px] text-gray-400">
-                    Silver & Gold Product Assistants
+                    Bronze, Silver & Gold Product Assistants
                   </div>
                 </div>
               </button>
@@ -454,8 +466,8 @@
             </p>
           </div>
 
-          {/* 2 Clean Clickable Product Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+          {/* 3 Clean Clickable Product Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto">
             {PRODUCTS.map((prod) => {
               const IconCmp = prod.icon;
               return (

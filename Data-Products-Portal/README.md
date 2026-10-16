@@ -1,11 +1,14 @@
-# Accenture Data Products Portal (Silver & Gold)
+# Accenture Data Products Portal (Bronze, Silver & Gold)
 
-A unified enterprise portal that authenticates users via Accenture Corporate SSO and hosts direct, interactive access to the two Medallion Data Products deployed on Google Cloud Run:
+A unified enterprise portal that authenticates users via Accenture Corporate SSO and hosts direct, interactive access to the three Medallion Data Products deployed on Google Cloud Run:
 
-1. **Silver Product (BFSI Silver Layer & Schema Library)**
+1. **Bronze Product (Raw Ingest & Multi-Source Specification)**
+   - Live URL: `https://proxy-bfsi-bronze-frontend-v1-1-a74bkpgdzq-uc.a.run.app`
+   - Conversational AI agent for multi-source landing (files, APIs, databases, streaming Kafka, unstructured documents) generating DDL, object table metadata, and source data contracts.
+2. **Silver Product (Silver Layer & Schema Library)**
    - Live URL: `https://proxy-bfsi-silver-frontend-v1-1-743146199.us-central1.run.app/`
    - Canonical conformed models (Party, Account, Payment, Transaction, Loan, etc.) aligned with ISO 20022, BIAN, and FIBO standards.
-2. **Gold Product (Data Product Assistant v2)**
+3. **Gold Product (Data Product Assistant v2)**
    - Live URL: `https://proxy-dp-assistant-v2-frontend-preview-743146199.us-central1.run.app`
    - Conversational AI agentic platform for discovering, designing, and synthesizing consumption-ready Gold fact/dimensional marts with automated STTM and Unity Catalog governance.
 
@@ -51,7 +54,7 @@ Then navigate to `http://localhost:3000`.
 ```
 ┌─────────────────┐       ┌────────────────────────┐       ┌────────────────────────┐
 │  Bronze Layer   │ ----> │     Silver Product     │ ----> │      Gold Product      │
-│ (Raw Ingest)    │       │ (Conformed BFSI Models)│       │ (Data Product Assistant│
+│ (Raw Ingest)    │       │   (Conformed Models)   │       │ (Data Product Assistant│
 │                 │       │    Cloud Run v1.1      │       │     Cloud Run v2.0)    │
 └─────────────────┘       └────────────────────────┘       └────────────────────────┘
 ```

@@ -53,37 +53,49 @@ const DownloadIcon = () => (
 )
 
 export const DEFAULT_BRONZE_CONTRACT = {
-  dataContractSpecification: '0.9.3',
-  id: 'urn:datacontract:banking_bronze:core_ingestion',
+  dataContractSpecification: '2.2.0',
+  id: 'urn:datacontract:banking_bronze:aib:core_ingestion',
   info: {
     title: 'Bronze Core Banking Raw Ingestion Data Contract',
     version: '1.0.0',
     status: 'ACTIVE',
-    description: 'Official Bronze Layer Ingestion Data Contract governing raw landing entities, immutable partitions, ingestion envelopes, and automated source fidelity assertions.',
-    domain: 'Core Banking',
-    owner: 'Data Integration & Governance Team',
-    standards: ['ISO 20022', 'BIAN', 'Basel III'],
-    target_dataset: 'banking_bronze',
+    description: 'Official Bronze Layer Ingestion Data Contract governing raw landing entities, Apache Iceberg external tables, ingestion envelopes, and automated source fidelity assertions.',
+    domain: 'banking_bronze',
+    owner: 'Enterprise Data Integration & Lakehouse Team',
+    standards: ['ISO 20022', 'BIAN', 'Basel III', 'COBOL Copybooks'],
+    target_lake: 'Google Cloud Data Lake (BigLake Iceberg)',
+  },
+  servers: {
+    biglake_iceberg: {
+      type: 'bigquery_biglake',
+      tableFormat: 'ICEBERG',
+      dataset: 'banking_bronze',
+      storageBucket: 'aib-data-lake-bronze',
+    },
   },
   servicelevels: {
     freshness: {
       schedule: 'HOURLY_CDC_DAILY_BATCH',
-      maxLag: '1h lag',
-      cron: '0 * * * *',
+      maxLag: '24h',
+      cron: '0 4 * * *',
     },
     availability: {
-      percentage: '99.99%',
+      percentage: '99.9%',
     },
     retention: {
-      period: '10 years',
-      policy: 'Immutable Raw Storage with Lifecycle Archival',
+      period: '7_YEARS',
+      days: 2555,
+      regulatory_basis: 'Basel III / PRA Supervisory Statement SS34/15 / FCA SYSC',
+      policy: 'Immutable Apache Iceberg Tables with Lifecycle Archival',
     },
   },
   models: {
     brz_customer_raw: {
       description: 'Raw Customer Ingestion Landing Table',
       type: 'table',
+      tableFormat: 'ICEBERG',
       physicalName: 'banking_bronze.brz_customer_raw',
+      storageLocation: 'gs://aib-data-lake-bronze/core/brz_customer_raw/',
       fields: {
         ingest_batch_id: { type: 'string', description: 'Unique ingestion batch run identifier', primary: false, nullable: false },
         ingest_ts: { type: 'timestamp', description: 'Bronze landing timestamp for daily partitioning', primary: false, nullable: false },
@@ -100,7 +112,9 @@ export const DEFAULT_BRONZE_CONTRACT = {
     brz_account_raw: {
       description: 'Raw Core Account Landing Table',
       type: 'table',
+      tableFormat: 'ICEBERG',
       physicalName: 'banking_bronze.brz_account_raw',
+      storageLocation: 'gs://aib-data-lake-bronze/core/brz_account_raw/',
       fields: {
         ingest_batch_id: { type: 'string', description: 'Unique ingestion batch run identifier', primary: false, nullable: false },
         ingest_ts: { type: 'timestamp', description: 'Bronze landing timestamp for daily partitioning', primary: false, nullable: false },
@@ -117,44 +131,48 @@ export const DEFAULT_BRONZE_CONTRACT = {
   },
   quality: [
     {
+      name: 'BRZ-DQ-001-ENVELOPE-COMPLETENESS',
       type: 'custom',
-      description: 'Ingestion batch ID and timestamp must not be null',
-      mustBe: 'ingest_batch_id IS NOT NULL AND ingest_ts IS NOT NULL',
+      description: 'Mandatory Ingestion Envelope columns must never be NULL',
+      mustBe: 'ingest_batch_id IS NOT NULL AND ingest_ts IS NOT NULL AND raw_payload_hash IS NOT NULL',
       severity: 'CRITICAL',
     },
     {
-      type: 'custom',
-      description: 'Raw payload hash must be 64-character SHA-256 for non-corruption check',
+      name: 'BRZ-DQ-002-PAYLOAD-HASH-SHA256',
+      type: 'format',
+      description: 'Raw payload hash must be a valid 64-character lowercase SHA-256 string',
       mustBe: 'LENGTH(raw_payload_hash) = 64',
       severity: 'CRITICAL',
     },
     {
-      type: 'custom',
-      description: 'Primary customer identifier must not be null',
-      mustBe: 'cust_id IS NOT NULL',
-      severity: 'CRITICAL',
+      name: 'BRZ-DQ-004-TIMELINESS-SLA',
+      type: 'freshness',
+      description: 'Data must arrive and land within maximum allowable lag of 24 hours',
+      maxLag: '24h',
+      severity: 'HIGH',
     },
     {
-      type: 'custom',
-      description: 'Account number must not be null',
-      mustBe: 'account_num IS NOT NULL',
-      severity: 'CRITICAL',
+      name: 'BRZ-DQ-005-VOLUME-ANOMALY-BOUNDS',
+      type: 'volume',
+      description: 'Daily batch volume must be within +/- 20% of the moving average',
+      varianceThreshold: '0.20',
+      severity: 'MEDIUM',
     },
   ],
 }
 
 function generateYamlString(data) {
   const lines = []
-  lines.push(`dataContractSpecification: "${data.dataContractSpecification || '0.9.3'}"`)
-  lines.push(`id: "${data.id || 'urn:datacontract:banking_silver'}"`)
+  lines.push(`dataContractSpecification: "${data.dataContractSpecification || '2.2.0'}"`)
+  lines.push(`id: "${data.id || 'urn:datacontract:banking_bronze'}"`)
   lines.push('info:')
   lines.push(`  title: "${data.info?.title || ''}"`)
   lines.push(`  version: "${data.info?.version || '1.0.0'}"`)
   lines.push(`  status: "${data.info?.status || 'ACTIVE'}"`)
   lines.push(`  description: "${(data.info?.description || '').replace(/"/g, '\\"')}"`)
-  lines.push(`  domain: "${data.info?.domain || ''}"`)
+  lines.push(`  domain: "${data.info?.domain || 'banking_bronze'}"`)
   lines.push(`  owner: "${data.info?.owner || ''}"`)
-  lines.push(`  target_dataset: "${data.info?.target_dataset || 'banking_silver'}"`)
+  lines.push(`  target_dataset: "${data.info?.target_dataset || 'banking_bronze'}"`)
   lines.push('  standards:')
   ;(data.info?.standards || []).forEach(s => {
     lines.push(`    - "${s}"`)
@@ -497,22 +515,35 @@ export default function DataContractCard({ view, onSave, isModal, onClose }) {
             <FileCodeIcon />
           </div>
           <div>
-            <div style={{ fontSize: 13.5, fontWeight: 700, letterSpacing: '0.01em', display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span>{contract.info?.title || 'Silver Layer Data Contract'}</span>
+            <div style={{ fontSize: 13.5, fontWeight: 700, letterSpacing: '0.01em', display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+              <span>{contract.info?.title || 'Bronze Layer Ingestion Data Contract'}</span>
               <span style={{
-                background: '#A100FF',
+                background: '#734600',
                 color: '#ffffff',
                 fontSize: 9.5,
                 padding: '1px 7px',
                 borderRadius: 10,
                 fontWeight: 700,
-                border: '1px solid #C2A3FF',
+                border: '1px solid #FFA366',
               }}>
                 ✎ Editable Mode
               </span>
+              {contract.modality?.modality_label && (
+                <span style={{
+                  background: '#2d1810',
+                  color: '#fcd34d',
+                  fontSize: 9.5,
+                  padding: '1px 7px',
+                  borderRadius: 10,
+                  fontWeight: 700,
+                  border: '1px solid #d97706',
+                }}>
+                  {contract.modality.modality_label}
+                </span>
+              )}
             </div>
             <div style={{ fontSize: 10.5, color: '#E6DCFF', fontFamily: 'monospace', marginTop: 2 }}>
-              {contract.id || 'urn:datacontract:banking_silver'}
+              {contract.id || 'urn:datacontract:banking_bronze'}
             </div>
           </div>
         </div>
@@ -668,27 +699,30 @@ export default function DataContractCard({ view, onSave, isModal, onClose }) {
               <button
                 type="button"
                 onClick={() => {
-                  const mKey = `slv_new_entity_${Date.now().toString().slice(-4)}`
+                  const mKey = `brz_new_entity_${Date.now().toString().slice(-4)}`
                   setContract(prev => ({
                     ...prev,
                     models: {
                       ...prev.models,
                       [mKey]: {
-                        description: 'New Conformed Entity Table',
+                        description: 'New Raw Bronze Ingestion Table',
                         type: 'table',
-                        physicalName: `banking_silver.${mKey}`,
+                        physicalName: `banking_bronze.${mKey}`,
+                        tableFormat: 'ICEBERG',
                         fields: {
-                          surrogate_key: { type: 'string', description: 'Surrogate Primary Key', primary: true, nullable: false },
-                          id: { type: 'string', description: 'Business Identifier', primary: false, nullable: false },
+                          ingest_batch_id: { type: 'string', description: 'Batch Run Identifier', primary: false, nullable: false },
+                          ingest_ts: { type: 'timestamp', description: 'Ingestion Timestamp', primary: false, nullable: false },
+                          raw_payload_hash: { type: 'string', description: 'SHA-256 Payload Hash', primary: false, nullable: false },
+                          bronze_id: { type: 'string', description: 'Deterministic Landing UUID', primary: true, nullable: false },
                         },
                       },
                     },
                   }))
                 }}
                 style={{
-                  background: '#E6DCFF',
-                  color: '#460073',
-                  border: '1px solid #C2A3FF',
+                  background: '#FFE6CC',
+                  color: '#734600',
+                  border: '1px solid #FFA366',
                   borderRadius: 6,
                   padding: '4px 10px',
                   fontSize: 11,
@@ -717,14 +751,29 @@ export default function DataContractCard({ view, onSave, isModal, onClose }) {
                   gap: 8,
                 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1, minWidth: 260 }}>
-                    <span style={{ fontSize: 10.5, fontWeight: 700, color: '#460073', textTransform: 'uppercase' }}>Table:</span>
+                    <span style={{ fontSize: 10.5, fontWeight: 700, color: '#734600', textTransform: 'uppercase' }}>Table:</span>
                     <input
                       type="text"
                       value={modelDef.physicalName || modelName}
                       onChange={e => updateModelDef(modelName, 'physicalName', e.target.value)}
-                      style={{ ...inputStyle, width: 'auto', minWidth: 200, fontFamily: 'monospace', fontWeight: 700, color: '#460073' }}
+                      style={{ ...inputStyle, width: 'auto', minWidth: 200, fontFamily: 'monospace', fontWeight: 700, color: '#734600' }}
                       title="Delete previous value and type physical table name"
                     />
+                    {modelDef.modality?.cadence === 'STREAMING_REALTIME' && (
+                      <span style={{ background: '#ecfdf5', color: '#065f46', border: '1px solid #6ee7b7', padding: '2px 6px', borderRadius: 4, fontSize: 9.5, fontWeight: 700 }}>
+                        ⚡ STREAMING · REALTIME
+                      </span>
+                    )}
+                    {modelDef.modality?.structure === 'UNSTRUCTURED' && (
+                      <span style={{ background: '#fef3c7', color: '#92400e', border: '1px solid #fcd34d', padding: '2px 6px', borderRadius: 4, fontSize: 9.5, fontWeight: 700 }}>
+                        📄 UNSTRUCTURED · OBJECT TABLE
+                      </span>
+                    )}
+                    {(modelDef.tableFormat === 'ICEBERG' && modelDef.modality?.cadence !== 'STREAMING_REALTIME') && (
+                      <span style={{ background: '#fff7ed', color: '#9a3412', border: '1px solid #fdba74', padding: '2px 6px', borderRadius: 4, fontSize: 9.5, fontWeight: 700 }}>
+                        🧊 BATCH · ICEBERG
+                      </span>
+                    )}
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 2, minWidth: 260 }}>
                     <span style={{ fontSize: 10.5, fontWeight: 600, color: '#64748b' }}>Desc:</span>

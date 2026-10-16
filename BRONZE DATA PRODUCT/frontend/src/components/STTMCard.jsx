@@ -283,6 +283,22 @@ export default function STTMCard({ view, variant = 'gold' }) {
           <div className="sttm-card-title">{title}</div>
           {step_label && <div className="sttm-card-step">{step_label}</div>}
         </div>
+        {view.modality?.modality_label && (
+          <span style={{
+            marginLeft: 'auto',
+            fontSize: 10,
+            fontWeight: 700,
+            padding: '3px 8px',
+            borderRadius: 4,
+            border: '1px solid #FFA366',
+            background: '#FFE6CC',
+            color: '#734600',
+            letterSpacing: '0.04em',
+            textTransform: 'uppercase',
+          }}>
+            {view.modality.modality_label}
+          </span>
+        )}
       </div>
 
       {domainFramework && (

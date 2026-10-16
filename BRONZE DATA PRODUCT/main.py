@@ -109,14 +109,34 @@ def cmd_validate_env():
             print(f"\n[!] No credentials found. Run: gcloud auth application-default login")
 
 
-def cmd_server():
+def cmd_server(args: list[str] = None):
     """Start the FastAPI server with uvicorn."""
     import uvicorn
-    port = int(os.environ.get("PORT", "8080"))
+    args = args or []
+    port = int(os.environ.get("PORT", "8000"))
     host = os.environ.get("HOST", "0.0.0.0")
+    reload = os.environ.get("DEV_MODE", "false").lower() == "true" or "--reload" in args
+
+    for i, a in enumerate(args):
+        if a == "--port" and i + 1 < len(args):
+            try:
+                port = int(args[i + 1])
+            except ValueError:
+                pass
+        elif a.startswith("--port="):
+            try:
+                port = int(a.split("=")[1])
+            except ValueError:
+                pass
+        elif a == "--host" and i + 1 < len(args):
+            host = args[i + 1]
+        elif a.startswith("--host="):
+            host = a.split("=")[1]
+
     print(f"\n=== BFSI-Bronze-Agent Server ===")
     print(f"  Starting on http://{host}:{port}")
     print(f"  Docs: http://localhost:{port}/docs")
+    print(f"  Reload: {'enabled' if reload else 'disabled'}")
     print(f"  GCP Project: {os.environ.get('GCP_PROJECT_ID', '(not set)')}")
     print(f"  Gemini Model: {os.environ.get('GEMINI_MODEL', '(not set)')}")
     print(f"  Publisher Mode: {os.environ.get('BQ_PUBLISHER_MODE', 'auto')}\n")
@@ -130,7 +150,7 @@ def cmd_server():
         "server:app",
         host=host,
         port=port,
-        reload=os.environ.get("DEV_MODE", "false").lower() == "true",
+        reload=reload,
         log_level=os.environ.get("AGENT_LOG_LEVEL", "info").lower(),
     )
 
@@ -159,7 +179,7 @@ if __name__ == "__main__":
     rest = args[1:]
 
     if command == "server":
-        cmd_server()
+        cmd_server(rest)
     elif command == "pipeline":
         cmd_pipeline(rest)
     elif command in ("validate-env", "validate"):
