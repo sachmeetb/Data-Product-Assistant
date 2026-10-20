@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef } from 'react'
 import LeftPane from './components/LeftPane'
 import ChatPane from './components/ChatPane'
 import RightPane from './components/RightPane'
@@ -41,6 +41,8 @@ export default function App() {
   const [editFormOpen, setEditFormOpen]       = useState(false)
   const [tweakMode, setTweakMode]             = useState(null) // 'er' | 'sttm' | null
   const [navigatorOpen, setNavigatorOpen]     = useState(false)
+  const latestContractRef                     = useRef(null)
+  const latestGlossaryRef                     = useRef(null)
 
   const allowUpload = UPLOAD_ALLOWED_STEPS.has(currentStep) && !pendingFile
 
@@ -56,7 +58,10 @@ export default function App() {
       const reqData = data.messages.map(m => m.requirement_data).filter(Boolean).at(-1)
       if (reqData) setRequirementData(reqData)
       const gloss = data.messages.map(m => m.glossary).filter(Boolean).at(-1)
-      if (gloss) setGlossaryData(gloss)
+      if (gloss) {
+        setGlossaryData(gloss)
+        latestGlossaryRef.current = gloss
+      }
 
       setMessages(prev => {
         const withoutLoading = prev
@@ -72,6 +77,8 @@ export default function App() {
             : idx === data.messages.length - 1 ? (data.chips || []) : [],
           discovery_view: msg.discovery_view
             ?? (idx === data.messages.length - 1 ? data.discovery_view : undefined),
+          entity_selector_view: msg.entity_selector_view
+            ?? (idx === data.messages.length - 1 ? data.entity_selector_view : undefined),
           glossary: msg.glossary ?? undefined,
           classification_view: msg.classification_view ?? undefined,
           challenger_view: msg.challenger_view ?? undefined,
@@ -106,6 +113,7 @@ export default function App() {
         m.id === thinkId
           ? { ...m, loading: false, text: data.text || '', chips: data.chips || [],
               discovery_view: data.discovery_view,
+              entity_selector_view: data.entity_selector_view,
               classification_view: data.classification_view }
           : m
       ))
@@ -134,6 +142,8 @@ export default function App() {
       const data = await sendChatMessage(sessionId, text, {
         action: opts.action,
         fileRefId: opts.fileRefId,
+        contract: opts.contract,
+        glossary: opts.glossary,
       })
       setSessionId(data.session_id)
       applyResponse(data, thinkId)
@@ -146,10 +156,59 @@ export default function App() {
     setSending(false)
   }, [sessionId, sending, applyResponse])
 
+  const handleContractChange = useCallback((updatedContract) => {
+    latestContractRef.current = updatedContract
+  }, [])
+
+  const handleSaveContract = useCallback((finalizedContract) => {
+    const contractToSave = finalizedContract || latestContractRef.current || DEFAULT_SILVER_CONTRACT
+    latestContractRef.current = contractToSave
+    sendMessage('Apply & Save Contract', {
+      action: 'save_contract',
+      contract: contractToSave,
+    })
+  }, [sendMessage])
+
+  const handleGlossaryChange = useCallback((updatedGlossary) => {
+    latestGlossaryRef.current = updatedGlossary
+  }, [])
+
+  const handleSaveGlossary = useCallback((finalizedGlossary) => {
+    const glossToSave = finalizedGlossary || latestGlossaryRef.current
+    if (glossToSave) {
+      latestGlossaryRef.current = glossToSave
+      setGlossaryData(glossToSave)
+    }
+  }, [])
+
+  const handleConfirmWithGlossary = useCallback((finalizedGlossary) => {
+    const glossToSave = finalizedGlossary || latestGlossaryRef.current
+    if (glossToSave) {
+      latestGlossaryRef.current = glossToSave
+      setGlossaryData(glossToSave)
+    }
+    sendMessage('Confirm Requirement', {
+      action: 'confirm_req',
+      glossary: glossToSave,
+    })
+  }, [sendMessage])
+
   // Intercept chip clicks — "Edit" / "Let me tweak this" open the form; rest go to backend
   const handleChipClick = useCallback((label) => {
     if ((label === 'Edit' || label === 'Let me tweak this' || label === 'Let me tweak one') && requirementData) {
       setEditFormOpen(true)
+      return
+    }
+    if (label === 'Apply & Save Contract' || label === 'Save Contract') {
+      handleSaveContract(latestContractRef.current)
+      return
+    }
+    if (label === 'Confirm Requirement' || label === 'Design Silver Schema') {
+      sendMessage(label, { glossary: latestGlossaryRef.current })
+      return
+    }
+    if (label === 'Open & Edit Existing Silver Structure') {
+      sendMessage(label, { action: 'open_existing_structure', glossary: latestGlossaryRef.current })
       return
     }
     if (label === DDI_CHIP_ADJUST_ER) {
@@ -161,7 +220,25 @@ export default function App() {
       return
     }
     sendMessage(label)
-  }, [requirementData, sendMessage])
+  }, [requirementData, sendMessage, handleSaveContract])
+
+  const handleApplyEntityScope = useCallback(({ selectedEntities, mode, domainLabel }) => {
+    if (!selectedEntities || selectedEntities.length === 0) return
+    const prompt = mode === 'all'
+      ? `Select All Entities (${selectedEntities.length})`
+      : mode === 'single'
+        ? `Select Only ${selectedEntities[0]}`
+        : `Proceed with selected entities for ${domainLabel || 'domain'}: ${selectedEntities.join(', ')}`
+    sendMessage(prompt, { action: 'select_entities' })
+  }, [sendMessage])
+
+  const handleOpenExistingStructure = useCallback(({ selectedEntities, domainName, domainLabel } = {}) => {
+    const entityNote = selectedEntities?.length
+      ? ` with entities: ${selectedEntities.join(', ')}`
+      : ''
+    const prompt = `Open and edit existing Silver structure for ${domainLabel || domainName || 'Core Banking & Accounts'}${entityNote}`
+    sendMessage(prompt, { action: 'open_existing_structure', glossary: latestGlossaryRef.current })
+  }, [sendMessage])
 
   const handleTweakSubmit = useCallback((text) => {
     const mode = tweakMode
@@ -172,21 +249,22 @@ export default function App() {
 
   const handleTweakClose = useCallback(() => setTweakMode(null), [])
 
-  const handleEditSubmit = useCallback((updates) => {
+  const handleEditSubmit = useCallback((updates, updatedGlossary) => {
     setEditFormOpen(false)
+    if (updatedGlossary) {
+      latestGlossaryRef.current = updatedGlossary
+      setGlossaryData(updatedGlossary)
+    }
     const lines = Object.entries(updates)
       .filter(([, v]) => v !== null && v !== undefined && String(v).trim() !== '')
       .map(([k, v]) => {
         if (k === 'Glossary Definitions') {
-          // Pipe-separated "Name: new description" pairs — call out that
-          // these are data-point description updates so the agent re-emits
-          // the matching data_points entries with the new descriptions.
           return `- Update these data point descriptions (one per pipe): ${v}`
         }
         return `- ${k}: ${v}`
       })
     const msg = `Please update my requirement with the following changes:\n${lines.join('\n')}`
-    sendMessage(msg, { action: 'edit' })
+    sendMessage(msg, { action: 'edit', glossary: updatedGlossary || latestGlossaryRef.current })
   }, [sendMessage])
 
   const handleEditClose = useCallback(() => setEditFormOpen(false), [])
@@ -234,6 +312,14 @@ export default function App() {
         onEditSubmit={handleEditSubmit}
         onEditClose={handleEditClose}
         onOpenNavigator={() => setNavigatorOpen(true)}
+        sessionId={sessionId}
+        onApplyEntityScope={handleApplyEntityScope}
+        onOpenExistingStructure={handleOpenExistingStructure}
+        onSaveContract={handleSaveContract}
+        onContractChange={handleContractChange}
+        onGlossaryChange={handleGlossaryChange}
+        onSaveGlossary={handleSaveGlossary}
+        onConfirmWithGlossary={handleConfirmWithGlossary}
       />
       <RightPane generatedFiles={generatedFiles} onDownload={handleDownload} />
       {tweakMode && (
@@ -246,7 +332,14 @@ export default function App() {
       <HierarchicalSelectorModal
         isOpen={navigatorOpen}
         onClose={() => setNavigatorOpen(false)}
+        sessionId={sessionId}
         onApply={(text) => sendMessage(text)}
+        onOpenExistingStructure={(payload) => {
+          handleOpenExistingStructure({
+            selectedEntities: payload?.selected_entities,
+            domainName: payload?.domain_name,
+          })
+        }}
       />
     </div>
   )

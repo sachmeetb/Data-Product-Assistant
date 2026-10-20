@@ -31,3 +31,32 @@ export async function fetchDomainFramework(domainName) {
   if (!res.ok) throw new Error(`Failed to load domain '${domainName}': ${res.status}`);
   return res.json();
 }
+
+export async function fetchNavigatorTree() {
+  const res = await fetch(`${API_BASE}/catalog/navigator`);
+  if (!res.ok) throw new Error(`Failed to load navigator tree: ${res.status}`);
+  return res.json();
+}
+
+export async function fetchDomainEntities(domainName) {
+  const res = await fetch(`${API_BASE}/catalog/domains/${encodeURIComponent(domainName)}/entities`);
+  if (!res.ok) throw new Error(`Failed to load entities for '${domainName}': ${res.status}`);
+  return res.json();
+}
+
+export async function fetchSourceModels(industry = '') {
+  const q = industry ? `?industry=${encodeURIComponent(industry)}` : '';
+  const res = await fetch(`${API_BASE}/catalog/source-models${q}`);
+  if (!res.ok) throw new Error(`Failed to load source models: ${res.status}`);
+  return res.json();
+}
+
+export async function submitNavigatorSelection(payload) {
+  const res = await fetch(`${API_BASE}/catalog/navigator/select`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) throw new Error(`Navigator selection failed: ${res.status}`);
+  return res.json();
+}

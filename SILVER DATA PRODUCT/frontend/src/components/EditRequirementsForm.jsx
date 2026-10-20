@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 
 const FRESHNESS_OPTIONS = ['', 'real-time', 'hourly', 'daily', 'weekly', 'monthly', 'quarterly']
+const SQL_TYPES = ['STRING', 'NUMERIC', 'INT64', 'FLOAT64', 'BOOL', 'DATE', 'TIMESTAMP', 'JSON']
 
 function dpLabel(dp) {
   if (!dp || typeof dp !== 'object') return String(dp)
@@ -32,31 +33,95 @@ export default function EditRequirementsForm({ data, glossary, onSubmit, onClose
     ).join(', '),
   })
 
-  // Track per-entry glossary descriptions. Keyed by entry name so we can
-  // diff against the original on submit and only forward changed descriptions.
-  const originalDescriptions = (glossary?.entries || []).reduce((acc, e) => {
-    acc[e.name] = e.description || ''
-    return acc
-  }, {})
-  const [glossEdits, setGlossEdits] = useState(originalDescriptions)
+  // Normalize entries with qualified key (entity_name.name) so same column names in different tables don't collide
+  const flatEntries = useMemo(() => {
+    if (Array.isArray(glossary?.entities) && glossary.entities.length > 0) {
+      const list = []
+      for (const ent of glossary.entities) {
+        for (const attr of (ent.attributes || [])) {
+          if (attr.included !== false) {
+            const colName = attr.column_name || attr.name
+            list.push({
+              ...attr,
+              entity_name: ent.table_name,
+              name: colName,
+              column_name: colName,
+              qualified_key: `${ent.table_name}.${colName}`,
+            })
+          }
+        }
+      }
+      return list
+    }
+    return (glossary?.entries || []).map(e => ({
+      ...e,
+      entity_name: e.entity_name || 'slv_entity',
+      column_name: e.column_name || e.name,
+      qualified_key: `${e.entity_name || 'slv_entity'}.${e.column_name || e.name}`,
+    }))
+  }, [glossary])
 
-  const setGloss = (name, val) =>
-    setGlossEdits(prev => ({ ...prev, [name]: val }))
+  const originalDescriptions = useMemo(() => {
+    return flatEntries.reduce((acc, e) => {
+      acc[e.qualified_key] = e.description || ''
+      return acc
+    }, {})
+  }, [flatEntries])
+
+  const [glossEdits, setGlossEdits] = useState(originalDescriptions)
+  const [typeEdits, setTypeEdits] = useState(() =>
+    flatEntries.reduce((acc, e) => {
+      acc[e.qualified_key] = (e.sql_type || e.data_type || 'STRING').toUpperCase()
+      return acc
+    }, {})
+  )
+  const [activeEntityFilter, setActiveEntityFilter] = useState('ALL')
+
+  const entityNames = useMemo(
+    () => Array.from(new Set(flatEntries.map(e => e.entity_name))),
+    [flatEntries]
+  )
+
+  const setGloss = (qKey, val) =>
+    setGlossEdits(prev => ({ ...prev, [qKey]: val }))
+
+  const setSqlType = (qKey, val) =>
+    setTypeEdits(prev => ({ ...prev, [qKey]: val }))
 
   const set = (key, val) => setForm(prev => ({ ...prev, [key]: val }))
 
   const handleSubmit = (e) => {
     e.preventDefault()
     const updates = { ...form }
-    // Glossary diff — only entries whose description actually changed
     const changed = Object.entries(glossEdits)
-      .filter(([name, desc]) => (originalDescriptions[name] || '') !== (desc || ''))
-      .map(([name, desc]) => `${name}: ${desc}`)
+      .filter(([qKey, desc]) => (originalDescriptions[qKey] || '') !== (desc || ''))
+      .map(([qKey, desc]) => {
+        const colName = qKey.includes('.') ? qKey.split('.').slice(1).join('.') : qKey
+        return `${colName}: ${desc}`
+      })
     if (changed.length) {
       updates['Glossary Definitions'] = changed.join(' | ')
     }
-    onSubmit(updates)
+
+    // Build structured glossary payload so server updates custom_entities directly
+    const updatedEntries = flatEntries.map(entry => ({
+      ...entry,
+      description: glossEdits[entry.qualified_key] ?? entry.description ?? '',
+      sql_type: typeEdits[entry.qualified_key] ?? entry.sql_type ?? 'STRING',
+      data_type: typeEdits[entry.qualified_key] ?? entry.sql_type ?? 'STRING',
+    }))
+    const updatedGlossary = {
+      ...(glossary || {}),
+      entries: updatedEntries,
+    }
+
+    onSubmit(updates, updatedGlossary)
   }
+
+  const visibleEntries = useMemo(
+    () => flatEntries.filter(e => activeEntityFilter === 'ALL' || e.entity_name === activeEntityFilter),
+    [flatEntries, activeEntityFilter]
+  )
 
   return (
     <div className="erf-overlay">
@@ -67,7 +132,7 @@ export default function EditRequirementsForm({ data, glossary, onSubmit, onClose
               <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
               <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
             </svg>
-            Edit Requirement
+            Edit Requirement &amp; Entity Glossary
           </div>
           <button className="erf-close" onClick={onClose} type="button" aria-label="Close">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -148,20 +213,81 @@ export default function EditRequirementsForm({ data, glossary, onSubmit, onClose
             </div>
           </div>
 
-          {glossary?.entries?.length > 0 && (
+          {flatEntries.length > 0 && (
             <div className="erf-gloss-section">
-              <div className="erf-gloss-title">
-                Glossary Definitions
-                <span className="erf-hint">edit any description below — leave others untouched</span>
+              <div className="erf-gloss-title" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
+                <div>
+                  Entity-Scoped Glossary Definitions ({flatEntries.length} attributes)
+                  <span className="erf-hint">edit any business definition or SQL type below</span>
+                </div>
+                {entityNames.length > 1 && (
+                  <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+                    <button
+                      type="button"
+                      onClick={() => setActiveEntityFilter('ALL')}
+                      style={{
+                        fontSize: 11,
+                        padding: '2px 8px',
+                        borderRadius: 4,
+                        border: '1px solid #CBD5E1',
+                        background: activeEntityFilter === 'ALL' ? '#7500C0' : '#FFFFFF',
+                        color: activeEntityFilter === 'ALL' ? '#FFFFFF' : '#334155',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      All ({flatEntries.length})
+                    </button>
+                    {entityNames.map(entName => (
+                      <button
+                        key={entName}
+                        type="button"
+                        onClick={() => setActiveEntityFilter(entName)}
+                        style={{
+                          fontSize: 11,
+                          fontFamily: 'monospace',
+                          padding: '2px 8px',
+                          borderRadius: 4,
+                          border: '1px solid #CBD5E1',
+                          background: activeEntityFilter === entName ? '#7500C0' : '#FFFFFF',
+                          color: activeEntityFilter === entName ? '#FFFFFF' : '#334155',
+                          cursor: 'pointer',
+                        }}
+                      >
+                        {entName}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
-              {glossary.entries.map((entry, i) => (
-                <div key={i} className="erf-gloss-row">
-                  <div className="erf-gloss-name">{entry.name}</div>
+              {visibleEntries.map((entry) => (
+                <div key={entry.qualified_key} className="erf-gloss-row" style={{ display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 10 }}>
+                  <div className="erf-gloss-name" style={{ display: 'flex', alignItems: 'center', gap: 6, paddingTop: 0 }}>
+                    <span style={{ fontSize: 10.5, color: '#6B21A8', background: '#F3E8FF', padding: '1px 6px', borderRadius: 4, fontFamily: 'monospace' }}>
+                      {entry.entity_name}
+                    </span>
+                    <span style={{ fontFamily: 'monospace', fontWeight: 700 }}>{entry.name}</span>
+                    <select
+                      value={typeEdits[entry.qualified_key] || 'STRING'}
+                      onChange={e => setSqlType(entry.qualified_key, e.target.value)}
+                      style={{
+                        marginLeft: 'auto',
+                        fontSize: 11,
+                        fontFamily: 'monospace',
+                        padding: '2px 6px',
+                        borderRadius: 4,
+                        border: '1px solid #CBD5E1',
+                      }}
+                    >
+                      {SQL_TYPES.map(t => (
+                        <option key={t} value={t}>{t}</option>
+                      ))}
+                    </select>
+                  </div>
                   <textarea
                     className="erf-textarea"
                     rows={2}
-                    value={glossEdits[entry.name] ?? entry.description ?? ''}
-                    onChange={e => setGloss(entry.name, e.target.value)}
+                    value={glossEdits[entry.qualified_key] ?? entry.description ?? ''}
+                    onChange={e => setGloss(entry.qualified_key, e.target.value)}
                   />
                 </div>
               ))}

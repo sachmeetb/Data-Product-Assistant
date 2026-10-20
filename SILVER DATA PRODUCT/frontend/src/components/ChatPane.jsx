@@ -11,6 +11,14 @@ export default function ChatPane({
   pendingFile, onUseFile, onDismissFile,
   editFormOpen, requirementData, glossaryData, onEditSubmit, onEditClose,
   onOpenNavigator,
+  sessionId,
+  onApplyEntityScope,
+  onOpenExistingStructure,
+  onSaveContract,
+  onContractChange,
+  onGlossaryChange,
+  onSaveGlossary,
+  onConfirmWithGlossary,
 }) {
   const bottomRef = useRef(null)
   const [downloading, setDownloading] = useState(false)
@@ -98,27 +106,33 @@ export default function ChatPane({
               Domain Navigator
             </button>
           )}
-          {messages.some(m => m.data_contract_view) && (
-            <button
-              className="header-download-btn"
-              onClick={() => setContractModalOpen(true)}
-              title="Open & Edit Silver Data Contract"
-              style={{
-                background: '#E6DCFF',
-                color: '#460073',
-                border: '1px solid #C2A3FF',
-                fontWeight: 700,
-              }}
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                <polyline points="14 2 14 8 20 8" />
-                <path d="m10 13-2 2 2 2" />
-                <path d="m14 13 2 2-2 2" />
-              </svg>
-              Silver Data Contract
-            </button>
-          )}
+          <button
+            className="header-download-btn"
+            onClick={() => {
+              if (messages.some(m => m.data_contract_view)) {
+                setContractModalOpen(true)
+              } else if (onOpenExistingStructure) {
+                onOpenExistingStructure({})
+              } else {
+                setContractModalOpen(true)
+              }
+            }}
+            title="Open, Inspect & Extend Existing Silver Data Structure / Contract"
+            style={{
+              background: '#E6DCFF',
+              color: '#460073',
+              border: '1px solid #C2A3FF',
+              fontWeight: 700,
+            }}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+              <polyline points="14 2 14 8 20 8" />
+              <path d="m10 13-2 2 2 2" />
+              <path d="m14 13 2 2-2 2" />
+            </svg>
+            {messages.some(m => m.data_contract_view) ? 'Silver Data Contract' : 'Open Silver Structure'}
+          </button>
           <button className="header-download-btn" onClick={downloadPDF} disabled={downloading} title="Download conversation as PDF">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
@@ -147,7 +161,19 @@ export default function ChatPane({
 
       <div className="messages" id="chat-messages">
         {messages.map(msg => (
-          <MessageRow key={msg.id} msg={msg} onChipClick={handleChipClick} />
+          <MessageRow
+            key={msg.id}
+            msg={msg}
+            onChipClick={handleChipClick}
+            sessionId={sessionId}
+            onApplyEntityScope={onApplyEntityScope}
+            onOpenExistingStructure={onOpenExistingStructure}
+            onSaveContract={onSaveContract}
+            onContractChange={onContractChange}
+            onGlossaryChange={onGlossaryChange}
+            onSaveGlossary={onSaveGlossary}
+            onConfirmWithGlossary={onConfirmWithGlossary}
+          />
         ))}
         <div ref={bottomRef} />
       </div>
@@ -213,6 +239,9 @@ export default function ChatPane({
           }}>
             <DataContractCard
               view={messages.slice().reverse().find(m => m.data_contract_view)?.data_contract_view || DEFAULT_SILVER_CONTRACT}
+              sessionId={sessionId}
+              onSave={onSaveContract}
+              onContractChange={onContractChange}
               isModal={true}
               onClose={() => setContractModalOpen(false)}
             />

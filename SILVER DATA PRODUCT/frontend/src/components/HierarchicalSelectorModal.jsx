@@ -1,15 +1,15 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { fetchIndustries, fetchIndustryDomains } from '../api/catalog';
+import { fetchIndustries, fetchIndustryDomains, submitNavigatorSelection } from '../api/catalog';
 
-export default function HierarchicalSelectorModal({ isOpen, onClose, onApply }) {
+export default function HierarchicalSelectorModal({ isOpen, sessionId, onClose, onApply, onOpenExistingStructure }) {
   const [industries, setIndustries] = useState([]);
-  const [selectedIndustryId, setSelectedIndustryId] = useState('energy_industrial');
+  const [selectedIndustryId, setSelectedIndustryId] = useState('banking');
   const [domains, setDomains] = useState([]);
+  const [activeDomainFilter, setActiveDomainFilter] = useState('ALL');
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  
+
   // Selection state: map of table -> Set of attribute names
-  // e.g. { 'water_quality_telemetry': Set(['asset_id', 'ph_level', ...]) }
   const [selectedAttributes, setSelectedAttributes] = useState({});
   const [expandedDomains, setExpandedDomains] = useState({});
   const [expandedTables, setExpandedTables] = useState({});
@@ -40,13 +40,15 @@ export default function HierarchicalSelectorModal({ isOpen, onClose, onApply }) 
         const data = await fetchIndustryDomains(selectedIndustryId);
         if (data && data.domains) {
           setDomains(data.domains);
-          // auto-expand all domains in this industry
+          setActiveDomainFilter('ALL');
           const expDom = {};
           const expTab = {};
           data.domains.forEach(d => {
-            expDom[d.domain_name] = true;
-            (d.entities || []).forEach(e => {
-              expTab[`${d.domain_name}::${e.table_name}`] = true;
+            const dName = d.domain_name || d.display_name || d.name;
+            expDom[dName] = true;
+            const entList = Array.isArray(d.entities) ? d.entities : (d.entities_list || []);
+            entList.forEach(e => {
+              expTab[`${dName}::${e.table_name}`] = false;
             });
           });
           setExpandedDomains(expDom);
@@ -84,22 +86,40 @@ export default function HierarchicalSelectorModal({ isOpen, onClose, onApply }) 
   const handleTableToggleAll = (tableName, allCols) => {
     setSelectedAttributes(prev => {
       const current = prev[tableName] ? new Set(prev[tableName]) : new Set();
-      const allSelected = allCols.every(c => current.has(c.column_name));
+      const allSelected = allCols.length > 0 && allCols.every(c => current.has(c.column_name || c.name));
       if (allSelected) {
         const next = { ...prev };
         delete next[tableName];
         return next;
       } else {
-        return { ...prev, [tableName]: new Set(allCols.map(c => c.column_name)) };
+        return { ...prev, [tableName]: new Set(allCols.map(c => c.column_name || c.name)) };
       }
+    });
+  };
+
+  const handleSelectOnlySingleEntity = (tableName, allCols) => {
+    setSelectedAttributes({
+      [tableName]: new Set(allCols.map(c => c.column_name || c.name)),
+    });
+  };
+
+  const handleSelectAllInDomain = (domainObj) => {
+    const entList = Array.isArray(domainObj.entities) ? domainObj.entities : (domainObj.entities_list || []);
+    setSelectedAttributes(prev => {
+      const next = { ...prev };
+      entList.forEach(e => {
+        next[e.table_name] = new Set((e.columns || []).map(c => c.column_name || c.name));
+      });
+      return next;
     });
   };
 
   const handleSelectAllInIndustry = () => {
     const next = {};
     domains.forEach(d => {
-      (d.entities || []).forEach(e => {
-        next[e.table_name] = new Set((e.columns || []).map(c => c.column_name));
+      const entList = Array.isArray(d.entities) ? d.entities : (d.entities_list || []);
+      entList.forEach(e => {
+        next[e.table_name] = new Set((e.columns || []).map(c => c.column_name || c.name));
       });
     });
     setSelectedAttributes(next);
@@ -109,32 +129,86 @@ export default function HierarchicalSelectorModal({ isOpen, onClose, onApply }) 
     setSelectedAttributes({});
   };
 
+  const selectedTableNames = useMemo(() => {
+    return Object.entries(selectedAttributes)
+      .filter(([, s]) => s && s.size > 0)
+      .map(([tbl]) => tbl);
+  }, [selectedAttributes]);
+
   const totalSelectedAttributes = useMemo(() => {
     return Object.values(selectedAttributes).reduce((acc, s) => acc + (s ? s.size : 0), 0);
   }, [selectedAttributes]);
 
-  const totalSelectedTables = useMemo(() => {
-    return Object.values(selectedAttributes).filter(s => s && s.size > 0).length;
-  }, [selectedAttributes]);
+  const totalSelectedTables = selectedTableNames.length;
 
-  const handleApplySelection = () => {
-    const currentIndustry = industries.find(i => i.id === selectedIndustryId);
-    const lines = [];
-    lines.push(`Augment Conformed Silver Model for Industry: **${currentIndustry ? currentIndustry.name : selectedIndustryId}**`);
-    
+  const activeDomainName = useMemo(() => {
+    if (activeDomainFilter !== 'ALL') return activeDomainFilter;
+    // Find which domain contains the first selected table
+    for (const d of domains) {
+      const dName = d.domain_name || d.display_name || d.name;
+      const entList = Array.isArray(d.entities) ? d.entities : (d.entities_list || []);
+      if (entList.some(e => selectedTableNames.includes(e.table_name))) {
+        return dName;
+      }
+    }
+    return domains[0]?.domain_name || domains[0]?.display_name || 'Core Banking & Accounts';
+  }, [activeDomainFilter, domains, selectedTableNames]);
+
+  const buildPlainAttributesMap = () => {
+    const out = {};
     Object.entries(selectedAttributes).forEach(([tbl, colsSet]) => {
       if (colsSet && colsSet.size > 0) {
-        lines.push(`- **Table \`${tbl}\`**: ${Array.from(colsSet).map(c => `\`${c}\``).join(', ')}`);
+        out[tbl] = Array.from(colsSet);
       }
     });
+    return out;
+  };
+
+  const handleApplySelection = async () => {
+    const currentIndustry = industries.find(i => i.id === selectedIndustryId);
+    const plainAttrs = buildPlainAttributesMap();
+    const lines = [];
+    lines.push(`Augment Conformed Silver Model for Industry: **${currentIndustry ? currentIndustry.name : selectedIndustryId}** — Domain: **${activeDomainName}**`);
+    Object.entries(plainAttrs).forEach(([tbl, colsArr]) => {
+      lines.push(`- **Table \`${tbl}\`**: ${colsArr.map(c => `\`${c}\``).join(', ')}`);
+    });
+
+    try {
+      await submitNavigatorSelection({
+        session_id: sessionId,
+        industry_id: selectedIndustryId,
+        domain_name: activeDomainName,
+        selection_mode: selectedTableNames.length === 1 ? 'single' : 'multiple',
+        selected_entities: selectedTableNames,
+        selected_attributes: plainAttrs,
+      });
+    } catch (err) {
+      console.warn('Navigator backend sync warning:', err);
+    }
 
     const formattedPrompt = lines.join('\n');
     onApply(formattedPrompt, {
-      industry_id: selectedIndustryId,
-      selected_attributes: selectedAttributes,
+      action: 'navigator_apply',
+      industryId: selectedIndustryId,
+      domainName: activeDomainName,
+      selectedEntities: selectedTableNames,
+      selectedAttributes: plainAttrs,
       table_count: totalSelectedTables,
       attribute_count: totalSelectedAttributes,
     });
+    onClose();
+  };
+
+  const handleOpenExisting = () => {
+    const plainAttrs = buildPlainAttributesMap();
+    if (onOpenExistingStructure) {
+      onOpenExistingStructure({
+        industryId: selectedIndustryId,
+        domainName: activeDomainName,
+        selectedEntities: selectedTableNames,
+        selectedAttributes: plainAttrs,
+      });
+    }
     onClose();
   };
 
@@ -161,7 +235,7 @@ export default function HierarchicalSelectorModal({ isOpen, onClose, onApply }) 
         background: '#ffffff',
         borderRadius: 12,
         width: '100%',
-        maxWidth: 950,
+        maxWidth: 1020,
         height: '88vh',
         display: 'flex',
         flexDirection: 'column',
@@ -182,7 +256,7 @@ export default function HierarchicalSelectorModal({ isOpen, onClose, onApply }) 
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <span style={{ fontSize: 18 }}>🌲</span>
               <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, letterSpacing: '-0.01em' }}>
-                Hierarchical Domain & Schema Navigator
+                Enterprise Domain &amp; Silver Schema Navigator
               </h3>
               <span style={{
                 background: 'rgba(255,255,255,0.2)',
@@ -191,11 +265,11 @@ export default function HierarchicalSelectorModal({ isOpen, onClose, onApply }) 
                 padding: '2px 8px',
                 borderRadius: 12,
               }}>
-                Industry → Domain → Table → Attributes
+                Industry → Domain → Entities (All / Single / Multi) → Attributes
               </span>
             </div>
             <p style={{ margin: '4px 0 0', fontSize: 11.5, opacity: 0.9 }}>
-              Select specific canonical tables and attributes to augment your Silver Data Contract.
+              Navigate available domains across industries, select all entities, a single entity, or multiple entities, or open an existing Silver structure to edit.
             </p>
           </div>
           <button
@@ -249,13 +323,69 @@ export default function HierarchicalSelectorModal({ isOpen, onClose, onApply }) 
                 alignItems: 'center',
                 gap: 5,
                 boxShadow: selectedIndustryId === ind.id ? '0 2px 4px rgba(117,0,192,0.2)' : 'none',
-                transition: 'all 0.15s ease',
               }}
             >
               <span>{ind.icon || '🏷️'}</span>
               <span>{ind.name}</span>
             </button>
           ))}
+        </div>
+
+        {/* Domain Navigation Bar */}
+        <div style={{
+          padding: '8px 24px',
+          background: '#faf5ff',
+          borderBottom: '1px solid #e9d5ff',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 6,
+          overflowX: 'auto',
+        }}>
+          <span style={{ fontSize: 10.5, fontWeight: 700, color: '#6b21a8', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
+            Available Domains:
+          </span>
+          <button
+            type="button"
+            onClick={() => setActiveDomainFilter('ALL')}
+            style={{
+              background: activeDomainFilter === 'ALL' ? '#460073' : '#ffffff',
+              color: activeDomainFilter === 'ALL' ? '#ffffff' : '#460073',
+              border: '1px solid #d8b4fe',
+              borderRadius: 14,
+              padding: '3px 10px',
+              fontSize: 11,
+              fontWeight: 700,
+              cursor: 'pointer',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            All Domains ({domains.length})
+          </button>
+          {domains.map(d => {
+            const dName = d.domain_name || d.display_name || d.name;
+            const entCount = Array.isArray(d.entities) ? d.entities.length : (d.entities_list?.length || d.entity_count || 0);
+            const isActive = activeDomainFilter === dName;
+            return (
+              <button
+                key={dName}
+                type="button"
+                onClick={() => setActiveDomainFilter(dName)}
+                style={{
+                  background: isActive ? '#7500C0' : '#ffffff',
+                  color: isActive ? '#ffffff' : '#334155',
+                  border: `1px solid ${isActive ? '#7500C0' : '#cbd5e1'}`,
+                  borderRadius: 14,
+                  padding: '3px 10px',
+                  fontSize: 11,
+                  fontWeight: isActive ? 700 : 500,
+                  cursor: 'pointer',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {dName} ({entCount})
+              </button>
+            );
+          })}
         </div>
 
         {/* Filter and Quick Action Bar */}
@@ -271,7 +401,7 @@ export default function HierarchicalSelectorModal({ isOpen, onClose, onApply }) 
           <div style={{ position: 'relative', flex: 1, maxWidth: 420 }}>
             <input
               type="text"
-              placeholder="Search domains, tables, or column names..."
+              placeholder="Search domains, tables (e.g. slv_account), or column names..."
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
               style={{
@@ -335,19 +465,23 @@ export default function HierarchicalSelectorModal({ isOpen, onClose, onApply }) 
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               {domains.map(d => {
-                const isDomExpanded = !!expandedDomains[d.domain_name];
-                const entities = d.entities || [];
+                const dName = d.domain_name || d.display_name || d.name;
+                if (activeDomainFilter !== 'ALL' && activeDomainFilter !== dName) return null;
+
+                const isDomExpanded = !!expandedDomains[dName];
+                const entities = Array.isArray(d.entities) ? d.entities : (d.entities_list || []);
                 const filteredEntities = entities.filter(ent => {
                   if (!q) return true;
-                  if (d.domain_name.toLowerCase().includes(q)) return true;
+                  if (dName.toLowerCase().includes(q)) return true;
                   if (ent.table_name.toLowerCase().includes(q)) return true;
-                  return (ent.columns || []).some(col => col.column_name.toLowerCase().includes(q));
+                  if ((ent.description || '').toLowerCase().includes(q)) return true;
+                  return (ent.columns || []).some(col => (col.column_name || col.name || '').toLowerCase().includes(q));
                 });
 
                 if (q && filteredEntities.length === 0) return null;
 
                 return (
-                  <div key={d.domain_name} style={{
+                  <div key={dName} style={{
                     background: '#ffffff',
                     border: '1px solid #e2e8f0',
                     borderRadius: 8,
@@ -356,7 +490,6 @@ export default function HierarchicalSelectorModal({ isOpen, onClose, onApply }) 
                   }}>
                     {/* Domain Header */}
                     <div
-                      onClick={() => toggleDomain(d.domain_name)}
                       style={{
                         padding: '10px 14px',
                         background: '#f8fafc',
@@ -364,40 +497,66 @@ export default function HierarchicalSelectorModal({ isOpen, onClose, onApply }) 
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'space-between',
-                        cursor: 'pointer',
                         userSelect: 'none',
+                        flexWrap: 'wrap',
+                        gap: 8,
                       }}
                     >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <div
+                        onClick={() => toggleDomain(dName)}
+                        style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', flex: 1 }}
+                      >
                         <span style={{ fontSize: 13, color: '#7500C0', transform: isDomExpanded ? 'rotate(90deg)' : 'none', display: 'inline-block', transition: 'transform 0.15s ease' }}>
                           ▶
                         </span>
                         <div>
-                          <strong style={{ fontSize: 13, color: '#0f172a' }}>{d.domain_name}</strong>
+                          <strong style={{ fontSize: 13, color: '#0f172a' }}>{dName}</strong>
                           <span style={{ fontSize: 11, color: '#64748b', marginLeft: 8 }}>
-                            {entities.length} tables · {entities.reduce((acc, e) => acc + (e.columns || []).length, 0)} canonical columns
+                            {entities.length} canonical entities · {entities.reduce((acc, e) => acc + (e.columns || []).length, 0)} columns
                           </span>
+                          {d.description && (
+                            <div style={{ fontSize: 11, color: '#64748b', marginTop: 2 }}>{d.description}</div>
+                          )}
                         </div>
                       </div>
-                      <span style={{ fontSize: 10, background: '#ede9fe', color: '#6b21a8', padding: '2px 8px', borderRadius: 10, fontWeight: 700 }}>
-                        DOMAIN
-                      </span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <button
+                          type="button"
+                          onClick={() => handleSelectAllInDomain(d)}
+                          style={{
+                            fontSize: 10.5,
+                            background: '#f3e8ff',
+                            color: '#6b21a8',
+                            border: '1px solid #d8b4fe',
+                            padding: '3px 9px',
+                            borderRadius: 6,
+                            fontWeight: 700,
+                            cursor: 'pointer',
+                          }}
+                        >
+                          ✓ Select All {entities.length} Entities in Domain
+                        </button>
+                        <span style={{ fontSize: 10, background: '#ede9fe', color: '#6b21a8', padding: '2px 8px', borderRadius: 10, fontWeight: 700 }}>
+                          DOMAIN
+                        </span>
+                      </div>
                     </div>
 
                     {/* Tables Accordion */}
                     {isDomExpanded && (
                       <div style={{ padding: '10px 14px', display: 'flex', flexDirection: 'column', gap: 10 }}>
                         {filteredEntities.map(e => {
-                          const tableKey = `${d.domain_name}::${e.table_name}`;
+                          const tableKey = `${dName}::${e.table_name}`;
                           const isTableExpanded = !!expandedTables[tableKey];
                           const cols = e.columns || [];
                           const selectedCols = selectedAttributes[e.table_name] || new Set();
-                          const isAllColsSelected = cols.length > 0 && cols.every(c => selectedCols.has(c.column_name));
-                          const isSomeColsSelected = cols.some(c => selectedCols.has(c.column_name)) && !isAllColsSelected;
+                          const isAllColsSelected = cols.length > 0 && cols.every(c => selectedCols.has(c.column_name || c.name));
+                          const isSomeColsSelected = cols.some(c => selectedCols.has(c.column_name || c.name)) && !isAllColsSelected;
+                          const isOnlyThisEntitySelected = totalSelectedTables === 1 && selectedTableNames[0] === e.table_name;
 
                           return (
                             <div key={e.table_name} style={{
-                              border: '1px solid #e2e8f0',
+                              border: (isAllColsSelected || isSomeColsSelected) ? '1.5px solid #7500C0' : '1px solid #e2e8f0',
                               borderRadius: 6,
                               background: '#ffffff',
                               overflow: 'hidden',
@@ -405,11 +564,13 @@ export default function HierarchicalSelectorModal({ isOpen, onClose, onApply }) 
                               {/* Table Header */}
                               <div style={{
                                 padding: '8px 12px',
-                                background: '#fdfdfd',
+                                background: (isAllColsSelected || isSomeColsSelected) ? '#fcfaff' : '#fdfdfd',
                                 borderBottom: isTableExpanded ? '1px solid #f1f5f9' : 'none',
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'space-between',
+                                flexWrap: 'wrap',
+                                gap: 8,
                               }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                                   <input
@@ -417,13 +578,13 @@ export default function HierarchicalSelectorModal({ isOpen, onClose, onApply }) 
                                     checked={isAllColsSelected}
                                     ref={input => { if (input) input.indeterminate = isSomeColsSelected; }}
                                     onChange={() => handleTableToggleAll(e.table_name, cols)}
-                                    style={{ cursor: 'pointer', accentColor: '#7500C0' }}
+                                    style={{ cursor: 'pointer', accentColor: '#7500C0', width: 15, height: 15 }}
                                   />
                                   <span
                                     onClick={() => toggleTable(tableKey)}
                                     style={{
                                       fontFamily: 'monospace',
-                                      fontSize: 12,
+                                      fontSize: 12.5,
                                       fontWeight: 700,
                                       color: '#0f172a',
                                       cursor: 'pointer',
@@ -431,14 +592,42 @@ export default function HierarchicalSelectorModal({ isOpen, onClose, onApply }) 
                                   >
                                     {e.table_name}
                                   </span>
-                                  <span style={{ fontSize: 10, color: '#64748b' }}>
+                                  <span style={{
+                                    fontSize: 9.5,
+                                    fontWeight: 700,
+                                    padding: '1px 6px',
+                                    borderRadius: 4,
+                                    background: '#eff6ff',
+                                    color: '#1d4ed8',
+                                    textTransform: 'uppercase',
+                                  }}>
+                                    {e.type || e.entity_type || 'dimension'}
+                                  </span>
+                                  <span style={{ fontSize: 10.5, color: '#64748b' }}>
                                     ({selectedCols.size}/{cols.length} cols)
                                   </span>
                                 </div>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                                  <span style={{ fontSize: 10, color: '#64748b', maxWidth: 300, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                  <span style={{ fontSize: 10.5, color: '#64748b', maxWidth: 280, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                     {e.description}
                                   </span>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleSelectOnlySingleEntity(e.table_name, cols)}
+                                    title="Select ONLY this specific entity"
+                                    style={{
+                                      background: isOnlyThisEntitySelected ? '#7500C0' : '#f3e8ff',
+                                      color: isOnlyThisEntitySelected ? '#ffffff' : '#6b21a8',
+                                      border: '1px solid #d8b4fe',
+                                      borderRadius: 5,
+                                      padding: '2px 8px',
+                                      fontSize: 10.5,
+                                      fontWeight: 700,
+                                      cursor: 'pointer',
+                                    }}
+                                  >
+                                    ◉ Only This Entity
+                                  </button>
                                   <button
                                     type="button"
                                     onClick={() => toggleTable(tableKey)}
@@ -451,7 +640,7 @@ export default function HierarchicalSelectorModal({ isOpen, onClose, onApply }) 
                                       fontWeight: 600,
                                     }}
                                   >
-                                    {isTableExpanded ? '▲ Hide' : '▼ View Columns'}
+                                    {isTableExpanded ? '▲ Hide Columns' : '▼ View Columns'}
                                   </button>
                                 </div>
                               </div>
@@ -461,15 +650,16 @@ export default function HierarchicalSelectorModal({ isOpen, onClose, onApply }) 
                                 <div style={{
                                   padding: '8px 12px',
                                   display: 'grid',
-                                  gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))',
+                                  gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))',
                                   gap: 6,
                                   background: '#fafbfc',
                                 }}>
                                   {cols.map(c => {
-                                    const isChecked = selectedCols.has(c.column_name);
+                                    const colName = c.column_name || c.name;
+                                    const isChecked = selectedCols.has(colName);
                                     return (
                                       <label
-                                        key={c.column_name}
+                                        key={colName}
                                         style={{
                                           display: 'flex',
                                           alignItems: 'center',
@@ -485,12 +675,15 @@ export default function HierarchicalSelectorModal({ isOpen, onClose, onApply }) 
                                         <input
                                           type="checkbox"
                                           checked={isChecked}
-                                          onChange={() => handleAttributeToggle(e.table_name, c.column_name)}
+                                          onChange={() => handleAttributeToggle(e.table_name, colName)}
                                           style={{ accentColor: '#7500C0' }}
                                         />
                                         <span style={{ fontFamily: 'monospace', fontWeight: 600, color: '#1e293b', flex: 1 }}>
-                                          {c.column_name}
+                                          {colName}
                                         </span>
+                                        {(c.is_pk || c.is_primary_key) && (
+                                          <span style={{ fontSize: 8.5, background: '#fef3c7', color: '#b45309', padding: '0 4px', borderRadius: 3, fontWeight: 700 }}>PK</span>
+                                        )}
                                         <span style={{
                                           fontSize: 9,
                                           background: '#f1f5f9',
@@ -499,7 +692,7 @@ export default function HierarchicalSelectorModal({ isOpen, onClose, onApply }) 
                                           borderRadius: 3,
                                           fontFamily: 'monospace',
                                         }}>
-                                          {c.data_type}
+                                          {c.data_type || c.type}
                                         </span>
                                       </label>
                                     );
@@ -526,17 +719,24 @@ export default function HierarchicalSelectorModal({ isOpen, onClose, onApply }) 
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
+          flexWrap: 'wrap',
+          gap: 10,
         }}>
           <div>
             <span style={{ fontSize: 12, fontWeight: 700, color: '#1e293b' }}>
-              Selected: <span style={{ color: '#7500C0' }}>{totalSelectedTables}</span> tables · <span style={{ color: '#7500C0' }}>{totalSelectedAttributes}</span> attributes
+              Selected Scope:{' '}
+              <span style={{ color: '#7500C0' }}>{totalSelectedTables}</span>{' '}
+              {totalSelectedTables === 1 ? 'entity' : 'entities'} ·{' '}
+              <span style={{ color: '#7500C0' }}>{totalSelectedAttributes}</span> attributes
             </span>
             <div style={{ fontSize: 10.5, color: '#64748b' }}>
-              Applying will formulate a structured schema augmentation directive in your chat session.
+              {totalSelectedTables === 1
+                ? `Single-entity mode: only ${selectedTableNames[0]} will be generated.`
+                : 'Select 1 entity, multiple entities, or all entities in a domain.'}
             </div>
           </div>
 
-          <div style={{ display: 'flex', gap: 10 }}>
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
             <button
               type="button"
               onClick={onClose}
@@ -544,7 +744,7 @@ export default function HierarchicalSelectorModal({ isOpen, onClose, onApply }) 
                 background: '#ffffff',
                 border: '1px solid #cbd5e1',
                 borderRadius: 6,
-                padding: '7px 16px',
+                padding: '7px 14px',
                 fontSize: 12,
                 fontWeight: 600,
                 color: '#475569',
@@ -552,6 +752,22 @@ export default function HierarchicalSelectorModal({ isOpen, onClose, onApply }) 
               }}
             >
               Cancel
+            </button>
+            <button
+              type="button"
+              onClick={handleOpenExisting}
+              style={{
+                background: '#f3e8ff',
+                border: '1px solid #7500C0',
+                borderRadius: 6,
+                padding: '7px 14px',
+                fontSize: 12,
+                fontWeight: 700,
+                color: '#460073',
+                cursor: 'pointer',
+              }}
+            >
+              🛠 Open &amp; Edit Existing Silver Structure
             </button>
             <button
               type="button"
@@ -569,7 +785,7 @@ export default function HierarchicalSelectorModal({ isOpen, onClose, onApply }) 
                 boxShadow: totalSelectedAttributes > 0 ? '0 2px 4px rgba(117,0,192,0.3)' : 'none',
               }}
             >
-              Apply Selection to Requirement
+              Apply Scope ({totalSelectedTables} {totalSelectedTables === 1 ? 'Entity' : 'Entities'})
             </button>
           </div>
         </div>

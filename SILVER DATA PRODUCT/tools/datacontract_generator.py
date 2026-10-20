@@ -20,22 +20,46 @@ def generate_data_contract_dict(
     product_plan: Dict[str, Any],
     bank_profile: Dict[str, Any],
     structured_req: Dict[str, Any],
+    selected_entities: Optional[List[str]] = None,
 ) -> Dict[str, Any]:
     """
     Build a structured Data Contract dictionary aligned with OpenDataContract Specification.
+    Respects `selected_entities` so single-entity or multi-entity selections generate strictly
+    the requested tables in `models` while preserving parent FK references in metadata.
     """
     bank_name = bank_profile.get("bank_name", "BFSI Bank")
     domain = structured_req.get("domain") or structured_req.get("banking_domain") or "deposits"
     use_case = structured_req.get("use_case_name") or f"{domain.replace('_', ' ').title()} Silver Schema"
 
-    models = {}
-    tables = product_plan.get("tables", [])
+    industry = (
+        bank_profile.get("industry")
+        or structured_req.get("industry")
+        or "banking"
+    )
+    target_dataset = f"{industry}_silver" if industry != "banking" else "banking_silver"
+
+    raw_tables = product_plan.get("tables") or product_plan.get("entities") or []
+    tables: List[Dict[str, Any]] = []
+    if isinstance(raw_tables, dict):
+        for tname, edef in raw_tables.items():
+            tables.append({
+                "table_name": tname,
+                "entity_type": edef.get("type") or edef.get("entity_type", "dimension"),
+                "grain": edef.get("grain", "one row per record"),
+                "description": edef.get("description", f"Conformed Silver entity {tname}"),
+                "columns": edef.get("columns", []),
+                "source_table": edef.get("source_table"),
+            })
+    elif isinstance(raw_tables, list):
+        tables = list(raw_tables)
+
     if not tables:
-        # Fallback default tables if product_plan is simplified
+        # Fallback default tables if product_plan is empty
         tables = [
             {
                 "table_name": "slv_customer",
                 "entity_type": "dimension",
+                "grain": "one row per customer party",
                 "description": "Conformed Customer 360 Dimension",
                 "columns": [
                     {"name": "surrogate_key", "type": "STRING", "primary_key": True, "nullable": False, "description": "Primary Surrogate Key"},
@@ -48,6 +72,7 @@ def generate_data_contract_dict(
             {
                 "table_name": "slv_account",
                 "entity_type": "dimension",
+                "grain": "one row per deposit account",
                 "description": "Conformed Deposit Account Dimension",
                 "columns": [
                     {"name": "surrogate_key", "type": "STRING", "primary_key": True, "nullable": False, "description": "Primary Surrogate Key"},
@@ -61,22 +86,54 @@ def generate_data_contract_dict(
             },
         ]
 
+    active_filter = (
+        selected_entities
+        or product_plan.get("selected_entities")
+        or structured_req.get("selected_entities")
+    )
+    if active_filter and isinstance(active_filter, list) and len(active_filter) > 0:
+        allowed = {str(x).strip().lower() for x in active_filter}
+        filtered_tables = [
+            t for t in tables
+            if (t.get("table_name") or t.get("name", "")).lower() in allowed
+        ]
+        if filtered_tables:
+            tables = filtered_tables
+
+    selected_attrs_map = (
+        product_plan.get("selected_attributes")
+        or structured_req.get("selected_attributes")
+        or {}
+    )
+
+    models = {}
     for t in tables:
-        tname = t.get("table_name", "slv_entity")
+        tname = t.get("table_name") or t.get("name", "slv_entity")
+        allowed_cols = None
+        if isinstance(selected_attrs_map, dict) and tname in selected_attrs_map and selected_attrs_map[tname]:
+            allowed_cols = {str(c).lower() for c in selected_attrs_map[tname]}
+
         fields = {}
         for c in t.get("columns", []):
-            cname = c.get("name", "id")
+            cname = c.get("name") or c.get("column_name", "id")
+            is_pk = bool(c.get("primary_key") or c.get("is_pk") or c.get("is_primary_key"))
+            fk_ref = c.get("references") or c.get("fk_ref")
+            # If attribute-level filter is active for this table, include PKs, FKs, and selected columns
+            if allowed_cols and not is_pk and not fk_ref and cname.lower() not in allowed_cols:
+                continue
+
+            col_type = c.get("type") or c.get("data_type", "STRING")
             field_entry: Dict[str, Any] = {
-                "type": str(c.get("type", "STRING")).lower(),
+                "type": str(col_type).lower(),
                 "description": c.get("description", f"Column {cname}"),
-                "nullable": bool(c.get("nullable", True)),
+                "nullable": bool(c.get("nullable", not is_pk)),
             }
-            if c.get("primary_key") or c.get("is_pk"):
+            if is_pk:
                 field_entry["primary"] = True
                 field_entry["nullable"] = False
-            if c.get("references") or c.get("fk_ref"):
-                field_entry["references"] = c.get("references") or c.get("fk_ref")
-            if c.get("pii"):
+            if fk_ref:
+                field_entry["references"] = fk_ref
+            if c.get("pii") or c.get("is_pii"):
                 field_entry["pii"] = True
                 field_entry["classification"] = "PII"
             fields[cname] = field_entry
@@ -84,9 +141,13 @@ def generate_data_contract_dict(
         models[tname] = {
             "description": t.get("description", f"Silver conformed entity {tname}"),
             "type": "table",
-            "physicalName": f"banking_silver.{tname}",
+            "entity_type": t.get("entity_type") or t.get("type", "dimension"),
+            "grain": t.get("grain", "one row per conformed record"),
+            "physicalName": f"{target_dataset}.{tname}",
             "fields": fields,
         }
+        if t.get("source_table"):
+            models[tname]["sourceTable"] = t["source_table"]
 
     quality_rules = [
         {
