@@ -27,7 +27,7 @@ steps:
       - '--image=us-central1-docker.pkg.dev/${_PROJECT_ID}/dp-assistant/yk-data-products-portal:${SHORT_SHA}'
       - '--region=${_REGION}'
       - '--platform=managed'
-      - '--allow-unauthenticated'
+      - '--iap'
       - '--port=8080'
 
 substitutions:
