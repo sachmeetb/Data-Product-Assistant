@@ -1,0 +1,9 @@
+{
+  "name": "products_sales",
+  "platform": "postgres",
+  "domain": "Retail / E-commerce",
+  "description": "Product catalogue, orders, customers, and sales transactions.",
+  "database": "products_sales",
+  "schemas": ["products_sales", "wb_views"],
+  "primary_schema": "products_sales"
+}

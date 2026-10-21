@@ -1,0 +1,311 @@
+domain: retail banking
+label: Retail Banking
+description: Retail Banking canonical schema — customer/party identity & KYC, deposit accounts & balances, cards & credit limits, lending (loans, repayments, delinquency), and payments/beneficiaries. Covers retail-banking source-system patterns (party, core-banking, cards, lending, payments) and per-customer aggregates such as lending exposure. Pairs with the SCD-2 history fields in common.yaml.
+columns:
+
+  # --- party / customer identity -------------------------------------------
+  - name: customer_id
+    logical_type: integer
+    physical_type: bigint
+    primary_key: true
+    description: Unique internal identifier for the customer/party. The shared business key across every retail-banking source system (crm, core banking, cards, lending, payments).
+    recommended_rules:
+      - { type: notNull }
+      - { type: unique }
+  - name: full_name
+    logical_type: string
+    physical_type: varchar(120)
+    sensitivity: pii
+    description: Full legal name of the customer. PII.
+    recommended_rules:
+      - { type: notNull }
+      - { type: maxLength, value: 120 }
+  - name: date_of_birth
+    logical_type: date
+    physical_type: date
+    sensitivity: pii
+    description: Customer date of birth. PII; used to derive age bands and eligibility.
+    recommended_rules:
+      - { type: notNull }
+  - name: gender
+    logical_type: string
+    physical_type: varchar(1)
+    sensitivity: pii
+    description: Recorded gender (M/F, O for organisations).
+    recommended_rules:
+      - { type: allowedValues, values: ["M", "F", "O"] }
+  - name: email
+    logical_type: string
+    physical_type: varchar(120)
+    sensitivity: pii
+    description: Primary email address on file. PII.
+    recommended_rules:
+      - { type: maxLength, value: 120 }
+      - { type: regex, pattern: "^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$", severity: "sh:Warning" }
+  - name: mobile_number
+    logical_type: string
+    physical_type: varchar(16)
+    sensitivity: pii
+    description: Primary mobile contact number. PII.
+    recommended_rules:
+      - { type: maxLength, value: 16 }
+  - name: residential_address
+    logical_type: string
+    physical_type: varchar(240)
+    sensitivity: pii
+    description: Registered residential/mailing address. PII.
+    recommended_rules:
+      - { type: maxLength, value: 240 }
+  - name: customer_segment
+    logical_type: string
+    physical_type: varchar(16)
+    description: Marketing/value segment the customer belongs to.
+    recommended_rules:
+      - { type: allowedValues, values: ["mass", "affluent", "premium", "private", "business"] }
+  - name: kyc_status
+    logical_type: string
+    physical_type: varchar(16)
+    description: Current Know-Your-Customer verification state.
+    recommended_rules:
+      - { type: notNull }
+      - { type: allowedValues, values: ["verified", "pending", "expired"] }
+  - name: onboarded_date
+    logical_type: date
+    physical_type: date
+    description: Date the customer relationship was established.
+    recommended_rules: []
+
+  # --- deposit accounts (core banking) -------------------------------------
+  - name: account_id
+    logical_type: integer
+    physical_type: bigint
+    description: Unique identifier for a deposit account (savings/current/overdraft). Shared business key within core banking.
+    recommended_rules:
+      - { type: notNull }
+  - name: product_type
+    logical_type: string
+    physical_type: varchar(24)
+    description: Deposit account product.
+    recommended_rules:
+      - { type: allowedValues, values: ["savings", "current", "overdraft", "salary"] }
+  - name: account_status
+    logical_type: string
+    physical_type: varchar(16)
+    description: Operational state of the deposit account.
+    recommended_rules:
+      - { type: allowedValues, values: ["active", "dormant", "closed", "frozen"] }
+  - name: currency
+    logical_type: string
+    physical_type: varchar(3)
+    description: ISO-4217 currency code the account/transaction is denominated in.
+    recommended_rules:
+      - { type: notNull }
+      - { type: maxLength, value: 3 }
+  - name: open_date
+    logical_type: date
+    physical_type: date
+    description: Date the account was opened.
+    recommended_rules: []
+  - name: balance_date
+    logical_type: date
+    physical_type: date
+    description: As-of date of a point-in-time balance snapshot.
+    recommended_rules: []
+  - name: ledger_balance
+    logical_type: decimal
+    physical_type: numeric(14,2)
+    description: Ledger (book) balance of the account as of balance_date.
+    recommended_rules:
+      - { type: notNull }
+  - name: available_balance
+    logical_type: decimal
+    physical_type: numeric(14,2)
+    description: Available (spendable) balance after holds as of balance_date.
+    recommended_rules:
+      - { type: notNull }
+
+  # --- cards ----------------------------------------------------------------
+  - name: card_id
+    logical_type: integer
+    physical_type: bigint
+    description: Unique identifier for an issued payment card (credit/debit). Shared business key within cards.
+    recommended_rules:
+      - { type: notNull }
+  - name: card_type
+    logical_type: string
+    physical_type: varchar(16)
+    description: Card product tier.
+    recommended_rules:
+      - { type: allowedValues, values: ["classic", "gold", "platinum", "corporate", "debit"] }
+  - name: card_status
+    logical_type: string
+    physical_type: varchar(16)
+    description: Current card state.
+    recommended_rules:
+      - { type: allowedValues, values: ["active", "blocked", "expired", "hotlisted"] }
+  - name: credit_limit
+    logical_type: decimal
+    physical_type: numeric(12,2)
+    description: Maximum credit available on the card (0 for debit cards).
+    recommended_rules:
+      - { type: range, min: 0 }
+  - name: limit_amount
+    logical_type: decimal
+    physical_type: numeric(12,2)
+    description: Amount of a per-card transactional/withdrawal limit (by limit type).
+    recommended_rules:
+      - { type: range, min: 0 }
+  - name: issue_date
+    logical_type: date
+    physical_type: date
+    description: Date the card was issued.
+    recommended_rules: []
+  - name: expiry_date
+    logical_type: date
+    physical_type: date
+    description: Date the card expires.
+    recommended_rules: []
+
+  # --- lending (loans, repayments, delinquency) ----------------------------
+  - name: loan_id
+    logical_type: integer
+    physical_type: bigint
+    description: Unique identifier for a loan account. Shared business key within lending.
+    recommended_rules:
+      - { type: notNull }
+  - name: loan_type
+    logical_type: string
+    physical_type: varchar(24)
+    description: Loan product.
+    recommended_rules:
+      - { type: allowedValues, values: ["home", "auto", "personal", "business", "education"] }
+  - name: principal_amount
+    logical_type: decimal
+    physical_type: numeric(14,2)
+    description: Original sanctioned principal amount of the loan.
+    recommended_rules:
+      - { type: range, min: 0 }
+  - name: interest_rate
+    logical_type: decimal
+    physical_type: numeric(6,3)
+    description: Annual interest rate applied to the loan (percent).
+    recommended_rules:
+      - { type: range, min: 0, max: 100 }
+  - name: disbursal_date
+    logical_type: date
+    physical_type: date
+    description: Date the loan principal was disbursed.
+    recommended_rules: []
+  - name: maturity_date
+    logical_type: date
+    physical_type: date
+    description: Contractual maturity date of the loan.
+    recommended_rules: []
+  - name: loan_status
+    logical_type: string
+    physical_type: varchar(16)
+    description: Servicing state of the loan.
+    recommended_rules:
+      - { type: allowedValues, values: ["active", "closed", "written_off", "delinquent"] }
+  - name: days_past_due
+    logical_type: integer
+    physical_type: integer
+    description: Number of days the loan is past due as of the delinquency snapshot.
+    recommended_rules:
+      - { type: range, min: 0 }
+  - name: dpd_bucket
+    logical_type: string
+    physical_type: varchar(12)
+    description: Days-past-due bucket for delinquency reporting and provisioning.
+    recommended_rules:
+      - { type: allowedValues, values: ["current", "1-30", "31-60", "61-90", "90+"] }
+  - name: overdue_amount
+    logical_type: decimal
+    physical_type: numeric(12,2)
+    description: Total overdue amount on the loan as of the delinquency snapshot.
+    recommended_rules:
+      - { type: range, min: 0 }
+  - name: amount_due
+    logical_type: decimal
+    physical_type: numeric(12,2)
+    description: Instalment amount due on a scheduled repayment.
+    recommended_rules:
+      - { type: range, min: 0 }
+  - name: amount_paid
+    logical_type: decimal
+    physical_type: numeric(12,2)
+    description: Instalment amount actually paid against a scheduled repayment.
+    recommended_rules:
+      - { type: range, min: 0 }
+  - name: due_date
+    logical_type: date
+    physical_type: date
+    description: Date a scheduled loan instalment is due.
+    recommended_rules: []
+  - name: as_of_date
+    logical_type: date
+    physical_type: date
+    description: As-of date of a delinquency / status snapshot.
+    recommended_rules: []
+
+  # --- payments -------------------------------------------------------------
+  - name: beneficiary_id
+    logical_type: integer
+    physical_type: bigint
+    description: Unique identifier for a saved payee/beneficiary registered by a customer.
+    recommended_rules:
+      - { type: notNull }
+  - name: payment_id
+    logical_type: integer
+    physical_type: bigint
+    description: Unique identifier for an outbound payment instruction.
+    recommended_rules:
+      - { type: notNull }
+  - name: payment_amount
+    logical_type: decimal
+    physical_type: numeric(14,2)
+    description: Monetary value of a payment instruction.
+    recommended_rules:
+      - { type: range, min: 0 }
+  - name: payment_status
+    logical_type: string
+    physical_type: varchar(16)
+    description: Processing state of a payment instruction.
+    recommended_rules:
+      - { type: allowedValues, values: ["submitted", "settled", "returned", "failed"] }
+  - name: value_date
+    logical_type: date
+    physical_type: date
+    description: Value date a payment settles on.
+    recommended_rules: []
+
+  # --- transactions (deposit + card ledgers) -------------------------------
+  - name: transaction_amount
+    logical_type: decimal
+    physical_type: numeric(14,2)
+    description: Monetary value of a deposit-account or card transaction.
+    recommended_rules:
+      - { type: notNull }
+  - name: transaction_date
+    logical_type: date
+    physical_type: date
+    description: Date a transaction was processed/posted.
+    recommended_rules: []
+  - name: transaction_type
+    logical_type: string
+    physical_type: varchar(16)
+    description: Type of transaction (e.g. purchase, cash_advance, refund, reversal for cards).
+    recommended_rules:
+      - { type: maxLength, value: 16 }
+  - name: channel
+    logical_type: string
+    physical_type: varchar(12)
+    description: Origination channel of a transaction (atm, pos, online, branch, upi).
+    recommended_rules:
+      - { type: allowedValues, values: ["atm", "pos", "online", "branch", "upi"] }
+  - name: merchant_name
+    logical_type: string
+    physical_type: varchar(80)
+    description: Name of the merchant where a card transaction occurred.
+    recommended_rules:
+      - { type: maxLength, value: 80 }

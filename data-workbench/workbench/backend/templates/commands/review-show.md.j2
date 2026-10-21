@@ -1,0 +1,18 @@
+---
+description: Pretty-print a single review item for triage
+argument-hint: <review_type> [<uri>]
+---
+
+Show one review item for triage. `$ARGUMENTS` is `<review_type> [<uri>]` where review_type is one of `descriptions | mappings | unmapped_columns | transformation_escalations | domain_rules`.
+
+Fetch the full pending list (no `summary=true`):
+
+```bash
+curl -s "{{ backend_base_url }}/api/projects/{{ project.id }}/reviews/<review_type>"
+```
+
+If `<uri>` was provided, find the matching item in the `items[]` array client-side and pretty-print just that one. Otherwise pretty-print the first item (the engineer can call `/review-show <type> <uri>` for a specific item). Print the full item (don't summarize — the engineer needs all of it to triage). Then end with a one-line pointer:
+
+> To approve / edit / reject this item, open `{{ frontend_base_url }}/engineer/projects/{{ project.id }}` and find it in the matching review panel.
+
+Read-only. Do not POST.

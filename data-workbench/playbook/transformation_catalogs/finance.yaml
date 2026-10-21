@@ -1,0 +1,61 @@
+# Finance-domain transformation templates.
+
+domain: finance
+templates:
+  - name: amount_to_usd
+    match:
+      target_name_patterns: ["amount_usd", "usd_amount", "total_usd"]
+      source_columns_required: ["amount", "currency_code"]
+    transform:
+      kind: lookup
+      inputs: ["currency_code"]
+      params:
+        lookup_table: "ref.fx_rates"
+        key_column: "currency_code"
+        value_column: "usd_rate"
+      expression: "amount * <usd_rate>"
+    confidence_floor: 0.85
+
+  - name: country_code_to_name
+    match:
+      target_name_patterns: ["country_name", "country"]
+      source_columns_required: ["country_code"]
+      source_data_type_pattern: "[Vv][Aa][Rr][Cc][Hh][Aa][Rr]"
+    transform:
+      kind: lookup
+      inputs: ["country_code"]
+      params:
+        lookup_table: "ref.iso_country"
+        key_column: "code"
+        value_column: "name"
+    confidence_floor: 0.85
+
+  - name: transaction_year_from_date
+    match:
+      target_name_patterns: ["txn_year", "transaction_year", "fiscal_year"]
+      source_columns_required: ["transaction_date"]
+    transform:
+      kind: expression
+      inputs: ["transaction_date"]
+      expression: "EXTRACT(YEAR FROM transaction_date)"
+    confidence_floor: 0.80
+
+  - name: margin_from_revenue_cost
+    match:
+      target_name_patterns: ["margin", "gross_margin"]
+      source_columns_required: ["revenue", "cost"]
+    transform:
+      kind: arithmetic
+      inputs: ["revenue", "cost"]
+      expression: "revenue - cost"
+    confidence_floor: 0.85
+
+  - name: margin_pct
+    match:
+      target_name_patterns: ["margin_pct", "margin_percent", "gross_margin_pct"]
+      source_columns_required: ["revenue", "cost"]
+    transform:
+      kind: arithmetic
+      inputs: ["revenue", "cost"]
+      expression: "(revenue - cost) / NULLIF(revenue, 0)"
+    confidence_floor: 0.80

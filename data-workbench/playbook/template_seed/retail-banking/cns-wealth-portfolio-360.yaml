@@ -1,0 +1,208 @@
+apiVersion: v3.1.0
+kind: DataContract
+id: template:retail-banking:cns-wealth-portfolio-360
+name: Wealth Portfolio 360
+version: 1.0.0
+status: draft
+domain: Retail Banking
+description: Investment/wealth view of a customer's managed portfolios — holdings,
+  instruments, valuations and performance — for wealth advisory and reporting. Requires
+  a wealth/investment source system that this estate does not contain (expected to
+  grade absent).
+schema:
+- name: Wealth Portfolio 360
+  physicalName: wealth_portfolio_360
+  physicalType: table
+  description: Investment/wealth view of a customer's managed portfolios — holdings,
+    instruments, valuations and performance — for wealth advisory and reporting. Requires
+    a wealth/investment source system that this estate does not contain (expected
+    to grade absent).
+  properties:
+  - name: portfolio_id
+    physicalName: portfolio_id
+    logicalName: Portfolio ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a managed investment portfolio.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: holding_id
+    physicalName: holding_id
+    logicalName: Holding ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a single security holding within a portfolio.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: instrument_id
+    physicalName: instrument_id
+    logicalName: Instrument ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a financial instrument in the instrument reference
+      master.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: isin
+    physicalName: isin
+    logicalName: ISIN
+    logicalType: varchar
+    physicalType: varchar
+    description: International Securities Identification Number of the held instrument.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: security_name
+    physicalName: security_name
+    logicalName: Security Name
+    logicalType: varchar
+    physicalType: varchar
+    description: Display name of the held security or fund.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: asset_class
+    physicalName: asset_class
+    logicalName: Asset Class
+    logicalType: varchar
+    physicalType: varchar
+    description: Asset-class classification such as equity, fixed_income, mutual_fund,
+      etf or cash.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: quantity
+    physicalName: quantity
+    logicalName: Quantity
+    logicalType: numeric
+    physicalType: numeric
+    description: Number of units of the instrument held.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: market_value
+    physicalName: market_value
+    logicalName: Market Value
+    logicalType: numeric
+    physicalType: numeric
+    description: Current market value of the holding at the valuation date.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: cost_basis
+    physicalName: cost_basis
+    logicalName: Cost Basis
+    logicalType: numeric
+    physicalType: numeric
+    description: Aggregate purchase cost of the holding.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: unrealized_gain_loss
+    physicalName: unrealized_gain_loss
+    logicalName: Unrealized Gain Loss
+    logicalType: numeric
+    physicalType: numeric
+    description: Unrealised gain or loss on the holding (market value minus cost basis).
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: portfolio_type
+    physicalName: portfolio_type
+    logicalName: Portfolio Type
+    logicalType: varchar
+    physicalType: varchar
+    description: Mandate/type of the portfolio such as discretionary, advisory or
+      execution_only.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: valuation_date
+    physicalName: valuation_date
+    logicalName: Valuation Date
+    logicalType: date
+    physicalType: date
+    description: Date the portfolio holdings were valued.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  foreignKeys: []
+  transform:
+    grouping_keys:
+    - portfolio_id
+    scd_policy:
+      type: snapshot
+    grain_prose: One row per holding within a customer's investment portfolio.
+customProperties:
+  feasibility:
+    schema_version: '1.0'
+    spec_classification: confidential
+    cadence: daily
+    freshness_history: snapshot
+    freshness_description: Daily valuation snapshot of holdings.
+    grain_keys:
+    - portfolio_id
+    grain_description: One row per holding within a customer's investment portfolio.
+    allowed_derivations:
+    - rename
+    - cast
+    composition:
+      join_keys:
+      - portfolio_id
+      - instrument_id
+      composed_of: []
+      description: Would be assembled from a portfolio-accounting / custody source
+        system joined to an instrument reference feed.
+productKind: consumer
+sourceSpecId: cns_wealth_portfolio_360

@@ -1,0 +1,191 @@
+# Supplementary demo services — automatically merged by Docker Compose, but now
+# gated behind compose PROFILES so they only start when explicitly opted in
+# (the `dwb` CLI passes `--profile postgres|mysql|gitea|storage` per launch):
+#
+# postgres  Postgres 16 hosting one database PER sample. The `dwb` CLI runs
+#           samples/_loader/pg-load.sh inside the container after start-up
+#           (idempotently) to createdb + load each selected sample from
+#           samples/<name>/*.sql. Which samples load is driven by `--pg-sample`
+#           (default: all). From INSIDE the compose net: host=postgres,
+#           port=5432; from the host: localhost:5433.
+#
+# mysql-hr  MySQL 8.0 hosting one schema-set PER sample (currently just
+#           hr-mysql → hr_core + hr_comp). The CLI runs
+#           samples/_loader/mysql-load.sh inside the container after start-up.
+#           Profile "mysql".
+#
+# Reach this MySQL from INSIDE the compose network (e.g. the backend container)
+# using host=mysql-hr, port=3306.  From your laptop use host=localhost, port=3307.
+#
+# The CLI writes the ready-to-use connections into .dwb/provisioned-sources.json
+# (one per loaded sample), surfaced in the UI as a "Quick connect" prefill. The
+# MySQL secret is pre-injected into the backend container below as
+# HR_MYSQL_PASSWORD.
+
+services:
+  # postgres  Sample-data Postgres, profile-gated. The whole samples/ tree is
+  #           mounted read-only at /samples; the CLI's post-start loader creates
+  #           one database per selected sample and runs its *.sql in order
+  #           (01_schema → 02_seed → 03_consumer_schema). POSTGRES_DB stays the
+  #           maintenance `postgres` db — sample DBs are created by the loader.
+  postgres:
+    image: postgres:16
+    profiles: ["postgres"]
+    environment:
+      POSTGRES_USER: ${DWB_PG_USER:-workbench}
+      POSTGRES_PASSWORD: ${DWB_PG_PASSWORD:-workbenchpass}
+      POSTGRES_DB: postgres
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./samples:/samples:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DWB_PG_USER:-workbench} -d postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  mysql-hr:
+    image: mysql:8.0
+    profiles: ["mysql"]
+    environment:
+      MYSQL_ROOT_PASSWORD: hrpass
+      MYSQL_ROOT_HOST: "%"
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_hr_data:/var/lib/mysql
+      - ./samples:/samples:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-phrpass"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  # gitea  Self-hosted Git server for the "Push to Git" integration. Each deployed
+  #        data product gets its own repo under the `dataworkbench` org.
+  #
+  # Bootstrap (one-time, after `docker compose up`):
+  #   1. Open http://localhost:3101 and sign in as workbench / workbenchpass.
+  #   2. Settings → Applications → Generate Token (name it `workbench`), copy it.
+  #   3. In DWB → Settings → Git Integration set:
+  #        Provider = Gitea
+  #        Base URL   = http://gitea:3000   (backend→gitea, inside the compose net)
+  #        Browse URL = http://localhost:3101  (what the UI's "View in Git" links
+  #                     point to — your laptop can't resolve "gitea"; blank defaults
+  #                     to this)
+  #        Token      = <the token from step 2>
+  #        Org        = dataworkbench
+  #
+  # `dwb up` (with the gitea profile on, which is the default) AUTOMATES all of
+  # the above — it creates the `workbench` user, generates a PAT, ensures the
+  # `dataworkbench` org, and writes it all into AppSettings. The manual steps
+  # only matter if you bring gitea up by hand.
+  gitea:
+    image: gitea/gitea:1.22
+    profiles: ["gitea"]
+    environment:
+      - GITEA__database__DB_TYPE=sqlite3
+      - GITEA__database__PATH=/data/gitea/gitea.db
+      - GITEA__server__HTTP_PORT=3000
+      - GITEA__server__DOMAIN=gitea
+      - GITEA__server__ROOT_URL=http://localhost:3101/
+      - GITEA__security__INSTALL_LOCK=true
+      - GITEA__service__DISABLE_REGISTRATION=true
+      - GITEA__migrations__ALLOW_LOCALNETWORKS=true
+    ports:
+      - "3101:3000"   # web — distinct from a personal Gitea on 3000
+    volumes:
+      - gitea_data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/api/healthz || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 10s
+
+  # seaweedfs  S3-compatible object store for PUBLISHING generated data artifacts
+  #            (Parquet + TransferBatch manifests). Off by default; profile
+  #            "storage". Full rationale: docs/architecture/object-store.md (ADR-14).
+  #
+  #  Endpoints:
+  #    S3 API    — inside the compose net:  http://seaweedfs:8333
+  #                from your laptop:         http://localhost:9000
+  #    Filer UI  — http://localhost:8888   (browse the actual published files)
+  #    Master UI — http://localhost:9333
+  #
+  #  The internal (seaweedfs:8333) vs public (localhost:9000) endpoint split is
+  #  load-bearing for presigned URLs: the backend signs GET URLs for the PUBLIC
+  #  endpoint so a browser can open them (ADR-14 D8). Dev credentials live in
+  #  docker/seaweedfs/s3.json (access key `workbench`, in the spirit of the
+  #  committed neo4j/gitea dev creds) — production uses real creds via secret_ref.
+  #  Why SeaweedFS (not MinIO): Apache-2.0 + actively maintained; MinIO's OSS repo
+  #  was archived and relicensed AGPLv3 (ADR-14 D2).
+  seaweedfs:
+    image: chrislusf/seaweedfs:4.42
+    profiles: ["storage"]
+    command: >
+      server -dir=/data -s3 -s3.port=8333
+      -s3.config=/etc/seaweedfs/s3.json
+      -ip.bind=0.0.0.0
+      -master.volumeSizeLimitMB=1024
+    ports:
+      - "9000:8333"   # S3 API   (host 9000 -> container 8333)
+      - "8888:8888"   # Filer web UI — browse published files
+      - "9333:9333"   # Master UI
+    volumes:
+      - wb_object_store:/data
+      - ./docker/seaweedfs/s3.json:/etc/seaweedfs/s3.json:ro
+    healthcheck:
+      # busybox wget (alpine image). SeaweedFS binds the advertised interface, so
+      # -ip.bind=0.0.0.0 (above) is what makes loopback reachable here; the S3
+      # gateway's own /status returns 200 once the gateway is serving.
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8333/status >/dev/null 2>&1 || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 10s
+
+  # otel-collector  Reference OpenTelemetry backend — Grafana "otel-lgtm" all-in-
+  #   one: an OTLP collector + Prometheus (metrics) + Tempo (traces) + Loki
+  #   (logs) + a Grafana UI, in ONE image. OFF by default; profile
+  #   "observability" (`dwb up --with observability`).
+  #
+  #   This is a REFERENCE VISUALIZER only — DW has NO runtime dependency on it.
+  #   To use your own observability platform instead, leave this profile off and
+  #   point OTEL_EXPORTER_OTLP_ENDPOINT at any OTLP endpoint (in .env / host env).
+  #   Image + Grafana host-port are overridable via WB_OTEL_IMAGE / WB_GRAFANA_PORT.
+  #
+  #   Endpoints:
+  #     Grafana UI — http://localhost:3111   (Explore → Tempo / Prometheus / Loki)
+  #     OTLP http  — localhost:4318   (the default export target)
+  #     OTLP grpc  — localhost:4317
+  otel-collector:
+    image: ${WB_OTEL_IMAGE:-grafana/otel-lgtm:latest}
+    profiles: ["observability"]
+    ports:
+      - "4317:4317"                       # OTLP gRPC
+      - "4318:4318"                       # OTLP HTTP (default export target)
+      - "${WB_GRAFANA_PORT:-3111}:3000"   # Grafana UI (host 3111 mirrors gitea's 3101 offset)
+    # No healthcheck: the image ships no guaranteed in-container probe tool, and
+    # `docker compose up --wait` treats a no-healthcheck service as ready once
+    # running — sufficient for an optional visualizer.
+
+  backend:
+    environment:
+      # Secret ref for the HR MySQL connection — referenced by PlatformConnection.secret_ref
+      HR_MYSQL_PASSWORD: hrpass
+    # NB: intentionally NO `depends_on: mysql-hr` (or `: otel-collector`) here. A
+    # hard depends_on a profiled service is a footgun — with that profile off,
+    # compose would refuse to start backend. The CLI always passes the full
+    # `--profile` set, and profiled services come up alongside the backend when
+    # enabled. The OTLP endpoint reaches the backend via the ${OTEL_*:-} env
+    # passthrough in docker-compose.yml, injected by the CLI when the profile is on.
+
+volumes:
+  postgres_data:
+  mysql_hr_data:
+  gitea_data:
+  wb_object_store:

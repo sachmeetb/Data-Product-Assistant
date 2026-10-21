@@ -1,0 +1,8 @@
+{
+  "name": "workbench-skills",
+  "version": "0.1.0",
+  "description": "Data Workbench server-side pipeline skills (run by the backend Agent SDK, loaded via --plugin-dir).",
+  "author": {
+    "name": "Data Workbench"
+  }
+}

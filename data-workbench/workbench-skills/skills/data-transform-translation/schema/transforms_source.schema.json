@@ -1,0 +1,56 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "data-transform-translation/transforms_source",
+  "title": "Per-platform transform capability source (authoring YAML)",
+  "description": "Shape of a single reference/<platform>/transforms.yaml file. The build step validates every source file against this before merging.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["platform", "engine", "functions"],
+  "properties": {
+    "platform": {
+      "type": "string",
+      "enum": ["postgres", "databricks", "snowflake", "bigquery", "mysql"]
+    },
+    "engine": {
+      "type": "string",
+      "description": "Engine/version the claims in this file assume, e.g. 'PostgreSQL 12+'."
+    },
+    "functions": {
+      "type": "object",
+      "description": "Function name (UPPERCASE canonical) -> capability entry for THIS platform.",
+      "propertyNames": { "pattern": "^[A-Z][A-Z0-9_]*$" },
+      "additionalProperties": { "$ref": "#/$defs/entry" }
+    },
+    "ops": {
+      "type": "object",
+      "description": "Neutral op name -> { semantics-variant -> capability entry } for THIS platform.",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": { "$ref": "#/$defs/entry" }
+      }
+    }
+  },
+  "$defs": {
+    "entry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["capability", "citation"],
+      "properties": {
+        "capability": { "type": "string", "enum": ["native", "emulated", "unsupported"] },
+        "emit": { "type": "string", "description": "SQL rule/template; informational for v1." },
+        "remediation": { "type": "string" },
+        "engine": { "type": "string", "description": "Overrides the file-level engine for this entry." },
+        "status": { "type": "string", "enum": ["verified", "conformance-verify"], "default": "conformance-verify" },
+        "citation": { "type": "string", "minLength": 4 },
+        "notes": { "type": "string" }
+      },
+      "allOf": [
+        {
+          "comment": "An unsupported entry must say what to do instead.",
+          "if": { "properties": { "capability": { "const": "unsupported" } } },
+          "then": { "required": ["capability", "citation", "remediation"] }
+        }
+      ]
+    }
+  }
+}

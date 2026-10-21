@@ -1,0 +1,42 @@
+apiVersion: workbench.platform/v1
+id: postgres
+displayName: PostgreSQL
+adapterVersion: "1.0.0"
+adapterKind: jdbc
+supportedServerVersions: ">=12"
+
+driver:
+  package: psycopg2-binary
+  compatibility: ">=2.9"
+
+credentialSchema: schemas/postgres-credentials.json
+
+namespace:
+  parts: [schema, relation]
+  labels:
+    schema: Schema
+    relation: Table / View
+
+capabilities:
+  connection: certified
+  discovery: certified
+  profiling: certified
+  read_query: certified
+  native_view: certified
+  dbt_materialized: certified
+  remediation: preview
+  semantic_qa: certified
+  transfer_source: preview
+  transfer_target: preview
+  lakehouse_export: unsupported
+  lakehouse_source: certified
+  volumetrics: preview
+  code_assets: unsupported
+
+notes: >
+  The Postgres adapter is the compatibility baseline. All capability claims
+  reflect the existing implementation before the multi-platform refactor;
+  they are protected by characterization tests and the Phase 0 suite.
+  'transfer_source'/'transfer_target' advanced to preview when the Phase-2
+  cross-platform transfer engine (DuckDB, transfer_then_transform) landed —
+  DuckDB reads/writes Postgres via its postgres extension.

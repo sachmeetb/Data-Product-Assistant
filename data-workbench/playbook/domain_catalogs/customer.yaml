@@ -1,0 +1,644 @@
+domain: customer
+label: Customer
+description: Customer 360 canonical schema — identity, contact, address, demographics, lifecycle, segmentation, value/engagement, consent, KYC/risk, B2B account hierarchy, acquisition source, and SCD-2 history fields.
+columns:
+
+  # --- identity ------------------------------------------------------------
+  - name: customer_id
+    logical_type: integer
+    physical_type: bigint
+    primary_key: true
+    description: Unique identifier for a customer across the enterprise. Stable across lifecycle events.
+    recommended_rules:
+      - { type: notNull }
+      - { type: unique }
+  - name: customer_type
+    logical_type: string
+    physical_type: varchar(20)
+    description: Party classification — individual / business / partner in generic CRM contexts; retail / corporate / hni in banking contexts. Drives downstream segmentation and consent rules.
+    recommended_rules:
+      - { type: notNull }
+      - { type: allowedValues, values: ["individual", "business", "partner", "retail", "corporate", "hni"] }
+  - name: source_system_id
+    logical_type: string
+    physical_type: varchar(64)
+    description: Native customer identifier in the originating source system (CRM, ERP, web). Used for cross-system reconciliation.
+    recommended_rules:
+      - { type: maxLength, value: 64 }
+  - name: source_system
+    logical_type: string
+    physical_type: varchar(40)
+    description: Name of the system where this customer record originated (e.g. salesforce, shopify, sap).
+    recommended_rules:
+      - { type: maxLength, value: 40 }
+  - name: mdm_golden_id
+    logical_type: string
+    physical_type: varchar(64)
+    description: Master Data Management cluster ID grouping duplicate / linked customer records into a single golden entity.
+    recommended_rules:
+      - { type: maxLength, value: 64 }
+  - name: parent_customer_id
+    logical_type: integer
+    physical_type: bigint
+    description: Self-FK to a parent customer for B2B account hierarchies (subsidiary → parent). Null for top-level / individual customers.
+    recommended_rules: []
+
+  # --- name / identifiers --------------------------------------------------
+  - name: legal_name
+    logical_type: string
+    physical_type: varchar(255)
+    description: Legal name for business customers; full legal name for individuals. PII.
+    recommended_rules:
+      - { type: notNull }
+      - { type: maxLength, value: 255 }
+  - name: display_name
+    logical_type: string
+    physical_type: varchar(255)
+    description: Human-readable name shown in UIs and communications. May differ from legal_name (preferred / shortened form).
+    recommended_rules:
+      - { type: maxLength, value: 255 }
+  - name: first_name
+    logical_type: string
+    physical_type: varchar(100)
+    description: Customer's first / given name. PII.
+    recommended_rules:
+      - { type: maxLength, value: 100 }
+  - name: middle_name
+    logical_type: string
+    physical_type: varchar(100)
+    description: Customer's middle name or initial. PII. Often null.
+    recommended_rules:
+      - { type: maxLength, value: 100 }
+  - name: last_name
+    logical_type: string
+    physical_type: varchar(100)
+    description: Customer's last / family name. PII.
+    recommended_rules:
+      - { type: maxLength, value: 100 }
+  - name: preferred_name
+    logical_type: string
+    physical_type: varchar(100)
+    description: Self-declared preferred name. Use in addressed communications when present.
+    recommended_rules:
+      - { type: maxLength, value: 100 }
+  - name: salutation
+    logical_type: string
+    physical_type: varchar(20)
+    description: Title used to address the customer (Mr, Ms, Mx, Dr, etc.).
+    recommended_rules:
+      - { type: maxLength, value: 20 }
+  - name: suffix
+    logical_type: string
+    physical_type: varchar(20)
+    description: Name suffix (Jr, Sr, II, III, PhD). Optional.
+    recommended_rules:
+      - { type: maxLength, value: 20 }
+
+  # --- contact -------------------------------------------------------------
+  - name: primary_email
+    logical_type: string
+    physical_type: varchar(320)
+    description: Primary contact email. PII. RFC-compliant format. Consent status recorded separately in email_opt_in.
+    recommended_rules:
+      - { type: regex, pattern: "^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$" }
+      - { type: maxLength, value: 320 }
+  - name: secondary_email
+    logical_type: string
+    physical_type: varchar(320)
+    description: Backup contact email. PII. Same format constraint as primary_email.
+    recommended_rules:
+      - { type: regex, pattern: "^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$" }
+      - { type: maxLength, value: 320 }
+  - name: primary_phone
+    logical_type: string
+    physical_type: varchar(32)
+    description: E.164-formatted primary phone number. PII.
+    recommended_rules:
+      - { type: regex, pattern: "^\\+?[0-9\\s\\-()]{7,32}$" }
+  - name: mobile_phone
+    logical_type: string
+    physical_type: varchar(32)
+    description: Mobile / cell phone number. PII. Used for SMS when sms_opt_in is true.
+    recommended_rules:
+      - { type: regex, pattern: "^\\+?[0-9\\s\\-()]{7,32}$" }
+  - name: work_phone
+    logical_type: string
+    physical_type: varchar(32)
+    description: Work / business phone number. PII. More relevant for B2B customers.
+    recommended_rules:
+      - { type: regex, pattern: "^\\+?[0-9\\s\\-()]{7,32}$" }
+  - name: preferred_contact_channel
+    logical_type: string
+    physical_type: varchar(20)
+    description: Customer's stated preferred communication channel.
+    recommended_rules:
+      - { type: allowedValues, values: ["email", "sms", "phone", "push", "mail", "none"] }
+  - name: preferred_language
+    logical_type: string
+    physical_type: varchar(10)
+    description: BCP 47 language tag for the customer's preferred communication language (e.g. en-US, fr-CA, ja).
+    recommended_rules:
+      - { type: regex, pattern: "^[a-z]{2,3}(-[A-Z]{2})?$" }
+  - name: time_zone
+    logical_type: string
+    physical_type: varchar(50)
+    description: IANA time zone name (e.g. America/New_York, Europe/London). Used to schedule communications respectfully.
+    recommended_rules:
+      - { type: maxLength, value: 50 }
+
+  # --- address (primary) ---------------------------------------------------
+  - name: address_line1
+    logical_type: string
+    physical_type: varchar(255)
+    description: Primary address — street number and street name. PII.
+    recommended_rules:
+      - { type: maxLength, value: 255 }
+  - name: address_line2
+    logical_type: string
+    physical_type: varchar(255)
+    description: Primary address — apartment, suite, building. PII. Often null.
+    recommended_rules:
+      - { type: maxLength, value: 255 }
+  - name: city
+    logical_type: string
+    physical_type: varchar(100)
+    description: City / locality of primary address. PII.
+    recommended_rules:
+      - { type: maxLength, value: 100 }
+  - name: state_region
+    logical_type: string
+    physical_type: varchar(100)
+    description: State, province, or region of primary address. PII. Use ISO 3166-2 subdivision codes where possible.
+    recommended_rules:
+      - { type: maxLength, value: 100 }
+  - name: postal_code
+    logical_type: string
+    physical_type: varchar(20)
+    description: Postal / ZIP code of primary address. PII. Format varies by country.
+    recommended_rules:
+      - { type: maxLength, value: 20 }
+  - name: country_code
+    logical_type: string
+    physical_type: char(2)
+    description: ISO 3166-1 alpha-2 country code of primary residence / registration.
+    recommended_rules:
+      - { type: regex, pattern: "^[A-Z]{2}$" }
+      - { type: allowedValues, values: ["US","CA","GB","DE","FR","ES","IT","NL","SE","NO","DK","FI","CH","AT","BE","IE","PT","PL","CZ","JP","KR","CN","HK","TW","SG","MY","TH","ID","PH","VN","IN","AU","NZ","BR","MX","AR","CL","CO","PE","ZA","AE","SA","IL","TR","EG"] }
+
+  # --- demographics --------------------------------------------------------
+  - name: date_of_birth
+    logical_type: date
+    physical_type: date
+    description: Customer's date of birth. PII. May be null for accounts that didn't provide it. Used for age-gated content and birthday campaigns.
+    recommended_rules:
+      - { type: range, max: "today", severity: "sh:Violation" }
+  - name: gender
+    logical_type: string
+    physical_type: varchar(20)
+    description: Self-declared gender. Optional; nullable. Free-form to allow self-identification.
+    recommended_rules:
+      - { type: maxLength, value: 20 }
+  - name: marital_status
+    logical_type: string
+    physical_type: varchar(20)
+    description: Self-declared marital status. Optional.
+    recommended_rules:
+      - { type: allowedValues, values: ["single", "married", "domestic_partner", "divorced", "widowed", "separated", "unspecified"] }
+  - name: nationality
+    logical_type: string
+    physical_type: char(2)
+    description: ISO 3166-1 alpha-2 country code of nationality. Distinct from country_code (residence).
+    recommended_rules:
+      - { type: regex, pattern: "^[A-Z]{2}$" }
+
+  # --- lifecycle / account state ------------------------------------------
+  - name: onboarded_at
+    logical_type: timestamp
+    physical_type: timestamp with time zone
+    description: UTC timestamp when the customer record was first established in the master system.
+    recommended_rules:
+      - { type: notNull }
+      - { type: range, max: "now", severity: "sh:Warning" }
+  - name: signup_date
+    logical_type: date
+    physical_type: date
+    description: Calendar date the customer first registered / signed up. Often the same day as onboarded_at.
+    recommended_rules:
+      - { type: range, max: "today", severity: "sh:Violation" }
+  - name: first_purchase_at
+    logical_type: timestamp
+    physical_type: timestamp with time zone
+    description: UTC timestamp of the customer's first completed (delivered) purchase. Null for never-purchased customers.
+    recommended_rules:
+      - { type: range, max: "now", severity: "sh:Warning" }
+  - name: last_purchase_at
+    logical_type: timestamp
+    physical_type: timestamp with time zone
+    description: UTC timestamp of the customer's most recent completed purchase. Drives recency calculations.
+    recommended_rules:
+      - { type: range, max: "now", severity: "sh:Warning" }
+  - name: last_login_at
+    logical_type: timestamp
+    physical_type: timestamp with time zone
+    description: UTC timestamp of the customer's most recent authenticated session.
+    recommended_rules:
+      - { type: range, max: "now", severity: "sh:Warning" }
+  - name: last_active_at
+    logical_type: timestamp
+    physical_type: timestamp with time zone
+    description: UTC timestamp of the customer's most recent meaningful interaction (login, purchase, support contact). Used for dormancy detection.
+    recommended_rules:
+      - { type: range, max: "now", severity: "sh:Warning" }
+  - name: churned_at
+    logical_type: timestamp
+    physical_type: timestamp with time zone
+    description: UTC timestamp when the customer was classified as churned. Null for active / dormant / not-yet-churned customers.
+    recommended_rules:
+      - { type: range, max: "now", severity: "sh:Warning" }
+  - name: account_status
+    logical_type: string
+    physical_type: varchar(20)
+    description: Operational state of the customer's account. Suspended/closed/banned accounts must be excluded from marketing.
+    recommended_rules:
+      - { type: notNull }
+      - { type: allowedValues, values: ["active", "inactive", "suspended", "closed", "banned"] }
+  - name: lifecycle_stage
+    logical_type: string
+    physical_type: varchar(20)
+    description: Business-facing lifecycle band. Distinct from operational account_status — drives segmentation, not access control.
+    recommended_rules:
+      - { type: allowedValues, values: ["lead", "prospect", "new", "growing", "vip", "dormant", "churned", "reactivated"] }
+  - name: days_since_signup
+    logical_type: integer
+    physical_type: integer
+    description: Materialised integer days between signup_date and the current snapshot date.
+    recommended_rules:
+      - { type: range, min: 0, severity: "sh:Violation" }
+
+  # --- segmentation / customer value --------------------------------------
+  - name: segment_code
+    logical_type: string
+    physical_type: varchar(20)
+    description: Customer segment classifier (lifecycle / value tier). History is captured via SCD-2 fields below.
+    recommended_rules:
+      - { type: allowedValues, values: ["new", "growing", "vip", "dormant", "churned", "reactivated", "high_value", "at_risk"] }
+  - name: customer_tier
+    logical_type: string
+    physical_type: varchar(20)
+    description: Loyalty / value tier. Often surfaced in customer-facing UIs (Bronze / Silver / Gold / Platinum).
+    recommended_rules:
+      - { type: allowedValues, values: ["bronze", "silver", "gold", "platinum", "vip"] }
+  - name: lifetime_value
+    logical_type: number
+    physical_type: numeric(14,2)
+    description: Cumulative revenue attributable to this customer to date in the reporting currency. Eligible for bucket banding.
+    recommended_rules:
+      - { type: range, min: 0, severity: "sh:Warning" }
+  - name: lifetime_value_currency
+    logical_type: string
+    physical_type: char(3)
+    description: ISO 4217 currency code that lifetime_value is denominated in.
+    recommended_rules:
+      - { type: regex, pattern: "^[A-Z]{3}$" }
+  - name: total_orders
+    logical_type: integer
+    physical_type: integer
+    description: Materialised count of delivered orders attributed to this customer.
+    recommended_rules:
+      - { type: range, min: 0, severity: "sh:Violation" }
+  - name: avg_order_value
+    logical_type: number
+    physical_type: numeric(12,2)
+    description: lifetime_value / total_orders for customers with total_orders > 0, else null.
+    recommended_rules:
+      - { type: range, min: 0, severity: "sh:Warning" }
+  - name: recency_days
+    logical_type: integer
+    physical_type: integer
+    description: Days between last_purchase_at and the snapshot date. R of RFM.
+    recommended_rules:
+      - { type: range, min: 0, severity: "sh:Violation" }
+  - name: frequency_count
+    logical_type: integer
+    physical_type: integer
+    description: Number of distinct purchase events in the trailing analysis window. F of RFM.
+    recommended_rules:
+      - { type: range, min: 0, severity: "sh:Violation" }
+  - name: rfm_score
+    logical_type: integer
+    physical_type: smallint
+    description: Composite RFM score (1-555 typical, scheme-dependent). Higher = more valuable + engaged.
+    recommended_rules:
+      - { type: range, min: 1, max: 555, severity: "sh:Warning" }
+  - name: churn_risk_score
+    logical_type: number
+    physical_type: numeric(5,2)
+    description: Churn risk scored 0-100 from transaction recency/frequency (days_since_last_txn * 2 - txn_count_90d * 5, clamped). 0 = active, 100 = almost certainly churned.
+    recommended_rules:
+      - { type: range, min: 0, max: 100, severity: "sh:Violation" }
+  - name: nps_score
+    logical_type: integer
+    physical_type: smallint
+    description: Most recent Net Promoter Score response. -100 to 100 (scaled) or 0-10 (raw response).
+    recommended_rules:
+      - { type: range, min: -100, max: 100, severity: "sh:Warning" }
+  - name: satisfaction_score
+    logical_type: number
+    physical_type: numeric(4,2)
+    description: Most recent CSAT score on a 1-5 or 1-10 scale (scheme is dataset-specific).
+    recommended_rules:
+      - { type: range, min: 0, max: 10, severity: "sh:Warning" }
+
+  # --- consent / privacy --------------------------------------------------
+  - name: marketing_opt_in
+    logical_type: boolean
+    physical_type: boolean
+    description: Whether the customer has consented to marketing communications (any channel). Master flag.
+    recommended_rules:
+      - { type: notNull }
+  - name: email_opt_in
+    logical_type: boolean
+    physical_type: boolean
+    description: Per-channel consent for marketing email. AND-ed with marketing_opt_in.
+    recommended_rules:
+      - { type: notNull }
+  - name: sms_opt_in
+    logical_type: boolean
+    physical_type: boolean
+    description: Per-channel consent for SMS / text marketing. AND-ed with marketing_opt_in.
+    recommended_rules:
+      - { type: notNull }
+  - name: phone_opt_in
+    logical_type: boolean
+    physical_type: boolean
+    description: Per-channel consent for outbound phone marketing. AND-ed with marketing_opt_in.
+    recommended_rules:
+      - { type: notNull }
+  - name: consent_recorded_at
+    logical_type: timestamp
+    physical_type: timestamp with time zone
+    description: UTC timestamp when the most recent consent decision was captured. Required for GDPR / CCPA audit trails.
+    recommended_rules:
+      - { type: range, max: "now", severity: "sh:Warning" }
+  - name: privacy_policy_version
+    logical_type: string
+    physical_type: varchar(20)
+    description: Version identifier of the privacy policy in force at the time of the customer's most recent consent decision.
+    recommended_rules:
+      - { type: maxLength, value: 20 }
+  - name: gdpr_deletion_requested_at
+    logical_type: timestamp
+    physical_type: timestamp with time zone
+    description: UTC timestamp when the customer requested erasure under GDPR Art. 17 / CCPA equivalent. Null = no request on file.
+    recommended_rules:
+      - { type: range, max: "now", severity: "sh:Warning" }
+  - name: data_retention_expires_at
+    logical_type: timestamp
+    physical_type: timestamp with time zone
+    description: UTC timestamp after which retained PII for this customer must be purged or anonymised.
+    recommended_rules: []
+
+  # --- KYC / risk / compliance --------------------------------------------
+  - name: kyc_status
+    logical_type: string
+    physical_type: varchar(20)
+    description: Know-Your-Customer verification state.
+    recommended_rules:
+      - { type: allowedValues, values: ["not_started", "pending", "verified", "failed", "expired"] }
+  - name: kyc_verified_at
+    logical_type: timestamp
+    physical_type: timestamp with time zone
+    description: UTC timestamp when KYC was last successfully verified. Null = never verified.
+    recommended_rules:
+      - { type: range, max: "now", severity: "sh:Warning" }
+  - name: sanctions_status
+    logical_type: string
+    physical_type: varchar(20)
+    description: Result of the most recent sanctions / watchlist screen.
+    recommended_rules:
+      - { type: allowedValues, values: ["clear", "flagged", "blocked", "pending_review", "not_screened"] }
+  - name: sanctions_screened_at
+    logical_type: timestamp
+    physical_type: timestamp with time zone
+    description: UTC timestamp of the most recent sanctions screen run for this customer.
+    recommended_rules:
+      - { type: range, max: "now", severity: "sh:Warning" }
+  - name: pep_flag
+    logical_type: boolean
+    physical_type: boolean
+    description: Politically Exposed Person flag set during enhanced due diligence.
+    recommended_rules: []
+  - name: fraud_score
+    logical_type: number
+    physical_type: numeric(5,4)
+    description: Modelled probability of fraudulent activity associated with this customer. 0 = trusted, 1 = high risk.
+    recommended_rules:
+      - { type: range, min: 0, max: 1, severity: "sh:Violation" }
+  - name: risk_band
+    logical_type: string
+    physical_type: varchar(10)
+    description: Discretised risk classification derived from fraud_score and KYC outcomes.
+    recommended_rules:
+      - { type: allowedValues, values: ["low", "medium", "high", "critical"] }
+
+  # --- B2B / account hierarchy --------------------------------------------
+  - name: industry_code
+    logical_type: string
+    physical_type: varchar(20)
+    description: Industry classifier for B2B customers. Source taxonomy is dataset-specific (NAICS, SIC, custom).
+    recommended_rules:
+      - { type: maxLength, value: 20 }
+  - name: naics_code
+    logical_type: string
+    physical_type: char(6)
+    description: North American Industry Classification System 6-digit code.
+    recommended_rules:
+      - { type: regex, pattern: "^[0-9]{2,6}$" }
+  - name: sic_code
+    logical_type: string
+    physical_type: char(4)
+    description: Standard Industrial Classification 4-digit code.
+    recommended_rules:
+      - { type: regex, pattern: "^[0-9]{4}$" }
+  - name: employee_count
+    logical_type: integer
+    physical_type: integer
+    description: Reported headcount for B2B customers.
+    recommended_rules:
+      - { type: range, min: 0, severity: "sh:Warning" }
+  - name: annual_revenue
+    logical_type: number
+    physical_type: numeric(18,2)
+    description: Reported annual revenue for B2B customers in the reporting currency.
+    recommended_rules:
+      - { type: range, min: 0, severity: "sh:Warning" }
+  - name: tax_id
+    logical_type: string
+    physical_type: varchar(40)
+    description: Tax / VAT registration identifier. PII for individuals, public for businesses in some jurisdictions.
+    recommended_rules:
+      - { type: maxLength, value: 40 }
+  - name: account_manager_email
+    logical_type: string
+    physical_type: varchar(320)
+    description: Email of the internal account manager / customer success rep assigned to this customer.
+    recommended_rules:
+      - { type: regex, pattern: "^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$" }
+
+  # --- acquisition / source -----------------------------------------------
+  - name: acquisition_channel
+    logical_type: string
+    physical_type: varchar(40)
+    description: High-level channel through which the customer was acquired.
+    recommended_rules:
+      - { type: allowedValues, values: ["organic", "paid_search", "paid_social", "display", "email", "affiliate", "referral", "direct", "partner", "event", "other"] }
+  - name: acquisition_campaign
+    logical_type: string
+    physical_type: varchar(100)
+    description: Specific campaign / source attribution string (utm_campaign, partner code, etc.).
+    recommended_rules:
+      - { type: maxLength, value: 100 }
+  - name: referrer_customer_id
+    logical_type: integer
+    physical_type: bigint
+    description: customer_id of the customer who referred this one. Null if not referral-acquired.
+    recommended_rules: []
+
+  # --- SCD-2 boundary fields (customer segment / status history) ----------
+  - name: effective_from
+    logical_type: date
+    physical_type: date
+    description: Date this customer attribute row became active. SCD-2 boundary.
+    recommended_rules:
+      - { type: notNull }
+  - name: effective_to
+    logical_type: date
+    physical_type: date
+    description: Date this customer attribute row was superseded. Null marks the current row.
+    recommended_rules: []
+  - name: is_current
+    logical_type: boolean
+    physical_type: boolean
+    description: Convenience flag. True iff effective_to is null. Exactly one current row per customer natural key.
+    recommended_rules:
+      - { type: notNull }
+
+  # --- banking customer master / profile (samples/banking) ------------------
+  - name: name
+    sensitivity: pii
+    logical_type: string
+    physical_type: varchar(120)
+    description: Full legal name of the customer (person or organisation).
+    recommended_rules:
+      - { type: notNull }
+      - { type: maxLength, value: 120 }
+  - name: email
+    sensitivity: pii
+    logical_type: string
+    physical_type: varchar(120)
+    description: Primary email address on file.
+    recommended_rules:
+      - { type: notNull }
+      - { type: regex, pattern: "^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$" }
+  - name: mobile_number
+    sensitivity: pii
+    logical_type: string
+    physical_type: varchar(16)
+    description: Primary mobile contact number in international +91 format.
+    recommended_rules:
+      - { type: notNull }
+      - { type: regex, pattern: "^\\+91-[6-9][0-9]{9}$", severity: "sh:Warning" }
+  - name: pan_and_aadhaar_number
+    sensitivity: pii
+    logical_type: string
+    physical_type: varchar(24)
+    description: Government-issued PAN/Aadhaar identifier. Highly sensitive; must never appear unmasked in consumer products.
+    recommended_rules:
+      - { type: notNull }
+      - { type: unique }
+      - { type: regex, pattern: "^[A-Z]{5}[0-9]{4}[A-Z]$", severity: "sh:Violation" }
+  - name: onboarded_date
+    logical_type: date
+    physical_type: date
+    description: Date the customer relationship was established.
+    recommended_rules:
+      - { type: notNull }
+      - { type: range, max: "today", severity: "sh:Violation" }
+  - name: customer_segment
+    logical_type: string
+    physical_type: varchar(16)
+    description: Marketing/value segment of the customer.
+    recommended_rules:
+      - { type: notNull }
+      - { type: allowedValues, values: ["mass", "affluent", "premium", "private", "business"], severity: "sh:Warning" }
+  - name: citizenship_country
+    sensitivity: pii
+    logical_type: string
+    physical_type: varchar(2)
+    description: ISO 3166-1 alpha-2 citizenship country code.
+    recommended_rules:
+      - { type: regex, pattern: "^[A-Z]{2}$" }
+  - name: onboarding_channel
+    logical_type: string
+    physical_type: varchar(24)
+    description: Channel through which the customer was onboarded.
+    recommended_rules:
+      - { type: allowedValues, values: ["branch", "online", "mobile_app", "relationship_manager"], severity: "sh:Warning" }
+  - name: communication_channel_pref
+    logical_type: string
+    physical_type: varchar(12)
+    description: Customer's preferred outreach channel.
+    recommended_rules:
+      - { type: allowedValues, values: ["email", "sms", "whatsapp", "phone"], severity: "sh:Warning" }
+  - name: marketing_opt_in_flag
+    logical_type: boolean
+    physical_type: boolean
+    description: Whether the customer has opted in to marketing communications. Gate every campaign audience on this flag.
+    recommended_rules:
+      - { type: notNull }
+  - name: kyc_verification_date
+    logical_type: date
+    physical_type: date
+    description: Date KYC was last verified. Null while verification is pending.
+    recommended_rules:
+      - { type: range, max: "today", severity: "sh:Warning" }
+
+  # --- campaign response (samples/banking edw.campaign_response) ------------
+  - name: campaign_id
+    logical_type: integer
+    physical_type: bigint
+    description: Identifier of the marketing campaign a message/response belongs to.
+    recommended_rules:
+      - { type: notNull }
+  - name: conversion_status
+    logical_type: string
+    physical_type: varchar(16)
+    description: Campaign response outcome for a customer.
+    recommended_rules:
+      - { type: notNull }
+      - { type: allowedValues, values: ["converted", "engaged", "no_response", "unsubscribed"] }
+  - name: conversion_value
+    logical_type: number
+    physical_type: numeric(12,2)
+    description: Monetary value attributed to a conversion. Null unless the response converted.
+    recommended_rules:
+      - { type: range, min: 0, severity: "sh:Violation" }
+  - name: message_sent_date
+    logical_type: date
+    physical_type: date
+    description: Date the campaign message was sent to the customer.
+    recommended_rules:
+      - { type: notNull }
+      - { type: range, max: "today", severity: "sh:Violation" }
+  - name: opened_flag
+    logical_type: boolean
+    physical_type: boolean
+    description: Whether the customer opened/viewed the campaign message. Conversions imply an open.
+    recommended_rules:
+      - { type: notNull }
+  - name: channel
+    logical_type: string
+    physical_type: varchar(12)
+    description: Delivery/origination channel (campaign messages - email, sms, whatsapp, push; transactions - atm, pos, online, branch, upi).
+    recommended_rules:
+      - { type: notNull }

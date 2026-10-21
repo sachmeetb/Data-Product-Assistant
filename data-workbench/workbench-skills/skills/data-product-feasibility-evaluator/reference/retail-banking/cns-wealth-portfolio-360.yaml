@@ -1,0 +1,109 @@
+spec_id: cns_wealth_portfolio_360
+name: Wealth Portfolio 360
+domain: Retail Banking
+product_kind: consumer
+description: Investment/wealth view of a customer's managed portfolios — holdings, instruments, valuations and performance — for wealth advisory and reporting. Requires a wealth/investment source system that this estate does not contain (expected to grade absent).
+schema_version: '1.0'
+classification: confidential
+grain:
+  keys:
+  - portfolio_id
+  description: One row per holding within a customer's investment portfolio.
+freshness:
+  history: snapshot
+  cadence: daily
+  description: Daily valuation snapshot of holdings.
+composition:
+  join_keys:
+  - portfolio_id
+  - instrument_id
+  composed_of: []
+  description: Would be assembled from a portfolio-accounting / custody source system joined to an instrument reference feed.
+allowed_derivations:
+- rename
+- cast
+attributes:
+- name: portfolio_id
+  type: bigint
+  concept: Portfolio ID
+  required: true
+  is_key: true
+  classification: internal
+  description: Unique identifier for a managed investment portfolio.
+- name: holding_id
+  type: bigint
+  concept: Holding ID
+  required: true
+  is_key: false
+  classification: internal
+  description: Unique identifier for a single security holding within a portfolio.
+- name: instrument_id
+  type: bigint
+  concept: Instrument ID
+  required: true
+  is_key: false
+  classification: internal
+  description: Unique identifier for a financial instrument in the instrument reference master.
+- name: isin
+  type: varchar
+  concept: ISIN
+  required: true
+  is_key: false
+  classification: internal
+  description: International Securities Identification Number of the held instrument.
+- name: security_name
+  type: varchar
+  concept: Security Name
+  required: true
+  is_key: false
+  classification: internal
+  description: Display name of the held security or fund.
+- name: asset_class
+  type: varchar
+  concept: Asset Class
+  required: true
+  is_key: false
+  classification: internal
+  description: Asset-class classification such as equity, fixed_income, mutual_fund, etf or cash.
+- name: quantity
+  type: numeric
+  concept: Quantity
+  required: true
+  is_key: false
+  classification: internal
+  description: Number of units of the instrument held.
+- name: market_value
+  type: numeric
+  concept: Market Value
+  required: true
+  is_key: false
+  classification: internal
+  description: Current market value of the holding at the valuation date.
+- name: cost_basis
+  type: numeric
+  concept: Cost Basis
+  required: true
+  is_key: false
+  classification: internal
+  description: Aggregate purchase cost of the holding.
+- name: unrealized_gain_loss
+  type: numeric
+  concept: Unrealized Gain Loss
+  required: true
+  is_key: false
+  classification: internal
+  description: Unrealised gain or loss on the holding (market value minus cost basis).
+- name: portfolio_type
+  type: varchar
+  concept: Portfolio Type
+  required: true
+  is_key: false
+  classification: internal
+  description: Mandate/type of the portfolio such as discretionary, advisory or execution_only.
+- name: valuation_date
+  type: date
+  concept: Valuation Date
+  required: true
+  is_key: false
+  classification: internal
+  description: Date the portfolio holdings were valued.

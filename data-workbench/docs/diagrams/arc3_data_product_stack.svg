@@ -1,0 +1,122 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 810" width="1440" height="810" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif">
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#94A3B8"/>
+    </marker>
+    <marker id="arr_rev" viewBox="0 0 10 10" refX="1" refY="5"
+            markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 10 0 L 0 5 L 10 10 z" fill="#94A3B8"/>
+    </marker>
+  </defs>
+  <rect width="1440" height="810" fill="#F8FAFC"/>
+  <rect x="0" y="0" width="1440" height="74" rx="0" ry="0" fill="#0F172A" stroke="none" stroke-width="1.5"/>
+  <text x="48" y="26" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="20" font-weight="700" fill="#FFFFFF" text-anchor="start">The three layers every AI initiative needs. Start with the foundation.</text>
+  <text x="48" y="54" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="10" font-weight="normal" fill="#94A3B8" text-anchor="start">AI agents are only as good as the data they reason over.  Reliable AI begins with reliable, governed data products.</text>
+  <rect x="48" y="70" width="120" height="3" rx="1" ry="1" fill="#16A34A" stroke="none" stroke-width="1.5"/>
+  <rect x="0" y="82" width="1440" height="124" rx="0" ry="0" fill="#EFF6FF" stroke="none" stroke-width="1.5"/>
+  <line x1="0" y1="82" x2="1440" y2="82" stroke="#2563EB" stroke-width="1"/>
+  <rect x="40" y="118" width="46" height="18" rx="9" ry="9" fill="#2563EB" stroke="none" stroke-width="1.5"/>
+  <text x="63" y="127" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="7" font-weight="700" fill="#FFFFFF" text-anchor="middle">Layer 3</text>
+  <text x="40" y="146" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="13" font-weight="700" fill="#1E3A8A" text-anchor="start">AI AGENTS &amp;</text>
+  <text x="40" y="162" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="13" font-weight="700" fill="#1E3A8A" text-anchor="start">APPLICATIONS</text>
+  <text x="40" y="184" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="9" font-weight="normal" fill="#475569" text-anchor="start">The Consumer</text>
+  <line x1="282" y1="92" x2="282" y2="196" stroke="#CBD5E1" stroke-width="1"/>
+  <rect x="294" y="94" width="266" height="100" rx="6" ry="6" fill="#DBEAFE" stroke="#93C5FD" stroke-width="1.5"/>
+  <text x="306" y="112" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="10" font-weight="700" fill="#1E3A8A" text-anchor="start">Natural Language Queries</text>
+  <text x="306" y="130" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="9" font-weight="normal" fill="#2563EB" text-anchor="start">Ask in business terms.</text>
+  <text x="306" y="144" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="9" font-weight="normal" fill="#2563EB" text-anchor="start">Get trusted, governed answers.</text>
+  <rect x="574" y="94" width="266" height="100" rx="6" ry="6" fill="#DBEAFE" stroke="#93C5FD" stroke-width="1.5"/>
+  <text x="586" y="112" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="10" font-weight="700" fill="#1E3A8A" text-anchor="start">Agentic Workflows</text>
+  <text x="586" y="130" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="9" font-weight="normal" fill="#2563EB" text-anchor="start">Multi-step AI processes grounded</text>
+  <text x="586" y="144" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="9" font-weight="normal" fill="#2563EB" text-anchor="start">in certified data products.</text>
+  <rect x="854" y="94" width="266" height="100" rx="6" ry="6" fill="#DBEAFE" stroke="#93C5FD" stroke-width="1.5"/>
+  <text x="866" y="112" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="10" font-weight="700" fill="#1E3A8A" text-anchor="start">Automated Analytics</text>
+  <text x="866" y="130" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="9" font-weight="normal" fill="#2563EB" text-anchor="start">Agents reason over data directly.</text>
+  <text x="866" y="144" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="9" font-weight="normal" fill="#2563EB" text-anchor="start">No manual query engineering.</text>
+  <rect x="1134" y="94" width="266" height="100" rx="6" ry="6" fill="#DBEAFE" stroke="#93C5FD" stroke-width="1.5"/>
+  <text x="1146" y="112" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="10" font-weight="700" fill="#1E3A8A" text-anchor="start">AI-Powered Applications</text>
+  <text x="1146" y="130" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="9" font-weight="normal" fill="#2563EB" text-anchor="start">Apps with semantic context.</text>
+  <text x="1146" y="144" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="9" font-weight="normal" fill="#2563EB" text-anchor="start">Consistent KPIs across tools.</text>
+  <line x1="155" y1="222" x2="155" y2="210" stroke="#D97706" stroke-width="2" marker-end="url(#arr)"/>
+  <text x="163" y="218" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="7" font-weight="normal" fill="#94A3B8" text-anchor="start">enables</text>
+  <rect x="0" y="226" width="1440" height="154" rx="0" ry="0" fill="#FFFBF0" stroke="none" stroke-width="1.5"/>
+  <line x1="0" y1="226" x2="1440" y2="226" stroke="#D97706" stroke-width="1"/>
+  <rect x="40" y="277" width="46" height="18" rx="9" ry="9" fill="#D97706" stroke="none" stroke-width="1.5"/>
+  <text x="63" y="286" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="7" font-weight="700" fill="#FFFFFF" text-anchor="middle">Layer 2</text>
+  <text x="40" y="305" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="13" font-weight="700" fill="#92400E" text-anchor="start">SEMANTIC LAYER</text>
+  <text x="40" y="327" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="9" font-weight="normal" fill="#475569" text-anchor="start">The Router</text>
+  <line x1="282" y1="236" x2="282" y2="370" stroke="#CBD5E1" stroke-width="1"/>
+  <rect x="294" y="236" width="359" height="110" rx="6" ry="6" fill="#FEF3C7" stroke="#FCD34D" stroke-width="1.5"/>
+  <text x="306" y="254" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="10" font-weight="700" fill="#92400E" text-anchor="start">Business Ontology  (Top Layer)</text>
+  <text x="306" y="272" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="9" font-weight="normal" fill="#D97706" text-anchor="start">Maps business concepts and terms.</text>
+  <text x="306" y="286" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="9" font-weight="normal" fill="#D97706" text-anchor="start">Ensures consistent KPIs,</text>
+  <text x="306" y="300" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="9" font-weight="normal" fill="#D97706" text-anchor="start">metrics, and definitions.</text>
+  <rect x="667" y="236" width="359" height="110" rx="6" ry="6" fill="#FEF3C7" stroke="#FCD34D" stroke-width="1.5"/>
+  <text x="679" y="254" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="10" font-weight="700" fill="#92400E" text-anchor="start">Data Product Metadata  (Bottom Layer)</text>
+  <text x="679" y="272" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="9" font-weight="normal" fill="#D97706" text-anchor="start">Maps ontology concepts</text>
+  <text x="679" y="286" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="9" font-weight="normal" fill="#D97706" text-anchor="start">to certified data products.</text>
+  <text x="679" y="300" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="9" font-weight="normal" fill="#D97706" text-anchor="start">Bridges business to technical.</text>
+  <rect x="1040" y="236" width="359" height="110" rx="6" ry="6" fill="#FEF3C7" stroke="#FCD34D" stroke-width="1.5"/>
+  <text x="1052" y="254" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="10" font-weight="700" fill="#92400E" text-anchor="start">Semantic Routing + Context</text>
+  <text x="1052" y="272" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="9" font-weight="normal" fill="#D97706" text-anchor="start">Routes AI queries to the right</text>
+  <text x="1052" y="286" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="9" font-weight="normal" fill="#D97706" text-anchor="start">data product automatically.</text>
+  <text x="1052" y="300" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="9" font-weight="normal" fill="#D97706" text-anchor="start">Injects semantic context into prompts.</text>
+  <rect x="294" y="350" width="1106" height="24" rx="4" ry="4" fill="#FEFCE8" stroke="#FDE68A" stroke-width="1.5"/>
+  <text x="310" y="362" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="9" font-weight="normal" fill="#92400E" text-anchor="start">Proof-of-concept dual-ontology semantic layer included in Data Workbench — demonstrates how governed data products directly power AI queries</text>
+  <line x1="155" y1="396" x2="155" y2="384" stroke="#16A34A" stroke-width="2" marker-end="url(#arr)"/>
+  <text x="163" y="392" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="7" font-weight="normal" fill="#94A3B8" text-anchor="start">powers</text>
+  <rect x="0" y="400" width="1440" height="252" rx="0" ry="0" fill="#F0FFF4" stroke="none" stroke-width="1.5"/>
+  <line x1="0" y1="400" x2="1440" y2="400" stroke="#16A34A" stroke-width="2.5"/>
+  <rect x="40" y="500" width="46" height="18" rx="9" ry="9" fill="#16A34A" stroke="none" stroke-width="1.5"/>
+  <text x="63" y="509" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="7" font-weight="700" fill="#FFFFFF" text-anchor="middle">Layer 1</text>
+  <text x="40" y="528" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="13" font-weight="700" fill="#14532D" text-anchor="start">DATA PRODUCTS</text>
+  <text x="40" y="550" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="9" font-weight="normal" fill="#475569" text-anchor="start">The Foundation</text>
+  <line x1="282" y1="410" x2="282" y2="642" stroke="#86EFAC" stroke-width="1.5"/>
+  <rect x="294" y="408" width="1106" height="32" rx="6" ry="6" fill="#16A34A" stroke="none" stroke-width="1.5"/>
+  <text x="314" y="424" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="start">Data Workbench builds this layer  —  20+ agent skills, full lifecycle from source database to marketplace-published data product</text>
+  <rect x="294" y="448" width="547" height="152" rx="8" ry="8" fill="#DCFCE7" stroke="#86EFAC" stroke-width="1.5"/>
+  <rect x="294" y="448" width="547" height="28" rx="8" ry="8" fill="#16A34A"/>
+  <text x="308" y="462" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="11" font-weight="700" fill="#FFFFFF" dominant-baseline="middle">SOURCE-ALIGNED  —  certify what you have</text>
+  <text x="314" y="494" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="10" font-weight="normal" fill="#14532D" text-anchor="start">→  Discovered from existing databases and data warehouses</text>
+  <text x="314" y="518" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="10" font-weight="normal" fill="#14532D" text-anchor="start">→  Auto-profiled and AI-enriched with business descriptions</text>
+  <text x="314" y="542" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="10" font-weight="normal" fill="#14532D" text-anchor="start">→  ODCS data contract synthesized from approved graph state</text>
+  <text x="314" y="566" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="10" font-weight="normal" fill="#14532D" text-anchor="start">→  Quality rules generated from observed data patterns</text>
+  <text x="314" y="590" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="10" font-weight="normal" fill="#14532D" text-anchor="start">→  Published to marketplace with full schema lineage</text>
+  <rect x="853" y="448" width="547" height="152" rx="8" ry="8" fill="#DCFCE7" stroke="#86EFAC" stroke-width="1.5"/>
+  <rect x="853" y="448" width="547" height="28" rx="8" ry="8" fill="#16A34A"/>
+  <text x="867" y="462" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="11" font-weight="700" fill="#FFFFFF" dominant-baseline="middle">CONSUMER-ALIGNED  —  build what you need</text>
+  <text x="873" y="494" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="10" font-weight="normal" fill="#14532D" text-anchor="start">→  Contract-first: schema designed before engineering begins</text>
+  <text x="873" y="518" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="10" font-weight="normal" fill="#14532D" text-anchor="start">→  Product Owner shapes columns, rules, and grain in a wizard</text>
+  <text x="873" y="542" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="10" font-weight="normal" fill="#14532D" text-anchor="start">→  Bound to source-aligned products via governed CONSUMES edges</text>
+  <text x="873" y="566" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="10" font-weight="normal" fill="#14532D" text-anchor="start">→  Virtual serving views generated with FK-aware join logic</text>
+  <text x="873" y="590" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="10" font-weight="normal" fill="#14532D" text-anchor="start">→  AI-ready: certified, governed, and semantically grounded</text>
+  <rect x="294" y="610" width="213" height="28" rx="13" ry="13" fill="#BBF7D0" stroke="#4ADE80" stroke-width="1.5"/>
+  <text x="400" y="624" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="9" font-weight="700" fill="#14532D" text-anchor="middle">Contracted (ODCS)</text>
+  <rect x="517" y="610" width="213" height="28" rx="13" ry="13" fill="#BBF7D0" stroke="#4ADE80" stroke-width="1.5"/>
+  <text x="623" y="624" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="9" font-weight="700" fill="#14532D" text-anchor="middle">Governed</text>
+  <rect x="740" y="610" width="213" height="28" rx="13" ry="13" fill="#BBF7D0" stroke="#4ADE80" stroke-width="1.5"/>
+  <text x="846" y="624" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="9" font-weight="700" fill="#14532D" text-anchor="middle">Quality-assured</text>
+  <rect x="963" y="610" width="213" height="28" rx="13" ry="13" fill="#BBF7D0" stroke="#4ADE80" stroke-width="1.5"/>
+  <text x="1069" y="624" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="9" font-weight="700" fill="#14532D" text-anchor="middle">Lineage-traced</text>
+  <rect x="1186" y="610" width="213" height="28" rx="13" ry="13" fill="#BBF7D0" stroke="#4ADE80" stroke-width="1.5"/>
+  <text x="1292" y="624" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="9" font-weight="700" fill="#14532D" text-anchor="middle">Marketplace-discoverable</text>
+  <line x1="155" y1="668" x2="155" y2="656" stroke="#475569" stroke-width="2" marker-end="url(#arr)"/>
+  <text x="163" y="662" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="7" font-weight="normal" fill="#94A3B8" text-anchor="start">feeds</text>
+  <rect x="0" y="672" width="1440" height="46" rx="0" ry="0" fill="#1E293B" stroke="none" stroke-width="1.5"/>
+  <rect x="40" y="680" width="259" height="30" rx="4" ry="4" fill="#334155" stroke="#475569" stroke-width="1.5"/>
+  <text x="169" y="695" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="9" font-weight="normal" fill="#94A3B8" text-anchor="middle">Relational Databases</text>
+  <rect x="315" y="680" width="259" height="30" rx="4" ry="4" fill="#334155" stroke="#475569" stroke-width="1.5"/>
+  <text x="444" y="695" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="9" font-weight="normal" fill="#94A3B8" text-anchor="middle">Data Warehouses</text>
+  <rect x="590" y="680" width="259" height="30" rx="4" ry="4" fill="#334155" stroke="#475569" stroke-width="1.5"/>
+  <text x="719" y="695" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="9" font-weight="normal" fill="#94A3B8" text-anchor="middle">Data Lakes</text>
+  <rect x="865" y="680" width="259" height="30" rx="4" ry="4" fill="#334155" stroke="#475569" stroke-width="1.5"/>
+  <text x="994" y="695" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="9" font-weight="normal" fill="#94A3B8" text-anchor="middle">Source APIs</text>
+  <rect x="1140" y="680" width="259" height="30" rx="4" ry="4" fill="#334155" stroke="#475569" stroke-width="1.5"/>
+  <text x="1269" y="695" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="9" font-weight="normal" fill="#94A3B8" text-anchor="middle">Legacy Systems</text>
+  <rect x="0" y="726" width="1440" height="84" rx="0" ry="0" fill="#0F172A" stroke="none" stroke-width="1.5"/>
+  <text x="720" y="752" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="13" font-weight="700" fill="#F1F5F9" text-anchor="middle">&quot;Algorithms are off the shelf, including GenAI. Differentiation is in the readiness of the data for AI.&quot;</text>
+  <text x="720" y="776" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="9" font-weight="normal" fill="#64748B" text-anchor="middle">Gartner  ·  D&amp;A Leaders, Ready Your Data for AI  ·  2025</text>
+  <line x1="420" y1="790" x2="1020" y2="790" stroke="#1E3A5F" stroke-width="1"/>
+  <text x="720" y="808" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="11" font-weight="600" fill="#94A3B8" text-anchor="middle">Layer 1. Built. Governed. Published.  The foundation that makes the rest possible.</text>
+</svg>

@@ -1,0 +1,216 @@
+spec_id: src_unsecured_loans
+name: Unsecured Loans
+domain: Retail Lending
+product_kind: source
+description: Loans without collateral like personal loans and education loans. Captures
+  application, credit scoring, disbursement, and performance.
+schema_version: '1.0'
+classification: confidential
+grain:
+  keys:
+  - loan_id
+  description: ''
+freshness:
+  history: scd2
+  cadence: ''
+  description: ''
+allowed_derivations:
+- rename
+- cast
+attributes:
+- name: loan_id
+  type: bigint
+  concept: Loan ID
+  description: Unique identifier for an unsecured loan account, used as the primary key across application, disbursement, and repayment records.
+  required: true
+  is_key: true
+  classification: internal
+- name: customer_id
+  type: bigint
+  concept: Customer ID
+  description: Unique identifier of the borrower, linking the unsecured loan to the customer master.
+  required: true
+  is_key: true
+  classification: internal
+- name: loan_type
+  type: varchar
+  concept: Loan Type
+  description: Classification of the unsecured loan product (e.g. personal loan, education loan, consumer durable loan, salary advance).
+  required: true
+  is_key: false
+  classification: internal
+- name: principal_amount
+  type: numeric
+  concept: Principal Amount
+  description: Total principal amount borrowed under the unsecured loan.
+  required: true
+  is_key: false
+  classification: internal
+- name: interest_rate
+  type: numeric
+  concept: Interest Rate
+  description: Annual interest rate applied to the outstanding principal balance for this unsecured loan.
+  required: true
+  is_key: false
+  classification: internal
+- name: start_date
+  type: date
+  concept: Start Date
+  description: Date on which the unsecured loan was disbursed and the repayment obligation began.
+  required: true
+  is_key: false
+  classification: internal
+- name: maturity_date
+  type: date
+  concept: Maturity Date
+  description: Scheduled date by which the unsecured loan must be fully repaid.
+  required: true
+  is_key: false
+  classification: internal
+- name: name
+  type: varchar
+  concept: Name
+  description: Full name of the borrower as recorded in the loan application and agreements.
+  required: true
+  is_key: false
+  classification: internal
+- name: contact_info
+  type: varchar
+  concept: Contact Info
+  description: Contact details of the borrower including phone number and email address, classified as PII.
+  required: false
+  is_key: false
+  classification: pii
+- name: credit_score
+  type: numeric
+  concept: Credit Score
+  description: Numeric credit score used in the underwriting decision for this loan, reflecting the borrower's creditworthiness at origination.
+  required: true
+  is_key: false
+  classification: internal
+- name: repayment_id
+  type: bigint
+  concept: Repayment ID
+  description: Unique identifier for a repayment transaction record against the unsecured loan.
+  required: true
+  is_key: true
+  classification: internal
+- name: repayment_date
+  type: date
+  concept: Repayment Date
+  description: Date on which a repayment installment was received from the borrower.
+  required: true
+  is_key: false
+  classification: internal
+- name: amount
+  type: numeric
+  concept: Amount
+  description: Monetary value of the repayment received, which may cover principal, interest, or fees.
+  required: true
+  is_key: false
+  classification: internal
+- name: payment_method
+  type: varchar
+  concept: Payment Method
+  description: Method used by the borrower to make the repayment (e.g. NACH auto-debit, online transfer, cash deposit, cheque).
+  required: false
+  is_key: false
+  classification: internal
+- name: disbursement_id
+  type: bigint
+  concept: Disbursement ID
+  description: Unique identifier for a disbursement event, recording the release of loan funds to the borrower.
+  required: true
+  is_key: true
+  classification: internal
+- name: disbursement_date
+  type: date
+  concept: Disbursement Date
+  description: Date on which loan funds were disbursed to the borrower's account or paid to a third party.
+  required: true
+  is_key: false
+  classification: internal
+- name: method
+  type: varchar
+  concept: Method
+  description: Mechanism by which the loan was disbursed (e.g. NEFT transfer to account, cheque, direct payment to institution).
+  required: false
+  is_key: false
+  classification: internal
+- name: dpd
+  type: varchar
+  concept: Dpd
+  description: Number of days the loan installment payment is past its due date, used for delinquency classification and provisioning.
+  required: false
+  is_key: false
+  classification: internal
+- name: bucket
+  type: varchar
+  concept: Bucket
+  description: Delinquency bucket classifying the loan by its days-past-due band for provisioning and collections purposes.
+  required: false
+  is_key: false
+  classification: internal
+- name: status
+  type: varchar
+  concept: Status
+  description: Current lifecycle status of the unsecured loan (e.g. active, closed, written off, non-performing, restructured).
+  required: true
+  is_key: false
+  classification: internal
+- name: application_id
+  type: bigint
+  concept: Application ID
+  description: Unique identifier for the loan application record from which this unsecured loan was originated.
+  required: true
+  is_key: true
+  classification: internal
+- name: scorecards
+  type: numeric
+  concept: Scorecards
+  description: Composite or component scorecard values from the credit scoring model used to evaluate the loan application.
+  required: true
+  is_key: false
+  classification: internal
+- name: decision
+  type: varchar
+  concept: Decision
+  description: Underwriting or credit decision outcome for the loan application (e.g. approved, declined, referred).
+  required: false
+  is_key: false
+  classification: internal
+- name: reasons
+  type: varchar
+  concept: Reasons
+  description: Coded reasons or decline codes associated with the underwriting decision, used for regulatory reporting and borrower communication.
+  required: false
+  is_key: false
+  classification: internal
+- name: overrides
+  type: varchar
+  concept: Overrides
+  description: Details of any manual overrides applied to the automated underwriting decision, including the override authority and rationale.
+  required: false
+  is_key: false
+  classification: internal
+- name: origination_fee
+  type: numeric
+  concept: Origination Fee
+  description: One-time processing or origination fee charged to the borrower at loan disbursement.
+  required: false
+  is_key: false
+  classification: internal
+- name: late_fee
+  type: numeric
+  concept: Late Fee
+  description: Penalty charged to the borrower for each installment payment received after its scheduled due date.
+  required: false
+  is_key: false
+  classification: internal
+- name: foreclosure_charges
+  type: numeric
+  concept: Foreclosure Charges
+  description: Fee levied on the borrower for fully repaying the unsecured loan before the scheduled maturity date.
+  required: false
+  is_key: false
+  classification: internal

@@ -1,0 +1,158 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 810" width="1440" height="810" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif">
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#94A3B8"/>
+    </marker>
+    <marker id="arr_rev" viewBox="0 0 10 10" refX="1" refY="5"
+            markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 10 0 L 0 5 L 10 10 z" fill="#94A3B8"/>
+    </marker>
+  </defs>
+  <rect width="1440" height="810" fill="#F8FAFC"/>
+  <rect x="0" y="0" width="1440" height="78" rx="0" ry="0" fill="#0F172A" stroke="none" stroke-width="1.5"/>
+  <text x="48" y="28" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="21" font-weight="700" fill="#FFFFFF" text-anchor="start">Every AI use case starts with a data product you haven&#x27;t built yet.</text>
+  <text x="48" y="57" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="10" font-weight="normal" fill="#94A3B8" text-anchor="start">Agent skills automate the heavy lifting. Engineers focus on judgment, quality, and business value.</text>
+  <rect x="48" y="74" width="120" height="3" rx="1" ry="1" fill="#16A34A" stroke="none" stroke-width="1.5"/>
+  <rect x="0" y="78" width="1440" height="36" rx="0" ry="0" fill="#FFF8F2" stroke="none" stroke-width="1.5"/>
+  <text x="720" y="96" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="10" font-weight="600" fill="#92400E" text-anchor="middle">Databases are not data products.  Turning one into the other is where AI initiatives stall — and where Data Workbench starts.</text>
+  <text x="48" y="128" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="9" font-weight="700" fill="#EF4444" text-anchor="start">THE DATABASE APPROACH  —  undocumented, ungoverned, no contract, no lineage</text>
+  <rect x="40" y="140" width="216" height="175" rx="8" ry="8" fill="#FFF7ED" stroke="#FCA5A5" stroke-width="1.5"/>
+  <rect x="40" y="140" width="216" height="28" rx="8" ry="8" fill="#DC2626" stroke="none" stroke-width="1.5"/>
+  <text x="148" y="154" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="10" font-weight="700" fill="#FFFFFF" text-anchor="middle">Schema Discovery</text>
+  <rect x="102" y="176" width="92" height="20" rx="10" ry="10" fill="#FEE2E2" stroke="#FCA5A5" stroke-width="1.5"/>
+  <text x="148" y="186" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="9" font-weight="700" fill="#EF4444" text-anchor="middle">3–5 weeks</text>
+  <text x="52" y="208" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="10" font-weight="normal" fill="#7F1D1D" text-anchor="start">DBAs manually document</text>
+  <text x="52" y="224" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="10" font-weight="normal" fill="#7F1D1D" text-anchor="start">tables, columns, types,</text>
+  <text x="52" y="240" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="10" font-weight="normal" fill="#7F1D1D" text-anchor="start">relationships</text>
+  <rect x="296" y="140" width="216" height="175" rx="8" ry="8" fill="#FFF7ED" stroke="#FCA5A5" stroke-width="1.5"/>
+  <rect x="296" y="140" width="216" height="28" rx="8" ry="8" fill="#DC2626" stroke="none" stroke-width="1.5"/>
+  <text x="404" y="154" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="10" font-weight="700" fill="#FFFFFF" text-anchor="middle">Data Documentation</text>
+  <rect x="358" y="176" width="92" height="20" rx="10" ry="10" fill="#FEE2E2" stroke="#FCA5A5" stroke-width="1.5"/>
+  <text x="404" y="186" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="9" font-weight="700" fill="#EF4444" text-anchor="middle">2–4 weeks</text>
+  <text x="308" y="208" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="10" font-weight="normal" fill="#7F1D1D" text-anchor="start">Analysts write descriptions</text>
+  <text x="308" y="224" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="10" font-weight="normal" fill="#7F1D1D" text-anchor="start">— often incomplete</text>
+  <text x="308" y="240" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="10" font-weight="normal" fill="#7F1D1D" text-anchor="start">or out of date</text>
+  <rect x="552" y="140" width="216" height="175" rx="8" ry="8" fill="#FFF7ED" stroke="#FCA5A5" stroke-width="1.5"/>
+  <rect x="552" y="140" width="216" height="28" rx="8" ry="8" fill="#DC2626" stroke="none" stroke-width="1.5"/>
+  <text x="660" y="154" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="10" font-weight="700" fill="#FFFFFF" text-anchor="middle">Column Mapping</text>
+  <rect x="614" y="176" width="92" height="20" rx="10" ry="10" fill="#FEE2E2" stroke="#FCA5A5" stroke-width="1.5"/>
+  <text x="660" y="186" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="9" font-weight="700" fill="#EF4444" text-anchor="middle">2–3 weeks</text>
+  <text x="564" y="208" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="10" font-weight="normal" fill="#7F1D1D" text-anchor="start">Engineers map source</text>
+  <text x="564" y="224" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="10" font-weight="normal" fill="#7F1D1D" text-anchor="start">to target in spreadsheets</text>
+  <text x="564" y="240" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="10" font-weight="normal" fill="#7F1D1D" text-anchor="start">— no lineage</text>
+  <rect x="808" y="140" width="216" height="175" rx="8" ry="8" fill="#FFF7ED" stroke="#FCA5A5" stroke-width="1.5"/>
+  <rect x="808" y="140" width="216" height="28" rx="8" ry="8" fill="#DC2626" stroke="none" stroke-width="1.5"/>
+  <text x="916" y="154" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="10" font-weight="700" fill="#FFFFFF" text-anchor="middle">Quality Rules</text>
+  <rect x="870" y="176" width="92" height="20" rx="10" ry="10" fill="#FEE2E2" stroke="#FCA5A5" stroke-width="1.5"/>
+  <text x="916" y="186" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="9" font-weight="700" fill="#EF4444" text-anchor="middle">1–3 weeks</text>
+  <text x="820" y="208" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="10" font-weight="normal" fill="#7F1D1D" text-anchor="start">Rules defined ad hoc,</text>
+  <text x="820" y="224" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="10" font-weight="normal" fill="#7F1D1D" text-anchor="start">per-project, never</text>
+  <text x="820" y="240" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="10" font-weight="normal" fill="#7F1D1D" text-anchor="start">reused or governed</text>
+  <rect x="1064" y="140" width="216" height="175" rx="8" ry="8" fill="#FFF7ED" stroke="#FCA5A5" stroke-width="1.5"/>
+  <rect x="1064" y="140" width="216" height="28" rx="8" ry="8" fill="#DC2626" stroke="none" stroke-width="1.5"/>
+  <text x="1172" y="154" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="10" font-weight="700" fill="#FFFFFF" text-anchor="middle">Deploy &amp; Document</text>
+  <rect x="1126" y="176" width="92" height="20" rx="10" ry="10" fill="#FEE2E2" stroke="#FCA5A5" stroke-width="1.5"/>
+  <text x="1172" y="186" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="9" font-weight="700" fill="#EF4444" text-anchor="middle">1–2 weeks</text>
+  <text x="1076" y="208" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="10" font-weight="normal" fill="#7F1D1D" text-anchor="start">View built manually.</text>
+  <text x="1076" y="224" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="10" font-weight="normal" fill="#7F1D1D" text-anchor="start">No contract, no</text>
+  <text x="1076" y="240" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="10" font-weight="normal" fill="#7F1D1D" text-anchor="start">marketplace entry</text>
+  <line x1="256" y1="227" x2="296" y2="227" stroke="#EF4444" stroke-width="1.5" marker-end="url(#arr)"/>
+  <line x1="512" y1="227" x2="552" y2="227" stroke="#EF4444" stroke-width="1.5" marker-end="url(#arr)"/>
+  <line x1="768" y1="227" x2="808" y2="227" stroke="#EF4444" stroke-width="1.5" marker-end="url(#arr)"/>
+  <line x1="1024" y1="227" x2="1064" y2="227" stroke="#EF4444" stroke-width="1.5" marker-end="url(#arr)"/>
+  <rect x="1320" y="162" width="100" height="110" rx="8" ry="8" fill="#FEE2E2" stroke="#FCA5A5" stroke-width="1.5"/>
+  <text x="1370" y="182" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="9" font-weight="700" fill="#EF4444" text-anchor="middle">Ungoverned</text>
+  <text x="1370" y="200" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="9" font-weight="normal" fill="#7F1D1D" text-anchor="middle">database table</text>
+  <text x="1370" y="230" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="20" font-weight="700" fill="#EF4444" text-anchor="middle">8–17</text>
+  <text x="1370" y="252" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="9" font-weight="normal" fill="#7F1D1D" text-anchor="middle">weeks</text>
+  <line x1="1280" y1="227" x2="1320" y2="227" stroke="#EF4444" stroke-width="1.5" marker-end="url(#arr)"/>
+  <line x1="40" y1="350" x2="1400" y2="350" stroke="#CBD5E1" stroke-width="1.5"/>
+  <rect x="620" y="338" width="200" height="24" rx="4" ry="4" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="1.5"/>
+  <text x="720" y="350" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="11" font-weight="700" fill="#94A3B8" text-anchor="middle">vs.</text>
+  <text x="48" y="386" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="9" font-weight="700" fill="#16A34A" text-anchor="start">THE DATA PRODUCT APPROACH  —  contracted, governed, documented, AI-consumable</text>
+  <rect x="40" y="398" width="216" height="190" rx="8" ry="8" fill="#F0FFF4" stroke="#86EFAC" stroke-width="2"/>
+  <rect x="40" y="398" width="216" height="28" rx="8" ry="8" fill="#16A34A" stroke="none" stroke-width="1.5"/>
+  <text x="148" y="412" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="10" font-weight="700" fill="#FFFFFF" text-anchor="middle">Auto-Discovery</text>
+  <rect x="116" y="434" width="64" height="20" rx="10" ry="10" fill="#DCFCE7" stroke="#86EFAC" stroke-width="1.5"/>
+  <text x="148" y="444" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="9" font-weight="700" fill="#16A34A" text-anchor="middle">2–4 hrs</text>
+  <rect x="50" y="558" width="196" height="18" rx="9" ry="9" fill="#D1FAE5" stroke="#6EE7B7" stroke-width="1.5"/>
+  <text x="148" y="567" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="7" font-weight="600" fill="#065F46" text-anchor="middle">data-discovery</text>
+  <text x="52" y="466" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="9" font-weight="normal" fill="#14532D" text-anchor="start">Agents scan every table,</text>
+  <text x="52" y="481" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="9" font-weight="normal" fill="#14532D" text-anchor="start">column, and FK —</text>
+  <text x="52" y="496" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="9" font-weight="normal" fill="#14532D" text-anchor="start">fully documented to graph</text>
+  <rect x="296" y="398" width="216" height="190" rx="8" ry="8" fill="#F0FFF4" stroke="#86EFAC" stroke-width="2"/>
+  <rect x="296" y="398" width="216" height="28" rx="8" ry="8" fill="#16A34A" stroke="none" stroke-width="1.5"/>
+  <text x="404" y="412" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="10" font-weight="700" fill="#FFFFFF" text-anchor="middle">Profile &amp; Enrich</text>
+  <rect x="372" y="434" width="64" height="20" rx="10" ry="10" fill="#DCFCE7" stroke="#86EFAC" stroke-width="1.5"/>
+  <text x="404" y="444" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="9" font-weight="700" fill="#16A34A" text-anchor="middle">1–3 hrs</text>
+  <rect x="306" y="558" width="196" height="18" rx="9" ry="9" fill="#D1FAE5" stroke="#6EE7B7" stroke-width="1.5"/>
+  <text x="404" y="567" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="7" font-weight="600" fill="#065F46" text-anchor="middle">data-profiling + metadata-enrichment</text>
+  <text x="308" y="466" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="9" font-weight="normal" fill="#14532D" text-anchor="start">AI writes descriptions</text>
+  <text x="308" y="481" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="9" font-weight="normal" fill="#14532D" text-anchor="start">from profiling data.</text>
+  <text x="308" y="496" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="9" font-weight="normal" fill="#14532D" text-anchor="start">Human approves or edits.</text>
+  <rect x="552" y="398" width="216" height="190" rx="8" ry="8" fill="#F0FFF4" stroke="#86EFAC" stroke-width="2"/>
+  <rect x="552" y="398" width="216" height="28" rx="8" ry="8" fill="#16A34A" stroke="none" stroke-width="1.5"/>
+  <text x="660" y="412" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="10" font-weight="700" fill="#FFFFFF" text-anchor="middle">Intelligent Mapping</text>
+  <rect x="628" y="434" width="64" height="20" rx="10" ry="10" fill="#DCFCE7" stroke="#86EFAC" stroke-width="1.5"/>
+  <text x="660" y="444" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="9" font-weight="700" fill="#16A34A" text-anchor="middle">1–2 hrs</text>
+  <rect x="562" y="558" width="196" height="18" rx="9" ry="9" fill="#D1FAE5" stroke="#6EE7B7" stroke-width="1.5"/>
+  <text x="660" y="567" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="7" font-weight="600" fill="#065F46" text-anchor="middle">data-mapping-neo4j</text>
+  <text x="564" y="466" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="9" font-weight="normal" fill="#14532D" text-anchor="start">AI maps source to target</text>
+  <text x="564" y="481" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="9" font-weight="normal" fill="#14532D" text-anchor="start">with full lineage.</text>
+  <text x="564" y="496" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="9" font-weight="normal" fill="#14532D" text-anchor="start">Human reviews, approves.</text>
+  <rect x="808" y="398" width="216" height="190" rx="8" ry="8" fill="#F0FFF4" stroke="#86EFAC" stroke-width="2"/>
+  <rect x="808" y="398" width="216" height="28" rx="8" ry="8" fill="#16A34A" stroke="none" stroke-width="1.5"/>
+  <text x="916" y="412" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="10" font-weight="700" fill="#FFFFFF" text-anchor="middle">Quality &amp; Rules</text>
+  <rect x="884" y="434" width="64" height="20" rx="10" ry="10" fill="#DCFCE7" stroke="#86EFAC" stroke-width="1.5"/>
+  <text x="916" y="444" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="9" font-weight="700" fill="#16A34A" text-anchor="middle">1–2 hrs</text>
+  <rect x="818" y="558" width="196" height="18" rx="9" ry="9" fill="#D1FAE5" stroke="#6EE7B7" stroke-width="1.5"/>
+  <text x="916" y="567" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="7" font-weight="600" fill="#065F46" text-anchor="middle">data-quality-rule-generation</text>
+  <text x="820" y="466" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="9" font-weight="normal" fill="#14532D" text-anchor="start">Domain rules from catalog.</text>
+  <text x="820" y="481" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="9" font-weight="normal" fill="#14532D" text-anchor="start">Observation rules from</text>
+  <text x="820" y="496" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="9" font-weight="normal" fill="#14532D" text-anchor="start">profiling. Auto-generated.</text>
+  <rect x="1064" y="398" width="216" height="190" rx="8" ry="8" fill="#F0FFF4" stroke="#86EFAC" stroke-width="2"/>
+  <rect x="1064" y="398" width="216" height="28" rx="8" ry="8" fill="#16A34A" stroke="none" stroke-width="1.5"/>
+  <text x="1172" y="412" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="10" font-weight="700" fill="#FFFFFF" text-anchor="middle">Serve &amp; Publish</text>
+  <rect x="1140" y="434" width="64" height="20" rx="10" ry="10" fill="#DCFCE7" stroke="#86EFAC" stroke-width="1.5"/>
+  <text x="1172" y="444" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="9" font-weight="700" fill="#16A34A" text-anchor="middle">&lt; 1 hr</text>
+  <rect x="1074" y="558" width="196" height="18" rx="9" ry="9" fill="#D1FAE5" stroke="#6EE7B7" stroke-width="1.5"/>
+  <text x="1172" y="567" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="7" font-weight="600" fill="#065F46" text-anchor="middle">data-serving-virtual-view</text>
+  <text x="1076" y="466" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="9" font-weight="normal" fill="#14532D" text-anchor="start">Virtual view generated.</text>
+  <text x="1076" y="481" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="9" font-weight="normal" fill="#14532D" text-anchor="start">ODCS contract attached.</text>
+  <text x="1076" y="496" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="9" font-weight="normal" fill="#14532D" text-anchor="start">Published to marketplace.</text>
+  <line x1="256" y1="493" x2="296" y2="493" stroke="#16A34A" stroke-width="2" marker-end="url(#arr)"/>
+  <line x1="512" y1="493" x2="552" y2="493" stroke="#16A34A" stroke-width="2" marker-end="url(#arr)"/>
+  <line x1="768" y1="493" x2="808" y2="493" stroke="#16A34A" stroke-width="2" marker-end="url(#arr)"/>
+  <line x1="1024" y1="493" x2="1064" y2="493" stroke="#16A34A" stroke-width="2" marker-end="url(#arr)"/>
+  <rect x="1320" y="402" width="100" height="168" rx="8" ry="8" fill="#DCFCE7" stroke="#86EFAC" stroke-width="2"/>
+  <text x="1370" y="422" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="9" font-weight="700" fill="#16A34A" text-anchor="middle">Governed</text>
+  <text x="1370" y="440" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="9" font-weight="normal" fill="#14532D" text-anchor="middle">Data Product</text>
+  <text x="1370" y="474" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="20" font-weight="700" fill="#16A34A" text-anchor="middle">Days</text>
+  <text x="1370" y="502" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="8" font-weight="normal" fill="#14532D" text-anchor="middle">✓ Contract</text>
+  <text x="1370" y="518" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="8" font-weight="normal" fill="#14532D" text-anchor="middle">✓ Lineage</text>
+  <text x="1370" y="534" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="8" font-weight="normal" fill="#14532D" text-anchor="middle">✓ Quality Rules</text>
+  <text x="1370" y="550" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="8" font-weight="normal" fill="#14532D" text-anchor="middle">✓ Marketplace</text>
+  <line x1="1280" y1="493" x2="1320" y2="493" stroke="#16A34A" stroke-width="2" marker-end="url(#arr)"/>
+  <rect x="40" y="622" width="328" height="102" rx="6" ry="6" fill="#F1F5F9" stroke="#CBD5E1" stroke-width="1"/>
+  <text x="54" y="644" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="12" font-weight="700" fill="#0F172A" text-anchor="start">20+ Agent Skills</text>
+  <text x="54" y="668" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="10" font-weight="normal" fill="#475569" text-anchor="start">Each with domain expertise</text>
+  <text x="54" y="682" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="10" font-weight="normal" fill="#475569" text-anchor="start">and provenance-tracked approvals</text>
+  <rect x="384" y="622" width="328" height="102" rx="6" ry="6" fill="#F1F5F9" stroke="#CBD5E1" stroke-width="1"/>
+  <text x="398" y="644" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="12" font-weight="700" fill="#0F172A" text-anchor="start">Two Product Types</text>
+  <text x="398" y="668" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="10" font-weight="normal" fill="#475569" text-anchor="start">Source-aligned: certify what you have.</text>
+  <text x="398" y="682" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="10" font-weight="normal" fill="#475569" text-anchor="start">Consumer-aligned: build what you need.</text>
+  <rect x="728" y="622" width="328" height="102" rx="6" ry="6" fill="#F1F5F9" stroke="#CBD5E1" stroke-width="1"/>
+  <text x="742" y="644" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="12" font-weight="700" fill="#0F172A" text-anchor="start">Human-in-the-Loop</text>
+  <text x="742" y="668" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="10" font-weight="normal" fill="#475569" text-anchor="start">Engineers approve AI suggestions.</text>
+  <text x="742" y="682" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="10" font-weight="normal" fill="#475569" text-anchor="start">Every decision improves future runs.</text>
+  <rect x="1072" y="622" width="328" height="102" rx="6" ry="6" fill="#F1F5F9" stroke="#CBD5E1" stroke-width="1"/>
+  <text x="1086" y="644" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="12" font-weight="700" fill="#0F172A" text-anchor="start">Active Learning</text>
+  <text x="1086" y="668" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="10" font-weight="normal" fill="#475569" text-anchor="start">Rejections and edits train the system.</text>
+  <text x="1086" y="682" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="10" font-weight="normal" fill="#475569" text-anchor="start">Accuracy improves with every project.</text>
+  <rect x="0" y="748" width="1440" height="62" rx="0" ry="0" fill="#1E293B" stroke="none" stroke-width="1.5"/>
+  <text x="720" y="772" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="13" font-weight="700" fill="#F1F5F9" text-anchor="middle">From source database to governed, marketplace-ready data product — measured in days, not months.</text>
+  <text x="720" y="798" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="10" font-weight="normal" fill="#64748B" text-anchor="middle">With full provenance, lineage, and human approval at every step.</text>
+  <line x1="440" y1="812" x2="1000" y2="812" stroke="#334155" stroke-width="1"/>
+  <text x="720" y="832" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="11" font-weight="600" fill="#94A3B8" text-anchor="middle">How many AI-ready data products does your organization have today?</text>
+</svg>

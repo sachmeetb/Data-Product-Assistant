@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "workbench": {
+      "type": "http",
+      "url": "${WORKBENCH_MCP_URL}",
+      "headers": {
+        "Authorization": "Bearer ${WORKBENCH_TOKEN}"
+      }
+    }
+  }
+}

@@ -1,0 +1,170 @@
+spec_id: src_transaction_master
+name: Transaction Master
+domain: Master Reference
+product_kind: source
+description: Detailed transaction logs across savings cards, UPI, type, amount, status,
+  balance, parties. Also includes transactional and non-transactional charges - schedules,
+  waivers  and reversals
+schema_version: '1.0'
+classification: internal
+grain:
+  keys:
+  - txn_id
+  description: ''
+freshness:
+  history: current
+  cadence: ''
+  description: ''
+allowed_derivations:
+- rename
+- cast
+attributes:
+- name: txn_id
+  type: bigint
+  concept: Txn ID
+  description: Unique identifier for an individual financial transaction posted across savings accounts, UPI, or card channels.
+  required: true
+  is_key: true
+  classification: internal
+- name: account_id
+  type: bigint
+  concept: Account ID
+  description: Identifier of the deposit or payment account on which the transaction was posted.
+  required: true
+  is_key: true
+  classification: internal
+- name: amount
+  type: numeric
+  concept: Amount
+  description: Monetary value of the transaction in the account's denomination currency.
+  required: true
+  is_key: false
+  classification: internal
+  derivations:
+  - currency_normalize
+- name: currency
+  type: varchar
+  concept: Currency
+  description: ISO currency code of the transaction amount.
+  required: true
+  is_key: false
+  classification: internal
+- name: timestamp
+  type: timestamp
+  concept: Timestamp
+  description: Date and time at which the transaction was initiated or processed.
+  required: false
+  is_key: false
+  classification: internal
+- name: channel
+  type: varchar
+  concept: Channel
+  description: Delivery channel through which the transaction was initiated, such as branch, ATM, internet banking, mobile, or UPI.
+  required: false
+  is_key: false
+  classification: internal
+- name: status
+  type: varchar
+  concept: Status
+  description: Current processing status of the transaction (e.g. posted, pending, reversed, failed).
+  required: true
+  is_key: false
+  classification: internal
+- name: customer_id
+  type: bigint
+  concept: Customer ID
+  description: Unique identifier of the account-holding customer who initiated or received the transaction.
+  required: true
+  is_key: true
+  classification: internal
+- name: party_id
+  type: bigint
+  concept: Party ID
+  description: Unique identifier for a counterparty or participant in the transaction, such as a remitter, beneficiary, or merchant.
+  required: true
+  is_key: true
+  classification: internal
+- name: role
+  type: varchar
+  concept: Role
+  description: Functional role of the party in the transaction (e.g. payer, payee, intermediary, guarantor).
+  required: false
+  is_key: false
+  classification: internal
+- name: name
+  type: varchar
+  concept: Name
+  description: Name of the transaction party or counterparty associated with this record.
+  required: true
+  is_key: false
+  classification: internal
+- name: external_id
+  type: bigint
+  concept: External ID
+  description: External or cross-system identifier linking the transaction to a record in an upstream originating system.
+  required: true
+  is_key: true
+  classification: internal
+- name: merchant_id
+  type: bigint
+  concept: Merchant ID
+  description: Unique identifier for the merchant involved in a card or merchant payment transaction.
+  required: true
+  is_key: true
+  classification: internal
+- name: mcc
+  type: varchar
+  concept: Mcc
+  description: ISO 18245 Merchant Category Code classifying the type of goods or services provided by the merchant.
+  required: false
+  is_key: false
+  classification: internal
+- name: country
+  type: numeric
+  concept: Country
+  description: Numeric country code indicating the country where the merchant or transaction counterparty is located.
+  required: false
+  is_key: false
+  classification: internal
+- name: posting_id
+  type: bigint
+  concept: Posting ID
+  description: Unique identifier for the accounting posting or general ledger entry created for this transaction.
+  required: true
+  is_key: true
+  classification: internal
+- name: gl_account
+  type: numeric
+  concept: Gl Account
+  description: General ledger account code to which the transaction amount is posted for accounting purposes.
+  required: false
+  is_key: false
+  classification: internal
+- name: debit_credit
+  type: varchar
+  concept: Debit Credit
+  description: Indicator of whether the posting is a debit or credit to the general ledger account.
+  required: false
+  is_key: false
+  classification: internal
+- name: ref_id
+  type: bigint
+  concept: Ref ID
+  description: Cross-reference identifier linking this transaction to a related record in another system, such as a payment order or batch.
+  required: true
+  is_key: true
+  classification: internal
+- name: source_system
+  type: varchar
+  concept: Source System
+  description: Name of the originating system from which the transaction was ingested (e.g. CBS, UPI switch, card processor).
+  required: false
+  is_key: false
+  classification: internal
+- name: source_key
+  type: varchar
+  concept: Source Key
+  description: Natural key or unique reference from the originating source system used for deduplication and reconciliation.
+  required: false
+  is_key: false
+  classification: internal

@@ -1,0 +1,29 @@
+{
+  "scenario": "migration",
+  "external_ref": "estate-analyzer:finding-8842",
+  "hints": {
+    "source_platform": "Oracle",
+    "target_platform": "Databricks",
+    "domain": "sales"
+  },
+  "metadata": {
+    "report_id": "EA-2026-Q3-0142",
+    "analyzer_version": "3.7.1",
+    "assessed_at": "2026-08-01T14:22:00Z",
+    "analyzer_confidence": 0.86
+  },
+  "content": [
+    {
+      "kind": "text",
+      "title": "Migration recommendation",
+      "media_type": "text/markdown",
+      "body": "## Recommendation: lift-and-shift SALES schema to the lakehouse\n\nThe legacy `SALES` schema on the on-prem **Oracle 19c** instance (`orcl-sales-prod`) backs the retired Order Management app. Data is read-only since the app was decommissioned in Q1. Recommend a raw lift-and-shift of the three core tables into **Databricks** (Unity Catalog `sales_raw`), full-load, weekly refresh not required (one-time). `ORDERS` is high-volume (~180M rows); `ORDER_LINES` ~640M; `CUSTOMERS` ~2.1M. Primary key on `ORDERS.ORDER_ID`. `ORDERS.UPDATED_AT` could serve as an incremental cursor if an ongoing sync is later needed."
+    },
+    {
+      "kind": "table",
+      "title": "Datasets and columns",
+      "media_type": "text/csv",
+      "body": "dataset,column,type,nullable,note\nSALES.ORDERS,ORDER_ID,NUMBER(18),false,primary key\nSALES.ORDERS,CUSTOMER_ID,NUMBER(18),false,fk -> CUSTOMERS\nSALES.ORDERS,ORDER_DATE,DATE,false,\nSALES.ORDERS,STATUS,VARCHAR2(20),true,\nSALES.ORDERS,TOTAL_AMOUNT,NUMBER(12,2),true,\nSALES.ORDERS,UPDATED_AT,TIMESTAMP(6),true,incremental cursor candidate\nSALES.ORDER_LINES,LINE_ID,NUMBER(18),false,primary key\nSALES.ORDER_LINES,ORDER_ID,NUMBER(18),false,fk -> ORDERS\nSALES.ORDER_LINES,PRODUCT_SKU,VARCHAR2(40),false,\nSALES.ORDER_LINES,QTY,NUMBER(9),false,\nSALES.ORDER_LINES,UNIT_PRICE,NUMBER(12,2),true,\nSALES.CUSTOMERS,CUSTOMER_ID,NUMBER(18),false,primary key\nSALES.CUSTOMERS,FULL_NAME,VARCHAR2(120),true,\nSALES.CUSTOMERS,EMAIL,VARCHAR2(255),true,\nSALES.CUSTOMERS,CREATED_AT,TIMESTAMP(6),true,"
+    }
+  ]
+}

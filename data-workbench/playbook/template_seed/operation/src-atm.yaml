@@ -1,0 +1,416 @@
+apiVersion: v3.1.0
+kind: DataContract
+id: template:operation:src-atm
+name: ATM
+version: 1.0.0
+status: draft
+domain: Operation
+description: ATM withdrawals, deposits, PIN changes, mini statements, and transaction
+  status.
+schema:
+- name: ATM
+  physicalName: atm
+  physicalType: table
+  description: ATM withdrawals, deposits, PIN changes, mini statements, and transaction
+    status.
+  properties:
+  - name: terminal_id
+    physicalName: terminal_id
+    logicalName: Terminal ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for the physical ATM terminal device at the network
+      switch level.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: atm_id
+    physicalName: atm_id
+    logicalName: ATM ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for the ATM machine, used as the primary key across
+      all ATM-related entities.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: switch_id
+    physicalName: switch_id
+    logicalName: Switch ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for the network switch or payment switch that routed
+      the ATM transaction.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: location
+    physicalName: location
+    logicalName: Location
+    logicalType: varchar
+    physicalType: varchar
+    description: Physical address or landmark description of the ATM's installed location.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: ownership
+    physicalName: ownership
+    logicalName: Ownership
+    logicalType: varchar
+    physicalType: varchar
+    description: Ownership model of the ATM, indicating whether it is bank-owned,
+      white-label, or third-party managed.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: status
+    physicalName: status
+    logicalName: Status
+    logicalType: varchar
+    physicalType: varchar
+    description: Current operational status of the ATM (e.g. active, out of service,
+      under maintenance, decommissioned).
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: last_health_check_ts
+    physicalName: last_health_check_ts
+    logicalName: Last Health Check Ts
+    logicalType: timestamp
+    physicalType: timestamp
+    description: Timestamp of the most recent automated health check performed on
+      the ATM to verify its operational readiness.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: txn_id
+    physicalName: txn_id
+    logicalName: Txn ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a transaction processed at this ATM, such as
+      a cash withdrawal, deposit, or PIN change.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: txn_type
+    physicalName: txn_type
+    logicalName: Txn Type
+    logicalType: varchar
+    physicalType: varchar
+    description: Classification of the ATM transaction type (e.g. cash withdrawal,
+      balance inquiry, mini statement, PIN change, deposit).
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: amount
+    physicalName: amount
+    logicalName: Amount
+    logicalType: numeric
+    physicalType: numeric
+    description: Monetary value of the cash dispensed or deposited in the ATM transaction.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: surcharge
+    physicalName: surcharge
+    logicalName: Surcharge
+    logicalType: varchar
+    physicalType: varchar
+    description: Additional fee charged for using an off-us ATM, levied on the cardholder
+      by the ATM operator.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: card_scheme
+    physicalName: card_scheme
+    logicalName: Card Scheme
+    logicalType: varchar
+    physicalType: varchar
+    description: Payment scheme or network used for the card transaction (e.g. Visa,
+      Mastercard, RuPay, Maestro).
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: pan_token
+    physicalName: pan_token
+    logicalName: PAN Token
+    logicalType: varchar
+    physicalType: varchar
+    description: Tokenized representation of the card's Primary Account Number (PAN)
+      used to identify the cardholder without exposing raw card data.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: pii
+    examples: []
+    logicalTypeOptions: {}
+  - name: stan_rrn
+    physicalName: stan_rrn
+    logicalName: Stan Rrn
+    logicalType: varchar
+    physicalType: varchar
+    description: System Trace Audit Number and Retrieval Reference Number uniquely
+      identifying the ATM transaction within the payment network.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: result_code
+    physicalName: result_code
+    logicalName: Result Code
+    logicalType: varchar
+    physicalType: varchar
+    description: Numeric or alphanumeric response code returned by the switch or issuer
+      indicating the transaction's authorization outcome.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: on_us_flag
+    physicalName: on_us_flag
+    logicalName: On Us Flag
+    logicalType: boolean
+    physicalType: boolean
+    description: Boolean indicator that the card used at the ATM belongs to the same
+      bank that operates the ATM (on-us transaction).
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: cassette_id_list
+    physicalName: cassette_id_list
+    logicalName: Cassette ID List
+    logicalType: varchar
+    physicalType: varchar
+    description: List of cassette identifiers installed in the ATM, each holding a
+      specific denomination of banknotes.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: load_event_id
+    physicalName: load_event_id
+    logicalName: Load Event ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a cash replenishment or cassette reload event
+      at the ATM.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: denomination_breakup
+    physicalName: denomination_breakup
+    logicalName: Denomination Breakup
+    logicalType: varchar
+    physicalType: varchar
+    description: Breakdown of banknote denominations and quantities loaded into the
+      ATM cassettes during a replenishment event.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: cassette_serials
+    physicalName: cassette_serials
+    logicalName: Cassette Serials
+    logicalType: varchar
+    physicalType: varchar
+    description: Serial numbers of the cassettes loaded into the ATM during a replenishment,
+      used for chain-of-custody tracking.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: load_ts
+    physicalName: load_ts
+    logicalName: Load Ts
+    logicalType: timestamp
+    physicalType: timestamp
+    description: Timestamp at which a cash replenishment or cassette reload was performed
+      at the ATM.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: replenish_staff_id
+    physicalName: replenish_staff_id
+    logicalName: Replenish Staff ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier of the staff member or vendor technician who performed
+      the cash replenishment.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: incident_id
+    physicalName: incident_id
+    logicalName: Incident ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for an ATM downtime, fault, or operational incident
+      record.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: error_code
+    physicalName: error_code
+    logicalName: Error Code
+    logicalType: varchar
+    physicalType: varchar
+    description: Error or fault code identifying the technical reason for an ATM incident
+      or transaction failure.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: start_ts
+    physicalName: start_ts
+    logicalName: Start Ts
+    logicalType: timestamp
+    physicalType: timestamp
+    description: Timestamp at which an ATM incident or downtime period began.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: end_ts
+    physicalName: end_ts
+    logicalName: End Ts
+    logicalType: timestamp
+    physicalType: timestamp
+    description: Timestamp at which an ATM incident or downtime period was resolved
+      and the machine returned to service.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: downtime_minutes
+    physicalName: downtime_minutes
+    logicalName: Downtime Minutes
+    logicalType: varchar
+    physicalType: varchar
+    description: Total duration in minutes that the ATM was unavailable during an
+      incident period.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  foreignKeys: []
+  transform:
+    grouping_keys:
+    - atm_id
+    scd_policy:
+      type: latest_only
+customProperties:
+  feasibility:
+    schema_version: '1.0'
+    spec_classification: confidential
+    cadence: ''
+    freshness_history: current
+    freshness_description: ''
+    grain_keys:
+    - atm_id
+    grain_description: ''
+    allowed_derivations:
+    - rename
+    - cast
+    composition:
+      join_keys: []
+      composed_of: []
+      description: ''
+productKind: source
+sourceSpecId: src_atm

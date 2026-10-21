@@ -1,0 +1,57 @@
+---
+description: Run a pipeline stage by stage_id (streams agent output)
+argument-hint: <stage_id> [--workflow-id=...] [--config-key=value ...]
+---
+
+Run pipeline stage `$ARGUMENTS` for this project. The stage is dispatched by the FastAPI backend exactly the same way the web UI dispatches it.
+
+## Step 1 — Resolve stage_id to stage_number
+
+Fetch the project's current workflows and find the stage:
+
+```bash
+curl -s {{ backend_base_url }}/api/projects/{{ project.id }}
+```
+
+In the `workflows[]` array, find the entry whose `stages[]` contains a stage with the requested `stage_id`. Capture both `workflow_id` and `stage_number`.
+
+If the user passed `--workflow-id=<wid>` in arguments, use that workflow; otherwise pick the first workflow that contains the stage_id. If no workflow contains the requested stage_id, abort with a clear error listing the available stage_ids.
+
+If the stage's `owner_role` is not `Data Engineer`, abort: tell the user the stage is gated to a different role and they need to run it from the corresponding UI (PO → wizard, DQA → DQ workflow, Steward → escalation queue). Do not attempt to bypass.
+
+## Step 2 — Check whether the stage is non-LLM
+
+Stages with `requires_llm=false` (e.g. `mark_discovery_complete`, `synthesize_odcs_from_graph`, `auto_mapping_sa`, `mark_engineering_complete`) are completed via:
+
+```bash
+curl -s -X POST "{{ backend_base_url }}/api/projects/{{ project.id }}/stages/<stage_number>/complete?workflow_id=<workflow_id>"
+```
+
+Report the response and stop.
+
+## Step 3 — LLM stage: stream via SSE
+
+For stages that require the SDK:
+
+```bash
+curl -N -s -X POST "{{ backend_base_url }}/api/projects/{{ project.id }}/stages/<stage_number>/stream" \
+  -H 'Content-Type: application/json' \
+  -d '{"workflow_id": "<workflow_id>", "stage_config": {<parsed --key=value pairs>}}'
+```
+
+The `-N` flag disables buffering so Server-Sent Events stream in real time. Each event is a `data: {...}\n\n` frame. Parse the JSON and render:
+
+- `type: text_delta` → print `text` to stdout
+- `type: tool_use` → print one line `[tool] <tool>: <truncated input>`
+- `type: thinking` → ignore (or print as a dim line if the user wants verbose mode)
+- `type: stage_complete` → print `✓ stage complete (cost $<cost_usd>)` and stop
+- `type: error` → print `✗ stage failed: <message>` and stop
+- `type: stage_status_changed` → ignore (UI-only signal)
+
+Do NOT loop or retry on error — surface the message and let the user investigate.
+
+## What this command does NOT do
+
+- It does NOT modify SQLite directly. All state writes happen server-side, atomically with the stage run.
+- It does NOT touch Neo4j directly. The skill the stage invokes does that under the agent's control.
+- It does NOT consult memory or hand-roll prompts. The backend's `pipeline.build_prompt` is the canonical prompt builder.

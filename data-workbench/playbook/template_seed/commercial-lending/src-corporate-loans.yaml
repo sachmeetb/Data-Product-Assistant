@@ -1,0 +1,431 @@
+apiVersion: v3.1.0
+kind: DataContract
+id: template:commercial-lending:src-corporate-loans
+name: Corporate Loans
+version: 1.0.0
+status: draft
+domain: Commercial Lending
+description: All types of corporate loans including term loans, asset finance, working
+  capital, and business loans—includes financials, covenants, collateral, bank overdraft
+  with limit tracking, utilization etc. and disbursement structure.
+schema:
+- name: Corporate Loans
+  physicalName: corporate_loans
+  physicalType: table
+  description: All types of corporate loans including term loans, asset finance, working
+    capital, and business loans—includes financials, covenants, collateral, bank overdraft
+    with limit tracking, utilization etc. and disbursement structure.
+  properties:
+  - name: customer_id
+    physicalName: customer_id
+    logicalName: Customer ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for the corporate borrower, linking the loan and
+      collateral records to the business customer's profile.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: name
+    physicalName: name
+    logicalName: Name
+    logicalType: varchar
+    physicalType: varchar
+    description: The registered legal name of the corporate borrower or business entity.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: industry
+    physicalName: industry
+    logicalName: Industry
+    logicalType: varchar
+    physicalType: varchar
+    description: The economic sector or industry classification of the corporate borrower,
+      such as manufacturing, retail, or financial services.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: registration_date
+    physicalName: registration_date
+    logicalName: Registration Date
+    logicalType: date
+    physicalType: date
+    description: The date on which the corporate entity was formally registered with
+      the relevant regulatory or company authority.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: credit_score
+    physicalName: credit_score
+    logicalName: Credit Score
+    logicalType: numeric
+    physicalType: numeric
+    description: A numeric creditworthiness assessment of the corporate borrower,
+      used to determine loan eligibility and pricing.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: loan_id
+    physicalName: loan_id
+    logicalName: Loan ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a corporate loan facility, serving as the primary
+      key for all loan-level financial and covenant records.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: loan_type
+    physicalName: loan_type
+    logicalName: Loan Type
+    logicalType: varchar
+    physicalType: varchar
+    description: The category of corporate lending product, such as term_loan, working_capital_facility,
+      asset_finance, or bank_overdraft.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: principal_amount
+    physicalName: principal_amount
+    logicalName: Principal Amount
+    logicalType: numeric
+    physicalType: numeric
+    description: The face value of the loan at origination, representing the total
+      amount disbursed or committed under the facility.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: interest_rate
+    physicalName: interest_rate
+    logicalName: Interest Rate
+    logicalType: numeric
+    physicalType: numeric
+    description: The annual rate of interest charged on the loan principal, expressed
+      as a percentage.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: start_date
+    physicalName: start_date
+    logicalName: Start Date
+    logicalType: date
+    physicalType: date
+    description: The date on which the loan facility became active and funds were
+      first available or disbursed.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: maturity_date
+    physicalName: maturity_date
+    logicalName: Maturity Date
+    logicalType: date
+    physicalType: date
+    description: The contractual date on which the outstanding loan balance must be
+      fully repaid.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: collateral_id
+    physicalName: collateral_id
+    logicalName: Collateral ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a collateral asset pledged to secure the corporate
+      loan facility.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: collateral_type
+    physicalName: collateral_type
+    logicalName: Collateral Type
+    logicalType: varchar
+    physicalType: varchar
+    description: The category of asset pledged as security, such as real_estate, equipment,
+      receivables, or listed_securities.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: market_value
+    physicalName: market_value
+    logicalName: Market Value
+    logicalType: numeric
+    physicalType: numeric
+    description: The current assessed market value of the collateral asset at the
+      time of valuation.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: status
+    physicalName: status
+    logicalName: Status
+    logicalType: varchar
+    physicalType: varchar
+    description: The current lifecycle state of the collateral, such as active, released,
+      or under_review.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: covenant_id
+    physicalName: covenant_id
+    logicalName: Covenant ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a financial or operational covenant attached
+      to the loan agreement.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: covenant_type
+    physicalName: covenant_type
+    logicalName: Covenant Type
+    logicalType: varchar
+    physicalType: varchar
+    description: The category of covenant, such as financial_ratio, information_covenant,
+      or negative_pledge.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: threshold_value
+    physicalName: threshold_value
+    logicalName: Threshold Value
+    logicalType: numeric
+    physicalType: numeric
+    description: The numeric limit or ratio that must not be breached under the terms
+      of the loan covenant.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: effective_date
+    physicalName: effective_date
+    logicalName: Effective Date
+    logicalType: date
+    physicalType: date
+    description: The date from which the covenant terms became binding on the borrower.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: breach_flag
+    physicalName: breach_flag
+    logicalName: Breach Flag
+    logicalType: boolean
+    physicalType: boolean
+    description: Boolean indicator signalling whether the covenant threshold has been
+      breached as of the last review date.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: facility_id
+    physicalName: facility_id
+    logicalName: Facility ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a credit facility (e.g. overdraft or revolving
+      credit line) available to the corporate customer.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: facility_type
+    physicalName: facility_type
+    logicalName: Facility Type
+    logicalType: varchar
+    physicalType: varchar
+    description: The type of credit facility, such as revolving_credit, overdraft,
+      or standby_letter_of_credit.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: limit_amount
+    physicalName: limit_amount
+    logicalName: Limit Amount
+    logicalType: numeric
+    physicalType: numeric
+    description: The maximum drawn balance permitted under the credit facility at
+      any point in time.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: utilization_percentage
+    physicalName: utilization_percentage
+    logicalName: Utilization Percentage
+    logicalType: numeric
+    physicalType: numeric
+    description: The proportion of the facility limit currently drawn by the borrower,
+      expressed as a percentage.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: disbursement_id
+    physicalName: disbursement_id
+    logicalName: Disbursement ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a single loan disbursement event, tracking
+      individual fund releases under the facility.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: disbursement_date
+    physicalName: disbursement_date
+    logicalName: Disbursement Date
+    logicalType: date
+    physicalType: date
+    description: The date on which loan funds were released to the borrower's account.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: amount
+    physicalName: amount
+    logicalName: Amount
+    logicalType: numeric
+    physicalType: numeric
+    description: The monetary value of funds disbursed in a single disbursement event.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: payment_method
+    physicalName: payment_method
+    logicalName: Payment Method
+    logicalType: varchar
+    physicalType: varchar
+    description: The mechanism used to transfer disbursed funds, such as RTGS, NEFT,
+      or account_credit.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  foreignKeys: []
+  transform:
+    grouping_keys:
+    - customer_id
+    scd_policy:
+      type: scd2
+customProperties:
+  feasibility:
+    schema_version: '1.0'
+    spec_classification: internal
+    cadence: ''
+    freshness_history: scd2
+    freshness_description: ''
+    grain_keys:
+    - customer_id
+    grain_description: ''
+    allowed_derivations:
+    - rename
+    - cast
+    composition:
+      join_keys: []
+      composed_of: []
+      description: ''
+productKind: source
+sourceSpecId: src_corporate_loans

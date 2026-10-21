@@ -1,0 +1,207 @@
+spec_id: src_trade_finance
+name: Trade Finance
+domain: Commercial Lending
+product_kind: source
+description: Captures data for Letters of Credit, Bank Guarantees, Bills for Collection,
+  and Export/Import transactions. Includes issuance, amendment, claims, remittances,
+  buyer/seller details, currency, Incoterms, and documentation status.
+schema_version: '1.0'
+classification: confidential
+grain:
+  keys:
+  - lc_id
+  description: ''
+freshness:
+  history: current
+  cadence: ''
+  description: ''
+allowed_derivations:
+- rename
+- cast
+attributes:
+- name: lc_id
+  type: bigint
+  concept: Lc ID
+  description: Unique identifier for a Letter of Credit instrument, serving as the primary key for all LC-related records including amendments and document checks.
+  required: true
+  is_key: true
+  classification: internal
+- name: applicant_id
+  type: bigint
+  concept: Applicant ID
+  description: The unique identifier of the corporate customer who applied for the Letter of Credit, representing the importer or buyer.
+  required: true
+  is_key: true
+  classification: internal
+- name: beneficiary_id
+  type: bigint
+  concept: Beneficiary ID
+  description: The unique identifier of the exporter or seller in whose favour the Letter of Credit is issued.
+  required: true
+  is_key: true
+  classification: internal
+- name: amount
+  type: numeric
+  concept: Amount
+  description: The face value of the Letter of Credit or trade finance instrument, denominated in the specified currency.
+  required: true
+  is_key: false
+  classification: internal
+  derivations:
+  - currency_normalize
+- name: currency
+  type: varchar
+  concept: Currency
+  description: The ISO currency code in which the trade finance instrument is denominated.
+  required: true
+  is_key: false
+  classification: internal
+- name: issue_date
+  type: date
+  concept: Issue Date
+  description: The date on which the Letter of Credit or bank guarantee was formally issued by the bank.
+  required: true
+  is_key: false
+  classification: internal
+- name: expiry_date
+  type: date
+  concept: Expiry Date
+  description: The last date by which the beneficiary must present conforming documents to draw under the Letter of Credit.
+  required: true
+  is_key: false
+  classification: internal
+- name: status
+  type: varchar
+  concept: Status
+  description: The current lifecycle state of the trade finance instrument, such as issued, amended, drawn, expired, or cancelled.
+  required: true
+  is_key: false
+  classification: internal
+- name: guarantee_id
+  type: bigint
+  concept: Guarantee ID
+  description: Unique identifier for a Bank Guarantee instrument issued on behalf of a corporate customer to a third-party beneficiary.
+  required: true
+  is_key: true
+  classification: internal
+- name: doc_id
+  type: bigint
+  concept: Doc ID
+  description: Unique identifier for a trade document submitted for checking under a Letter of Credit or collection, such as a bill of lading or invoice.
+  required: true
+  is_key: true
+  classification: internal
+- name: type
+  type: varchar
+  concept: Type
+  description: The category of trade document, such as commercial_invoice, packing_list, certificate_of_origin, or bill_of_lading.
+  required: true
+  is_key: false
+  classification: internal
+- name: received_date
+  type: date
+  concept: Received Date
+  description: The date on which the presented trade documents were received by the bank for examination.
+  required: true
+  is_key: false
+  classification: internal
+- name: discrepancy_flag
+  type: boolean
+  concept: Discrepancy Flag
+  description: Boolean indicator signalling that one or more presented documents do not comply with the terms of the Letter of Credit.
+  required: false
+  is_key: false
+  classification: pii
+- name: drawee_id
+  type: bigint
+  concept: Drawee ID
+  description: The unique identifier of the party on whom a bill of exchange is drawn for collection, typically the importer's bank or the importer.
+  required: true
+  is_key: true
+  classification: internal
+- name: presenting_bank
+  type: varchar
+  concept: Presenting Bank
+  description: The name of the correspondent bank presenting the collection documents on behalf of the seller.
+  required: false
+  is_key: false
+  classification: internal
+- name: due_date
+  type: date
+  concept: Due Date
+  description: The date on which payment is due under a usance bill of exchange or deferred payment arrangement.
+  required: true
+  is_key: false
+  classification: internal
+- name: shipment_id
+  type: bigint
+  concept: Shipment ID
+  description: Unique identifier for a shipment record associated with the trade finance transaction, capturing logistics details.
+  required: true
+  is_key: true
+  classification: internal
+- name: vessel
+  type: varchar
+  concept: Vessel
+  description: The name of the shipping vessel used to transport goods under the trade finance transaction.
+  required: false
+  is_key: false
+  classification: internal
+- name: port_of_loading
+  type: varchar
+  concept: Port Of Loading
+  description: The name of the port from which the goods were loaded and dispatched.
+  required: false
+  is_key: false
+  classification: internal
+- name: port_of_discharge
+  type: varchar
+  concept: Port Of Discharge
+  description: The name of the destination port where goods are unloaded.
+  required: false
+  is_key: false
+  classification: internal
+- name: incoterm
+  type: varchar
+  concept: Incoterm
+  description: The International Commercial Terms (Incoterms) rule governing delivery obligations, risk, and cost division between buyer and seller.
+  required: false
+  is_key: false
+  classification: internal
+- name: bill_id
+  type: bigint
+  concept: Bill ID
+  description: Unique identifier for a bill of exchange or collection instrument associated with the trade finance transaction.
+  required: true
+  is_key: true
+  classification: internal
+- name: settlement_id
+  type: bigint
+  concept: Settlement ID
+  description: Unique identifier for the settlement record capturing the payment or funds transfer finalising a trade finance transaction.
+  required: true
+  is_key: true
+  classification: internal
+- name: method
+  type: varchar
+  concept: Method
+  description: The settlement mechanism or payment instruction type, such as SWIFT_MT103, RTGS, or nostro_account_transfer.
+  required: false
+  is_key: false
+  classification: internal
+- name: charges
+  type: numeric
+  concept: Charges
+  description: The bank charges and fees levied for processing the trade finance instrument, such as issuance fees or amendment charges.
+  required: false
+  is_key: false
+  classification: internal
+  derivations:
+  - currency_normalize
+- name: reimbursement_bank
+  type: varchar
+  concept: Reimbursement Bank
+  description: The name of the correspondent bank authorised to claim reimbursement on behalf of the negotiating or paying bank.
+  required: false
+  is_key: false
+  classification: internal

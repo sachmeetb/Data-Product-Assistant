@@ -1,0 +1,107 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 810" width="1440" height="810" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif">
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#94A3B8"/>
+    </marker>
+    <marker id="arr_rev" viewBox="0 0 10 10" refX="1" refY="5"
+            markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 10 0 L 0 5 L 10 10 z" fill="#94A3B8"/>
+    </marker>
+  </defs>
+  <rect width="1440" height="810" fill="#F8FAFC"/>
+  <rect x="0" y="0" width="1440" height="92" rx="0" ry="0" fill="#0C3547" stroke="none" stroke-width="1.5"/>
+  <rect x="0" y="0" width="640" height="92" rx="0" ry="0" fill="#16536E" stroke="none" stroke-width="1.5"/>
+  <rect x="0" y="89" width="1440" height="3" rx="0" ry="0" fill="#0EA5E9" stroke="none" stroke-width="1.5"/>
+  <text x="46" y="38" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="30" font-weight="700" fill="#FFFFFF" text-anchor="start">Data Workbench</text>
+  <text x="46" y="66" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="11" font-weight="normal" fill="#94A3B8" text-anchor="start">An AI-powered platform for building, governing, and publishing enterprise data products</text>
+  <text x="1394" y="36" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="11" font-weight="600" fill="#0EA5E9" text-anchor="end">AI-Powered  ·  Human-Governed  ·  AI-Ready</text>
+  <text x="1394" y="60" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="10" font-weight="normal" fill="#64748B" text-anchor="end">Engineering Workbench  +  Product Workbench</text>
+  <rect x="40" y="100" width="330" height="412" rx="8" ry="8" fill="#1A2E3D" stroke="none" stroke-width="1.5"/>
+  <rect x="40" y="100" width="330" height="4" rx="0" ry="0" fill="#0EA5E9" stroke="none" stroke-width="1.5"/>
+  <text x="60" y="130" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="13" font-weight="700" fill="#FFFFFF" text-anchor="start">What is Data Workbench?</text>
+  <text x="60" y="156" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="10" font-weight="normal" fill="#CBD5E1" text-anchor="start">A workbench where AI agents and humans</text>
+  <text x="60" y="173" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="10" font-weight="normal" fill="#CBD5E1" text-anchor="start">collaborate to build governed data products.</text>
+  <text x="60" y="190" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="10" font-weight="normal" fill="#CBD5E1" text-anchor="start">Agent skills automate the heavy lifting —</text>
+  <text x="60" y="207" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="10" font-weight="normal" fill="#CBD5E1" text-anchor="start">engineers and product owners review and</text>
+  <text x="60" y="224" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="10" font-weight="normal" fill="#CBD5E1" text-anchor="start">approve at every step.</text>
+  <line x1="56" y1="250" x2="354" y2="250" stroke="#2A4A5E" stroke-width="1"/>
+  <text x="60" y="268" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="11" font-weight="700" fill="#0EA5E9" text-anchor="start">Two Workbench Shells</text>
+  <rect x="54" y="290" width="302" height="58" rx="6" ry="6" fill="#223344" stroke="#2A4A5E" stroke-width="1"/>
+  <text x="68" y="308" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="10" font-weight="700" fill="#FFFFFF" text-anchor="start">Engineering Workbench</text>
+  <text x="68" y="324" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="9" font-weight="normal" fill="#94A3B8" text-anchor="start">AI pipeline: discover → profile →</text>
+  <text x="68" y="339" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="9" font-weight="normal" fill="#94A3B8" text-anchor="start">map → quality → publish</text>
+  <rect x="54" y="358" width="302" height="58" rx="6" ry="6" fill="#223344" stroke="#2A4A5E" stroke-width="1"/>
+  <text x="68" y="376" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="10" font-weight="700" fill="#FFFFFF" text-anchor="start">Product Workbench</text>
+  <text x="68" y="392" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="9" font-weight="normal" fill="#94A3B8" text-anchor="start">Design products contract-first,</text>
+  <text x="68" y="407" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="9" font-weight="normal" fill="#94A3B8" text-anchor="start">validate and publish to marketplace</text>
+  <line x1="56" y1="432" x2="354" y2="432" stroke="#2A4A5E" stroke-width="1"/>
+  <text x="60" y="452" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="11" font-weight="700" fill="#0EA5E9" text-anchor="start">Knowledge Graph</text>
+  <text x="60" y="470" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="9" font-weight="normal" fill="#94A3B8" text-anchor="start">Neo4j: all assets, semantics,</text>
+  <text x="60" y="486" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="9" font-weight="normal" fill="#94A3B8" text-anchor="start">lineage &amp; provenance in one graph</text>
+  <rect x="382" y="100" width="503" height="198" rx="6" ry="6" fill="#EFF6FF" stroke="#BFDBFE" stroke-width="1.5"/>
+  <rect x="382" y="100" width="503" height="26" rx="6" ry="6" fill="#DBEAFE" stroke="none" stroke-width="1.5"/>
+  <rect x="382" y="120" width="503" height="6" rx="0" ry="0" fill="#DBEAFE" stroke="none" stroke-width="1.5"/>
+  <rect x="392" y="107" width="11" height="11" rx="6" ry="6" fill="#FCA5A5" stroke="none" stroke-width="1.5"/>
+  <rect x="408" y="107" width="11" height="11" rx="6" ry="6" fill="#FCD34D" stroke="none" stroke-width="1.5"/>
+  <rect x="424" y="107" width="11" height="11" rx="6" ry="6" fill="#86EFAC" stroke="none" stroke-width="1.5"/>
+  <rect x="444" y="107" width="425" height="11" rx="3" ry="3" fill="#BFDBFE" stroke="none" stroke-width="1.5"/>
+  <rect x="607" y="177" width="52" height="34" rx="5" ry="5" fill="#BFDBFE" stroke="#93C5FD" stroke-width="1.5"/>
+  <rect x="623" y="185" width="20" height="18" rx="9" ry="9" fill="#60A5FA" stroke="none" stroke-width="1.5"/>
+  <text x="633" y="223" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="10" font-weight="600" fill="#334155" text-anchor="middle">Engineering Workbench — Pipeline &amp; Stages</text>
+  <text x="633" y="239" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="8" font-weight="normal" fill="#64748B" text-anchor="middle">Suggest: project list with pipeline stage progress chips</text>
+  <rect x="897" y="100" width="503" height="198" rx="6" ry="6" fill="#EFF6FF" stroke="#BFDBFE" stroke-width="1.5"/>
+  <rect x="897" y="100" width="503" height="26" rx="6" ry="6" fill="#DBEAFE" stroke="none" stroke-width="1.5"/>
+  <rect x="897" y="120" width="503" height="6" rx="0" ry="0" fill="#DBEAFE" stroke="none" stroke-width="1.5"/>
+  <rect x="907" y="107" width="11" height="11" rx="6" ry="6" fill="#FCA5A5" stroke="none" stroke-width="1.5"/>
+  <rect x="923" y="107" width="11" height="11" rx="6" ry="6" fill="#FCD34D" stroke="none" stroke-width="1.5"/>
+  <rect x="939" y="107" width="11" height="11" rx="6" ry="6" fill="#86EFAC" stroke="none" stroke-width="1.5"/>
+  <rect x="959" y="107" width="425" height="11" rx="3" ry="3" fill="#BFDBFE" stroke="none" stroke-width="1.5"/>
+  <rect x="1122" y="177" width="52" height="34" rx="5" ry="5" fill="#BFDBFE" stroke="#93C5FD" stroke-width="1.5"/>
+  <rect x="1138" y="185" width="20" height="18" rx="9" ry="9" fill="#60A5FA" stroke="none" stroke-width="1.5"/>
+  <text x="1148" y="223" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="10" font-weight="600" fill="#334155" text-anchor="middle">Knowledge Graph Explorer</text>
+  <text x="1148" y="239" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="8" font-weight="normal" fill="#64748B" text-anchor="middle">Suggest: Neo4j browser graph visualization</text>
+  <rect x="382" y="308" width="1018" height="204" rx="6" ry="6" fill="#EFF6FF" stroke="#BFDBFE" stroke-width="1.5"/>
+  <rect x="382" y="308" width="1018" height="26" rx="6" ry="6" fill="#DBEAFE" stroke="none" stroke-width="1.5"/>
+  <rect x="382" y="328" width="1018" height="6" rx="0" ry="0" fill="#DBEAFE" stroke="none" stroke-width="1.5"/>
+  <rect x="392" y="315" width="11" height="11" rx="6" ry="6" fill="#FCA5A5" stroke="none" stroke-width="1.5"/>
+  <rect x="408" y="315" width="11" height="11" rx="6" ry="6" fill="#FCD34D" stroke="none" stroke-width="1.5"/>
+  <rect x="424" y="315" width="11" height="11" rx="6" ry="6" fill="#86EFAC" stroke="none" stroke-width="1.5"/>
+  <rect x="444" y="315" width="940" height="11" rx="3" ry="3" fill="#BFDBFE" stroke="none" stroke-width="1.5"/>
+  <rect x="865" y="388" width="52" height="34" rx="5" ry="5" fill="#BFDBFE" stroke="#93C5FD" stroke-width="1.5"/>
+  <rect x="881" y="396" width="20" height="18" rx="9" ry="9" fill="#60A5FA" stroke="none" stroke-width="1.5"/>
+  <text x="891" y="434" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="10" font-weight="600" fill="#334155" text-anchor="middle">Product Workbench — Marketplace &amp; Product Authoring</text>
+  <text x="891" y="450" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="8" font-weight="normal" fill="#64748B" text-anchor="middle">Suggest: product wizard OR published marketplace product cards</text>
+  <text x="40" y="528" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="13" font-weight="700" fill="#0C3547" text-anchor="start">Key Features</text>
+  <rect x="40" y="536" width="108" height="3" rx="1" ry="1" fill="#0EA5E9" stroke="none" stroke-width="1.5"/>
+  <rect x="40" y="548" width="262" height="248" rx="6" ry="6" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.5"/>
+  <rect x="40" y="548" width="262" height="4" rx="0" ry="0" fill="#0EA5E9" stroke="none" stroke-width="1.5"/>
+  <text x="54" y="570" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="10" font-weight="700" fill="#0C3547" text-anchor="start">Agent-Powered Pipeline</text>
+  <text x="54" y="588" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="9" font-weight="normal" fill="#334155" text-anchor="start">20+ AI agent skills built for</text>
+  <text x="54" y="603" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="9" font-weight="normal" fill="#334155" text-anchor="start">data engineering — discovery,</text>
+  <text x="54" y="618" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="9" font-weight="normal" fill="#334155" text-anchor="start">profiling, mapping, quality,</text>
+  <rect x="314" y="548" width="262" height="248" rx="6" ry="6" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.5"/>
+  <rect x="314" y="548" width="262" height="4" rx="0" ry="0" fill="#0EA5E9" stroke="none" stroke-width="1.5"/>
+  <text x="328" y="570" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="10" font-weight="700" fill="#0C3547" text-anchor="start">Human-in-the-Loop</text>
+  <text x="328" y="588" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="9" font-weight="normal" fill="#334155" text-anchor="start">Every AI output reviewed and</text>
+  <text x="328" y="603" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="9" font-weight="normal" fill="#334155" text-anchor="start">approved before it persists.</text>
+  <text x="328" y="618" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="9" font-weight="normal" fill="#334155" text-anchor="start">Provenance tracked at each step.</text>
+  <rect x="588" y="548" width="262" height="248" rx="6" ry="6" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.5"/>
+  <rect x="588" y="548" width="262" height="4" rx="0" ry="0" fill="#0EA5E9" stroke="none" stroke-width="1.5"/>
+  <text x="602" y="570" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="10" font-weight="700" fill="#0C3547" text-anchor="start">Data Contracts (ODCS)</text>
+  <text x="602" y="588" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="9" font-weight="normal" fill="#334155" text-anchor="start">Every product carries a machine-</text>
+  <text x="602" y="603" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="9" font-weight="normal" fill="#334155" text-anchor="start">readable contract: schema, rules,</text>
+  <text x="602" y="618" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="9" font-weight="normal" fill="#334155" text-anchor="start">lineage, and governance built in.</text>
+  <rect x="862" y="548" width="262" height="248" rx="6" ry="6" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.5"/>
+  <rect x="862" y="548" width="262" height="4" rx="0" ry="0" fill="#0EA5E9" stroke="none" stroke-width="1.5"/>
+  <text x="876" y="570" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="10" font-weight="700" fill="#0C3547" text-anchor="start">Two Product Types</text>
+  <text x="876" y="588" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="9" font-weight="normal" fill="#334155" text-anchor="start">Source-aligned: certify existing</text>
+  <text x="876" y="603" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="9" font-weight="normal" fill="#334155" text-anchor="start">databases. Consumer-aligned:</text>
+  <text x="876" y="618" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="9" font-weight="normal" fill="#334155" text-anchor="start">design for your AI use cases.</text>
+  <rect x="1136" y="548" width="262" height="248" rx="6" ry="6" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.5"/>
+  <rect x="1136" y="548" width="262" height="4" rx="0" ry="0" fill="#0EA5E9" stroke="none" stroke-width="1.5"/>
+  <text x="1150" y="570" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="10" font-weight="700" fill="#0C3547" text-anchor="start">Marketplace &amp; Discoverability</text>
+  <text x="1150" y="588" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="9" font-weight="normal" fill="#334155" text-anchor="start">Published products searchable</text>
+  <text x="1150" y="603" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="9" font-weight="normal" fill="#334155" text-anchor="start">and consumable by AI agents</text>
+  <text x="1150" y="618" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif" font-size="9" font-weight="normal" fill="#334155" text-anchor="start">and teams across the enterprise.</text>
+</svg>

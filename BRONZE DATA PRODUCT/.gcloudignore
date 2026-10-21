@@ -1,0 +1,21 @@
+# Exclude secrets
+.env
+.env.*
+
+# Python caches
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+**/.pytest_cache/
+
+# Excel lock/temp files
+**/~$*
+
+# Frontend build artifacts (backend build context)
+frontend/node_modules/
+frontend/dist/
+
+# Misc
+**/.DS_Store
+**/.venv/
+.git/

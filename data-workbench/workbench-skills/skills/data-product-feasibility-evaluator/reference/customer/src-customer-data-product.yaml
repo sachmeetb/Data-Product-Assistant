@@ -1,0 +1,281 @@
+spec_id: src_customer_data_product
+name: Customer data product
+domain: Customer
+product_kind: source
+description: Customer's core identity and demographic informattion, contant info,
+  KYC Details, account features, account status history, account limits, nominee details,
+  marketing & channel, preferences, mapping of customers to assigned RMs or service
+  agenst along with all the arrangement keys with other FDPs
+schema_version: '1.0'
+classification: confidential
+grain:
+  keys:
+  - customer_id
+  description: ''
+freshness:
+  history: scd2
+  cadence: ''
+  description: ''
+allowed_derivations:
+- rename
+- cast
+attributes:
+- name: customer_id
+  type: bigint
+  concept: Customer ID
+  description: Unique numeric identifier for the bank customer, serving as the primary key across all personal, account, and relationship records.
+  required: true
+  is_key: true
+  classification: internal
+- name: name
+  type: varchar
+  concept: Name
+  description: The full legal name of the customer as recorded at onboarding and verified through KYC.
+  required: true
+  is_key: false
+  classification: internal
+- name: gender
+  type: varchar
+  concept: Gender
+  description: The customer's self-declared or KYC-recorded gender, used for demographic segmentation and regulatory reporting.
+  required: false
+  is_key: false
+  classification: internal
+- name: pan_and_aadhaar_number
+  type: varchar
+  concept: PAN And Aadhaar Number
+  description: The customer's tax identification (PAN) and national biometric identity (Aadhaar) numbers, used for KYC verification in India.
+  required: false
+  is_key: false
+  classification: pii
+- name: customer_type
+  type: varchar
+  concept: Customer Type
+  description: The classification of the customer, such as individual, corporate, joint, or minor, determining applicable product and regulatory treatment.
+  required: true
+  is_key: false
+  classification: internal
+- name: citizenship_country
+  type: numeric
+  concept: Citizenship Country
+  description: The numeric country code representing the customer's country of citizenship, used for residency and FATCA/CRS classification.
+  required: false
+  is_key: false
+  classification: internal
+- name: onboarded_date
+  type: date
+  concept: Onboarded Date
+  description: The date on which the customer relationship was formally established and the account first activated.
+  required: true
+  is_key: false
+  classification: internal
+- name: onborading_channel
+  type: varchar
+  concept: Onborading Channel
+  description: The channel through which the customer was onboarded, such as branch, mobile_app, or banking_agent.
+  required: false
+  is_key: false
+  classification: internal
+- name: mobile_number
+  type: varchar
+  concept: Mobile Number
+  description: The customer's registered mobile phone number, used for OTP authentication, alerts, and outbound communication.
+  required: false
+  is_key: false
+  classification: pii
+- name: email
+  type: varchar
+  concept: Email
+  description: The customer's registered email address, used for digital notifications, statements, and marketing correspondence.
+  required: false
+  is_key: false
+  classification: pii
+- name: address
+  type: varchar
+  concept: Address
+  description: The customer's current residential or mailing address as held on record for KYC and statement delivery purposes.
+  required: false
+  is_key: false
+  classification: pii
+- name: language
+  type: varchar
+  concept: Language
+  description: The customer's preferred communication language, used to route correspondence and service interactions appropriately.
+  required: false
+  is_key: false
+  classification: internal
+- name: communication_channel_pref
+  type: varchar
+  concept: Communication Channel Pref
+  description: The customer's preferred channel for receiving bank communications, such as SMS, email, or in-app notification.
+  required: false
+  is_key: false
+  classification: internal
+- name: marketing_opt_in_flags
+  type: varchar
+  concept: Marketing Opt In Flags
+  description: A set of flags indicating whether the customer has consented to receiving marketing communications across various channels and product categories.
+  required: false
+  is_key: false
+  classification: internal
+- name: accessibility_needs
+  type: varchar
+  concept: Accessibility Needs
+  description: Any declared accessibility requirements of the customer, used to ensure appropriate service adaptations are made.
+  required: false
+  is_key: false
+  classification: internal
+- name: kyc_id
+  type: bigint
+  concept: KYC ID
+  description: Unique identifier for the customer's KYC verification record, linking identity documents and due-diligence outcomes.
+  required: true
+  is_key: true
+  classification: internal
+- name: document_type
+  type: varchar
+  concept: Document Type
+  description: The category of identity document used for KYC verification, such as passport, national_id, or driving_licence.
+  required: true
+  is_key: false
+  classification: internal
+- name: kyc_status
+  type: varchar
+  concept: KYC Status
+  description: The current KYC compliance status of the customer, such as verified, pending, expired, or under_review.
+  required: true
+  is_key: false
+  classification: internal
+- name: verifcation_date
+  type: date
+  concept: Verifcation Date
+  description: The date on which the customer's KYC documents were last verified or renewed.
+  required: true
+  is_key: false
+  classification: internal
+- name: mapping_id
+  type: bigint
+  concept: Mapping ID
+  description: Unique identifier for the record linking the customer to a specific financial product or account arrangement.
+  required: true
+  is_key: true
+  classification: internal
+- name: product_type
+  type: varchar
+  concept: Product Type
+  description: The type of financial product held by the customer under this mapping, such as savings_account, loan, credit_card, or fixed_deposit.
+  required: true
+  is_key: false
+  classification: internal
+- name: account_number
+  type: numeric
+  concept: Account Number
+  description: The customer's account number associated with the product mapping, masked or partial for PII protection.
+  required: false
+  is_key: false
+  classification: pii
+- name: load_id
+  type: bigint
+  concept: Load ID
+  description: Unique identifier for a batch data load event, used for lineage tracking and reconciliation of customer record updates.
+  required: true
+  is_key: true
+  classification: internal
+- name: card_number
+  type: varchar
+  concept: Card Number
+  description: The masked card number associated with the customer's payment card product under this arrangement.
+  required: false
+  is_key: false
+  classification: pii
+- name: product_status
+  type: varchar
+  concept: Product Status
+  description: The current lifecycle state of the customer's product arrangement, such as active, dormant, closed, or suspended.
+  required: true
+  is_key: false
+  classification: internal
+- name: start_date
+  type: date
+  concept: Start Date
+  description: The date on which the customer's product arrangement became active.
+  required: true
+  is_key: false
+  classification: internal
+- name: maturity_date
+  type: date
+  concept: Maturity Date
+  description: The scheduled maturity or expiry date of the customer's product arrangement, if applicable (e.g. fixed deposit or loan).
+  required: true
+  is_key: false
+  classification: internal
+- name: household_id_group_id
+  type: bigint
+  concept: Household ID Group ID
+  description: The unique identifier for the household or group to which this customer belongs, enabling household-level analytics and relationship banking.
+  required: true
+  is_key: true
+  classification: internal
+- name: rm_id
+  type: bigint
+  concept: RM ID
+  description: The unique identifier of the Relationship Manager assigned to serve this customer.
+  required: true
+  is_key: true
+  classification: internal
+- name: rn_name
+  type: varchar
+  concept: Rn Name
+  description: The full name of the Relationship Manager assigned to this customer.
+  required: true
+  is_key: false
+  classification: internal
+- name: assigned_on
+  type: varchar
+  concept: Assigned On
+  description: The date or timestamp on which the Relationship Manager was assigned to the customer.
+  required: false
+  is_key: false
+  classification: internal
+- name: servicing_branch
+  type: varchar
+  concept: Servicing Branch
+  description: The bank branch designated as the primary servicing location for this customer.
+  required: false
+  is_key: false
+  classification: internal
+- name: nominee_id
+  type: bigint
+  concept: Nominee ID
+  description: Unique identifier for the nominee record designating a beneficiary for the customer's account or product in the event of death.
+  required: true
+  is_key: true
+  classification: internal
+- name: linked_acc_number
+  type: varchar
+  concept: Linked Acc Number
+  description: The account number of the linked account held by the nominee, used for credit instructions or payout processing.
+  required: false
+  is_key: false
+  classification: internal
+- name: nominee_name
+  type: varchar
+  concept: Nominee Name
+  description: The full name of the nominee designated to receive account proceeds on behalf of the deceased customer.
+  required: true
+  is_key: false
+  classification: pii
+- name: relationship_to_customer
+  type: varchar
+  concept: Relationship To Customer
+  description: The nature of the relationship between the nominee and the customer, such as spouse, child, or sibling.
+  required: false
+  is_key: false
+  classification: internal
+- name: share
+  type: varchar
+  concept: Share
+  description: The percentage share or portion of the account proceeds allocated to this nominee, relevant when multiple nominees are designated.
+  required: false
+  is_key: false
+  classification: internal

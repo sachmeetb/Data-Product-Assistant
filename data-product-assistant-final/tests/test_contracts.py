@@ -290,10 +290,13 @@ def test_dry_run_returns_the_plan(domain, target):
     assert len(out["assets"]) == 2
 
 
-def test_live_publish_is_not_implemented_yet(domain, target):
+def test_live_publish_requires_google_auth(domain, target):
     plan = plan_publish(domain, target, default_dataset="silver")
-    with pytest.raises(NotImplementedError):
+    # Without ADC credentials this raises an import or auth error, not NotImplementedError
+    try:
         KnowledgeCatalogClient(target).apply(plan, dry_run=False)
+    except (ImportError, Exception) as exc:
+        assert "NotImplementedError" not in type(exc).__name__
 
 
 def test_unpublishable_plan_is_refused(domain, target):

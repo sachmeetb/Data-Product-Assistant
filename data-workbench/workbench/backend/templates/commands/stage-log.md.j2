@@ -1,0 +1,24 @@
+---
+description: Show the latest transcript for a stage (read-only)
+argument-hint: <stage_id> [--workflow-id=...]
+---
+
+Fetch the latest `StageExecution` log for stage `$ARGUMENTS`.
+
+## Step 1 — Resolve stage_id to stage_number
+
+```bash
+curl -s {{ backend_base_url }}/api/projects/{{ project.id }}
+```
+
+Find the stage in `workflows[].stages[]` matching `stage_id`. If `--workflow-id=<wid>` was passed, scope to that workflow.
+
+## Step 2 — Fetch the most recent execution
+
+```bash
+curl -s "{{ backend_base_url }}/api/projects/{{ project.id }}/stage-executions?stage_number=<stage_number>&workflow_id=<workflow_id>&limit=1"
+```
+
+Pretty-print the `log_json` content. Each entry is one event in the same shape `/run-stage` streams (`text_delta`, `tool_use`, `stage_complete`, etc.). If `truncated=true`, mention that the log was capped at 2MB.
+
+Do NOT POST to any endpoint. This is read-only.

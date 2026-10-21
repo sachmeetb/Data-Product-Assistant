@@ -1,0 +1,203 @@
+spec_id: src_internet_banking
+name: Internet Banking
+domain: Digital
+product_kind: source
+description: Login sessions, device/browser fingerprints, transactions, failed attempts.
+schema_version: '1.0'
+classification: confidential
+grain:
+  keys:
+  - customer_id
+  description: ''
+freshness:
+  history: current
+  cadence: ''
+  description: ''
+allowed_derivations:
+- rename
+- cast
+attributes:
+- name: customer_id
+  type: bigint
+  concept: Customer ID
+  description: Unique identifier for the bank customer whose internet banking session and activity are recorded.
+  required: true
+  is_key: true
+  classification: internal
+- name: session_id
+  type: bigint
+  concept: Session ID
+  description: Unique identifier for a single internet banking login session, grouping all events and transactions performed during that session.
+  required: true
+  is_key: true
+  classification: internal
+- name: timestamp
+  type: timestamp
+  concept: Timestamp
+  description: The date and time at which the internet banking session was initiated or the recorded event occurred.
+  required: false
+  is_key: false
+  classification: internal
+- name: ip_address
+  type: varchar
+  concept: IP Address
+  description: The IP address from which the customer accessed the internet banking portal, used for fraud detection and audit purposes.
+  required: false
+  is_key: false
+  classification: pii
+- name: session_duration
+  type: numeric
+  concept: Session Duration
+  description: The total time in seconds the customer was active within the internet banking session before logout or timeout.
+  required: false
+  is_key: false
+  classification: internal
+- name: authentication_method
+  type: varchar
+  concept: Authentication Method
+  description: The mechanism used by the customer to authenticate into internet banking, such as OTP, password, or biometric.
+  required: false
+  is_key: false
+  classification: internal
+- name: login_status
+  type: varchar
+  concept: Login Status
+  description: The outcome of the login attempt, indicating whether it succeeded, failed, or was blocked due to security rules.
+  required: true
+  is_key: false
+  classification: internal
+- name: reaaon_for_failure
+  type: varchar
+  concept: Reaaon For Failure
+  description: The reason code explaining why the login attempt failed, such as incorrect_password, account_locked, or OTP_expired.
+  required: false
+  is_key: false
+  classification: internal
+- name: device_id
+  type: bigint
+  concept: Device ID
+  description: Unique identifier for the device used to access internet banking, enabling new or suspicious device detection.
+  required: true
+  is_key: true
+  classification: internal
+- name: device_type
+  type: varchar
+  concept: Device Type
+  description: The category of device used to access internet banking, such as desktop, laptop, or tablet.
+  required: true
+  is_key: false
+  classification: internal
+- name: user_agent_hash
+  type: varchar
+  concept: User Agent Hash
+  description: A hashed fingerprint of the browser's user agent string, used to identify and track the device browser environment.
+  required: false
+  is_key: false
+  classification: pii
+- name: first_seen_ts
+  type: timestamp
+  concept: First Seen Ts
+  description: The timestamp of the first recorded internet banking session for this device, used for new-device detection.
+  required: false
+  is_key: false
+  classification: internal
+- name: last_seen_ts
+  type: timestamp
+  concept: Last Seen Ts
+  description: The timestamp of the most recent internet banking session recorded for this device, enabling device activity age assessment.
+  required: false
+  is_key: false
+  classification: internal
+- name: txn_id
+  type: bigint
+  concept: Txn ID
+  description: Unique identifier for a financial transaction initiated through internet banking during the session.
+  required: true
+  is_key: true
+  classification: internal
+- name: transaction_type
+  type: varchar
+  concept: Transaction Type
+  description: The category of the internet banking transaction, such as funds_transfer, bill_payment, fixed_deposit_creation, or statement_request.
+  required: true
+  is_key: false
+  classification: internal
+- name: amount
+  type: numeric
+  concept: Amount
+  description: The monetary value of the transaction initiated through internet banking.
+  required: true
+  is_key: false
+  classification: internal
+  derivations:
+  - currency_normalize
+- name: initiation_and_completion_timestamp
+  type: timestamp
+  concept: Initiation And Completion Timestamp
+  description: The paired timestamps recording when the internet banking transaction was submitted and when it was confirmed or completed.
+  required: false
+  is_key: false
+  classification: internal
+- name: beneficiary_id
+  type: bigint
+  concept: Beneficiary ID
+  description: The unique identifier of the payee or beneficiary account to which the internet banking transaction was directed.
+  required: true
+  is_key: true
+  classification: internal
+- name: status
+  type: varchar
+  concept: Status
+  description: The current state of the internet banking transaction, such as pending, successful, failed, or reversed.
+  required: true
+  is_key: false
+  classification: internal
+- name: currency
+  type: varchar
+  concept: Currency
+  description: The ISO currency code of the internet banking transaction amount.
+  required: true
+  is_key: false
+  classification: internal
+- name: reason_for_failure
+  type: varchar
+  concept: Reason For Failure
+  description: The reason the internet banking transaction failed, such as insufficient_funds, beneficiary_invalid, or system_error.
+  required: false
+  is_key: false
+  classification: internal
+- name: event_id
+  type: bigint
+  concept: Event ID
+  description: Unique identifier for a discrete security or activity event within the internet banking session, such as a failed login or suspicious access attempt.
+  required: true
+  is_key: true
+  classification: internal
+- name: failed_login_count
+  type: numeric
+  concept: Failed Login Count
+  description: The number of consecutive failed login attempts recorded before the session or account was locked.
+  required: false
+  is_key: false
+  classification: internal
+- name: password_reset
+  type: varchar
+  concept: Password Reset
+  description: An indicator or timestamp recording whether and when the customer reset their internet banking password during the session.
+  required: false
+  is_key: false
+  classification: internal
+- name: otp_resend_count
+  type: numeric
+  concept: OTP Resend Count
+  description: The number of times the customer requested a new OTP during the login or transaction authentication flow.
+  required: false
+  is_key: false
+  classification: internal
+- name: anomaly_flags
+  type: varchar
+  concept: Anomaly Flags
+  description: A set of indicator codes marking detected anomalies in the session, such as unusual_location, new_device, or high_risk_transaction.
+  required: false
+  is_key: false
+  classification: internal

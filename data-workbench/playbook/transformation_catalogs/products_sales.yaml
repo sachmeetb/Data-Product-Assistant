@@ -1,0 +1,254 @@
+# Products & Sales domain transformation templates.
+# Matched by the data-mapping skill when authoring a consumer-aligned product
+# whose source schema looks like products_sales (samples/products_sales/).
+
+domain: products_sales
+templates:
+
+  # --- Name composition ----------------------------------------------------
+  - name: customer_full_name
+    match:
+      target_name_patterns: ["customer_name", "full_name", "fullname", "name"]
+      source_columns_required: ["first_name", "last_name"]
+    transform:
+      kind: concat
+      inputs: ["first_name", "last_name"]
+      separator: " "
+      decorators:
+        standardization: ["trim"]
+    confidence_floor: 0.90
+
+  # --- PII handling --------------------------------------------------------
+  - name: email_masked
+    match:
+      target_name_patterns: ["email_masked", "masked_email", "email_safe", "email_redacted"]
+      source_columns_required: ["email"]
+    transform:
+      kind: mask
+      inputs: ["email"]
+      params:
+        algorithm: "keep_last"
+        keep_n: 4
+        mask_char: "X"
+        keep_format: true
+    confidence_floor: 0.85
+
+  - name: customer_id_hash
+    match:
+      target_name_patterns: ["hashed_id", "customer_id_hash", "id_hash", "anon_id"]
+      source_columns_required: ["customer_id"]
+    transform:
+      kind: hash
+      inputs: ["customer_id"]
+      params:
+        algorithm: "sha256"
+        salt: "products_sales_demo"
+    confidence_floor: 0.80
+
+  # --- Banding / bucketing -------------------------------------------------
+  - name: lifetime_value_band
+    match:
+      target_name_patterns: ["clv_band", "ltv_band", "customer_value_band", "lifetime_value_band"]
+      source_columns_required: ["lifetime_value_usd"]
+    transform:
+      kind: bucket
+      inputs: ["lifetime_value_usd"]
+      params:
+        boundaries: [500, 5000, 50000]
+        labels: ["low", "mid", "high", "vip"]
+    confidence_floor: 0.85
+
+  - name: order_value_band
+    match:
+      target_name_patterns: ["order_value_band", "order_size_band", "basket_band"]
+      source_columns_required: ["total_amount"]
+    transform:
+      kind: bucket
+      inputs: ["total_amount"]
+      params:
+        boundaries: [50, 250, 1000]
+        labels: ["small", "medium", "large", "enterprise"]
+    confidence_floor: 0.80
+
+  # --- SCD-2 latest-value lookups -----------------------------------------
+  - name: current_product_price
+    match:
+      target_name_patterns: ["current_price", "active_price", "live_price", "selling_price"]
+      source_columns_required: ["product_id"]
+    transform:
+      kind: lookup
+      inputs: ["product_id"]
+      params:
+        lookup_table: "products_sales.product_price_history"
+        key_column: "product_id"
+        value_column: "price"
+        selection_strategy: "latest"
+        order_by_column: "effective_date"
+        filter_clause: "is_current = true"
+    confidence_floor: 0.85
+
+  - name: current_customer_segment
+    match:
+      target_name_patterns: ["current_segment", "segment", "segment_code", "active_segment"]
+      source_columns_required: ["customer_id"]
+    transform:
+      kind: lookup
+      inputs: ["customer_id"]
+      params:
+        lookup_table: "products_sales.customer_segment_assignment"
+        key_column: "customer_id"
+        value_column: "segment_code"
+        selection_strategy: "latest"
+        order_by_column: "effective_from"
+        filter_clause: "effective_to IS NULL"
+    confidence_floor: 0.85
+
+  # --- Aggregate lookups (per customer rollups) ---------------------------
+  - name: total_orders_per_customer
+    match:
+      target_name_patterns: ["total_orders", "order_count", "orders_placed"]
+      source_columns_required: ["customer_id"]
+    transform:
+      kind: lookup
+      inputs: ["customer_id"]
+      params:
+        lookup_table: "products_sales.order_header"
+        key_column: "customer_id"
+        value_column: "id"
+        selection_strategy: "aggregate"
+        aggregate_function: "COUNT"
+    confidence_floor: 0.80
+
+  - name: total_spend_per_customer
+    match:
+      target_name_patterns: ["total_spend", "lifetime_spend", "total_revenue", "gross_revenue"]
+      source_columns_required: ["customer_id"]
+    transform:
+      kind: lookup
+      inputs: ["customer_id"]
+      params:
+        lookup_table: "products_sales.order_header"
+        key_column: "customer_id"
+        value_column: "total_amount"
+        selection_strategy: "aggregate"
+        aggregate_function: "SUM"
+        filter_clause: "status = 'delivered'"
+    confidence_floor: 0.80
+
+  - name: units_sold_per_product
+    match:
+      target_name_patterns: ["units_sold", "total_quantity", "qty_sold"]
+      source_columns_required: ["product_id"]
+    transform:
+      kind: lookup
+      inputs: ["product_id"]
+      params:
+        lookup_table: "products_sales.order_item"
+        key_column: "product_id"
+        value_column: "quantity"
+        selection_strategy: "aggregate"
+        aggregate_function: "SUM"
+    confidence_floor: 0.80
+
+  - name: revenue_per_product
+    match:
+      target_name_patterns: ["product_revenue", "total_revenue", "gross_revenue"]
+      source_columns_required: ["product_id"]
+    transform:
+      kind: lookup
+      inputs: ["product_id"]
+      params:
+        lookup_table: "products_sales.order_item"
+        key_column: "product_id"
+        value_column: "line_total"
+        selection_strategy: "aggregate"
+        aggregate_function: "SUM"
+    confidence_floor: 0.80
+
+  # --- Existence flags (boolean derivations) -------------------------------
+  - name: has_returned_order
+    match:
+      target_name_patterns: ["has_returned", "ever_returned", "has_returned_order", "is_returner"]
+      source_columns_required: ["customer_id"]
+    transform:
+      kind: lookup
+      inputs: ["customer_id"]
+      params:
+        lookup_table: "products_sales.order_header"
+        key_column: "customer_id"
+        value_column: "id"
+        selection_strategy: "exists"
+        filter_clause: "status = 'returned'"
+    confidence_floor: 0.75
+
+  - name: has_cancelled_order
+    match:
+      target_name_patterns: ["has_cancelled", "ever_cancelled"]
+      source_columns_required: ["customer_id"]
+    transform:
+      kind: lookup
+      inputs: ["customer_id"]
+      params:
+        lookup_table: "products_sales.order_header"
+        key_column: "customer_id"
+        value_column: "id"
+        selection_strategy: "exists"
+        filter_clause: "status = 'cancelled'"
+    confidence_floor: 0.75
+
+  # --- Status / lifecycle classification ----------------------------------
+  - name: order_status_category
+    match:
+      target_name_patterns: ["status_category", "order_status_group", "status_class"]
+      source_columns_required: ["order_status"]
+    transform:
+      kind: case
+      inputs: ["order_status"]
+      expression: "CASE WHEN order_status IN ('cancelled','returned') THEN 'terminal' WHEN order_status = 'delivered' THEN 'complete' ELSE 'in_progress' END"
+    confidence_floor: 0.75
+
+  # --- Derived numerics ----------------------------------------------------
+  - name: margin_percent
+    match:
+      target_name_patterns: ["margin_pct", "margin_percent", "gross_margin"]
+      source_columns_required: ["list_price", "cost"]
+    transform:
+      kind: expression
+      inputs: ["list_price", "cost"]
+      expression: "ROUND((list_price - cost) / NULLIF(list_price, 0) * 100, 2)"
+    confidence_floor: 0.85
+
+  - name: line_total_recompute
+    match:
+      target_name_patterns: ["line_total", "line_amount", "extended_amount"]
+      source_columns_required: ["quantity", "unit_price", "discount_pct"]
+    transform:
+      kind: expression
+      inputs: ["quantity", "unit_price", "discount_pct"]
+      expression: "ROUND(quantity * unit_price * (1 - discount_pct / 100.0), 2)"
+    confidence_floor: 0.85
+
+  # --- Format / parsing demos ---------------------------------------------
+  - name: email_username
+    match:
+      target_name_patterns: ["email_user", "email_username", "username_from_email"]
+      source_columns_required: ["email"]
+    transform:
+      kind: split
+      inputs: ["email"]
+      params:
+        delimiter: "@"
+        position: 1
+    confidence_floor: 0.80
+
+  - name: email_domain
+    match:
+      target_name_patterns: ["email_domain", "domain_from_email"]
+      source_columns_required: ["email"]
+    transform:
+      kind: split
+      inputs: ["email"]
+      params:
+        delimiter: "@"
+        position: 2
+    confidence_floor: 0.80

@@ -1,0 +1,112 @@
+platform: bigquery
+engine: "BigQuery Standard SQL (GoogleSQL, current)"
+
+functions:
+  AGE:
+    capability: unsupported
+    remediation: "BigQuery has no AGE. Decompose to a date_difference op. boundary_count via DATE_DIFF(end, start, YEAR); completed_units needs a month/day boundary adjustment (see the date_difference op emit)."
+    citation: "https://cloud.google.com/bigquery/docs/reference/standard-sql/date_functions"
+    status: verified
+  DATE_DIFF:
+    capability: native
+    emit: "DATE_DIFF({end}, {start}, {part})"
+    notes: "DATE_DIFF(end, start, YEAR) counts calendar-year BOUNDARIES crossed, NOT completed elapsed years — a common off-by-one trap."
+    citation: "https://cloud.google.com/bigquery/docs/reference/standard-sql/date_functions#date_diff"
+    status: verified
+  DATE_TRUNC:
+    capability: native
+    emit: "DATE_TRUNC({date}, {part})"
+    notes: "Arg order is (date, part) — the date comes FIRST, opposite of Postgres/Snowflake DATE_TRUNC(part, ts)."
+    citation: "https://cloud.google.com/bigquery/docs/reference/standard-sql/date_functions#date_trunc"
+    status: verified
+  MD5:
+    capability: emulated
+    emit: "TO_HEX(MD5({text}))"
+    notes: "MD5() returns BYTES; wrap in TO_HEX(...) to match the hex-string output of the other engines."
+    citation: "https://cloud.google.com/bigquery/docs/reference/standard-sql/hash_functions#md5"
+    status: verified
+  SHA1:
+    capability: emulated
+    emit: "TO_HEX(SHA1({text}))"
+    notes: "SHA1() returns BYTES; wrap in TO_HEX(...)."
+    citation: "https://cloud.google.com/bigquery/docs/reference/standard-sql/hash_functions#sha1"
+    status: verified
+  SHA256:
+    capability: emulated
+    emit: "TO_HEX(SHA256({text}))"
+    notes: "SHA256() returns BYTES; wrap in TO_HEX(...). BigQuery has SHA256/SHA512, not a bit-length SHA2()."
+    citation: "https://cloud.google.com/bigquery/docs/reference/standard-sql/hash_functions#sha256"
+    status: verified
+  REGEXP_REPLACE:
+    capability: native
+    emit: "REGEXP_REPLACE({s}, {pattern}, {repl})"
+    notes: "Global by default; uses RE2 pattern syntax."
+    citation: "https://cloud.google.com/bigquery/docs/reference/standard-sql/string_functions#regexp_replace"
+    status: verified
+  SPLIT_PART:
+    capability: unsupported
+    remediation: "BigQuery has no SPLIT_PART. Use SPLIT({s}, {delim})[SAFE_OFFSET({idx}-1)] (SPLIT returns a 0-based array)."
+    citation: "https://cloud.google.com/bigquery/docs/reference/standard-sql/string_functions#split"
+    status: verified
+  TO_CHAR:
+    capability: unsupported
+    remediation: "No TO_CHAR. Use FORMAT_DATE / FORMAT_TIMESTAMP / FORMAT_DATETIME with strftime-style format elements."
+    citation: "https://cloud.google.com/bigquery/docs/reference/standard-sql/date_functions#format_date"
+    status: verified
+  DATE_FORMAT:
+    capability: unsupported
+    remediation: "No DATE_FORMAT. Use FORMAT_DATE / FORMAT_TIMESTAMP."
+    citation: "https://cloud.google.com/bigquery/docs/reference/standard-sql/date_functions#format_date"
+    status: verified
+  DATEDIFF:
+    capability: unsupported
+    remediation: "BigQuery spells it DATE_DIFF(end, start, part), not DATEDIFF."
+    citation: "https://cloud.google.com/bigquery/docs/reference/standard-sql/date_functions#date_diff"
+    status: verified
+  MONTHS_BETWEEN:
+    capability: unsupported
+    remediation: "No MONTHS_BETWEEN. Use DATE_DIFF({end}, {start}, MONTH) (boundary count) or a date_difference op."
+    citation: "https://cloud.google.com/bigquery/docs/reference/standard-sql/date_functions#date_diff"
+    status: verified
+  TIMESTAMPDIFF:
+    capability: unsupported
+    remediation: "No TIMESTAMPDIFF. Use TIMESTAMP_DIFF({end}, {start}, {part}) or DATE_DIFF for dates."
+    citation: "https://cloud.google.com/bigquery/docs/reference/standard-sql/timestamp_functions#timestamp_diff"
+    status: verified
+  SHA2:
+    capability: unsupported
+    remediation: "No bit-length SHA2(). Use SHA256({text}) / SHA512({text}) (both return BYTES; wrap in TO_HEX)."
+    citation: "https://cloud.google.com/bigquery/docs/reference/standard-sql/hash_functions#sha256"
+    status: verified
+  DIGEST:
+    capability: unsupported
+    remediation: "No pgcrypto DIGEST. Use TO_HEX(SHA256({text}))."
+    citation: "https://cloud.google.com/bigquery/docs/reference/standard-sql/hash_functions#sha256"
+    status: verified
+
+ops:
+  date_difference:
+    completed_units:
+      capability: emulated
+      emit: "DATE_DIFF({end}, {start}, YEAR) - IF((EXTRACT(MONTH FROM {end}), EXTRACT(DAY FROM {end})) < (EXTRACT(MONTH FROM {start}), EXTRACT(DAY FROM {start})), 1, 0)"
+      notes: "DATE_DIFF YEAR counts boundaries; subtract 1 when the end's month/day is before the start's to get completed elapsed years."
+      status: conformance-verify
+      citation: "https://cloud.google.com/bigquery/docs/reference/standard-sql/date_functions#date_diff"
+    boundary_count:
+      capability: native
+      emit: "DATE_DIFF({end}, {start}, YEAR)"
+      notes: "Counts calendar-year boundaries crossed."
+      status: conformance-verify
+      citation: "https://cloud.google.com/bigquery/docs/reference/standard-sql/date_functions#date_diff"
+    symbolic_interval:
+      capability: unsupported
+      remediation: "No native symbolic (yrs+mos+days) interval. Emit separate completed_units per unit, or a STRUCT of counts."
+      citation: "https://cloud.google.com/bigquery/docs/reference/standard-sql/date_functions"
+      status: verified
+  split_part:
+    default:
+      capability: emulated
+      emit: "SPLIT({s}, {delim})[SAFE_OFFSET({idx} - 1)]"
+      notes: "SPLIT returns a 0-based array; convert the 1-based neutral index. SAFE_OFFSET yields NULL (not error) when out of range, matching SPLIT_PART's empty-string tolerance loosely."
+      status: conformance-verify
+      citation: "https://cloud.google.com/bigquery/docs/reference/standard-sql/string_functions#split"

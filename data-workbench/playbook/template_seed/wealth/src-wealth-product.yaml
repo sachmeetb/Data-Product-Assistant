@@ -1,0 +1,484 @@
+apiVersion: v3.1.0
+kind: DataContract
+id: template:wealth:src-wealth-product
+name: Wealth product
+version: 1.0.0
+status: draft
+domain: Wealth
+description: Holdings, transactions and valuations for investment and advisory products.
+schema:
+- name: Wealth product
+  physicalName: wealth_product
+  physicalType: table
+  description: Holdings, transactions and valuations for investment and advisory products.
+  properties:
+  - name: portfolio_id
+    physicalName: portfolio_id
+    logicalName: Portfolio ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a customer's investment or advisory portfolio,
+      used as the primary key across holdings and performance records.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: customer_id
+    physicalName: customer_id
+    logicalName: Customer ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier of the wealth customer who owns the portfolio.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: account_id
+    physicalName: account_id
+    logicalName: Account ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Identifier of the banking or custody account linked to the investment
+      portfolio.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: base_currency
+    physicalName: base_currency
+    logicalName: Base Currency
+    logicalType: varchar
+    physicalType: varchar
+    description: ISO currency code in which portfolio valuations, returns, and performance
+      are reported.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: inception_date
+    physicalName: inception_date
+    logicalName: Inception Date
+    logicalType: date
+    physicalType: date
+    description: Date on which the investment portfolio was opened and the advisory
+      or investment mandate began.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: risk_profile
+    physicalName: risk_profile
+    logicalName: Risk Profile
+    logicalType: varchar
+    physicalType: varchar
+    description: Customer's risk tolerance classification (e.g. conservative, moderate,
+      aggressive) used to determine investment strategy and suitability.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: suitability_status
+    physicalName: suitability_status
+    logicalName: Suitability Status
+    logicalType: varchar
+    physicalType: varchar
+    description: Suitability assessment status indicating whether the portfolio's
+      current investments are appropriate for the customer's declared profile and
+      objectives.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: position_id
+    physicalName: position_id
+    logicalName: Position ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for an individual investment position held within
+      the portfolio.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: instrument_id
+    physicalName: instrument_id
+    logicalName: Instrument ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for the financial instrument held in the position
+      (e.g. equity, bond, mutual fund, structured product).
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: quantity
+    physicalName: quantity
+    logicalName: Quantity
+    logicalType: varchar
+    physicalType: varchar
+    description: Number of units or face value of the financial instrument held in
+      the position.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: cost
+    physicalName: cost
+    logicalName: Cost
+    logicalType: numeric
+    physicalType: numeric
+    description: Total acquisition cost of the position, used as the cost basis for
+      unrealized gain/loss calculations.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: market_price
+    physicalName: market_price
+    logicalName: Market Price
+    logicalType: numeric
+    physicalType: numeric
+    description: Current market price per unit of the instrument, used to compute
+      the marked-to-market value of the position.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: order_id
+    physicalName: order_id
+    logicalName: Order ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a trade or investment order placed for the
+      portfolio.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: side
+    physicalName: side
+    logicalName: Side
+    logicalType: varchar
+    physicalType: varchar
+    description: Direction of the order (buy or sell) indicating whether the trade
+      is increasing or reducing the portfolio's exposure to an instrument.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: price
+    physicalName: price
+    logicalName: Price
+    logicalType: numeric
+    physicalType: numeric
+    description: Limit or requested price specified in the trade order.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: timestamp
+    physicalName: timestamp
+    logicalName: Timestamp
+    logicalType: timestamp
+    physicalType: timestamp
+    description: Date and time at which the order was placed or the trade event occurred.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: trade_id
+    physicalName: trade_id
+    logicalName: Trade ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for an executed trade record, generated when an
+      order is matched and confirmed by the exchange or counterparty.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: execution_price
+    physicalName: execution_price
+    logicalName: Execution Price
+    logicalType: numeric
+    physicalType: numeric
+    description: Actual price at which the trade was executed in the market.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: execution_time
+    physicalName: execution_time
+    logicalName: Execution Time
+    logicalType: varchar
+    physicalType: varchar
+    description: Time at which the trade execution was confirmed by the exchange or
+      counterparty.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: perf_id
+    physicalName: perf_id
+    logicalName: Perf ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a portfolio performance measurement record
+      covering a defined period.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: period
+    physicalName: period
+    logicalName: Period
+    logicalType: varchar
+    physicalType: varchar
+    description: Measurement period for which portfolio performance is calculated
+      (e.g. MTD, QTD, YTD, 1Y, since-inception).
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: return
+    physicalName: return
+    logicalName: Return
+    logicalType: varchar
+    physicalType: varchar
+    description: Portfolio return for the measurement period, expressed as a percentage
+      and typically calculated on a time-weighted or money-weighted basis.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: benchmark
+    physicalName: benchmark
+    logicalName: Benchmark
+    logicalType: varchar
+    physicalType: varchar
+    description: Name or identifier of the market index or benchmark used to compare
+      the portfolio's relative performance.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: ca_id
+    physicalName: ca_id
+    logicalName: Ca ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a corporate action event affecting a security
+      held in the portfolio (e.g. dividend, rights issue, stock split).
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: type
+    physicalName: type
+    logicalName: Type
+    logicalType: varchar
+    physicalType: varchar
+    description: Type of corporate action event affecting the held security (e.g.
+      cash dividend, stock dividend, rights issue, bonus shares, merger).
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: record_date
+    physicalName: record_date
+    logicalName: Record Date
+    logicalType: date
+    physicalType: date
+    description: Date on which an investor must be a registered holder of the security
+      to be entitled to the corporate action benefit.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: ex_date
+    physicalName: ex_date
+    logicalName: Ex Date
+    logicalType: date
+    physicalType: date
+    description: Ex-dividend or ex-rights date; securities purchased on or after this
+      date do not carry entitlement to the corporate action.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: payable_date
+    physicalName: payable_date
+    logicalName: Payable Date
+    logicalType: date
+    physicalType: date
+    description: Date on which corporate action proceeds (e.g. dividend cash, bonus
+      shares) are credited to the investor's account.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: fee_id
+    physicalName: fee_id
+    logicalName: Fee ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a fee or charge record associated with the
+      portfolio.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: mgmt_fee
+    physicalName: mgmt_fee
+    logicalName: Mgmt Fee
+    logicalType: numeric
+    physicalType: numeric
+    description: Management fee charged for professional discretionary portfolio management
+      services.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: advisory_fee
+    physicalName: advisory_fee
+    logicalName: Advisory Fee
+    logicalType: numeric
+    physicalType: numeric
+    description: Advisory fee charged for investment advice provided under an advisory
+      (non-discretionary) mandate.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: brokerage_fee
+    physicalName: brokerage_fee
+    logicalName: Brokerage Fee
+    logicalType: numeric
+    physicalType: numeric
+    description: Commission or brokerage charge levied for executing trade orders
+      on behalf of the portfolio.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  foreignKeys: []
+  transform:
+    grouping_keys:
+    - portfolio_id
+    scd_policy:
+      type: snapshot
+customProperties:
+  feasibility:
+    schema_version: '1.0'
+    spec_classification: internal
+    cadence: ''
+    freshness_history: snapshot
+    freshness_description: ''
+    grain_keys:
+    - portfolio_id
+    grain_description: ''
+    allowed_derivations:
+    - rename
+    - cast
+    composition:
+      join_keys: []
+      composed_of: []
+      description: ''
+productKind: source
+sourceSpecId: src_wealth_product

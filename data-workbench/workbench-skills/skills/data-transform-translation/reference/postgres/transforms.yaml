@@ -1,0 +1,112 @@
+platform: postgres
+engine: "PostgreSQL 12+"
+
+# Only DIVERGENT functions belong here — anything ANSI-safe across all five
+# served platforms lives in ../portable_functions.yaml. Each entry states THIS
+# platform's capability; the build step inverts the five files into one map.
+functions:
+  AGE:
+    capability: native
+    emit: "AGE({end}, {start})"
+    notes: "Returns a SYMBOLIC interval (years, months, days) — NOT a scalar count. Do not translate verbatim; decompose to a date_difference op with an explicit semantics discriminator."
+    citation: "https://www.postgresql.org/docs/current/functions-datetime.html"
+    status: verified
+  SPLIT_PART:
+    capability: native
+    emit: "SPLIT_PART({s}, {delim}, {idx})"
+    notes: "1-based index; returns '' when idx exceeds the number of fields."
+    citation: "https://www.postgresql.org/docs/current/functions-string.html"
+    status: verified
+  TO_CHAR:
+    capability: native
+    emit: "TO_CHAR({value}, {format})"
+    notes: "Postgres format model differs from Oracle/Snowflake tokens in edge cases; treat format tokens as a neutral set."
+    citation: "https://www.postgresql.org/docs/current/functions-formatting.html"
+    status: verified
+  DATE_TRUNC:
+    capability: native
+    emit: "DATE_TRUNC({unit}, {ts})"
+    citation: "https://www.postgresql.org/docs/current/functions-datetime.html"
+    status: verified
+  MD5:
+    capability: native
+    emit: "MD5({text})"
+    notes: "Returns a 32-char hex string."
+    citation: "https://www.postgresql.org/docs/current/functions-string.html"
+    status: verified
+  DIGEST:
+    capability: emulated
+    emit: "ENCODE(DIGEST({text}, '{algo}'), 'hex')"
+    remediation: "Requires the pgcrypto extension (CREATE EXTENSION pgcrypto). No hex-string SHA without it."
+    notes: "digest() returns bytea; wrap in ENCODE(...,'hex')."
+    citation: "https://www.postgresql.org/docs/current/pgcrypto.html"
+    status: verified
+  REGEXP_REPLACE:
+    capability: native
+    emit: "REGEXP_REPLACE({s}, {pattern}, {repl}, 'g')"
+    notes: "Replaces only the FIRST match unless the 4th-arg flag 'g' is passed. sqlglot renders the flag per dialect."
+    citation: "https://www.postgresql.org/docs/current/functions-matching.html"
+    status: verified
+  DATE_FORMAT:
+    capability: unsupported
+    remediation: "Postgres has no DATE_FORMAT. Use TO_CHAR({ts}, {format}) instead."
+    citation: "https://www.postgresql.org/docs/current/functions-formatting.html"
+    status: verified
+  DATEDIFF:
+    capability: unsupported
+    remediation: "Postgres has no DATEDIFF. Use a date_difference op (boundary_count / completed_units) which lowers to AGE()/EXTRACT arithmetic."
+    citation: "https://www.postgresql.org/docs/current/functions-datetime.html"
+    status: verified
+  DATE_DIFF:
+    capability: unsupported
+    remediation: "Postgres has no DATE_DIFF. Use a date_difference op."
+    citation: "https://www.postgresql.org/docs/current/functions-datetime.html"
+    status: verified
+  MONTHS_BETWEEN:
+    capability: unsupported
+    remediation: "Postgres has no MONTHS_BETWEEN. Compute via (EXTRACT(YEAR FROM AGE(...))*12 + EXTRACT(MONTH FROM AGE(...)))."
+    citation: "https://www.postgresql.org/docs/current/functions-datetime.html"
+    status: verified
+  TIMESTAMPDIFF:
+    capability: unsupported
+    remediation: "Postgres has no TIMESTAMPDIFF. Use a date_difference op or interval arithmetic."
+    citation: "https://www.postgresql.org/docs/current/functions-datetime.html"
+    status: verified
+  SHA1:
+    capability: unsupported
+    remediation: "No native SHA1. Use DIGEST via pgcrypto: ENCODE(DIGEST({text}, 'sha1'), 'hex')."
+    citation: "https://www.postgresql.org/docs/current/pgcrypto.html"
+    status: verified
+  SHA2:
+    capability: unsupported
+    remediation: "No native SHA2. Use DIGEST via pgcrypto: ENCODE(DIGEST({text}, 'sha256'), 'hex')."
+    citation: "https://www.postgresql.org/docs/current/pgcrypto.html"
+    status: verified
+
+ops:
+  date_difference:
+    completed_units:
+      capability: native
+      emit: "EXTRACT(YEAR FROM AGE({end}, {start}))"
+      notes: "AGE() yields a symbolic interval; EXTRACT(YEAR ...) reads completed whole years. Only YEAR shown; MONTH/DAY analogous."
+      status: conformance-verify
+      citation: "https://www.postgresql.org/docs/current/functions-datetime.html"
+    boundary_count:
+      capability: native
+      emit: "EXTRACT(YEAR FROM {end}) - EXTRACT(YEAR FROM {start})"
+      notes: "Counts calendar-year boundaries crossed, NOT completed elapsed years."
+      status: conformance-verify
+      citation: "https://www.postgresql.org/docs/current/functions-datetime.html"
+    symbolic_interval:
+      capability: native
+      emit: "AGE({end}, {start})"
+      notes: "The composite years+months+days interval; only Postgres expresses this natively."
+      status: verified
+      citation: "https://www.postgresql.org/docs/current/functions-datetime.html"
+  split_part:
+    default:
+      capability: native
+      emit: "SPLIT_PART({s}, {delim}, {idx})"
+      notes: "1-based index."
+      status: verified
+      citation: "https://www.postgresql.org/docs/current/functions-string.html"

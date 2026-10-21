@@ -159,6 +159,7 @@ def _client() -> genai.Client:
             vertexai=True,
             project=_GCP_PROJECT,
             location=_GENAI_LOCATION,
+            http_options={"timeout": 1800000},  # 1800s (value is milliseconds) — LLM agent calls are slow
         )
     return _genai_client
 

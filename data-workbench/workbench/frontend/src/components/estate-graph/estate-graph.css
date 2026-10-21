@@ -1,0 +1,219 @@
+/* Estate Graph — scoped styles ported from the "Lineage Merge" design bundle.
+   Every selector is nested under .estate-graph and all design CSS variables are
+   prefixed --eg-* so nothing leaks into the rest of the app. Light theme only
+   for v1 (the workbench shell is light). */
+
+.estate-graph {
+  --eg-bg: oklch(0.972 0.004 250);
+  --eg-surface: #fff;
+  --eg-surface-2: oklch(0.955 0.005 250);
+  --eg-border: oklch(0.89 0.008 250);
+  --eg-border-strong: oklch(0.78 0.012 250);
+  --eg-text: oklch(0.24 0.015 260);
+  --eg-muted: oklch(0.52 0.015 260);
+  --eg-accent: oklch(0.52 0.14 262);
+  --eg-grid-dot: oklch(0.90 0.006 250);
+  --eg-mask: oklch(0.972 0.004 250 / 0.7);
+  --eg-edge: oklch(0.42 0.012 260);
+  --eg-c-retire: oklch(0.55 0.20 25);
+  --eg-c-add: oklch(0.52 0.15 152);
+  --eg-shadow: 0 1px 2px oklch(0.3 0.02 260 / 0.07), 0 4px 14px oklch(0.3 0.02 260 / 0.05);
+
+  display: flex;
+  flex-direction: column;
+  background: var(--eg-bg);
+  color: var(--eg-text);
+  /* No frame on the container: the header shares the page background, so any
+     border along the header (top OR sides) reads as a stray line. The frame is
+     put on the graph-canvas area (.body) instead, where it separates the grey
+     canvas from the page. */
+  border: 0;
+  border-radius: 0 0 10px 10px;
+  overflow: hidden;
+  font-family: "IBM Plex Sans", system-ui, sans-serif;
+}
+.estate-graph * { box-sizing: border-box; }
+
+/* ── top bar ── */
+/* Blend the header into the page: match the shell's --bg-tint (the background
+   behind this whole view) instead of a stark white surface. */
+.estate-graph .topbar { flex: none; background: var(--bg-tint, var(--eg-bg)); border-bottom: 1px solid var(--eg-border); padding: 9px 16px 11px; display: flex; flex-direction: column; gap: 9px; }
+.estate-graph .tb-row { display: flex; align-items: center; gap: 14px; }
+.estate-graph .stats { display: flex; gap: 20px; align-items: flex-end; }
+.estate-graph .stat { display: flex; flex-direction: column; line-height: 1; }
+.estate-graph .stat b { font-size: 21px; font-weight: 700; letter-spacing: -0.02em; }
+.estate-graph .stat i { font: 600 9px/1.4 "IBM Plex Mono", monospace; letter-spacing: 0.1em; text-transform: uppercase; color: var(--eg-muted); font-style: normal; margin-top: 3px; }
+.estate-graph .tb-hint { font-size: 12px; color: var(--eg-muted); padding-left: 14px; border-left: 1px solid var(--eg-border); }
+.estate-graph .tb-hint b { color: var(--eg-accent); font-weight: 600; }
+.estate-graph .tb-controls { gap: 8px; flex-wrap: nowrap; height: 33px; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; }
+.estate-graph .tb-controls::-webkit-scrollbar { display: none; }
+.estate-graph .tb-controls > * { flex: none; }
+.estate-graph .search { font: 400 12.5px "IBM Plex Sans", sans-serif; color: var(--eg-text); background: var(--eg-surface); border: 1px solid var(--eg-border-strong); border-radius: 7px; padding: 6px 10px; width: 200px; flex: 0 1 auto; min-width: 96px; }
+.estate-graph .search::placeholder { color: var(--eg-muted); }
+.estate-graph select { font: 500 12.5px "IBM Plex Sans", sans-serif; color: var(--eg-text); background: var(--eg-surface); border: 1px solid var(--eg-border-strong); border-radius: 7px; padding: 6px 9px; cursor: pointer; flex: 0 1 auto; min-width: 74px; }
+.estate-graph .tb-toggle { display: flex; align-items: center; gap: 6px; font: 500 12px "IBM Plex Sans", sans-serif; color: var(--eg-muted); white-space: nowrap; cursor: pointer; }
+.estate-graph .btn { font: 600 12.5px "IBM Plex Sans", sans-serif; cursor: pointer; padding: 6px 12px; border-radius: 7px; border: 1px solid var(--eg-border-strong); background: var(--eg-surface); color: var(--eg-text); white-space: nowrap; }
+.estate-graph .btn:hover { border-color: var(--eg-accent); color: var(--eg-accent); }
+.estate-graph .btn.primary { background: var(--eg-accent); border-color: var(--eg-accent); color: #fff; }
+.estate-graph .btn.primary:hover { color: #fff; filter: brightness(1.08); }
+.estate-graph .btn.wide { width: 100%; margin-top: 8px; }
+.estate-graph .btn.eg-btn-icon { display: inline-flex; align-items: center; justify-content: center; gap: 7px; }
+.estate-graph .crumb { font-size: 12px; color: var(--eg-muted); margin-left: 2px; }
+.estate-graph .crumb b { color: var(--eg-text); font-weight: 600; }
+.estate-graph .router-tag { font: 600 9px/1.6 "IBM Plex Mono", monospace; letter-spacing: 0.08em; text-transform: uppercase; color: var(--eg-muted); background: var(--eg-surface-2); border: 1px solid var(--eg-border); border-radius: 4px; padding: 1px 6px; white-space: nowrap; }
+.estate-graph .router-tag.busy { color: var(--eg-accent); border-color: var(--eg-accent); }
+
+/* ── stage ── */
+.estate-graph .body { flex: 1; display: flex; min-height: 0; border-left: 1px solid var(--eg-border); border-right: 1px solid var(--eg-border); border-bottom: 1px solid var(--eg-border); border-radius: 0 0 10px 10px; }
+.estate-graph .stage { flex: 1; position: relative; min-height: 0; min-width: 0; }
+.estate-graph .react-flow { background: var(--eg-bg); }
+.estate-graph .react-flow__node { cursor: pointer; }
+.estate-graph .react-flow__handle { opacity: 0; pointer-events: none; width: 1px; height: 1px; min-width: 0; min-height: 0; border: 0; }
+.estate-graph .react-flow__edge-path { transition: stroke 0.18s, opacity 0.18s; }
+.estate-graph .react-flow__attribution { display: none; }
+.estate-graph .react-flow__minimap { background: var(--eg-surface); border: 1px solid var(--eg-border); border-radius: 8px; bottom: 14px !important; right: 14px !important; left: auto !important; }
+
+/* ── node: constant footprint, content counter-scaled to hold screen size ── */
+.estate-graph .onode { position: relative; display: flex; align-items: center; justify-content: center; transition: opacity 0.18s; }
+.estate-graph .onode.st-dim { opacity: 0.14; }
+.estate-graph .onode.st-ctx { opacity: 0.62; }
+/* Search spotlight: the veiled (non-match) nodes sit a touch more visible than a
+   plain lineage-dim — a scrimmed backdrop you can still read, with the matches +
+   current selection at full strength on top. The veil is applied via `filter:
+   opacity()` (NOT the opacity property): `.onode` has `transition: opacity`, and
+   React Flow animates the nodes continuously, so a running opacity transition
+   outranks even !important and the property never settles — filter is immune. */
+.estate-graph .stage.eg-searching .onode.st-dim { filter: opacity(0.68) grayscale(0.3); }
+.estate-graph .onode.tier-glyph .glyph-wrap, .estate-graph .onode.tier-chip .chip-wrap { transform: scale(clamp(1, calc(1 / var(--z, 1)), 3.2)); transform-origin: center center; }
+.estate-graph .glyph-wrap { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; height: 100%; position: relative; }
+.estate-graph .glyph-label { position: absolute; top: calc(100% - 15px); left: 50%; transform: translateX(-50%); font: 500 10px/1.4 "IBM Plex Sans", sans-serif; color: var(--eg-muted); max-width: 118px; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.estate-graph .glyph { display: block; overflow: visible; }
+.estate-graph .glyph.glowing { filter: none; }
+.estate-graph .onode.st-sel .glyph.glowing { filter: drop-shadow(0 0 calc(var(--gr) * 0.45) var(--gc)) drop-shadow(0 0 calc(var(--gr) * 1.5) var(--gc)); }
+/* filter match: lit but clearly NOT the selection — soft single-halo only */
+.estate-graph .onode.st-hit .glyph.glowing { filter: drop-shadow(0 0 calc(var(--gr) * 0.6) var(--gc)); }
+.estate-graph[data-far="1"] .glyph-label { display: none; }
+.estate-graph .onode.st-sel .glyph-label, .estate-graph .onode.st-up .glyph-label, .estate-graph .onode.st-down .glyph-label, .estate-graph .onode.st-hit .glyph-label { color: var(--eg-text); font-weight: 600; }
+
+.estate-graph .chip-wrap { display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; }
+.estate-graph .chip-body { display: flex; align-items: center; gap: 6px; padding: 5px 9px; border-radius: 999px; background: var(--eg-surface); border: 1px solid var(--eg-border); box-shadow: var(--eg-shadow); max-width: 210px; border-left: 3px solid var(--sys); }
+.estate-graph .chip-name { font: 600 11.5px/1.35 "IBM Plex Mono", monospace; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.estate-graph .chip-disp { font: 700 8px/1.5 "IBM Plex Mono", monospace; letter-spacing: 0.06em; padding: 0 4px; border-radius: 3px; flex: none; }
+.estate-graph .chip-dot { width: 6px; height: 6px; border-radius: 50%; flex: none; }
+.estate-graph .onode.st-sel .chip-body { border-color: var(--sys, var(--eg-accent)); box-shadow: 0 0 0 2px color-mix(in oklch, var(--sys, var(--eg-accent)) 55%, transparent), 0 0 13px 1px color-mix(in oklch, var(--sys, var(--eg-accent)) 48%, transparent), var(--eg-shadow); }
+.estate-graph .onode.st-hit .chip-body { border-color: var(--sys, var(--eg-accent)); border-style: dashed; box-shadow: 0 0 0 1.5px color-mix(in oklch, var(--sys, var(--eg-accent)) 28%, transparent), var(--eg-shadow); }
+
+.estate-graph .card-wrap { width: 100%; height: 100%; background: var(--eg-surface); border: 1px solid var(--eg-border); border-left: 3px solid var(--sys, var(--eg-border-strong)); border-radius: 9px; padding: 8px 10px; display: flex; flex-direction: column; gap: 3px; box-shadow: var(--eg-shadow); overflow: hidden; }
+/* The card's left strip + selection glow both read --sys, set inline to the
+   node's PLATFORM colour (sys.color) — the same source the glyph + chip use — so
+   the strip matches the glyph colour and the glow. (Type is already conveyed by
+   the card-type label, so the strip no longer needs to encode it.) */
+.estate-graph .card-head { display: flex; align-items: center; gap: 6px; }
+.estate-graph .dot { width: 6px; height: 6px; border-radius: 50%; flex: none; }
+.estate-graph .d-fresh { background: oklch(0.62 0.17 148); }
+.estate-graph .d-warn { background: oklch(0.72 0.16 75); }
+.estate-graph .d-stale { background: oklch(0.58 0.19 25); }
+.estate-graph .card-name { font: 600 12px/1.2 "IBM Plex Mono", monospace; flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.estate-graph .card-type { font: 600 8.5px/1 "IBM Plex Mono", monospace; letter-spacing: 0.07em; text-transform: uppercase; color: var(--eg-muted); flex: none; }
+.estate-graph .card-sub { display: flex; align-items: center; gap: 6px; font-size: 10.5px; color: var(--eg-muted); min-width: 0; }
+.estate-graph .card-team { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.estate-graph .card-sys { font: 500 9px/1.5 "IBM Plex Mono", monospace; padding: 0 5px; border-radius: 3px; background: var(--eg-surface-2); color: var(--sys); flex: none; }
+.estate-graph .card-disp { font: 600 8.5px/1.6 "IBM Plex Mono", monospace; letter-spacing: 0.06em; padding: 0 5px; border-radius: 3px; flex: none; margin-left: auto; }
+.estate-graph .p-remain { color: var(--eg-muted); }
+.estate-graph .p-modernize { background: oklch(0.62 0.20 300 / 0.15); color: oklch(0.52 0.20 300); }
+.estate-graph .p-migrate { background: oklch(0.58 0.18 250 / 0.15); color: oklch(0.50 0.18 250); }
+.estate-graph .p-retire { background: oklch(0.60 0.19 25 / 0.14); color: oklch(0.52 0.19 25); }
+.estate-graph .card-metric { font: 400 10px/1.3 "IBM Plex Mono", monospace; color: var(--eg-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.estate-graph .card-flag { font: 600 8.5px/1.6 "IBM Plex Mono", monospace; letter-spacing: 0.07em; padding: 0 5px; border-radius: 3px; flex: none; }
+.estate-graph .f-add { background: oklch(0.52 0.15 152 / 0.16); color: var(--eg-c-add); }
+.estate-graph .f-retire { background: oklch(0.55 0.20 25 / 0.14); color: var(--eg-c-retire); }
+/* change preview: hue only appears here */
+.estate-graph .onode.ch-retire .card-wrap { border-color: var(--eg-c-retire); border-left-color: var(--eg-c-retire); background: oklch(0.55 0.20 25 / 0.05); }
+.estate-graph .onode.ch-add .card-wrap { border-color: var(--eg-c-add); border-left-color: var(--eg-c-add); border-style: dashed; background: oklch(0.52 0.15 152 / 0.05); }
+.estate-graph .onode.ch-retire .chip-body { border-color: var(--eg-c-retire); border-left-color: var(--eg-c-retire); }
+.estate-graph .onode.ch-add .chip-body { border-color: var(--eg-c-add); border-left-color: var(--eg-c-add); border-style: dashed; }
+.estate-graph .onode.ch-retire .glyph { filter: drop-shadow(0 0 5px var(--eg-c-retire)); }
+.estate-graph .onode.ch-add .glyph { filter: drop-shadow(0 0 5px var(--eg-c-add)); }
+.estate-graph .onode.st-sel .card-wrap { border-color: var(--sys, var(--eg-accent)); box-shadow: 0 0 0 2px color-mix(in oklch, var(--sys, var(--eg-accent)) 55%, transparent), 0 0 16px 2px color-mix(in oklch, var(--sys, var(--eg-accent)) 48%, transparent), var(--eg-shadow); }
+.estate-graph .onode.st-hit .card-wrap { border-color: var(--sys, var(--eg-accent)); border-style: dashed; border-left-style: solid; box-shadow: 0 0 0 1.5px color-mix(in oklch, var(--sys, var(--eg-accent)) 28%, transparent), var(--eg-shadow); }
+/* NB: no is-root border override — it used to paint the border --eg-accent (navy)
+   while the glow stayed --sys, so the left strip and glow disagreed. A root node
+   is already the selected one (st-sel), so it keeps the matching --sys strip+glow. */
+/* "+N" hidden-connections badge on a selected node — peeks past the top-right
+   corner, coloured like the node's selection glow (its --sys / platform colour) */
+.estate-graph .eg-more { position: absolute; z-index: 6; min-width: 17px; height: 17px; padding: 0 4px; box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; border-radius: 9px; font: 700 10px/1 "IBM Plex Mono", monospace; color: #fff; box-shadow: 0 1px 3px rgba(15,23,42,0.3); border: 1.5px solid var(--eg-surface); }
+/* The badge lives INSIDE each tier's content (which is what counter-scales
+   with zoom), anchored to that tier's visible shape so it never drifts. */
+.estate-graph .chip-body { position: relative; }
+.estate-graph .chip-body .eg-more { top: -12px; right: -10px; }
+.estate-graph .glyph-wrap .eg-more { top: 0; left: calc(50% + 6px); }
+/* card tier isn't counter-scaled — the node box IS the card, badge on the box */
+.estate-graph .onode.tier-card > .eg-more { top: -8px; right: -8px; }
+/* live what-if node: DAG-style dashed outline only — neutralise the type/platform
+   colour stripe so the node reads as a plain card + navy/red dashed outline (no green fill) */
+.estate-graph .onode.is-live-preview .card-wrap,
+.estate-graph .onode.is-live-preview .chip-body { border-left-color: var(--eg-border); }
+.estate-graph .onode.is-live-preview .glyph { filter: none; }
+/* retiring node ghosts out (DAG parity) — faded card, but the dashed outline + badge stay crisp */
+.estate-graph .onode.lp-retire .card-wrap, .estate-graph .onode.lp-retire .chip-body { opacity: 0.6; }
+.estate-graph .onode.lp-retire .card-disp, .estate-graph .onode.lp-retire .chip-disp { opacity: 1; }
+/* live what-if NEW badge: white text on black (overrides the green f-add pill) */
+.estate-graph .onode.lp-add .card-disp, .estate-graph .onode.lp-add .chip-disp { background: #1e293b; color: #fff; }
+/* live what-if new wiring: moving dash (RF's `animated` doesn't reach custom routed edges) */
+.estate-graph .eg-live-edge .react-flow__edge-path { animation: eg-dashmove 0.5s linear infinite; }
+@keyframes eg-dashmove { to { stroke-dashoffset: -11; } }
+/* caution marker on a migrate what-if edge the plan flagged */
+.estate-graph .eg-caution-badge { position: absolute; z-index: 11; pointer-events: all; font-size: 13px; line-height: 1; padding: 2px 3px; border-radius: 5px; background: #f59e0b; color: #fff; box-shadow: 0 1px 3px rgba(15,23,42,0.25); cursor: help; transition: box-shadow 0.15s, background 0.15s; }
+.estate-graph .eg-caution-badge:hover { background: #d97706; box-shadow: 0 0 0 3px rgba(245,158,11,0.4), 0 2px 6px rgba(15,23,42,0.3); }
+
+/* ── legend ── */
+.estate-graph .legend { position: absolute; left: 14px; bottom: 14px; z-index: 5; background: var(--eg-surface); border: 1px solid var(--eg-border); border-radius: 10px; padding: 9px 12px 10px; box-shadow: var(--eg-shadow); max-width: 206px; }
+.estate-graph .legend-toggle { display: flex; align-items: center; gap: 6px; width: 100%; border: 0; background: transparent; padding: 0; cursor: pointer; font: 600 9px/1.4 "IBM Plex Mono", monospace; letter-spacing: 0.1em; text-transform: uppercase; color: var(--eg-muted); }
+.estate-graph .legend-toggle:hover { color: var(--eg-text); }
+.estate-graph .legend-toggle span { margin-left: auto; font-size: 11px; }
+.estate-graph .legend-h { font: 600 9px/1.4 "IBM Plex Mono", monospace; letter-spacing: 0.1em; text-transform: uppercase; color: var(--eg-muted); margin-bottom: 6px; }
+.estate-graph .legend-h:not(:first-child) { margin-top: 11px; }
+.estate-graph .legend-list { display: flex; flex-direction: column; gap: 4px; }
+.estate-graph .lg-item { display: flex; align-items: center; gap: 7px; font-size: 11.5px; }
+.estate-graph .lg-swatch { width: 10px; height: 10px; border-radius: 3px; flex: none; }
+.estate-graph .lg-line { width: 16px; height: 0; border-top: 2px solid var(--eg-edge); flex: none; }
+.estate-graph .lg-line.l-retire { border-top-color: var(--eg-c-retire); }
+.estate-graph .lg-line.l-add { border-top: 2px dashed var(--eg-c-add); }
+.estate-graph .lg-item .glyph { flex: none; }
+
+/* ── LOD ladder ── */
+.estate-graph .ladder { position: absolute; right: 14px; top: 14px; z-index: 5; display: flex; align-items: center; gap: 2px; background: var(--eg-surface); border: 1px solid var(--eg-border); border-radius: 10px; padding: 5px 6px; box-shadow: var(--eg-shadow); }
+.estate-graph .ladder-step { display: flex; align-items: center; padding: 5px 11px; border-radius: 6px; border: 0; background: transparent; cursor: pointer; font: inherit; }
+.estate-graph .ladder-sep { width: 1px; align-self: stretch; margin: 2px 3px; background: var(--eg-border); flex: none; }
+.estate-graph .ladder-step:hover .ls-label { color: var(--eg-text); }
+.estate-graph .ladder-step.on { background: var(--eg-accent); }
+/* The tier Auto currently resolves to: a subtle tint + accent text, distinct from
+   the solid-blue PINNED look, so it reads as "auto is here now" not "pinned". */
+.estate-graph .ladder-step.auto-here { background: color-mix(in oklch, var(--eg-accent) 14%, transparent); }
+.estate-graph .ladder-step.auto-here .ls-label { color: var(--eg-accent); }
+.estate-graph .ls-label { font: 600 11px/1 "IBM Plex Sans", sans-serif; color: var(--eg-muted); }
+.estate-graph .ladder-step.on .ls-label { color: #fff; }
+.estate-graph .ladder-step.on:hover .ls-label { color: #fff; }
+
+/* ── detail rail ── */
+.estate-graph .detail { flex: none; width: 300px; min-height: 0; overflow-y: auto; background: var(--eg-surface); border-left: 1px solid var(--eg-border); padding: 14px 16px 20px; position: relative; }
+.estate-graph .detail-close { position: absolute; right: 10px; top: 10px; width: 22px; height: 22px; border: 0; background: transparent; color: var(--eg-muted); font-size: 17px; line-height: 1; cursor: pointer; border-radius: 5px; }
+.estate-graph .detail-close:hover { background: var(--eg-surface-2); color: var(--eg-text); }
+.estate-graph .detail-kicker { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; }
+.estate-graph .d-chip { display: flex; align-items: center; gap: 5px; font: 600 9.5px/1.6 "IBM Plex Mono", monospace; letter-spacing: 0.06em; text-transform: uppercase; padding: 2px 7px; border-radius: 4px; background: var(--eg-surface-2); color: var(--sys); }
+.estate-graph .d-status { font: 600 9.5px/1.6 "IBM Plex Mono", monospace; letter-spacing: 0.06em; padding: 2px 7px; border-radius: 4px; }
+.estate-graph .d-status.s-fresh { background: oklch(0.62 0.17 148 / 0.14); color: oklch(0.50 0.15 148); }
+.estate-graph .d-status.s-warn { background: oklch(0.72 0.16 75 / 0.18); color: oklch(0.52 0.14 70); }
+.estate-graph .d-status.s-stale { background: oklch(0.58 0.19 25 / 0.14); color: oklch(0.52 0.19 25); }
+.estate-graph .detail-title { margin: 0; font: 700 15px/1.3 "IBM Plex Mono", monospace; letter-spacing: -0.01em; word-break: break-word; }
+.estate-graph .detail-sub { font-size: 11.5px; color: var(--eg-muted); margin: 3px 0 10px; }
+.estate-graph .detail-lin { display: flex; gap: 14px; font-size: 11.5px; color: var(--eg-muted); padding: 8px 0; border-top: 1px solid var(--eg-border); border-bottom: 1px solid var(--eg-border); margin-bottom: 10px; }
+.estate-graph .detail-planhint { font-size: 11.5px; color: var(--eg-muted); margin: 4px 0 8px; }
+.estate-graph .detail-lin span { white-space: nowrap; }
+.estate-graph .detail-lin b { color: var(--eg-text); font: 600 13px "IBM Plex Mono", monospace; margin-right: 3px; }
+.estate-graph .detail-rows { display: flex; flex-direction: column; margin-top: 12px; }
+.estate-graph .drow { display: flex; justify-content: space-between; gap: 12px; padding: 5px 0; border-bottom: 1px solid var(--eg-border); font-size: 11.5px; }
+.estate-graph .drow:last-child { border-bottom: 0; }
+.estate-graph .dk { color: var(--eg-muted); flex: none; }
+.estate-graph .dv { text-align: right; font-weight: 500; }
+.estate-graph .detail-metric { margin-top: 10px; font: 400 10.5px/1.4 "IBM Plex Mono", monospace; color: var(--eg-muted); padding-top: 9px; border-top: 1px solid var(--eg-border); }

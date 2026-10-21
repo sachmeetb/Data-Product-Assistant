@@ -1,0 +1,562 @@
+apiVersion: v3.1.0
+kind: DataContract
+id: template:payments:src-payments-data-product
+name: Payments Data product
+version: 1.0.0
+status: draft
+domain: Payments
+description: Unified view of domestic and international payments including NEFT, UPI,
+  ACH, remittances, bill, and merchant payments. Captures transaction details, status,
+  FX rates, and merchant info
+schema:
+- name: Payments Data product
+  physicalName: payments_data_product
+  physicalType: table
+  description: Unified view of domestic and international payments including NEFT,
+    UPI, ACH, remittances, bill, and merchant payments. Captures transaction details,
+    status, FX rates, and merchant info
+  properties:
+  - name: txn_id
+    physicalName: txn_id
+    logicalName: Txn ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a domestic or international payment transaction,
+      serving as the primary key across payment entities.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: type
+    physicalName: type
+    logicalName: Type
+    logicalType: varchar
+    physicalType: varchar
+    description: Classification of the payment type or scheme used (e.g. NEFT, UPI,
+      ACH, RTGS, bill payment, merchant payment).
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: amount
+    physicalName: amount
+    logicalName: Amount
+    logicalType: numeric
+    physicalType: numeric
+    description: Monetary value of the payment in the transaction currency.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: currency
+    physicalName: currency
+    logicalName: Currency
+    logicalType: varchar
+    physicalType: varchar
+    description: ISO currency code of the payment amount.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: txn_initiation_and_completion_timestamp
+    physicalName: txn_initiation_and_completion_timestamp
+    logicalName: Txn Initiation And Completion Timestamp
+    logicalType: timestamp
+    physicalType: timestamp
+    description: Timestamps recording when the payment was initiated by the customer
+      and when it was completed or rejected by the system.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: status
+    physicalName: status
+    logicalName: Status
+    logicalType: varchar
+    physicalType: varchar
+    description: Current processing status of the payment (e.g. pending, completed,
+      failed, reversed).
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: initiating_bank
+    physicalName: initiating_bank
+    logicalName: Initiating Bank
+    logicalType: varchar
+    physicalType: varchar
+    description: Name or code of the bank that originated and submitted the payment
+      instruction.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: receiving_bank
+    physicalName: receiving_bank
+    logicalName: Receiving Bank
+    logicalType: varchar
+    physicalType: varchar
+    description: Name or code of the bank that received and is processing the incoming
+      payment.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: participant_id
+    physicalName: participant_id
+    logicalName: Participant ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a party (payer or payee) involved in the payment
+      transaction; classified as PII.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: pii
+    examples: []
+    logicalTypeOptions: {}
+  - name: transaction_id
+    physicalName: transaction_id
+    logicalName: Transaction ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Secondary transaction identifier assigned by the payment network
+      or clearing house for routing and reconciliation.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: role
+    physicalName: role
+    logicalName: Role
+    logicalType: varchar
+    physicalType: varchar
+    description: Role of the participant in the payment transaction (e.g. payer, payee,
+      agent).
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: participant_type
+    physicalName: participant_type
+    logicalName: Participant Type
+    logicalType: varchar
+    physicalType: varchar
+    description: Classification of the transaction participant as an individual, corporate
+      entity, government, or merchant; classified as PII.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: pii
+    examples: []
+    logicalTypeOptions: {}
+  - name: identifier_type
+    physicalName: identifier_type
+    logicalName: Identifier Type
+    logicalType: varchar
+    physicalType: varchar
+    description: Type of identifier used to route the payment to the participant (e.g.
+      VPA for UPI, IBAN, account number, MSISDN).
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: channel_type
+    physicalName: channel_type
+    logicalName: Channel Type
+    logicalType: varchar
+    physicalType: varchar
+    description: High-level channel category through which the payment was initiated
+      (e.g. mobile app, internet banking, branch, POS).
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: device_type
+    physicalName: device_type
+    logicalName: Device Type
+    logicalType: varchar
+    physicalType: varchar
+    description: Type of device used to initiate the payment (e.g. smartphone, desktop
+      browser, POS terminal, feature phone).
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: app_name
+    physicalName: app_name
+    logicalName: App Name
+    logicalType: varchar
+    physicalType: varchar
+    description: Name of the mobile or web application through which the payment was
+      initiated (e.g. bank's mobile app or a third-party UPI app).
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: settlement_date
+    physicalName: settlement_date
+    logicalName: Settlement Date
+    logicalType: date
+    physicalType: date
+    description: Date on which the payment was settled between the participating banks
+      through the clearing infrastructure.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: settlement_status
+    physicalName: settlement_status
+    logicalName: Settlement Status
+    logicalType: varchar
+    physicalType: varchar
+    description: Status of the interbank settlement for this payment (e.g. settled,
+      pending, failed).
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: settlement_mode
+    physicalName: settlement_mode
+    logicalName: Settlement Mode
+    logicalType: varchar
+    physicalType: varchar
+    description: Mechanism by which the interbank settlement is executed (e.g. net
+      settlement, gross real-time settlement, deferred net settlement).
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: reconciliation_status
+    physicalName: reconciliation_status
+    logicalName: Reconciliation Status
+    logicalType: varchar
+    physicalType: varchar
+    description: Status of the reconciliation process matching payment records between
+      internal systems and the clearing house.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: merchant_id
+    physicalName: merchant_id
+    logicalName: Merchant ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for the merchant involved in a merchant payment
+      or bill-payment transaction.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: name
+    physicalName: name
+    logicalName: Name
+    logicalType: varchar
+    physicalType: varchar
+    description: Registered name of the merchant associated with the payment.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: settlement_bank
+    physicalName: settlement_bank
+    logicalName: Settlement Bank
+    logicalType: varchar
+    physicalType: varchar
+    description: Name of the bank responsible for settling funds on behalf of the
+      merchant.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: merchant_category_code
+    physicalName: merchant_category_code
+    logicalName: Merchant Category Code
+    logicalType: varchar
+    physicalType: varchar
+    description: ISO 18245 Merchant Category Code classifying the type of goods or
+      services sold by the merchant.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: source_and_destination_country
+    physicalName: source_and_destination_country
+    logicalName: Source And Destination Country
+    logicalType: numeric
+    physicalType: numeric
+    description: Numeric country codes identifying the source and destination countries
+      for cross-border payment transactions.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: currency_pair
+    physicalName: currency_pair
+    logicalName: Currency Pair
+    logicalType: varchar
+    physicalType: varchar
+    description: Currency pair involved in the FX conversion for a cross-border payment
+      (e.g. USD/INR, EUR/USD).
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: fx_rate
+    physicalName: fx_rate
+    logicalName: FX Rate
+    logicalType: numeric
+    physicalType: numeric
+    description: Exchange rate applied to convert the payment amount between the source
+      and destination currencies.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: purpose_code_education
+    physicalName: purpose_code_education
+    logicalName: Purpose Code Education
+    logicalType: varchar
+    physicalType: varchar
+    description: Regulatory purpose code for education-related remittance payments
+      under RBI or equivalent regulatory guidelines.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: family
+    physicalName: family
+    logicalName: Family
+    logicalType: varchar
+    physicalType: varchar
+    description: Sub-category or purpose label for family remittance payments in cross-border
+      transactions.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: investment
+    physicalName: investment
+    logicalName: Investment
+    logicalType: varchar
+    physicalType: varchar
+    description: Sub-category or purpose label for investment-related cross-border
+      payment transactions.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: exception_id
+    physicalName: exception_id
+    logicalName: Exception ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for an exception, dispute, or exception-handling
+      record associated with a payment transaction.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: exception_type
+    physicalName: exception_type
+    logicalName: Exception Type
+    logicalType: varchar
+    physicalType: varchar
+    description: Category of payment exception, such as duplicate transaction, failed
+      authorization, or reconciliation mismatch.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: raised_by
+    physicalName: raised_by
+    logicalName: Raised By
+    logicalType: varchar
+    physicalType: varchar
+    description: System or user who raised the payment exception or dispute record.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: resolution_time
+    physicalName: resolution_time
+    logicalName: Resolution Time
+    logicalType: varchar
+    physicalType: varchar
+    description: Duration or timestamp by which the payment exception or dispute was
+      resolved.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: resolution_outcome
+    physicalName: resolution_outcome
+    logicalName: Resolution Outcome
+    logicalType: varchar
+    physicalType: varchar
+    description: Final disposition of the payment exception, such as accepted, rejected,
+      or escalated.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: payment_purpose
+    physicalName: payment_purpose
+    logicalName: Payment Purpose
+    logicalType: varchar
+    physicalType: varchar
+    description: Narrative description of the economic purpose of the payment as declared
+      by the initiating party.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: p2p_or_p2m_amount_transactions
+    physicalName: p2p_or_p2m_amount_transactions
+    logicalName: P2p Or P2m Amount Transactions
+    logicalType: numeric
+    physicalType: numeric
+    description: Monetary amount of peer-to-peer (P2P) or person-to-merchant (P2M)
+      payment transactions in this record or batch.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  foreignKeys: []
+  transform:
+    grouping_keys:
+    - txn_id
+    scd_policy:
+      type: latest_only
+customProperties:
+  feasibility:
+    schema_version: '1.0'
+    spec_classification: confidential
+    cadence: ''
+    freshness_history: current
+    freshness_description: ''
+    grain_keys:
+    - txn_id
+    grain_description: ''
+    allowed_derivations:
+    - rename
+    - cast
+    composition:
+      join_keys: []
+      composed_of: []
+      description: ''
+    attr_derivations:
+      amount:
+      - currency_normalize
+      p2p_or_p2m_amount_transactions:
+      - currency_normalize
+productKind: source
+sourceSpecId: src_payments_data_product

@@ -1,0 +1,8 @@
+{
+  "name": "workbench-product-owner",
+  "version": "0.1.0",
+  "description": "Data Workbench product-owner kit — the workbench-po MCP server, a guide skill, and /my-products + /product-status slash commands so a data product owner can turn a business need into a data product from their own Claude Code (thin client; engineering runs server-side).",
+  "author": {
+    "name": "Data Workbench"
+  }
+}

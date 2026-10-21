@@ -1,0 +1,182 @@
+spec_id: src_external_claims_liabilities
+name: External Claims/Liabilities
+domain: Credit registry
+product_kind: source
+description: Bank-reported cross-border positions and flows by instrument, sector
+  and currency for BoP/IIP (ITRS/BPM6/BPM7 aligned). Supports capital-flow monitoring,
+  EWI indicators, and residency/sector breakdowns.
+schema_version: '1.0'
+classification: internal
+grain:
+  keys:
+  - bank_id
+  description: ''
+freshness:
+  history: snapshot
+  cadence: ''
+  description: ''
+allowed_derivations:
+- rename
+- cast
+attributes:
+- name: bank_id
+  type: bigint
+  concept: Bank ID
+  description: Unique identifier for the reporting bank, serving as the primary key for all positions and flows submitted in this regulatory report.
+  required: true
+  is_key: true
+  classification: internal
+- name: lei
+  type: varchar
+  concept: LEI
+  description: The Legal Entity Identifier of the reporting bank, a globally standardised 20-character code used in regulatory and cross-border reporting.
+  required: false
+  is_key: false
+  classification: internal
+- name: reporting_period
+  type: varchar
+  concept: Reporting Period
+  description: The calendar period (e.g. quarter or month) to which the reported positions and flow data relate.
+  required: false
+  is_key: false
+  classification: internal
+- name: version
+  type: varchar
+  concept: Version
+  description: The submission version or revision number, distinguishing original reports from amended or restated submissions.
+  required: false
+  is_key: false
+  classification: internal
+- name: country
+  type: numeric
+  concept: Country
+  description: The numeric country code of the counterparty's country of residence, used to break down cross-border claims and liabilities by jurisdiction.
+  required: false
+  is_key: false
+  classification: internal
+- name: sector
+  type: varchar
+  concept: Sector
+  description: The institutional sector classification of the counterparty (e.g. banks, non-bank financial, non-financial corporates) per BPM6/BPM7.
+  required: false
+  is_key: false
+  classification: internal
+- name: residency
+  type: varchar
+  concept: Residency
+  description: The residency status of the counterparty, distinguishing resident from non-resident positions for BoP/IIP classification.
+  required: false
+  is_key: false
+  classification: internal
+- name: loan_deposit_security_derivative
+  type: varchar
+  concept: Loan Deposit Security Derivative
+  description: The instrument category of the cross-border position, classifying it as a loan, deposit, debt security, or derivative.
+  required: false
+  is_key: false
+  classification: internal
+- name: original_maturity
+  type: varchar
+  concept: Original Maturity
+  description: The maturity bucket of the instrument at origination, such as short-term (under one year) or long-term.
+  required: false
+  is_key: false
+  classification: internal
+- name: residual_maturity
+  type: varchar
+  concept: Residual Maturity
+  description: The remaining time to maturity of the instrument as at the reporting date, used for liquidity and capital analysis.
+  required: false
+  is_key: false
+  classification: internal
+- name: currency
+  type: varchar
+  concept: Currency
+  description: The ISO currency code in which the cross-border position or flow is denominated.
+  required: true
+  is_key: false
+  classification: internal
+- name: fx_rate_source
+  type: numeric
+  concept: FX Rate Source
+  description: The reference exchange rate source or identifier used to convert foreign-currency positions to the reporting currency.
+  required: true
+  is_key: false
+  classification: internal
+- name: valuation_method
+  type: varchar
+  concept: Valuation Method
+  description: The accounting basis used to value the position, such as fair_value, amortised_cost, or nominal_value.
+  required: false
+  is_key: false
+  classification: internal
+- name: opening_position
+  type: numeric
+  concept: Opening Position
+  description: The stock value of the cross-border claim or liability at the start of the reporting period.
+  required: false
+  is_key: false
+  classification: internal
+- name: transactions
+  type: varchar
+  concept: Transactions
+  description: The net value of new transactions (flows) in the instrument category during the reporting period.
+  required: false
+  is_key: false
+  classification: internal
+- name: price_changes
+  type: numeric
+  concept: Price Changes
+  description: The valuation change attributable to market price movements during the reporting period, excluding transactions.
+  required: false
+  is_key: false
+  classification: internal
+- name: fx_changes
+  type: varchar
+  concept: FX Changes
+  description: The valuation change attributable to exchange rate movements during the reporting period.
+  required: false
+  is_key: false
+  classification: internal
+- name: other_adjustments
+  type: varchar
+  concept: Other Adjustments
+  description: Miscellaneous statistical adjustments to the position not captured by transactions, price changes, or FX effects.
+  required: false
+  is_key: false
+  classification: internal
+- name: closing_position
+  type: numeric
+  concept: Closing Position
+  description: The stock value of the cross-border claim or liability at the end of the reporting period, incorporating all flows and adjustments.
+  required: false
+  is_key: false
+  classification: internal
+- name: npl_flag
+  type: boolean
+  concept: NPL Flag
+  description: Boolean indicator marking whether the reported claim is classified as a non-performing loan under applicable credit quality criteria.
+  required: false
+  is_key: false
+  classification: internal
+- name: consolidation_basis
+  type: varchar
+  concept: Consolidation Basis
+  description: The accounting consolidation scope of the reported data, such as solo, sub-consolidated, or fully_consolidated.
+  required: false
+  is_key: false
+  classification: internal
+- name: submission_status
+  type: varchar
+  concept: Submission Status
+  description: The current processing state of the regulatory submission, such as pending, accepted, or queried.
+  required: true
+  is_key: false
+  classification: internal
+- name: audit_trail
+  type: varchar
+  concept: Audit Trail
+  description: A log or reference string tracking the submission, review, and amendment history of the reported record.
+  required: false
+  is_key: false
+  classification: internal

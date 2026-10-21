@@ -1,0 +1,76 @@
+domain: human_resources
+description: Domain rules for Human Resources data (employees, departments, salaries, titles).
+
+rules:
+  # ── Date rules ────────────────────────────────────────────────────────────
+  - match:
+      description_contains: ["birth", "born", "dob", "date of birth"]
+      data_type: ["date", "timestamp", "timestamp without time zone"]
+    rule:
+      type: range
+      min: "1900-01-01"
+      max: "today"
+      severity: "sh:Warning"
+      rationale: "Employee birth dates should be within a reasonable human lifespan"
+
+  - match:
+      description_contains: ["hire", "hired", "start date", "join", "employment date"]
+      data_type: ["date", "timestamp", "timestamp without time zone"]
+    rule:
+      type: range
+      min: "1950-01-01"
+      max: "today"
+      severity: "sh:Warning"
+      rationale: "Employment start dates should not precede 1950 or be in the future"
+
+  - match:
+      description_contains: ["termination", "end date", "leave date", "separation"]
+      data_type: ["date", "timestamp", "timestamp without time zone"]
+    rule:
+      type: range
+      min: "1950-01-01"
+      max: "today"
+      severity: "sh:Warning"
+      rationale: "Employment end dates should be within a reasonable range"
+
+  # ── Compensation rules ────────────────────────────────────────────────────
+  - match:
+      description_contains: ["salary", "compensation", "pay", "wage", "annual"]
+      data_type: ["integer", "numeric", "decimal", "bigint"]
+    rule:
+      type: range
+      min: 0
+      max: 10000000
+      severity: "sh:Warning"
+      rationale: "Salary values should be non-negative and within reasonable bounds"
+
+  # ── Categorical rules ─────────────────────────────────────────────────────
+  - match:
+      description_contains: ["gender", "sex"]
+    rule:
+      type: allowedValues
+      values: ["M", "F"]
+      severity: "sh:Info"
+      rationale: "Gender values in the employees dataset use single-letter codes"
+
+  # ── Age rules ─────────────────────────────────────────────────────────────
+  - match:
+      description_contains: ["age"]
+      data_type: ["integer", "smallint", "numeric"]
+    rule:
+      type: range
+      min: 0
+      max: 120
+      severity: "sh:Warning"
+      rationale: "Age values should be within a reasonable human range"
+
+  # ── Employee number/ID rules ──────────────────────────────────────────────
+  - match:
+      description_contains: ["employee number", "emp_no", "employee id"]
+      data_type: ["integer", "bigint"]
+    rule:
+      type: range
+      min: 1
+      max: 99999999
+      severity: "sh:Warning"
+      rationale: "Employee numbers should be positive integers within a reasonable range"

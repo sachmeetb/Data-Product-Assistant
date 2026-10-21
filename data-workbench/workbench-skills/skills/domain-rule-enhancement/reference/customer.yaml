@@ -1,0 +1,126 @@
+domain: customer
+description: Domain rules for Customer/CRM data (accounts, contacts, opportunities, leads).
+
+rules:
+  # ── Date rules ────────────────────────────────────────────────────────────
+  - match:
+      description_contains: ["created", "creation date", "created date"]
+      data_type: ["date", "timestamp", "timestamp without time zone", "timestamp with time zone"]
+    rule:
+      type: range
+      min: "2000-01-01"
+      max: "today"
+      severity: "sh:Warning"
+      rationale: "CRM record creation dates should not precede system inception or be in the future"
+
+  - match:
+      description_contains: ["close date", "closed date", "closing"]
+      data_type: ["date", "timestamp"]
+    rule:
+      type: range
+      min: "2000-01-01"
+      max: "today"
+      severity: "sh:Warning"
+      rationale: "Close dates should be within a reasonable range"
+
+  - match:
+      description_contains: ["last modified", "modified date", "last activity"]
+      data_type: ["date", "timestamp", "timestamp without time zone", "timestamp with time zone"]
+    rule:
+      type: range
+      max: "today"
+      severity: "sh:Warning"
+      rationale: "Modification timestamps should not be in the future"
+
+  # ── Revenue and financial ─────────────────────────────────────────────────
+  - match:
+      description_contains: ["revenue", "annual revenue", "amount", "expected revenue"]
+      data_type: ["numeric", "decimal", "double precision", "float", "bigint", "integer"]
+    rule:
+      type: range
+      min: 0
+      max: 100000000000
+      severity: "sh:Warning"
+      rationale: "Revenue and financial amounts should be non-negative"
+
+  - match:
+      description_contains: ["probability", "likelihood"]
+      data_type: ["numeric", "decimal", "double precision", "float", "integer"]
+    rule:
+      type: range
+      min: 0
+      max: 100
+      severity: "sh:Warning"
+      rationale: "Probability values should be between 0 and 100"
+
+  # ── Contact information ───────────────────────────────────────────────────
+  - match:
+      description_contains: ["phone", "telephone", "fax", "mobile"]
+      data_type: ["varchar", "text", "character varying"]
+    rule:
+      type: pattern
+      regex: "^[+]?[0-9()\\-\\s.]{7,20}$"
+      severity: "sh:Info"
+      rationale: "Phone numbers should match a basic format"
+
+  - match:
+      description_contains: ["website", "url", "web address"]
+      data_type: ["varchar", "text", "character varying"]
+    rule:
+      type: pattern
+      regex: "^https?://"
+      severity: "sh:Info"
+      rationale: "Website URLs should start with http:// or https://"
+
+  # ── Categorical/enum rules ────────────────────────────────────────────────
+  - match:
+      description_contains: ["account type", "type of account"]
+    rule:
+      type: allowedValues
+      values: ["Customer - Direct", "Customer - Channel", "Channel Partner / Reseller", "Installation Partner", "Technology Partner", "Other", "Prospect"]
+      severity: "sh:Info"
+      rationale: "Account type should be from the standard Salesforce picklist"
+
+  - match:
+      description_contains: ["industry", "industry sector"]
+    rule:
+      type: allowedValues
+      values: ["Agriculture", "Apparel", "Banking", "Biotechnology", "Chemicals", "Communications", "Construction", "Consulting", "Education", "Electronics", "Energy", "Engineering", "Entertainment", "Environmental", "Finance", "Food & Beverage", "Government", "Healthcare", "Hospitality", "Insurance", "Machinery", "Manufacturing", "Media", "Not For Profit", "Other", "Recreation", "Retail", "Shipping", "Technology", "Telecommunications", "Transportation", "Utilities"]
+      severity: "sh:Info"
+      rationale: "Industry should be from the standard Salesforce picklist"
+
+  - match:
+      description_contains: ["rating"]
+      name_contains: ["rating"]
+    rule:
+      type: allowedValues
+      values: ["Hot", "Warm", "Cold"]
+      severity: "sh:Info"
+      rationale: "Account rating should be Hot, Warm, or Cold"
+
+  - match:
+      description_contains: ["lead source", "source of lead"]
+    rule:
+      type: allowedValues
+      values: ["Web", "Phone Inquiry", "Partner Referral", "Purchased List", "Other", "Trade Show", "Employee Referral", "Public Relations", "Direct Mail", "Seminar - Internal", "Seminar - Partner", "Advertisement"]
+      severity: "sh:Info"
+      rationale: "Lead source should be from the standard Salesforce picklist"
+
+  - match:
+      description_contains: ["stage", "opportunity stage", "sales stage"]
+    rule:
+      type: allowedValues
+      values: ["Prospecting", "Qualification", "Needs Analysis", "Value Proposition", "Id. Decision Makers", "Perception Analysis", "Proposal/Price Quote", "Negotiation/Review", "Closed Won", "Closed Lost"]
+      severity: "sh:Info"
+      rationale: "Sales stage should be from the standard Salesforce picklist"
+
+  # ── Quantity rules ────────────────────────────────────────────────────────
+  - match:
+      description_contains: ["employees", "number of employees", "employee count"]
+      data_type: ["integer", "numeric", "bigint"]
+    rule:
+      type: range
+      min: 0
+      max: 10000000
+      severity: "sh:Warning"
+      rationale: "Employee count should be non-negative and reasonable"

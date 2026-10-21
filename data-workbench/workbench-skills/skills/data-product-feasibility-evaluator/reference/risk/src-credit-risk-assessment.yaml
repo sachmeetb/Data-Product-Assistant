@@ -1,0 +1,425 @@
+spec_id: src_credit_risk_assessment
+name: Credit Risk Assessment
+domain: Risk
+product_kind: source
+description: Borrower-level credit scoring, rating history, and overrides
+schema_version: '1.0'
+classification: internal
+grain:
+  keys:
+  - score_id
+  description: ''
+freshness:
+  history: scd2
+  cadence: ''
+  description: ''
+allowed_derivations:
+- rename
+- cast
+attributes:
+- name: score_id
+  type: bigint
+  concept: Score ID
+  description: Unique identifier for a credit score event record, serving as the primary key across scoring and rating entities.
+  required: true
+  is_key: true
+  classification: internal
+- name: customer_id
+  type: bigint
+  concept: Customer ID
+  description: Unique identifier of the borrower whose credit risk is being assessed, linking to the customer master.
+  required: true
+  is_key: true
+  classification: internal
+- name: score_value
+  type: numeric
+  concept: Score Value
+  description: Numeric credit score assigned to the borrower by the scoring model for this assessment event.
+  required: true
+  is_key: false
+  classification: internal
+- name: score_range_min
+  type: numeric
+  concept: Score Range Min
+  description: Minimum value of the scoring model's possible range, providing context for interpreting the score value.
+  required: true
+  is_key: false
+  classification: internal
+- name: score_range_max
+  type: numeric
+  concept: Score Range Max
+  description: Maximum value of the scoring model's possible range, used to normalize and benchmark the score value.
+  required: true
+  is_key: false
+  classification: internal
+- name: scoring_model_name
+  type: varchar
+  concept: Scoring Model Name
+  description: Name of the internal or bureau scoring model used to generate the credit score.
+  required: true
+  is_key: false
+  classification: internal
+- name: model_version
+  type: varchar
+  concept: Model Version
+  description: Version identifier of the scoring model used, enabling reproducibility and model change tracking.
+  required: false
+  is_key: false
+  classification: internal
+- name: score_date
+  type: date
+  concept: Score Date
+  description: Date on which the credit score was generated for the borrower.
+  required: true
+  is_key: false
+  classification: internal
+- name: score_valid_till
+  type: numeric
+  concept: Score Valid Till
+  description: Expiry date or number of days after which the credit score is no longer considered current for underwriting decisions.
+  required: true
+  is_key: false
+  classification: internal
+- name: score_status
+  type: numeric
+  concept: Score Status
+  description: Current status of the credit score record (e.g. active, expired, superseded by a newer score).
+  required: true
+  is_key: false
+  classification: internal
+- name: rating_id
+  type: bigint
+  concept: Rating ID
+  description: Unique identifier for a credit rating record assigned to the borrower by the bank or an external agency.
+  required: true
+  is_key: true
+  classification: internal
+- name: rating_grade
+  type: varchar
+  concept: Rating Grade
+  description: Alphabetic or categorical credit grade assigned to the borrower (e.g. AAA, BB+, substandard).
+  required: false
+  is_key: false
+  classification: internal
+- name: rating_scale
+  type: varchar
+  concept: Rating Scale
+  description: Rating scale framework used for the credit grade, indicating the range and meaning of the grade categories.
+  required: false
+  is_key: false
+  classification: internal
+- name: rating_agency
+  type: varchar
+  concept: Rating Agency
+  description: Name of the internal credit team or external rating agency that assigned the credit rating.
+  required: false
+  is_key: false
+  classification: internal
+- name: rating_date
+  type: date
+  concept: Rating Date
+  description: Date on which the credit rating was assigned or most recently reviewed.
+  required: true
+  is_key: false
+  classification: internal
+- name: rating_valid_till
+  type: varchar
+  concept: Rating Valid Till
+  description: Expiry date or validity period after which the credit rating must be reviewed or renewed.
+  required: false
+  is_key: false
+  classification: internal
+- name: rating_status
+  type: varchar
+  concept: Rating Status
+  description: Current status of the credit rating (e.g. active, under review, withdrawn, expired).
+  required: true
+  is_key: false
+  classification: internal
+- name: rating_outlook
+  type: varchar
+  concept: Rating Outlook
+  description: Forward-looking opinion accompanying the credit rating, such as stable, positive, or negative.
+  required: false
+  is_key: false
+  classification: internal
+- name: override_id
+  type: bigint
+  concept: Override ID
+  description: Unique identifier for a credit rating override record where the system-generated rating was manually adjusted by a credit officer.
+  required: true
+  is_key: true
+  classification: internal
+- name: original_rating_grade
+  type: varchar
+  concept: Original Rating Grade
+  description: Credit grade produced by the automated scoring model before a human override was applied.
+  required: false
+  is_key: false
+  classification: internal
+- name: override_rating_grade
+  type: varchar
+  concept: Override Rating Grade
+  description: Credit grade assigned by the credit officer as the result of overriding the automated model output.
+  required: false
+  is_key: false
+  classification: internal
+- name: override_reason_code
+  type: varchar
+  concept: Override Reason Code
+  description: Coded reason justifying the credit rating override (e.g. collateral quality, management change, industry outlook).
+  required: false
+  is_key: false
+  classification: internal
+- name: requested_by_user_id
+  type: bigint
+  concept: Requested By User ID
+  description: Unique identifier of the credit officer or user who submitted the override request.
+  required: true
+  is_key: true
+  classification: internal
+- name: approved_by_user_id
+  type: bigint
+  concept: Approved By User ID
+  description: Unique identifier of the senior credit authority who approved the override request.
+  required: true
+  is_key: true
+  classification: internal
+- name: override_date
+  type: date
+  concept: Override Date
+  description: Date on which the credit rating override was approved and became effective.
+  required: true
+  is_key: false
+  classification: internal
+- name: override_approval_status
+  type: varchar
+  concept: Override Approval Status
+  description: Status of the override approval workflow (e.g. pending, approved, rejected, escalated).
+  required: true
+  is_key: false
+  classification: internal
+- name: enquiry_id
+  type: bigint
+  concept: Enquiry ID
+  description: Unique identifier for a credit bureau enquiry record initiated during underwriting or periodic review.
+  required: true
+  is_key: true
+  classification: internal
+- name: bureau_name
+  type: varchar
+  concept: Bureau Name
+  description: Name of the credit information bureau whose database was queried for this enquiry (e.g. CIBIL, Experian, Equifax).
+  required: true
+  is_key: false
+  classification: internal
+- name: enquiry_date
+  type: date
+  concept: Enquiry Date
+  description: Date on which the credit bureau was queried for the borrower's credit report.
+  required: true
+  is_key: false
+  classification: internal
+- name: enquiry_type
+  type: varchar
+  concept: Enquiry Type
+  description: Purpose of the credit bureau enquiry, such as loan application, periodic review, or soft check.
+  required: true
+  is_key: false
+  classification: internal
+- name: product_type
+  type: varchar
+  concept: Product Type
+  description: Type of credit product being applied for or reviewed, which determines the applicable bureau enquiry category.
+  required: true
+  is_key: false
+  classification: internal
+- name: amount_requested
+  type: numeric
+  concept: Amount Requested
+  description: Loan or credit amount requested by the borrower that triggered the bureau enquiry.
+  required: true
+  is_key: false
+  classification: internal
+- name: enquiry_result
+  type: varchar
+  concept: Enquiry Result
+  description: Outcome or summary result returned by the credit bureau for this enquiry.
+  required: false
+  is_key: false
+  classification: internal
+- name: bureau_reference_number
+  type: varchar
+  concept: Bureau Reference Number
+  description: Unique reference number assigned by the credit bureau to this enquiry for audit and dispute resolution.
+  required: false
+  is_key: false
+  classification: internal
+- name: report_id
+  type: bigint
+  concept: Report ID
+  description: Unique identifier for a credit bureau report retrieved for the borrower.
+  required: true
+  is_key: true
+  classification: internal
+- name: report_date
+  type: date
+  concept: Report Date
+  description: Date on which the credit bureau report was pulled and made available.
+  required: true
+  is_key: false
+  classification: internal
+- name: bureau_score
+  type: numeric
+  concept: Bureau Score
+  description: Credit score as reported by the external credit bureau in this report.
+  required: true
+  is_key: false
+  classification: internal
+- name: total_accounts_reported
+  type: numeric
+  concept: Total Accounts Reported
+  description: Total number of credit accounts (loans, cards, lines) reported by all lenders for this borrower in the bureau report.
+  required: false
+  is_key: false
+  classification: internal
+- name: total_enquiries_12m
+  type: varchar
+  concept: Total Enquiries 12m
+  description: Total number of credit enquiries made against the borrower's bureau record in the preceding 12 months.
+  required: false
+  is_key: false
+  classification: internal
+- name: max_dpd_24m
+  type: varchar
+  concept: Max Dpd 24m
+  description: Maximum days-past-due recorded on any of the borrower's credit accounts in the preceding 24 months.
+  required: false
+  is_key: false
+  classification: internal
+- name: write_off_flag
+  type: boolean
+  concept: Write Off Flag
+  description: Boolean indicator that a write-off has been recorded against any of the borrower's accounts in the bureau report.
+  required: false
+  is_key: false
+  classification: internal
+- name: collateral_id
+  type: bigint
+  concept: Collateral ID
+  description: Unique identifier for a collateral asset associated with the borrower's credit risk exposure.
+  required: true
+  is_key: true
+  classification: internal
+- name: collateral_type
+  type: varchar
+  concept: Collateral Type
+  description: Type of collateral pledged against the borrower's credit facilities (e.g. property, securities, gold, receivables).
+  required: true
+  is_key: false
+  classification: internal
+- name: market_value
+  type: numeric
+  concept: Market Value
+  description: Current market value of the collateral asset as assessed for credit risk coverage and LTV monitoring purposes.
+  required: true
+  is_key: false
+  classification: internal
+- name: valuation_date
+  type: date
+  concept: Valuation Date
+  description: Date on which the collateral was most recently valued for credit risk monitoring.
+  required: true
+  is_key: false
+  classification: internal
+- name: lien_status
+  type: varchar
+  concept: Lien Status
+  description: Status of the lien or charge registered on the collateral in favor of the bank (e.g. registered, pending, released).
+  required: true
+  is_key: false
+  classification: internal
+- name: exposure_id
+  type: bigint
+  concept: Exposure ID
+  description: Unique identifier for a credit exposure record summarizing the borrower's outstanding credit obligations.
+  required: true
+  is_key: true
+  classification: internal
+- name: limit_amount
+  type: numeric
+  concept: Limit Amount
+  description: Total approved credit limit or sanctioned amount across the borrower's credit facilities.
+  required: true
+  is_key: false
+  classification: internal
+- name: outstanding_amount
+  type: numeric
+  concept: Outstanding Amount
+  description: Current drawn or outstanding balance on the borrower's credit exposure as of the reporting date.
+  required: true
+  is_key: false
+  classification: internal
+- name: off_balance_exposure
+  type: numeric
+  concept: Off Balance Exposure
+  description: Undrawn or contingent credit exposure not yet reflected on the balance sheet (e.g. unutilized credit lines, guarantees).
+  required: true
+  is_key: false
+  classification: internal
+- name: reporting_date
+  type: date
+  concept: Reporting Date
+  description: Date as of which the credit exposure figures are reported.
+  required: true
+  is_key: false
+  classification: internal
+- name: covenant_id
+  type: bigint
+  concept: Covenant ID
+  description: Unique identifier for a loan covenant monitoring record associated with the borrower's credit facility.
+  required: true
+  is_key: true
+  classification: internal
+- name: covenant_type
+  type: varchar
+  concept: Covenant Type
+  description: Type of financial or behavioral covenant the borrower is required to maintain (e.g. leverage ratio, current ratio, dividend restriction).
+  required: true
+  is_key: false
+  classification: internal
+- name: threshold_value
+  type: numeric
+  concept: Threshold Value
+  description: Numeric limit or target value for the covenant metric that the borrower must not breach.
+  required: true
+  is_key: false
+  classification: internal
+- name: observed_value
+  type: numeric
+  concept: Observed Value
+  description: Actual measured value of the covenant metric as reported by the borrower for the observation date.
+  required: true
+  is_key: false
+  classification: internal
+- name: observation_date
+  type: date
+  concept: Observation Date
+  description: Date as of which the covenant metric was measured or reported.
+  required: true
+  is_key: false
+  classification: internal
+- name: breach_flag
+  type: boolean
+  concept: Breach Flag
+  description: Boolean indicator that the observed covenant metric value has breached the agreed threshold.
+  required: false
+  is_key: false
+  classification: internal
+- name: breach_status
+  type: varchar
+  concept: Breach Status
+  description: Current status of a covenant breach event (e.g. notified, waived, remediated, accelerated).
+  required: true
+  is_key: false
+  classification: internal

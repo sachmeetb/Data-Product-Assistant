@@ -1,0 +1,386 @@
+apiVersion: v3.1.0
+kind: DataContract
+id: template:payments:src-balance-of-payment
+name: Balance of Payment
+version: 1.0.0
+status: draft
+domain: Payments
+description: Transaction-level cross-border payments used to construct BoP/ITRS flows
+  (inflows/outflows) across channels—RTGS, correspondent banking (SWIFT/ISO 20022),
+  remittance/ACH and card networks.
+schema:
+- name: Balance of Payment
+  physicalName: balance_of_payment
+  physicalType: table
+  description: Transaction-level cross-border payments used to construct BoP/ITRS
+    flows (inflows/outflows) across channels—RTGS, correspondent banking (SWIFT/ISO
+    20022), remittance/ACH and card networks.
+  properties:
+  - name: txn_id
+    physicalName: txn_id
+    logicalName: Txn ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a cross-border transaction record used in BoP/ITRS
+      flow compilation.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: uetr_message_id
+    physicalName: uetr_message_id
+    logicalName: UETR Message ID
+    logicalType: bigint
+    physicalType: bigint
+    description: SWIFT Unique End-to-End Transaction Reference (UETR) or message identifier
+      uniquely tracking the payment through the correspondent network.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: channel
+    physicalName: channel
+    logicalName: Channel
+    logicalType: varchar
+    physicalType: varchar
+    description: Payment channel through which the cross-border transaction was processed
+      (e.g. RTGS, SWIFT, ACH, remittance).
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: amount
+    physicalName: amount
+    logicalName: Amount
+    logicalType: numeric
+    physicalType: numeric
+    description: Gross monetary value of the cross-border transaction in the original
+      transaction currency.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: currency
+    physicalName: currency
+    logicalName: Currency
+    logicalType: varchar
+    physicalType: varchar
+    description: ISO currency code of the transaction amount before FX conversion.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: fx_rate
+    physicalName: fx_rate
+    logicalName: FX Rate
+    logicalType: numeric
+    physicalType: numeric
+    description: Exchange rate applied to convert the transaction amount from the
+      transaction currency to the reporting currency.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: charges
+    physicalName: charges
+    logicalName: Charges
+    logicalType: numeric
+    physicalType: numeric
+    description: Bank charges or correspondent fees deducted from the transaction
+      amount.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: net_amount
+    physicalName: net_amount
+    logicalName: Net Amount
+    logicalType: numeric
+    physicalType: numeric
+    description: Net monetary value of the transaction after deduction of charges,
+      expressed in the reporting currency.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: inflow_outflow
+    physicalName: inflow_outflow
+    logicalName: Inflow Outflow
+    logicalType: varchar
+    physicalType: varchar
+    description: Direction of the cross-border payment relative to the domestic economy,
+      used for BoP categorization (inflow or outflow).
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: payer_country
+    physicalName: payer_country
+    logicalName: Payer Country
+    logicalType: numeric
+    physicalType: numeric
+    description: Numeric country code of the country from which the cross-border payment
+      originates.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: beneficiary_country
+    physicalName: beneficiary_country
+    logicalName: Beneficiary Country
+    logicalType: numeric
+    physicalType: numeric
+    description: Numeric country code of the country to which the cross-border payment
+      is destined.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: residency_status
+    physicalName: residency_status
+    logicalName: Residency Status
+    logicalType: varchar
+    physicalType: varchar
+    description: Residency classification of the counterparty (resident or non-resident)
+      used for BoP regulatory reporting requirements.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: purpose_code
+    physicalName: purpose_code
+    logicalName: Purpose Code
+    logicalType: varchar
+    physicalType: varchar
+    description: Regulatory purpose code assigned to the transaction indicating the
+      economic nature of the cross-border transfer (e.g. trade, remittance, investment
+      income).
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: goods_services_travel_income_classification
+    physicalName: goods_services_travel_income_classification
+    logicalName: Goods Services Travel Income Classification
+    logicalType: numeric
+    physicalType: numeric
+    description: BoP standard account classification of the transaction under current
+      account components (goods, services, travel, or primary income).
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: bic_lei
+    physicalName: bic_lei
+    logicalName: BIC LEI
+    logicalType: varchar
+    physicalType: varchar
+    description: Bank Identifier Code (BIC) or Legal Entity Identifier (LEI) of the
+      correspondent or counterparty institution involved in the payment.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: account_ids
+    physicalName: account_ids
+    logicalName: Account Ids
+    logicalType: bigint
+    physicalType: bigint
+    description: Identifiers of the payer and beneficiary accounts involved in the
+      cross-border transaction.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: correspondent_chain
+    physicalName: correspondent_chain
+    logicalName: Correspondent Chain
+    logicalType: varchar
+    physicalType: varchar
+    description: Ordered list of correspondent banks through which the payment was
+      routed from originator to beneficiary.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: msg_type
+    physicalName: msg_type
+    logicalName: Msg Type
+    logicalType: varchar
+    physicalType: varchar
+    description: Messaging standard and message type used for the payment instruction
+      (e.g. MT103, pacs.008, MT202).
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: settlement_date
+    physicalName: settlement_date
+    logicalName: Settlement Date
+    logicalType: date
+    physicalType: date
+    description: Date on which the cross-border payment was settled between the transacting
+      institutions.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: status
+    physicalName: status
+    logicalName: Status
+    logicalType: varchar
+    physicalType: varchar
+    description: Current processing status of the cross-border transaction (e.g. settled,
+      pending, returned, cancelled).
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: reversal_flag
+    physicalName: reversal_flag
+    logicalName: Reversal Flag
+    logicalType: boolean
+    physicalType: boolean
+    description: Boolean indicator that this transaction is a reversal or return of
+      a previously processed cross-border payment.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: source_system
+    physicalName: source_system
+    logicalName: Source System
+    logicalType: varchar
+    physicalType: varchar
+    description: Name of the originating system (e.g. RTGS, SWIFT hub, remittance
+      platform) from which the transaction record was ingested.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: enrichment_flags
+    physicalName: enrichment_flags
+    logicalName: Enrichment Flags
+    logicalType: varchar
+    physicalType: varchar
+    description: Set of indicator flags documenting post-ingestion data enrichments
+      applied to the record, such as country code normalization or purpose code inference.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: screening_result
+    physicalName: screening_result
+    logicalName: Screening Result
+    logicalType: varchar
+    physicalType: varchar
+    description: Outcome of sanctions, AML, or compliance screening applied to the
+      cross-border transaction.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  foreignKeys: []
+  transform:
+    grouping_keys:
+    - txn_id
+    scd_policy:
+      type: latest_only
+customProperties:
+  feasibility:
+    schema_version: '1.0'
+    spec_classification: internal
+    cadence: ''
+    freshness_history: current
+    freshness_description: ''
+    grain_keys:
+    - txn_id
+    grain_description: ''
+    allowed_derivations:
+    - rename
+    - cast
+    composition:
+      join_keys: []
+      composed_of: []
+      description: ''
+    attr_derivations:
+      amount:
+      - currency_normalize
+      charges:
+      - currency_normalize
+      net_amount:
+      - currency_normalize
+productKind: source
+sourceSpecId: src_balance_of_payment

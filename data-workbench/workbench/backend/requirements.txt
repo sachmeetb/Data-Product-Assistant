@@ -1,0 +1,95 @@
+# Pinned to the versions the container actually runs (root requirements.txt).
+# The older fastapi 0.115 / uvicorn 0.30 pins could not resolve against
+# claude-agent-sdk (its `mcp` dependency needs newer uvicorn), so a clean venv
+# built from THIS file failed outright — keep these in step with the root pins.
+fastapi==0.135.2
+uvicorn[standard]==0.42.0
+sqlmodel==0.0.22
+websockets>=13.0
+aiofiles>=24.1.0
+
+# Runtime deps for the non-LLM DQ test executor (dq_test_executor.py)
+# invokes generated run_gx_validations.py / run_all.py directly; these
+# must already be present in the backend venv so no runtime pip install
+# is needed during stage execution.
+great-expectations>=1.0,<2.0
+pandas>=2.0
+pandera>=0.20
+psycopg2-binary>=2.9
+pymysql>=1.0
+snowflake-connector-python>=3.0.0
+snowflake-sqlalchemy>=1.5.0
+databricks-sql-connector>=3.0.0
+# SQLAlchemy dialect for Databricks — split out of databricks-sql-connector in 3.x.
+# Required for warehouse DQ execution: the generated GX runner connects via the
+# databricks SQLAlchemy dialect (dq_test_executor._preflight_sqlalchemy_dialect).
+# 2.x pairs with databricks-sql-connector 4.x and registers the plain `databricks`
+# URL scheme (1.x used `databricks+connector`).
+databricks-sqlalchemy>=2.0
+sqlalchemy>=2.0
+
+# Neo4j knowledge graph, ODCS/YAML handling, schema validation, SQL parsing,
+# and the Claude Agent SDK (`claude_agent_sdk`) that drives LLM-backed stages
+# server-side. All imported directly by the backend (neo4j_client.py, osi.py,
+# domain_catalogs.py, qa_execute.py, sdk_runner.py, chat_runner.py, …) —
+# required for a clean-venv bootstrap.
+#
+# NOTE: `claude_agent_sdk` is the package every backend module imports. The
+# older `claude-code-sdk` distribution is NOT used and must not be re-added —
+# installing it instead leaves a clean venv unable to import the backend
+# (test_docs_consistency.py guards this).
+neo4j>=5.0
+pyyaml>=6.0
+jsonschema>=4.0
+# Session JWTs for request-level auth (pure-python — no native build).
+PyJWT>=2.8
+sqlglot>=25.0
+sqlparse>=0.5
+claude-agent-sdk>=0.2.95
+
+# Fuzzy ranking for marketplace Semantic-Q&A value resolution
+# (value_resolution.py). C-backed; the module degrades to stdlib difflib if
+# absent, so this is a quality dep, not a hard requirement.
+rapidfuzz>=3.0
+
+# Phase 3 data-plane: Parquet export + DuckDB bounded-workload reader.
+# pyarrow is the canonical Parquet writer (export_table.py in
+# data-export-parquet skill).  duckdb is the first certified read engine for
+# TransferBatch manifests.  Both are pinned to exact tested minor versions —
+# ADR-19 prohibits broad ranges for embedded analytics engines.
+pyarrow>=19.0.0,<20.0
+duckdb>=1.1.0,<2.0
+
+# Object storage (ADR-14, docs/architecture/object-store.md). boto3 backs the
+# S3-compatible ObjectStoreProvider (platform/providers/object_store_s3.py) that
+# PUBLISHES generated data artifacts to any S3 endpoint (SeaweedFS/RustFS/AWS/
+# MinIO). Lazily imported inside the provider, so a venv without it still boots;
+# required to actually publish. GCS/Azure providers (future) add their own deps.
+boto3>=1.34
+s3fs>=2024.0          # DLT filesystem destination uses s3fs when staging to S3 (Phase 5)
+
+# Phase 2.1 cross-platform transfer (transfer_then_transform) — OPTIONAL.
+# The DuckDB engine (above) handles postgres/duckdb targets with no extra deps.
+# Warehouse targets (Snowflake/Databricks) use the dlt EL engine which is
+# lazily imported. The [s3] extra is required for Phase 5 native S3 staging
+# (dlt.destinations.filesystem with s3:// URLs); without it DLT raises
+# MissingDependencyException even when s3fs is present, because DLT checks its
+# own extras metadata rather than just testing importability.
+# Install per deployment to enable warehouse targets alongside S3 staging:
+#   pip install 'dlt[s3,snowflake]'   # or 'dlt[s3,databricks]'
+dlt[s3]>=1.0
+
+# OpenTelemetry — OPT-IN observability. Backend self-instrumentation + OTLP
+# export, active ONLY when OTEL_EXPORTER_OTLP_ENDPOINT is set (telemetry.py);
+# all imports are lazy/guarded so a venv without these still boots. HTTP/protobuf
+# exporter only (no grpcio). The frozen root requirements.txt pins the exact
+# versions + transitives the container installs; keep the two in step.
+opentelemetry-sdk>=1.44
+opentelemetry-exporter-otlp-proto-http>=1.44
+opentelemetry-instrumentation-fastapi>=0.65b0
+
+# Test harness (acceptance-gate lifecycle + UI/MCP parity tests). Dev-only;
+# the runtime image doesn't need these, but pinning them here keeps one
+# canonical list. Run: pytest workbench/backend/tests
+pytest>=8.0
+httpx>=0.27
