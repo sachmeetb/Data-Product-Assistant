@@ -1,0 +1,47 @@
+apiVersion: workbench.platform/v1
+id: s3
+displayName: Amazon S3 (object store)
+adapterVersion: "0.1.0"
+adapterKind: object_store
+supportedServerVersions: "aws-sdk-python>=1.0"
+
+driver:
+  package: boto3
+  compatibility: ">=1.26"
+
+credentialSchema: schemas/s3-credentials.json
+
+namespace:
+  parts: [bucket, prefix]
+  labels:
+    bucket: Bucket
+    prefix: Key Prefix
+
+capabilities:
+  # Object-store capability (ADR-14). The SQL-oriented capabilities below stay
+  # unsupported — a bucket has no SELECT / view / dbt target.
+  artifact_publish: preview
+  connection: unsupported
+  discovery: unsupported
+  profiling: unsupported
+  read_query: unsupported
+  native_view: unsupported
+  dbt_materialized: unsupported
+  remediation: unsupported
+  semantic_qa: unsupported
+  transfer_source: unsupported
+  transfer_target: unsupported
+  lakehouse_export: unsupported
+  lakehouse_source: unsupported
+  volumetrics: unsupported
+  code_assets: unsupported
+
+notes: >
+  Object-store platform (ADR-14, docs/architecture/object-store.md). The
+  S3ObjectStoreProvider (platform/providers/object_store_s3.py, boto3) is
+  resolved via dispatch.get_object_store_provider and used to PUBLISH generated
+  data artifacts (Parquet + manifests) — the artifact_publish capability. Set
+  extra_config.endpoint_url for non-AWS endpoints (SeaweedFS/RustFS/MinIO),
+  public_endpoint_url for presigning, plus bucket / region / addressing_style.
+  AWS credential vending: prefer IAM roles over static keys; secret_ref should
+  reference a role ARN or a Secrets Manager path, never inline credentials.

@@ -221,11 +221,15 @@ function generateYamlString(data) {
   return lines.join('\n')
 }
 
-export default function DataContractCard({ view, onSave, isModal, onClose }) {
+export default function DataContractCard({ view, onSave, isModal, onClose, sessionId, apiBase }) {
   const [activeTab, setActiveTab] = useState('schema')
   const [copied, setCopied] = useState(false)
   const [savedBadge, setSavedBadge] = useState(false)
   const [newStandardInput, setNewStandardInput] = useState('')
+  const [isCommitting, setIsCommitting] = useState(false)
+  const [kcUrl, setKcUrl] = useState(null)
+  const [bqUrl, setBqUrl] = useState(null)
+  const [commitError, setCommitError] = useState(null)
 
   // Initialize editable state with full prefilled values
   const [contract, setContract] = useState(() => {
@@ -432,13 +436,37 @@ export default function DataContractCard({ view, onSave, isModal, onClose }) {
     }))
   }
 
-  // Save Contract
-  const handleSave = () => {
+  // Save Contract + commit to BigQuery and register in Dataplex Knowledge Catalog
+  const handleSave = async () => {
     const yamlString = generateYamlString(contract)
     const finalized = { ...contract, yaml_text: yamlString }
     if (onSave) onSave(finalized)
-    setSavedBadge(true)
-    setTimeout(() => setSavedBadge(false), 3000)
+
+    setIsCommitting(true)
+    setKcUrl(null)
+    setBqUrl(null)
+    setCommitError(null)
+
+    try {
+      const base = apiBase || import.meta.env.VITE_API_URL || ''
+      const resp = await fetch(`${base}/v1/data-contract/commit`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contract: finalized, session_id: sessionId || null }),
+      })
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}`)
+      const data = await resp.json()
+      if (data.kc_url) setKcUrl(data.kc_url)
+      if (data.bq_url) setBqUrl(data.bq_url)
+      setSavedBadge(true)
+      setTimeout(() => setSavedBadge(false), 3000)
+    } catch (err) {
+      setCommitError('Registered locally — Knowledge Catalog unavailable.')
+      setSavedBadge(true)
+      setTimeout(() => setSavedBadge(false), 3000)
+    } finally {
+      setIsCommitting(false)
+    }
   }
 
   const handleReset = () => {
@@ -549,7 +577,7 @@ export default function DataContractCard({ view, onSave, isModal, onClose }) {
         </div>
 
         {/* Header Right Actions */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
           {savedBadge && (
             <span style={{
               background: '#10B981',
@@ -567,26 +595,91 @@ export default function DataContractCard({ view, onSave, isModal, onClose }) {
             </span>
           )}
 
+          {kcUrl && (
+            <a
+              href={kcUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              title="Open this data product in GCP Knowledge Catalog"
+              style={{
+                background: '#1a73e8',
+                color: '#ffffff',
+                fontSize: 10.5,
+                fontWeight: 700,
+                padding: '4px 10px',
+                borderRadius: 6,
+                textDecoration: 'none',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 5,
+                boxShadow: '0 1px 4px rgba(0,0,0,0.18)',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              🔗 Open in Knowledge Catalog
+            </a>
+          )}
+
+          {bqUrl && !kcUrl && (
+            <a
+              href={bqUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              title="Open bronze dataset in BigQuery console"
+              style={{
+                background: '#1a73e8',
+                color: '#ffffff',
+                fontSize: 10.5,
+                fontWeight: 700,
+                padding: '4px 10px',
+                borderRadius: 6,
+                textDecoration: 'none',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 5,
+                boxShadow: '0 1px 4px rgba(0,0,0,0.18)',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              🔗 Open in BigQuery
+            </a>
+          )}
+
+          {commitError && (
+            <span style={{
+              background: '#fef3c7',
+              color: '#92400e',
+              fontSize: 10,
+              fontWeight: 600,
+              padding: '3px 8px',
+              borderRadius: 6,
+            }}>
+              ⚠ {commitError}
+            </span>
+          )}
+
           <button
             onClick={handleSave}
-            title="Save your changes to this Data Contract"
+            disabled={isCommitting}
+            title="Save contract and register in Knowledge Catalog"
             style={{
-              background: '#10B981',
+              background: isCommitting ? '#6b7280' : '#10B981',
               color: '#ffffff',
               border: 'none',
               borderRadius: 6,
               padding: '6px 12px',
               fontSize: 11,
               fontWeight: 700,
-              cursor: 'pointer',
+              cursor: isCommitting ? 'not-allowed' : 'pointer',
               display: 'flex',
               alignItems: 'center',
               gap: 5,
               boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
               transition: 'background 0.15s',
+              opacity: isCommitting ? 0.75 : 1,
             }}
           >
-            <SaveIcon /> Save Contract
+            <SaveIcon /> {isCommitting ? 'Committing…' : 'Save & Commit'}
           </button>
 
           <button
@@ -1280,21 +1373,23 @@ export default function DataContractCard({ view, onSave, isModal, onClose }) {
           <button
             type="button"
             onClick={handleSave}
+            disabled={isCommitting}
             style={{
-              background: '#10B981',
+              background: isCommitting ? '#6b7280' : '#10B981',
               color: '#ffffff',
               border: 'none',
               borderRadius: 6,
               padding: '6px 14px',
               fontSize: 11,
               fontWeight: 700,
-              cursor: 'pointer',
+              cursor: isCommitting ? 'not-allowed' : 'pointer',
               display: 'flex',
               alignItems: 'center',
               gap: 5,
+              opacity: isCommitting ? 0.75 : 1,
             }}
           >
-            <SaveIcon /> Apply &amp; Save Contract
+            <SaveIcon /> {isCommitting ? 'Committing…' : 'Save & Commit'}
           </button>
         </div>
       </div>

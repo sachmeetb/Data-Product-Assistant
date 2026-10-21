@@ -1,0 +1,328 @@
+{
+  "domain": "Human Resources",
+  "queried_at": "2026-04-01T16:42:30.702070+00:00",
+  "statistics": {
+    "descriptions": {
+      "total_reviewed": 24,
+      "approved": 22,
+      "rejected": 2,
+      "rejection_rate": 0.083,
+      "rejection_categories": {
+        "too_specific": 2
+      },
+      "quality_distribution": {
+        "1": 2,
+        "2": 15,
+        "3": 5
+      }
+    },
+    "mappings": {
+      "total_reviewed": 0,
+      "approved": 0,
+      "rejected": 0,
+      "rejection_rate": 0,
+      "rejection_categories": {},
+      "quality_distribution": {}
+    }
+  },
+  "rejected_descriptions": [
+    {
+      "schema": "employees",
+      "table_name": "employee",
+      "column_name": "first_name",
+      "data_type": "character varying",
+      "primary_key": false,
+      "nullable": false,
+      "original_text": "Given name of the employee, always present.",
+      "corrected_text": "Given name of the employee.",
+      "rejection_category": "too_specific",
+      "rejection_detail": "",
+      "activity_uri": "prov:activity:employees.employee.first_name:20260401T163151Z:review:20260401T163336",
+      "occurred_at": "20260401T163336",
+      "reviewer": "workbench-user"
+    },
+    {
+      "schema": "employees",
+      "table_name": "employee",
+      "column_name": "last_name",
+      "data_type": "character varying",
+      "primary_key": false,
+      "nullable": false,
+      "original_text": "Family name (surname) of the employee, always present.",
+      "corrected_text": "Family name (surname) of the employee.",
+      "rejection_category": "too_specific",
+      "rejection_detail": "",
+      "activity_uri": "prov:activity:employees.employee.last_name:20260401T163151Z:review:20260401T163347",
+      "occurred_at": "20260401T163347",
+      "reviewer": "workbench-user"
+    }
+  ],
+  "approved_descriptions": [
+    {
+      "schema": "employees",
+      "table_name": "department_employee",
+      "column_name": "from_date",
+      "data_type": "date",
+      "primary_key": false,
+      "nullable": false,
+      "description_text": "Date on which the employee's assignment to the department began, always present.",
+      "quality": 3,
+      "activity_uri": "prov:activity:employees.department_employee.from_date:20260401T163151Z:review:20260401T163307",
+      "occurred_at": "20260401T163307"
+    },
+    {
+      "schema": "employees",
+      "table_name": "department_employee",
+      "column_name": "to_date",
+      "data_type": "date",
+      "primary_key": false,
+      "nullable": false,
+      "description_text": "Date on which the employee's assignment to the department ended, always present; a far-future value indicates a current assignment.",
+      "quality": 3,
+      "activity_uri": "prov:activity:employees.department_employee.to_date:20260401T163151Z:review:20260401T163308",
+      "occurred_at": "20260401T163308"
+    },
+    {
+      "schema": "employees",
+      "table_name": "department_manager",
+      "column_name": "from_date",
+      "data_type": "date",
+      "primary_key": false,
+      "nullable": false,
+      "description_text": "Date on which the employee began managing the department, always present.",
+      "quality": 3,
+      "activity_uri": "prov:activity:employees.department_manager.from_date:20260401T163151Z:review:20260401T163312",
+      "occurred_at": "20260401T163312"
+    },
+    {
+      "schema": "employees",
+      "table_name": "department_manager",
+      "column_name": "to_date",
+      "data_type": "date",
+      "primary_key": false,
+      "nullable": false,
+      "description_text": "Date on which the employee's tenure as department manager ended, always present; a far-future value indicates a current manager.",
+      "quality": 3,
+      "activity_uri": "prov:activity:employees.department_manager.to_date:20260401T163151Z:review:20260401T163313",
+      "occurred_at": "20260401T163313"
+    },
+    {
+      "schema": "employees",
+      "table_name": "employee",
+      "column_name": "birth_date",
+      "data_type": "date",
+      "primary_key": false,
+      "nullable": false,
+      "description_text": "Date of birth of the employee, always present.",
+      "quality": 3,
+      "activity_uri": "prov:activity:employees.employee.birth_date:20260401T163151Z:review:20260401T163316",
+      "occurred_at": "20260401T163316"
+    },
+    {
+      "schema": "employees",
+      "table_name": "department_employee",
+      "column_name": "department_id",
+      "data_type": "character",
+      "primary_key": true,
+      "nullable": false,
+      "description_text": "Foreign key referencing the department to which the employee is assigned.",
+      "quality": 2,
+      "activity_uri": "prov:activity:employees.department_employee.department_id:20260401T163151Z:review:20260401T163306",
+      "occurred_at": "20260401T163306"
+    },
+    {
+      "schema": "employees",
+      "table_name": "department_employee",
+      "column_name": "employee_id",
+      "data_type": "bigint",
+      "primary_key": true,
+      "nullable": false,
+      "description_text": "Foreign key referencing the employee assigned to a department.",
+      "quality": 2,
+      "activity_uri": "prov:activity:employees.department_employee.employee_id:20260401T163151Z:review:20260401T163304",
+      "occurred_at": "20260401T163304"
+    },
+    {
+      "schema": "employees",
+      "table_name": "department_manager",
+      "column_name": "department_id",
+      "data_type": "character",
+      "primary_key": true,
+      "nullable": false,
+      "description_text": "Foreign key referencing the department being managed.",
+      "quality": 2,
+      "activity_uri": "prov:activity:employees.department_manager.department_id:20260401T163151Z:review:20260401T163311",
+      "occurred_at": "20260401T163311"
+    },
+    {
+      "schema": "employees",
+      "table_name": "department_manager",
+      "column_name": "employee_id",
+      "data_type": "bigint",
+      "primary_key": true,
+      "nullable": false,
+      "description_text": "Foreign key referencing the employee who serves as manager of the department.",
+      "quality": 2,
+      "activity_uri": "prov:activity:employees.department_manager.employee_id:20260401T163151Z:review:20260401T163310",
+      "occurred_at": "20260401T163310"
+    },
+    {
+      "schema": "employees",
+      "table_name": "employee",
+      "column_name": "gender",
+      "data_type": "USER-DEFINED",
+      "primary_key": false,
+      "nullable": false,
+      "description_text": "Gender of the employee; one of two values: M (male) or F (female).",
+      "quality": 2,
+      "activity_uri": "prov:activity:employees.employee.gender:20260401T163151Z:review:20260401T163352",
+      "occurred_at": "20260401T163352"
+    },
+    {
+      "schema": "employees",
+      "table_name": "employee",
+      "column_name": "hire_date",
+      "data_type": "date",
+      "primary_key": false,
+      "nullable": false,
+      "description_text": "Date on which the employee was hired by the organisation, always present.",
+      "quality": 2,
+      "activity_uri": "prov:activity:employees.employee.hire_date:20260401T163151Z:review:20260401T163353",
+      "occurred_at": "20260401T163353"
+    },
+    {
+      "schema": "employees",
+      "table_name": "employee",
+      "column_name": "id",
+      "data_type": "bigint",
+      "primary_key": true,
+      "nullable": false,
+      "description_text": "Unique identifier for each employee record, assigned as a numeric key.",
+      "quality": 2,
+      "activity_uri": "prov:activity:employees.employee.id:20260401T163151Z:review:20260401T163315",
+      "occurred_at": "20260401T163315"
+    },
+    {
+      "schema": "employees",
+      "table_name": "salary",
+      "column_name": "amount",
+      "data_type": "bigint",
+      "primary_key": false,
+      "nullable": false,
+      "description_text": "Gross salary amount for the employee during the associated date range, recorded in whole currency units; always present.",
+      "quality": 2,
+      "activity_uri": "prov:activity:employees.salary.amount:20260401T163151Z:review:20260401T163353",
+      "occurred_at": "20260401T163353"
+    },
+    {
+      "schema": "employees",
+      "table_name": "salary",
+      "column_name": "employee_id",
+      "data_type": "bigint",
+      "primary_key": true,
+      "nullable": false,
+      "description_text": "Foreign key referencing the employee to whom the salary record belongs.",
+      "quality": 2,
+      "activity_uri": "prov:activity:employees.salary.employee_id:20260401T163151Z:review:20260401T163353",
+      "occurred_at": "20260401T163353"
+    },
+    {
+      "schema": "employees",
+      "table_name": "salary",
+      "column_name": "from_date",
+      "data_type": "date",
+      "primary_key": true,
+      "nullable": false,
+      "description_text": "Start date of the salary period, forming part of the composite primary key; always present.",
+      "quality": 2,
+      "activity_uri": "prov:activity:employees.salary.from_date:20260401T163151Z:review:20260401T163353",
+      "occurred_at": "20260401T163353"
+    },
+    {
+      "schema": "employees",
+      "table_name": "salary",
+      "column_name": "to_date",
+      "data_type": "date",
+      "primary_key": false,
+      "nullable": false,
+      "description_text": "End date of the salary period, always present; a far-future value indicates the current salary.",
+      "quality": 2,
+      "activity_uri": "prov:activity:employees.salary.to_date:20260401T163151Z:review:20260401T163353",
+      "occurred_at": "20260401T163353"
+    },
+    {
+      "schema": "employees",
+      "table_name": "title",
+      "column_name": "employee_id",
+      "data_type": "bigint",
+      "primary_key": true,
+      "nullable": false,
+      "description_text": "Foreign key referencing the employee who holds the title.",
+      "quality": 2,
+      "activity_uri": "prov:activity:employees.title.employee_id:20260401T163151Z:review:20260401T163353",
+      "occurred_at": "20260401T163353"
+    },
+    {
+      "schema": "employees",
+      "table_name": "title",
+      "column_name": "from_date",
+      "data_type": "date",
+      "primary_key": true,
+      "nullable": false,
+      "description_text": "Date on which the employee began holding the title, forming part of the composite primary key; always present.",
+      "quality": 2,
+      "activity_uri": "prov:activity:employees.title.from_date:20260401T163151Z:review:20260401T163354",
+      "occurred_at": "20260401T163354"
+    },
+    {
+      "schema": "employees",
+      "table_name": "title",
+      "column_name": "title",
+      "data_type": "character varying",
+      "primary_key": true,
+      "nullable": false,
+      "description_text": "Job title held by the employee; one of six values: Staff, Engineer, Assistant Engineer, Technique Leader, Senior Engineer, or Senior Staff.",
+      "quality": 2,
+      "activity_uri": "prov:activity:employees.title.title:20260401T163151Z:review:20260401T163354",
+      "occurred_at": "20260401T163354"
+    },
+    {
+      "schema": "employees",
+      "table_name": "title",
+      "column_name": "to_date",
+      "data_type": "date",
+      "primary_key": false,
+      "nullable": true,
+      "description_text": "Date on which the employee stopped holding the title; a far-future or null value indicates the title is still current.",
+      "quality": 2,
+      "activity_uri": "prov:activity:employees.title.to_date:20260401T163151Z:review:20260401T163355",
+      "occurred_at": "20260401T163355"
+    },
+    {
+      "schema": "employees",
+      "table_name": "department",
+      "column_name": "dept_name",
+      "data_type": "character varying",
+      "primary_key": false,
+      "nullable": false,
+      "description_text": "Human-readable name of the department (e.g. Sales, Research, Human Resources); always present and unique across departments.",
+      "quality": 1,
+      "activity_uri": "prov:activity:employees.department.dept_name:20260401T163151Z:review:20260401T163303",
+      "occurred_at": "20260401T163303"
+    },
+    {
+      "schema": "employees",
+      "table_name": "department",
+      "column_name": "id",
+      "data_type": "character",
+      "primary_key": true,
+      "nullable": false,
+      "description_text": "Unique identifier for each department, assigned as a short alphanumeric code (e.g. d001, d002); always present.",
+      "quality": 1,
+      "activity_uri": "prov:activity:employees.department.id:20260401T163151Z:review:20260401T163301",
+      "occurred_at": "20260401T163301"
+    }
+  ],
+  "rejected_mappings": [],
+  "approved_mappings": []
+}

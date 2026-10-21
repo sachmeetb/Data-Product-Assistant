@@ -1,0 +1,111 @@
+platform: mysql
+engine: "MySQL 8.0+"
+
+# NOTE: MySQL currently has NO native-view emitter in serving
+# (stage_execution._PLATFORM_DIALECT_MAP maps mysql -> 'ansi'). This corpus
+# still describes MySQL capabilities so the reconcile decision (wire MySQLDialect
+# in, or scope MySQL out of native-view serving) is a data-grounded one. See
+# docs/architecture/transform-portability.md "MySQL reconcile".
+functions:
+  AGE:
+    capability: unsupported
+    remediation: "MySQL has no AGE. Decompose to a date_difference op (completed_units via TIMESTAMPDIFF(YEAR, start, end); boundary_count via YEAR(end)-YEAR(start))."
+    citation: "https://dev.mysql.com/doc/refman/8.0/en/date-and-time-functions.html"
+    status: verified
+  DATE_FORMAT:
+    capability: native
+    emit: "DATE_FORMAT({ts}, {format})"
+    notes: "Uses MySQL format specifiers (%Y, %m, %d ...), NOT Postgres TO_CHAR tokens."
+    citation: "https://dev.mysql.com/doc/refman/8.0/en/date-and-time-functions.html#function_date-format"
+    status: verified
+  DATEDIFF:
+    capability: native
+    emit: "DATEDIFF({end}, {start})"
+    notes: "Two-arg DATEDIFF(end, start) returns DAYS only (no unit form)."
+    citation: "https://dev.mysql.com/doc/refman/8.0/en/date-and-time-functions.html#function_datediff"
+    status: verified
+  TIMESTAMPDIFF:
+    capability: native
+    emit: "TIMESTAMPDIFF({unit}, {start}, {end})"
+    notes: "TIMESTAMPDIFF(YEAR, start, end) yields COMPLETED whole years (elapsed, not boundary)."
+    citation: "https://dev.mysql.com/doc/refman/8.0/en/date-and-time-functions.html#function_timestampdiff"
+    status: verified
+  MD5:
+    capability: native
+    emit: "MD5({text})"
+    notes: "Returns a 32-char hex string."
+    citation: "https://dev.mysql.com/doc/refman/8.0/en/encryption-functions.html#function_md5"
+    status: verified
+  SHA1:
+    capability: native
+    emit: "SHA1({text})"
+    citation: "https://dev.mysql.com/doc/refman/8.0/en/encryption-functions.html#function_sha1"
+    status: verified
+  SHA2:
+    capability: native
+    emit: "SHA2({text}, 256)"
+    citation: "https://dev.mysql.com/doc/refman/8.0/en/encryption-functions.html#function_sha2"
+    status: verified
+  REGEXP_REPLACE:
+    capability: native
+    emit: "REGEXP_REPLACE({s}, {pattern}, {repl})"
+    notes: "MySQL 8.0+; global by default."
+    citation: "https://dev.mysql.com/doc/refman/8.0/en/regexp.html#function_regexp-replace"
+    status: verified
+  SPLIT_PART:
+    capability: unsupported
+    remediation: "MySQL has no SPLIT_PART. Use SUBSTRING_INDEX(SUBSTRING_INDEX({s}, {delim}, {idx}), {delim}, -1)."
+    citation: "https://dev.mysql.com/doc/refman/8.0/en/string-functions.html#function_substring-index"
+    status: verified
+  TO_CHAR:
+    capability: unsupported
+    remediation: "No TO_CHAR. Use DATE_FORMAT({ts}, {format}) for temporal formatting."
+    citation: "https://dev.mysql.com/doc/refman/8.0/en/date-and-time-functions.html#function_date-format"
+    status: verified
+  DATE_DIFF:
+    capability: unsupported
+    remediation: "MySQL spells it DATEDIFF(end, start) (days) or TIMESTAMPDIFF(unit, start, end), not DATE_DIFF."
+    citation: "https://dev.mysql.com/doc/refman/8.0/en/date-and-time-functions.html#function_datediff"
+    status: verified
+  MONTHS_BETWEEN:
+    capability: unsupported
+    remediation: "No MONTHS_BETWEEN. Use TIMESTAMPDIFF(MONTH, {start}, {end})."
+    citation: "https://dev.mysql.com/doc/refman/8.0/en/date-and-time-functions.html#function_timestampdiff"
+    status: verified
+  DATE_TRUNC:
+    capability: unsupported
+    remediation: "MySQL 8.0 has no DATE_TRUNC. Truncate via DATE_FORMAT + re-parse, or date arithmetic."
+    citation: "https://dev.mysql.com/doc/refman/8.0/en/date-and-time-functions.html"
+    status: verified
+  DIGEST:
+    capability: unsupported
+    remediation: "No pgcrypto DIGEST. Use SHA2({text}, 256) / SHA1() / MD5()."
+    citation: "https://dev.mysql.com/doc/refman/8.0/en/encryption-functions.html#function_sha2"
+    status: verified
+
+ops:
+  date_difference:
+    completed_units:
+      capability: native
+      emit: "TIMESTAMPDIFF(YEAR, {start}, {end})"
+      notes: "Completed whole years (elapsed)."
+      status: conformance-verify
+      citation: "https://dev.mysql.com/doc/refman/8.0/en/date-and-time-functions.html#function_timestampdiff"
+    boundary_count:
+      capability: native
+      emit: "YEAR({end}) - YEAR({start})"
+      notes: "Calendar-year boundaries crossed, NOT completed elapsed years."
+      status: conformance-verify
+      citation: "https://dev.mysql.com/doc/refman/8.0/en/date-and-time-functions.html#function_year"
+    symbolic_interval:
+      capability: unsupported
+      remediation: "No native symbolic (yrs+mos+days) interval. Emit separate completed_units per unit."
+      citation: "https://dev.mysql.com/doc/refman/8.0/en/date-and-time-functions.html"
+      status: verified
+  split_part:
+    default:
+      capability: emulated
+      emit: "SUBSTRING_INDEX(SUBSTRING_INDEX({s}, {delim}, {idx}), {delim}, -1)"
+      notes: "Emulates 1-based SPLIT_PART via nested SUBSTRING_INDEX."
+      status: conformance-verify
+      citation: "https://dev.mysql.com/doc/refman/8.0/en/string-functions.html#function_substring-index"

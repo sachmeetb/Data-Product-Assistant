@@ -1,0 +1,27 @@
+---
+description: Override the inferred FK joins for an output dataset
+argument-hint: <output_dataset_uri> <joins_json>
+---
+
+Persist an explicit `joins[]` list for `$ARGUMENTS`. Format: `<output_dataset_uri> <joins_json>` where `<joins_json>` is a JSON array of `{alias, dataset_uri, kind, predicate}` entries.
+
+Example for a `dpe-cf` consumer joining two source-product views:
+
+```json
+[
+  {"alias": "emp", "dataset_uri": "vw_employee", "kind": "left", "predicate": "base.employee_id = emp.id"},
+  {"alias": "dept", "dataset_uri": "vw_department", "kind": "left", "predicate": "emp.department_id = dept.id"}
+]
+```
+
+Valid `kind` values: `left`, `inner`, `right`, `full`, `cross`. `predicate` is required for non-CROSS joins.
+
+```bash
+curl -s -X PUT "{{ backend_base_url }}/api/projects/{{ project.id }}/dataset-transform/joins" \
+  -H 'Content-Type: application/json' \
+  -d '{"output_dataset_uri": "<output_dataset_uri>", "joins": <joins_json>}'
+```
+
+On 400 the response includes a per-index `errors` list — fix the offending entry and retry. On 404 the contract/schema for that URI isn't in this project's graph.
+
+**Known limitation:** if the PO re-saves the contract through the wizard, this override is wiped when `_save_odcs_to_graph` rebuilds the schema-side `:DatasetTransform` from the YAML. Re-apply after PO edits if needed.

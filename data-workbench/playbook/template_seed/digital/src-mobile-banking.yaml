@@ -1,0 +1,363 @@
+apiVersion: v3.1.0
+kind: DataContract
+id: template:digital:src-mobile-banking
+name: Mobile Banking
+version: 1.0.0
+status: draft
+domain: Digital
+description: App activity, screen flows, push notifications, crash logs, and feature
+  adoption.
+schema:
+- name: Mobile Banking
+  physicalName: mobile_banking
+  physicalType: table
+  description: App activity, screen flows, push notifications, crash logs, and feature
+    adoption.
+  properties:
+  - name: session_id
+    physicalName: session_id
+    logicalName: Session ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a mobile banking app session, grouping all
+      events, transactions, and interactions performed by the customer during that
+      session.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: customer_id
+    physicalName: customer_id
+    logicalName: Customer ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier of the bank customer whose mobile banking activity
+      is captured in this session record.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: device_id
+    physicalName: device_id
+    logicalName: Device ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for the mobile device used to access the banking
+      app, enabling device history and fraud detection.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: session_start_and_end
+    physicalName: session_start_and_end
+    logicalName: Session Start And End
+    logicalType: varchar
+    physicalType: varchar
+    description: The paired start and end timestamps for the mobile banking session,
+      used to compute session duration and identify abandonment.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: os_version
+    physicalName: os_version
+    logicalName: Os Version
+    logicalType: varchar
+    physicalType: varchar
+    description: The operating system version running on the customer's mobile device
+      at the time of the session.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: app_version
+    physicalName: app_version
+    logicalName: App Version
+    logicalType: varchar
+    physicalType: varchar
+    description: The version of the mobile banking application installed on the customer's
+      device during the session.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: network_information
+    physicalName: network_information
+    logicalName: Network Information
+    logicalType: varchar
+    physicalType: varchar
+    description: Details about the network connection type and quality during the
+      session, such as WiFi, 4G, or 5G.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: tap_click_events
+    physicalName: tap_click_events
+    logicalName: Tap Click Events
+    logicalType: varchar
+    physicalType: varchar
+    description: A log or count of the customer's in-app tap and click interactions,
+      used for UX analytics and feature adoption tracking.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: imei_number
+    physicalName: imei_number
+    logicalName: Imei Number
+    logicalType: varchar
+    physicalType: varchar
+    description: The International Mobile Equipment Identity number of the customer's
+      device, used for device-level fraud monitoring.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: app_permissions
+    physicalName: app_permissions
+    logicalName: App Permissions
+    logicalType: varchar
+    physicalType: varchar
+    description: The set of device permissions granted to the mobile banking app,
+      such as location, camera, or biometric access.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: notifications_enabled
+    physicalName: notifications_enabled
+    logicalName: Notifications Enabled
+    logicalType: varchar
+    physicalType: varchar
+    description: An indicator of whether the customer has enabled push notification
+      delivery for the mobile banking app.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: txn_id
+    physicalName: txn_id
+    logicalName: Txn ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a financial transaction initiated by the customer
+      through the mobile banking app.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: type
+    physicalName: type
+    logicalName: Type
+    logicalType: varchar
+    physicalType: varchar
+    description: The category of the mobile banking transaction, such as fund_transfer,
+      bill_payment, mobile_recharge, or UPI_payment.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: amount
+    physicalName: amount
+    logicalName: Amount
+    logicalType: numeric
+    physicalType: numeric
+    description: The monetary value of the transaction initiated through the mobile
+      banking app.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: linked_account_number
+    physicalName: linked_account_number
+    logicalName: Linked Account Number
+    logicalType: numeric
+    physicalType: numeric
+    description: The masked account number from which the mobile banking transaction
+      was debited.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: pii
+    examples: []
+    logicalTypeOptions: {}
+  - name: beneficiary
+    physicalName: beneficiary
+    logicalName: Beneficiary
+    logicalType: varchar
+    physicalType: varchar
+    description: The name or identifier of the recipient of the mobile banking transaction.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: timestamp
+    physicalName: timestamp
+    logicalName: Timestamp
+    logicalType: timestamp
+    physicalType: timestamp
+    description: The date and time at which the mobile banking transaction or event
+      was recorded.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: auth_method
+    physicalName: auth_method
+    logicalName: Auth Method
+    logicalType: varchar
+    physicalType: varchar
+    description: The authentication method used to authorise the mobile banking transaction,
+      such as PIN, biometric, or OTP.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: status
+    physicalName: status
+    logicalName: Status
+    logicalType: varchar
+    physicalType: varchar
+    description: The outcome state of the mobile banking transaction, such as successful,
+      failed, or pending.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: failture_reasons
+    physicalName: failture_reasons
+    logicalName: Failture Reasons
+    logicalType: varchar
+    physicalType: varchar
+    description: The reason code or description explaining why the mobile banking
+      transaction failed, such as network_error or insufficient_balance.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: error_id
+    physicalName: error_id
+    logicalName: Error ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for an application error or crash event recorded
+      during the mobile banking session.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: error_message
+    physicalName: error_message
+    logicalName: Error Message
+    logicalType: varchar
+    physicalType: varchar
+    description: A descriptive message associated with the application error or crash,
+      used for debugging and stability monitoring.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: crash_report
+    physicalName: crash_report
+    logicalName: Crash Report
+    logicalType: varchar
+    physicalType: varchar
+    description: A structured or free-text log capturing the stack trace and context
+      of an application crash during the mobile banking session.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  foreignKeys: []
+  transform:
+    grouping_keys:
+    - session_id
+    scd_policy:
+      type: latest_only
+customProperties:
+  feasibility:
+    schema_version: '1.0'
+    spec_classification: confidential
+    cadence: ''
+    freshness_history: current
+    freshness_description: ''
+    grain_keys:
+    - session_id
+    grain_description: ''
+    allowed_derivations:
+    - rename
+    - cast
+    composition:
+      join_keys: []
+      composed_of: []
+      description: ''
+productKind: source
+sourceSpecId: src_mobile_banking

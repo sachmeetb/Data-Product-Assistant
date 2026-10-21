@@ -1,0 +1,161 @@
+spec_id: src_marketing_execution_and_conversion_log
+name: Marketing Execution and Conversion Log
+domain: Marketing & Sales
+product_kind: source
+description: Data tracking lead-to-opportunity-to-closure and drop-off points, in
+  other words - capturing customer-level response to campaigns-opens, clicks, redemptions,
+  conversions.
+schema_version: '1.0'
+classification: internal
+grain:
+  keys:
+  - lead_id
+  description: ''
+freshness:
+  history: current
+  cadence: ''
+  description: ''
+allowed_derivations:
+- rename
+- cast
+attributes:
+- name: lead_id
+  type: bigint
+  concept: Lead ID
+  description: Unique identifier for a marketing lead record tracking a customer's progression through the sales funnel.
+  required: true
+  is_key: true
+  classification: internal
+- name: customer_id
+  type: bigint
+  concept: Customer ID
+  description: Unique identifier of the customer associated with the lead, linking to the customer master.
+  required: true
+  is_key: true
+  classification: internal
+- name: campaign_id
+  type: bigint
+  concept: Campaign ID
+  description: Identifier of the marketing campaign that generated or is attributed to this lead.
+  required: true
+  is_key: true
+  classification: internal
+- name: lead_source
+  type: varchar
+  concept: Lead Source
+  description: Originating channel or touchpoint through which the lead was generated (e.g. email campaign, branch referral, digital ad).
+  required: false
+  is_key: false
+  classification: internal
+- name: lead_creation_date
+  type: date
+  concept: Lead Creation Date
+  description: Date on which the lead record was created, marking the start of the customer's tracked funnel journey.
+  required: true
+  is_key: false
+  classification: internal
+- name: product_interest
+  type: varchar
+  concept: Product Interest
+  description: Bank product or product category the customer expressed interest in or was targeted for through the campaign.
+  required: false
+  is_key: false
+  classification: internal
+- name: rm_id
+  type: bigint
+  concept: RM ID
+  description: Unique identifier of the relationship manager or sales officer assigned to follow up on this lead.
+  required: true
+  is_key: true
+  classification: internal
+- name: message_sent_date
+  type: date
+  concept: Message Sent Date
+  description: Date on which the campaign message or offer was dispatched to the customer associated with this lead.
+  required: true
+  is_key: false
+  classification: internal
+- name: channel
+  type: varchar
+  concept: Channel
+  description: Communication channel used to deliver the campaign message, such as email, SMS, or push notification.
+  required: false
+  is_key: false
+  classification: internal
+- name: open_timestamp
+  type: timestamp
+  concept: Open Timestamp
+  description: Timestamp at which the customer opened or viewed the campaign message.
+  required: false
+  is_key: false
+  classification: internal
+- name: click_timestamp
+  type: timestamp
+  concept: Click Timestamp
+  description: Timestamp at which the customer clicked on a link or call-to-action in the campaign message.
+  required: false
+  is_key: false
+  classification: internal
+- name: redemption_timestamp
+  type: timestamp
+  concept: Redemption Timestamp
+  description: Timestamp at which the customer redeemed an offer or coupon associated with the campaign.
+  required: false
+  is_key: false
+  classification: internal
+- name: conversion_flag
+  type: boolean
+  concept: Conversion Flag
+  description: Boolean indicator that the customer completed the targeted action (e.g. product application or purchase) for this lead.
+  required: false
+  is_key: false
+  classification: internal
+- name: conversion_status
+  type: varchar
+  concept: Conversion Status
+  description: Detailed status of the conversion outcome, such as applied, approved, dropped, or pending.
+  required: true
+  is_key: false
+  classification: internal
+- name: conversion_date
+  type: date
+  concept: Conversion Date
+  description: Date on which the customer successfully converted by completing the campaign's target action.
+  required: true
+  is_key: false
+  classification: internal
+- name: drop_reason
+  type: varchar
+  concept: Drop Reason
+  description: Reason the lead was lost or the customer dropped out of the funnel without converting.
+  required: false
+  is_key: false
+  classification: internal
+- name: converted_product
+  type: varchar
+  concept: Converted Product
+  description: Name or code of the banking product the customer purchased or applied for upon conversion.
+  required: false
+  is_key: false
+  classification: internal
+- name: conversion_value
+  type: numeric
+  concept: Conversion Value
+  description: Monetary value attributed to the conversion event, such as loan amount sanctioned or deposit amount opened.
+  required: true
+  is_key: false
+  classification: internal
+- name: segment_id
+  type: bigint
+  concept: Segment ID
+  description: Unique identifier for the customer segment to which this lead belongs, used for funnel analysis by cohort.
+  required: true
+  is_key: true
+  classification: internal
+- name: size
+  type: numeric
+  concept: Size
+  description: Estimated count of customers in the segment associated with this lead, used for reach and coverage reporting.
+  required: false
+  is_key: false
+  classification: internal

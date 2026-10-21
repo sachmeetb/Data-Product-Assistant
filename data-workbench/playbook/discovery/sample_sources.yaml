@@ -1,0 +1,55 @@
+# Demo sample source code — ONE place, safe to delete.
+#
+# Every piece of legacy code the Discovery demo displays lives here, inlined.
+# An estate object opts in with `sample_source: <key>` (a key below, NOT a path);
+# GET /discovery/{object_id}/source resolves it from this file.
+#
+# Deleting this file (or any entry) is safe: the endpoint degrades to
+# "No legacy source captured for this object" and the panel shows the object's
+# schema instead. Nothing else reads it.
+#
+# NOTE: imported estates may instead set `sample_source` to a project-relative
+# PATH (contains a "/"); those are resolved on disk and are not demo content.
+samples:
+  mkt_cust_extract_v2:
+    code: ".LOGON tdprod/mkt_etl_svc,********;\n.SET WIDTH 160;\n.SET ERROROUT STDOUT;\n\n/* ============================================================================\n\
+      \   mkt_cust_extract_v2 — Marketing customer audience build (Teradata BTEQ).\n   Daily 06:00. Joins\
+      \ the enterprise customer base to campaign-response events\n   and derives the marketing audience\
+      \ consumed by campaign_audience.\n   Owner: j.okafor (Marketing).\n   ============================================================================\
+      \ */\n\nDATABASE mkt;\n\n/* Rebuild the staging audience table each run. */\nDROP TABLE mkt.campaign_audience_stg;\n\
+      \nCREATE MULTISET TABLE mkt.campaign_audience_stg, NO FALLBACK, NO BEFORE JOURNAL, NO AFTER JOURNAL\n\
+      (\n    customer_id        INTEGER          NOT NULL,\n    full_name          VARCHAR(120) CHARACTER\
+      \ SET LATIN NOT CASESPECIFIC,\n    income_band        VARCHAR(16)  CHARACTER SET LATIN NOT CASESPECIFIC,\n\
+      \    last_campaign_id   INTEGER,\n    responses_90d      INTEGER,\n    conversion_value   DECIMAL(18,2),\n\
+      \    last_response_dt   DATE FORMAT 'YYYY-MM-DD',\n    audience_tier      BYTEINT,\n    load_ts\
+      \            TIMESTAMP(0)\n)\nPRIMARY INDEX (customer_id);\n\nINSERT INTO mkt.campaign_audience_stg\n\
+      SEL\n    c.customer_id,\n    TRIM(c.first_name) || ' ' || TRIM(c.last_name)              AS full_name,\n\
+      \    c.income_band,\n    r.campaign_id                                               AS last_campaign_id,\n\
+      \    ZEROIFNULL(COUNT(r.campaign_id))                            AS responses_90d,\n    ZEROIFNULL(SUM(r.conversion_value))\
+      \                         AS conversion_value,\n    MAX(r.message_sent_date)                   \
+      \                 AS last_response_dt,\n    CASE\n        WHEN SUM(r.conversion_value) >= 1000 THEN\
+      \ 1\n        WHEN SUM(r.conversion_value) >=  250 THEN 2\n        ELSE 3\n    END              \
+      \                                           AS audience_tier,\n    CURRENT_TIMESTAMP(0)        \
+      \                                AS load_ts\nFROM EDW.CUSTOMER c\nINNER JOIN EDW.CAMPAIGN_RESPONSE\
+      \ r\n    ON r.customer_id = c.customer_id\nWHERE r.message_sent_date >= ADD_MONTHS(CURRENT_DATE,\
+      \ -3)\n  AND c.customer_type = 'RETAIL'\nGROUP BY c.customer_id, c.first_name, c.last_name, c.income_band,\
+      \ r.campaign_id\nQUALIFY ROW_NUMBER() OVER (PARTITION BY c.customer_id ORDER BY MAX(r.message_sent_date)\
+      \ DESC) = 1;\n\n.IF ERRORCODE <> 0 THEN .QUIT 8;\n\n/* Collect stats so the downstream view planner\
+      \ has fresh demographics. */\nCOLLECT STATISTICS COLUMN (customer_id) ON mkt.campaign_audience_stg;\n\
+      \n.LOGOFF;\n.QUIT;\n"
+    filename: source.sql
+    language: sql
+  teradata_customer_extract:
+    code: ".LOGON tdprod/etl_svc,********;\n.SET WIDTH 120;\n\n/* Daily active-customer rollup — Teradata\
+      \ BTEQ batch script.\n   Produces a MULTISET staging table of the latest balance per customer. */\n\
+      \nCREATE MULTISET TABLE stg.customer_balance_daily, FALLBACK\n(\n    customer_id   INTEGER,\n  \
+      \  account_id    INTEGER,\n    balance_amt   DECIMAL(18,2),\n    as_of_dt      DATE FORMAT 'YYYY-MM-DD',\n\
+      \    src_region    VARCHAR(8) CHARACTER SET LATIN NOT CASESPECIFIC,\n    load_status   BYTEINT\n\
+      )\nPRIMARY INDEX (customer_id);\n\nINSERT INTO stg.customer_balance_daily\nSEL\n    c.customer_id,\n\
+      \    a.account_id,\n    ZEROIFNULL(a.balance_amt)                         AS balance_amt,\n    CAST(a.as_of_ts\
+      \ AS DATE FORMAT 'YYYYMMDD')        AS as_of_dt,\n    c.region_cd,\n    1\nFROM prod.customer c\n\
+      JOIN prod.account  a  ON a.customer_id = c.customer_id\nWHERE a.as_of_ts >= CURRENT_DATE - 1\nQUALIFY\
+      \ ROW_NUMBER() OVER (PARTITION BY c.customer_id ORDER BY a.as_of_ts DESC) = 1;\n\n.IF ERRORCODE\
+      \ <> 0 THEN .QUIT 8;\n.LOGOFF;\n.QUIT;\n"
+    filename: source.sql
+    language: sql

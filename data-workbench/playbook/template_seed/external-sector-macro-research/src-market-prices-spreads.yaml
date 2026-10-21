@@ -1,0 +1,447 @@
+apiVersion: v3.1.0
+kind: DataContract
+id: template:external-sector-macro-research:src-market-prices-spreads
+name: Market Prices & Spreads
+version: 1.0.0
+status: draft
+domain: External Sector & Macro Research
+description: Normalized feed of market quotes and reference curves used for FX/interest-rate
+  pass-through, BoP valuation effects, reserves analytics, and policy monitoring.
+  Includes spot/forward FX, rates (OIS/IRS/bonds/bills), equities/commodities where
+  relevant, and CDS spreads.
+schema:
+- name: Market Prices & Spreads
+  physicalName: market_prices_spreads
+  physicalType: table
+  description: Normalized feed of market quotes and reference curves used for FX/interest-rate
+    pass-through, BoP valuation effects, reserves analytics, and policy monitoring.
+    Includes spot/forward FX, rates (OIS/IRS/bonds/bills), equities/commodities where
+    relevant, and CDS spreads.
+  properties:
+  - name: isin_ticker
+    physicalName: isin_ticker
+    logicalName: Isin Ticker
+    logicalType: varchar
+    physicalType: varchar
+    description: International Securities Identification Number or exchange ticker
+      symbol uniquely identifying the financial instrument.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: cfi
+    physicalName: cfi
+    logicalName: Cfi
+    logicalType: varchar
+    physicalType: varchar
+    description: ISO 10962 Classification of Financial Instruments code describing
+      the instrument's asset class and key characteristics.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: currency
+    physicalName: currency
+    logicalName: Currency
+    logicalType: varchar
+    physicalType: varchar
+    description: ISO currency code of the instrument's pricing or quotation currency.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: venue
+    physicalName: venue
+    logicalName: Venue
+    logicalType: varchar
+    physicalType: varchar
+    description: Name or identifier of the trading venue, exchange, or market where
+      the quote was sourced.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: bid
+    physicalName: bid
+    logicalName: Bid
+    logicalType: varchar
+    physicalType: varchar
+    description: Best buyer price quoted for the instrument at the time of capture.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: ask
+    physicalName: ask
+    logicalName: Ask
+    logicalType: varchar
+    physicalType: varchar
+    description: Best seller price or offer quoted for the instrument at the time
+      of capture.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: mid
+    physicalName: mid
+    logicalName: Mid
+    logicalType: varchar
+    physicalType: varchar
+    description: Arithmetic midpoint between the bid and ask prices, used as a reference
+      rate in valuation and analytics.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: last
+    physicalName: last
+    logicalName: Last
+    logicalType: varchar
+    physicalType: varchar
+    description: Most recent executed trade price or last quoted price for the instrument.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: open_high_low_close
+    physicalName: open_high_low_close
+    logicalName: Open High Low Close
+    logicalType: varchar
+    physicalType: varchar
+    description: Composite field capturing the opening, intraday high, intraday low,
+      and closing prices for a given trading session.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: yield
+    physicalName: yield
+    logicalName: Yield
+    logicalType: varchar
+    physicalType: varchar
+    description: Annualized yield of a fixed-income instrument derived from its price,
+      coupon, and maturity characteristics.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: tenor
+    physicalName: tenor
+    logicalName: Tenor
+    logicalType: varchar
+    physicalType: varchar
+    description: Maturity bucket or time horizon of the instrument or rate quote on
+      the yield curve (e.g. 3M, 1Y, 5Y).
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: day_count
+    physicalName: day_count
+    logicalName: Day Count
+    logicalType: numeric
+    physicalType: numeric
+    description: Numeric day-count convention used to accrue interest or calculate
+      periods for the instrument (e.g. 30/360, Actual/365).
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: compounding
+    physicalName: compounding
+    logicalName: Compounding
+    logicalType: varchar
+    physicalType: varchar
+    description: Compounding frequency convention applied to the rate or yield (e.g.
+      annual, semi-annual, continuous).
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: fixing_date
+    physicalName: fixing_date
+    logicalName: Fixing Date
+    logicalType: date
+    physicalType: date
+    description: Date on which a reference rate, FX rate, or floating rate is officially
+      fixed for settlement purposes.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: spot
+    physicalName: spot
+    logicalName: Spot
+    logicalType: varchar
+    physicalType: varchar
+    description: Spot FX rate or spot price for the instrument, representing the current
+      exchange or immediate settlement rate.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: forward_points
+    physicalName: forward_points
+    logicalName: Forward Points
+    logicalType: numeric
+    physicalType: numeric
+    description: Number of forward basis points added to or subtracted from the spot
+      rate to derive the outright forward FX rate.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: implied_rate
+    physicalName: implied_rate
+    logicalName: Implied Rate
+    logicalType: numeric
+    physicalType: numeric
+    description: Interest rate implied by the forward points and spot rate via covered
+      interest parity, used for cross-currency analytics and reserves valuation.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: cross
+    physicalName: cross
+    logicalName: Cross
+    logicalType: varchar
+    physicalType: varchar
+    description: Currency pair label denoting the two currencies in an FX quote (e.g.
+      USD/INR, EUR/USD).
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: type
+    physicalName: type
+    logicalName: Type
+    logicalType: varchar
+    physicalType: varchar
+    description: Classification of the price quote or instrument type, such as FX
+      spot, FX forward, OIS rate, bond yield, or CDS spread.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: maturity
+    physicalName: maturity
+    logicalName: Maturity
+    logicalType: varchar
+    physicalType: varchar
+    description: Expiry or maturity date of a derivative, bond, or forward contract.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: strike
+    physicalName: strike
+    logicalName: Strike
+    logicalType: varchar
+    physicalType: varchar
+    description: Agreed exercise price of an options contract at which the underlying
+      instrument can be bought or sold.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: vol
+    physicalName: vol
+    logicalName: Vol
+    logicalType: varchar
+    physicalType: varchar
+    description: Implied or realized volatility of the instrument, expressed as an
+      annualized percentage.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: index_id
+    physicalName: index_id
+    logicalName: Index ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a financial index, benchmark, or reference
+      rate series such as an equity index or rate fixing.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: constituents
+    physicalName: constituents
+    logicalName: Constituents
+    logicalType: varchar
+    physicalType: varchar
+    description: List or reference to the component instruments that make up the index
+      or basket.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: weights
+    physicalName: weights
+    logicalName: Weights
+    logicalType: varchar
+    physicalType: varchar
+    description: Weighting scheme applied to index constituents when computing the
+      index level (e.g. market-cap weighted, equal-weighted).
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: source_vendor
+    physicalName: source_vendor
+    logicalName: Source Vendor
+    logicalType: varchar
+    physicalType: varchar
+    description: Name of the external market data vendor or provider that supplied
+      this price or rate record.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: timestamp_tz
+    physicalName: timestamp_tz
+    logicalName: Timestamp Tz
+    logicalType: timestamp
+    physicalType: timestamp
+    description: Timezone-aware timestamp at which the price, rate, or quote was captured
+      or published by the vendor.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: latency_ms
+    physicalName: latency_ms
+    logicalName: Latency Ms
+    logicalType: varchar
+    physicalType: varchar
+    description: Round-trip latency in milliseconds between price generation and ingestion,
+      used for data-quality monitoring.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: completeness_flag
+    physicalName: completeness_flag
+    logicalName: Completeness Flag
+    logicalType: boolean
+    physicalType: boolean
+    description: Boolean indicator that all expected price fields for this instrument
+      and fixing date are present and valid.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  foreignKeys: []
+  transform:
+    grouping_keys:
+    - index_id
+    scd_policy:
+      type: latest_only
+customProperties:
+  feasibility:
+    schema_version: '1.0'
+    spec_classification: internal
+    cadence: ''
+    freshness_history: current
+    freshness_description: ''
+    grain_keys:
+    - index_id
+    grain_description: ''
+    allowed_derivations:
+    - rename
+    - cast
+    composition:
+      join_keys: []
+      composed_of: []
+      description: ''
+productKind: source
+sourceSpecId: src_market_prices_spreads

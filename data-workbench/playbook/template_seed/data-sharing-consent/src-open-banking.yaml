@@ -1,0 +1,416 @@
+apiVersion: v3.1.0
+kind: DataContract
+id: template:data-sharing-consent:src-open-banking
+name: Open Banking
+version: 1.0.0
+status: draft
+domain: Data Sharing & Consent
+description: Detailed logs of API calls made by third‑party providers under open‑banking
+  arrangements. Captures request metadata, consent, data accessed and response times.
+  Supports monitoring of API usage, customer consent, fraud and performance management.
+  Open banking allows third‑party providers to access consumer financial data via
+  secure APIs, fostering innovation and personalised services.
+schema:
+- name: Open Banking
+  physicalName: open_banking
+  physicalType: table
+  description: Detailed logs of API calls made by third‑party providers under open‑banking
+    arrangements. Captures request metadata, consent, data accessed and response times.
+    Supports monitoring of API usage, customer consent, fraud and performance management.
+    Open banking allows third‑party providers to access consumer financial data via
+    secure APIs, fostering innovation and personalised services.
+  properties:
+  - name: consent_id
+    physicalName: consent_id
+    logicalName: Consent ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a customer's open-banking consent grant, authorising
+      a specific third-party provider to access account data.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: customer_id
+    physicalName: customer_id
+    logicalName: Customer ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier of the bank customer who granted the open-banking
+      consent and whose financial data may be accessed.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: institution_id
+    physicalName: institution_id
+    logicalName: Institution ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier of the third-party provider (TPP) institution granted
+      access under the open-banking consent.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: scope
+    physicalName: scope
+    logicalName: Scope
+    logicalType: varchar
+    physicalType: varchar
+    description: The set of data permissions granted under the consent, defining which
+      account types and data categories the TPP may access.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: status
+    physicalName: status
+    logicalName: Status
+    logicalType: varchar
+    physicalType: varchar
+    description: The current state of the consent grant, such as active, revoked,
+      expired, or pending_authorisation.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: expiry
+    physicalName: expiry
+    logicalName: Expiry
+    logicalType: varchar
+    physicalType: varchar
+    description: The date or timestamp after which the consent grant is no longer
+      valid and TPP access is automatically revoked.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: ext_acct_id
+    physicalName: ext_acct_id
+    logicalName: Ext Acct ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a customer's external account record as exposed
+      through the open-banking API.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: account_type
+    physicalName: account_type
+    logicalName: Account Type
+    logicalType: numeric
+    physicalType: numeric
+    description: The classification of the account type exposed under the consent,
+      such as current, savings, credit_card, or loan.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: masked_number
+    physicalName: masked_number
+    logicalName: Masked Number
+    logicalType: varchar
+    physicalType: varchar
+    description: The partially masked account number, used to identify the account
+      to the TPP without exposing the full account number.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: ext_txn_id
+    physicalName: ext_txn_id
+    logicalName: Ext Txn ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a transaction record retrieved by the TPP through
+      the open-banking API on behalf of the customer.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: amount
+    physicalName: amount
+    logicalName: Amount
+    logicalType: numeric
+    physicalType: numeric
+    description: The monetary value of the transaction retrieved from the customer's
+      account via the open-banking API.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: currency
+    physicalName: currency
+    logicalName: Currency
+    logicalType: varchar
+    physicalType: varchar
+    description: The ISO currency code of the transaction amount or account balance.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: timestamp
+    physicalName: timestamp
+    logicalName: Timestamp
+    logicalType: timestamp
+    physicalType: timestamp
+    description: The date and time of the transaction as recorded in the bank's core
+      system.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: description
+    physicalName: description
+    logicalName: Description
+    logicalType: varchar
+    physicalType: varchar
+    description: A free-text narrative or reference associated with the transaction,
+      as surfaced through the open-banking API.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: as_of_date
+    physicalName: as_of_date
+    logicalName: As Of Date
+    logicalType: date
+    physicalType: date
+    description: The date on which the account balance snapshot was captured and reported
+      through the open-banking API.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: available_balance
+    physicalName: available_balance
+    logicalName: Available Balance
+    logicalType: numeric
+    physicalType: numeric
+    description: The funds available for immediate use in the customer's account as
+      of the snapshot date.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: current_balance
+    physicalName: current_balance
+    logicalName: Current Balance
+    logicalType: numeric
+    physicalType: numeric
+    description: The total ledger balance of the customer's account as of the snapshot
+      date, including uncleared items.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: access_id
+    physicalName: access_id
+    logicalName: Access ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a single TPP API access event, recording one
+      instance of data retrieval under an active consent.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: tpp_id
+    physicalName: tpp_id
+    logicalName: Tpp ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for the third-party provider (TPP) that initiated
+      the API access request.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: data_elements_accessed
+    physicalName: data_elements_accessed
+    logicalName: Data Elements Accessed
+    logicalType: varchar
+    physicalType: varchar
+    description: The specific data fields or resource types retrieved by the TPP during
+      the API access event.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: ts
+    physicalName: ts
+    logicalName: Ts
+    logicalType: varchar
+    physicalType: varchar
+    description: The timestamp of the API access event, used for audit trail and rate-limiting
+      purposes.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: ip
+    physicalName: ip
+    logicalName: IP
+    logicalType: varchar
+    physicalType: varchar
+    description: The IP address from which the TPP initiated the API access request,
+      used for fraud monitoring and access audit.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: auth_method
+    physicalName: auth_method
+    logicalName: Auth Method
+    logicalType: varchar
+    physicalType: varchar
+    description: The authentication mechanism used by the customer or TPP to authorise
+      the API access, such as OAuth2 or biometric.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: name
+    physicalName: name
+    logicalName: Name
+    logicalType: varchar
+    physicalType: varchar
+    description: The registered name of the TPP institution, used for display and
+      compliance reporting purposes.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: country
+    physicalName: country
+    logicalName: Country
+    logicalType: numeric
+    physicalType: numeric
+    description: The numeric country code of the TPP institution's country of registration.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: bic
+    physicalName: bic
+    logicalName: BIC
+    logicalType: varchar
+    physicalType: varchar
+    description: The Bank Identifier Code (BIC/SWIFT) of the TPP institution or the
+      bank involved in the open-banking arrangement.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  foreignKeys: []
+  transform:
+    grouping_keys:
+    - consent_id
+    scd_policy:
+      type: snapshot
+customProperties:
+  feasibility:
+    schema_version: '1.0'
+    spec_classification: internal
+    cadence: ''
+    freshness_history: snapshot
+    freshness_description: ''
+    grain_keys:
+    - consent_id
+    grain_description: ''
+    allowed_derivations:
+    - rename
+    - cast
+    composition:
+      join_keys: []
+      composed_of: []
+      description: ''
+    attr_derivations:
+      amount:
+      - currency_normalize
+      available_balance:
+      - currency_normalize
+      current_balance:
+      - currency_normalize
+productKind: source
+sourceSpecId: src_open_banking

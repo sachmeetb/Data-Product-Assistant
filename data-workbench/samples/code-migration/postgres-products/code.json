@@ -1,0 +1,11 @@
+{
+  "name": "postgres-products-rollup",
+  "source_platform": "postgres",
+  "source_platform_version": "16",
+  "sample_database": "products_sales",
+  "schemas": ["products_sales"],
+  "artifact_kind": "pyspark_job",
+  "suggested_target_platform": "databricks",
+  "entry_files": ["legacy_sales_rollup.py"],
+  "description": "Legacy Postgres ETL job (psycopg2) against the products_sales sample. Exercises DISTINCT ON, string_agg, ::type casts, to_char, ILIKE, ON CONFLICT upsert, SCD-2 current-segment as-of, and derived-column arithmetic — a good candidate for conversion to a Databricks PySpark job."
+}

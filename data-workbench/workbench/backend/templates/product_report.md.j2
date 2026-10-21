@@ -1,0 +1,155 @@
+{# Markdown report for a single data product. Rendered fresh on every
+   GET /api/marketplace/{contract_id}/report. Sections suppress themselves
+   when the underlying data is empty so a barely-populated contract still
+   produces a clean, terse report. #}
+# {{ detail.title or detail.name or contract_id }}
+
+> **Snapshot as of {{ generated_at_utc }} UTC** — every fact below could be stale by the time you read this. Re-generate from the marketplace detail page or `/generate-report` to refresh.
+
+| Field | Value |
+|---|---|
+| Contract ID | `{{ contract_id }}` |
+| Product URI | `{{ detail.uri }}` |
+| Version | {{ detail.lifecycle_version or 1 }} |
+| Lifecycle state | `{{ detail.lifecycle_state or "draft" }}` |
+| Product kind | `{{ detail.product_kind or "(unset)" }}` |
+| Domain | {{ detail.domain or "_(none)_" }} |
+| Archetype | {{ project.archetype }} |
+| Project | `{{ project.project_code }}` |
+{% if detail.has_inflight_edit %}| Edit in progress | **yes** — a draft version exists; this report reflects the deployed version |
+{% endif %}{% if detail.published_at %}| Published at | {{ detail.published_at }} |
+{% endif %}
+
+{% if spec.description %}## Description
+
+{{ spec.description }}
+{% endif %}
+{% if spec.purpose %}
+## Purpose
+
+{{ spec.purpose }}
+{% endif %}
+{% if spec.limitations %}
+## Limitations
+
+{{ spec.limitations }}
+{% endif %}
+{% if spec.tags %}
+**Tags:** {% for t in spec.tags %}`{{ t }}`{% if not loop.last %}, {% endif %}{% endfor %}
+{% endif %}
+{% if detail.owners or detail.stewards or detail.team %}
+## People
+
+{% if detail.owners %}**Owners**
+
+| Name | Email | Role |
+|---|---|---|
+{% for o in detail.owners %}| {{ o.name or o.username or "—" }} | {{ o.email or "—" }} | {{ o.role or "—" }} |
+{% endfor %}
+{% endif %}
+{% if detail.stewards %}**Stewards**
+
+| Name | Email | Role |
+|---|---|---|
+{% for s in detail.stewards %}| {{ s.name or s.username or "—" }} | {{ s.email or "—" }} | {{ s.role or "—" }} |
+{% endfor %}
+{% endif %}
+{% if detail.team %}**Team**
+
+| Name | Email | Role |
+|---|---|---|
+{% for t in detail.team %}| {{ t.name or t.username or "—" }} | {{ t.email or "—" }} | {{ t.role or "—" }} |
+{% endfor %}
+{% endif %}
+{% endif %}
+{% if spec.inputs %}
+## Inputs (consumed source products)
+
+Consumer-aligned products declare `:CONSUMES` edges to upstream source products. This contract reads from:
+
+| Name | Contract ID | URI |
+|---|---|---|
+{% for ip in spec.inputs %}| {{ ip.name or "—" }} | `{{ ip.contract_id }}` | `{{ ip.dprod_uri }}` |
+{% endfor %}
+{% endif %}
+{% if spec.schema %}
+## Schema
+
+{% for ds in spec.schema %}### {{ ds.physicalName }}{% if ds.name and ds.name != ds.physicalName %} ({{ ds.name }}){% endif %}
+
+{% if ds.description %}{{ ds.description }}
+
+{% endif %}{% if ds.physicalType %}**Physical type:** `{{ ds.physicalType }}`  {% endif %}
+
+{% set cols = ds.properties or [] %}{% if cols %}
+| # | Name | Logical type | Physical type | PK | Required | Description |
+|---|---|---|---|---|---|---|
+{% for c in cols %}| {{ loop.index }} | `{{ c.name }}` | {{ c.logicalType or "—" }} | {{ c.physicalType or "—" }} | {% if c.primaryKey %}✓{% else %}—{% endif %} | {% if c.required %}✓{% else %}—{% endif %} | {{ (c.description or "")|replace("\n", " ") }} |
+{% endfor %}
+{% endif %}
+
+{% set xform = ds.transform or {} %}{% if xform %}**Dataset-level transforms**
+
+{% if xform.filter %}- `filter`: `{{ xform.filter|replace("`", "'") }}`
+{% endif %}{% if xform.dedupe %}- `dedupe`: keys=`{{ xform.dedupe.keys|join(",") }}` order_by=`{{ xform.dedupe.order_by or "" }} {{ xform.dedupe.direction or "" }}`
+{% endif %}{% if xform.grouping_keys %}- `grouping_keys`: `{{ xform.grouping_keys|join(", ") }}`
+{% endif %}{% if xform.joins %}- `joins`: {{ xform.joins|length }} explicit join entry/entries (FK auto-discovery bypassed)
+{% endif %}{% if xform.scd_policy %}- `scd_policy`: type=`{{ xform.scd_policy.type }}`{% if xform.scd_policy.effective_column %}, effective=`{{ xform.scd_policy.effective_column }}`{% endif %}
+{% endif %}{% if xform.window_specs %}- `window_specs`: {{ xform.window_specs.keys()|list|join(", ") }}
+{% endif %}{% if xform.suppressed_columns %}- `suppressed_columns`: {% for sc in xform.suppressed_columns %}`{{ sc }}`{% if not loop.last %}, {% endif %}{% endfor %}
+{% endif %}{% if xform.grain_prose %}- `grain`: {{ xform.grain_prose }}
+{% endif %}
+
+{% endif %}{% set erd = erd_by_dataset.get(ds.physicalName) %}{% if erd %}**ERD**
+
+{{ erd }}
+
+{% endif %}{% endfor %}
+{% endif %}
+{% if lineage_graph or mappings %}
+## Lineage
+
+{% if lineage_graph %}{{ lineage_graph }}
+
+{% endif %}{% if mappings %}**Mappings** ({{ mappings|length }} approved/pending)
+
+| Product column | Sources | Kind | Expression | Author | Status |
+|---|---|---|---|---|---|
+{% for m in mappings %}| `{{ m.product_col_name or "—" }}` | {% if m.transform_kind == "literal" %}_(literal: {{ m.literal_value or "?" }})_{% else %}{{ m.source_label or "—" }}{% endif %} | `{{ m.transform_kind or "direct" }}` | {{ (m.transform_expression or "")|replace("|", "\\|")|replace("\n", " ") }} | {{ m.transform_author or "—" }} | `{{ m.status or "—" }}` |
+{% endfor %}
+{% endif %}
+{% endif %}
+{% if quality_by_source or osi_block %}
+## Quality
+
+{% for src, rules in quality_by_source.items() %}**{{ src }}** ({{ rules|length }} rule{% if rules|length != 1 %}s{% endif %})
+
+| Rule | Dimension | Severity | Column | Business impact |
+|---|---|---|---|---|
+{% for q in rules %}| {{ q.name or q.rule or "—" }} | {{ q.dimension or "—" }} | `{{ q.severity or "—" }}` | {% if q.column_name %}`{{ q.column_name }}`{% else %}—{% endif %} | {{ (q.businessImpact or q.description or "")|replace("\n", " ") }} |
+{% endfor %}
+
+{% endfor %}{% if osi_block %}**OSI Readiness**
+
+| Band | Completeness | Conformance pass | Evaluated at |
+|---|---|---|---|
+| `{{ osi_block.osi_band or "—" }}` | {{ osi_block.osi_completeness if osi_block.osi_completeness is not none else "—" }} | {{ osi_block.osi_conformance_pass if osi_block.osi_conformance_pass is not none else "—" }} | {{ osi_block.osi_evaluated_at or "—" }} |
+{% endif %}
+{% endif %}
+{% if detail.serving %}
+## Serving
+
+{% for sv in detail.serving %}### {{ sv.viewSchema or "" }}{% if sv.viewSchema and sv.viewName %}.{% endif %}{{ sv.viewName or "" }}
+
+- **Mode:** `{{ sv.servingMode or "—" }}`
+- **Platform:** `{{ sv.targetPlatform or "—" }}`
+
+{% if sv.ddl %}```sql
+{{ sv.ddl }}
+```
+
+{% endif %}{% endfor %}
+{% endif %}
+---
+
+_Report generated at {{ generated_at_utc }} UTC by `GET /api/marketplace/{{ contract_id }}/report`. Live view: [{{ frontend_base_url }}/marketplace?uri={{ detail.uri }}]({{ frontend_base_url }}/marketplace?uri={{ detail.uri }})_

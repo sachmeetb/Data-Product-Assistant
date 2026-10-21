@@ -1,0 +1,14 @@
+---
+description: Read the current :DatasetTransform joins[] for an output dataset
+argument-hint: <output_dataset_uri>
+---
+
+Read the current dataset-shape state for `$ARGUMENTS` (an `output_dataset_uri` of the form `dprod:ds:{contract_id}:{schema_physical_name}`).
+
+```bash
+curl -s "{{ backend_base_url }}/api/projects/{{ project.id }}/dataset-transform?output_dataset_uri=$ARGUMENTS"
+```
+
+The response includes `joins`, `filter`, `dedupe`, `grouping_keys`, `scd_policy`, `suppressed_columns`, `grain_prose`. Engineer overrides only touch `joins[]` — the others are PO-authored in the wizard.
+
+Empty `joins` means FK auto-discovery is in charge. A non-empty list means an explicit join graph is being used (and FK auto-discovery is bypassed entirely).

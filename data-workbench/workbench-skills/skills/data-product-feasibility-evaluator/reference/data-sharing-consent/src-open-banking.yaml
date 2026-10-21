@@ -1,0 +1,211 @@
+spec_id: src_open_banking
+name: Open Banking
+domain: Data Sharing & Consent
+product_kind: source
+description: Detailed logs of API calls made by third‑party providers under open‑banking
+  arrangements. Captures request metadata, consent, data accessed and response times.
+  Supports monitoring of API usage, customer consent, fraud and performance management.
+  Open banking allows third‑party providers to access consumer financial data via
+  secure APIs, fostering innovation and personalised services.
+schema_version: '1.0'
+classification: internal
+grain:
+  keys:
+  - consent_id
+  description: ''
+freshness:
+  history: snapshot
+  cadence: ''
+  description: ''
+allowed_derivations:
+- rename
+- cast
+attributes:
+- name: consent_id
+  type: bigint
+  concept: Consent ID
+  description: Unique identifier for a customer's open-banking consent grant, authorising a specific third-party provider to access account data.
+  required: true
+  is_key: true
+  classification: internal
+- name: customer_id
+  type: bigint
+  concept: Customer ID
+  description: Unique identifier of the bank customer who granted the open-banking consent and whose financial data may be accessed.
+  required: true
+  is_key: true
+  classification: internal
+- name: institution_id
+  type: bigint
+  concept: Institution ID
+  description: Unique identifier of the third-party provider (TPP) institution granted access under the open-banking consent.
+  required: true
+  is_key: true
+  classification: internal
+- name: scope
+  type: varchar
+  concept: Scope
+  description: The set of data permissions granted under the consent, defining which account types and data categories the TPP may access.
+  required: false
+  is_key: false
+  classification: internal
+- name: status
+  type: varchar
+  concept: Status
+  description: The current state of the consent grant, such as active, revoked, expired, or pending_authorisation.
+  required: true
+  is_key: false
+  classification: internal
+- name: expiry
+  type: varchar
+  concept: Expiry
+  description: The date or timestamp after which the consent grant is no longer valid and TPP access is automatically revoked.
+  required: false
+  is_key: false
+  classification: internal
+- name: ext_acct_id
+  type: bigint
+  concept: Ext Acct ID
+  description: Unique identifier for a customer's external account record as exposed through the open-banking API.
+  required: true
+  is_key: true
+  classification: internal
+- name: account_type
+  type: numeric
+  concept: Account Type
+  description: The classification of the account type exposed under the consent, such as current, savings, credit_card, or loan.
+  required: true
+  is_key: false
+  classification: internal
+- name: masked_number
+  type: varchar
+  concept: Masked Number
+  description: The partially masked account number, used to identify the account to the TPP without exposing the full account number.
+  required: false
+  is_key: false
+  classification: internal
+- name: ext_txn_id
+  type: bigint
+  concept: Ext Txn ID
+  description: Unique identifier for a transaction record retrieved by the TPP through the open-banking API on behalf of the customer.
+  required: true
+  is_key: true
+  classification: internal
+- name: amount
+  type: numeric
+  concept: Amount
+  description: The monetary value of the transaction retrieved from the customer's account via the open-banking API.
+  required: true
+  is_key: false
+  classification: internal
+  derivations:
+  - currency_normalize
+- name: currency
+  type: varchar
+  concept: Currency
+  description: The ISO currency code of the transaction amount or account balance.
+  required: true
+  is_key: false
+  classification: internal
+- name: timestamp
+  type: timestamp
+  concept: Timestamp
+  description: The date and time of the transaction as recorded in the bank's core system.
+  required: false
+  is_key: false
+  classification: internal
+- name: description
+  type: varchar
+  concept: Description
+  description: A free-text narrative or reference associated with the transaction, as surfaced through the open-banking API.
+  required: false
+  is_key: false
+  classification: internal
+- name: as_of_date
+  type: date
+  concept: As Of Date
+  description: The date on which the account balance snapshot was captured and reported through the open-banking API.
+  required: true
+  is_key: false
+  classification: internal
+- name: available_balance
+  type: numeric
+  concept: Available Balance
+  description: The funds available for immediate use in the customer's account as of the snapshot date.
+  required: true
+  is_key: false
+  classification: internal
+  derivations:
+  - currency_normalize
+- name: current_balance
+  type: numeric
+  concept: Current Balance
+  description: The total ledger balance of the customer's account as of the snapshot date, including uncleared items.
+  required: true
+  is_key: false
+  classification: internal
+  derivations:
+  - currency_normalize
+- name: access_id
+  type: bigint
+  concept: Access ID
+  description: Unique identifier for a single TPP API access event, recording one instance of data retrieval under an active consent.
+  required: true
+  is_key: true
+  classification: internal
+- name: tpp_id
+  type: bigint
+  concept: Tpp ID
+  description: Unique identifier for the third-party provider (TPP) that initiated the API access request.
+  required: true
+  is_key: true
+  classification: internal
+- name: data_elements_accessed
+  type: varchar
+  concept: Data Elements Accessed
+  description: The specific data fields or resource types retrieved by the TPP during the API access event.
+  required: false
+  is_key: false
+  classification: internal
+- name: ts
+  type: varchar
+  concept: Ts
+  description: The timestamp of the API access event, used for audit trail and rate-limiting purposes.
+  required: false
+  is_key: false
+  classification: internal
+- name: ip
+  type: varchar
+  concept: IP
+  description: The IP address from which the TPP initiated the API access request, used for fraud monitoring and access audit.
+  required: false
+  is_key: false
+  classification: internal
+- name: auth_method
+  type: varchar
+  concept: Auth Method
+  description: The authentication mechanism used by the customer or TPP to authorise the API access, such as OAuth2 or biometric.
+  required: false
+  is_key: false
+  classification: internal
+- name: name
+  type: varchar
+  concept: Name
+  description: The registered name of the TPP institution, used for display and compliance reporting purposes.
+  required: true
+  is_key: false
+  classification: internal
+- name: country
+  type: numeric
+  concept: Country
+  description: The numeric country code of the TPP institution's country of registration.
+  required: false
+  is_key: false
+  classification: internal
+- name: bic
+  type: varchar
+  concept: BIC
+  description: The Bank Identifier Code (BIC/SWIFT) of the TPP institution or the bank involved in the open-banking arrangement.
+  required: false
+  is_key: false
+  classification: internal

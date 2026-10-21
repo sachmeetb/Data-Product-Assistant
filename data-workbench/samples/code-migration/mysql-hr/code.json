@@ -1,0 +1,11 @@
+{
+  "name": "mysql-hr-headcount",
+  "source_platform": "mysql",
+  "source_platform_version": "8.0",
+  "sample_database": "hr-mysql",
+  "schemas": ["hr_core", "hr_comp"],
+  "artifact_kind": "sql_script",
+  "suggested_target_platform": "databricks",
+  "entry_files": ["legacy_headcount_report.sql"],
+  "description": "Legacy MySQL headcount + compensation report against the hr-mysql sample. Exercises GROUP_CONCAT, IFNULL, DATE_FORMAT, backtick identifiers, TINYINT(1)-as-boolean, cryptic columns (amt/rsn/lvl), and SCD-2 as-of filtering on is_current."
+}

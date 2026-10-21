@@ -1,0 +1,305 @@
+apiVersion: v3.1.0
+kind: DataContract
+id: template:enterprise:src-esg-ratings
+name: ESG Ratings
+version: 1.0.0
+status: draft
+domain: Enterprise
+description: Ratings that assess the bank's performance across Environmental, Social,
+  and Governance (ESG) factors, reflecting its commitment to sustainability and responsible
+  practices.
+schema:
+- name: ESG Ratings
+  physicalName: esg_ratings
+  physicalType: table
+  description: Ratings that assess the bank's performance across Environmental, Social,
+    and Governance (ESG) factors, reflecting its commitment to sustainability and
+    responsible practices.
+  properties:
+  - name: issuer_id
+    physicalName: issuer_id
+    logicalName: Issuer ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique numeric identifier for the company or entity being rated across
+      ESG dimensions.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: name
+    physicalName: name
+    logicalName: Name
+    logicalType: varchar
+    physicalType: varchar
+    description: Legal or trading name of the rated issuer entity.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: country
+    physicalName: country
+    logicalName: Country
+    logicalType: numeric
+    physicalType: numeric
+    description: Numeric country code indicating the issuer's domicile or primary
+      place of incorporation.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: sector
+    physicalName: sector
+    logicalName: Sector
+    logicalType: varchar
+    physicalType: varchar
+    description: Industry sector classification of the issuer, used for peer-group
+      benchmarking in ESG analysis.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: rating_id
+    physicalName: rating_id
+    logicalName: Rating ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a specific ESG rating event or assessment record.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: provider
+    physicalName: provider
+    logicalName: Provider
+    logicalType: varchar
+    physicalType: varchar
+    description: Name of the external ESG rating agency or data provider that produced
+      this rating.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: score
+    physicalName: score
+    logicalName: Score
+    logicalType: numeric
+    physicalType: numeric
+    description: Composite numeric ESG score assigned to the issuer by the rating
+      provider.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: grade
+    physicalName: grade
+    logicalName: Grade
+    logicalType: varchar
+    physicalType: varchar
+    description: Alphabetic or categorical grade summarizing the issuer's overall
+      ESG performance (e.g. AA, B+).
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: date
+    physicalName: date
+    logicalName: Date
+    logicalType: date
+    physicalType: date
+    description: Calendar date on which the ESG rating or score was published or became
+      effective.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: metric_id
+    physicalName: metric_id
+    logicalName: Metric ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a specific ESG sub-metric or indicator within
+      the rating framework.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: category
+    physicalName: category
+    logicalName: Category
+    logicalType: varchar
+    physicalType: varchar
+    description: ESG dimension or pillar the metric belongs to, such as Environmental,
+      Social, or Governance.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: value
+    physicalName: value
+    logicalName: Value
+    logicalType: numeric
+    physicalType: numeric
+    description: Numeric measurement of the issuer's performance on a specific ESG
+      sub-metric.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: period
+    physicalName: period
+    logicalName: Period
+    logicalType: varchar
+    physicalType: varchar
+    description: Reporting period (e.g. calendar year, quarter) to which the metric
+      value relates.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: event_id
+    physicalName: event_id
+    logicalName: Event ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a material ESG-related event, controversy,
+      or disclosure incident.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: severity
+    physicalName: severity
+    logicalName: Severity
+    logicalType: varchar
+    physicalType: varchar
+    description: Qualitative severity rating of an ESG event or controversy, such
+      as High, Medium, or Low.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: start_date
+    physicalName: start_date
+    logicalName: Start Date
+    logicalType: date
+    physicalType: date
+    description: Date on which the ESG event or controversy began.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: end_date
+    physicalName: end_date
+    logicalName: End Date
+    logicalType: date
+    physicalType: date
+    description: Date on which the ESG event or controversy concluded or was resolved.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: source_id
+    physicalName: source_id
+    logicalName: Source ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for the data source or feed that supplied the ESG
+      rating or metric data.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: refresh_frequency
+    physicalName: refresh_frequency
+    logicalName: Refresh Frequency
+    logicalType: varchar
+    physicalType: varchar
+    description: Cadence at which the ESG rating or metric is updated by the provider
+      (e.g. annual, quarterly, monthly).
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  foreignKeys: []
+  transform:
+    grouping_keys:
+    - issuer_id
+    scd_policy:
+      type: scd2
+customProperties:
+  feasibility:
+    schema_version: '1.0'
+    spec_classification: internal
+    cadence: ''
+    freshness_history: scd2
+    freshness_description: ''
+    grain_keys:
+    - issuer_id
+    grain_description: ''
+    allowed_derivations:
+    - rename
+    - cast
+    composition:
+      join_keys: []
+      composed_of: []
+      description: ''
+productKind: source
+sourceSpecId: src_esg_ratings

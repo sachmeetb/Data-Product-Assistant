@@ -1,0 +1,72 @@
+# Portable functions — ANSI-safe across ALL served platforms
+# (postgres, databricks, snowflake, bigquery, mysql).
+#
+# A function listed here is treated by the AST validator as `native` on every
+# served platform, so it does NOT need a per-platform entry. Only add a name
+# here when you are confident all five engines accept it with the SAME argument
+# shape and semantics. Anything divergent belongs in a per-platform
+# reference/<platform>/transforms.yaml `functions` map instead.
+#
+# NOTE: identifier/operator nodes (CAST via `::`, concat via `||`, CASE) are
+# handled structurally by sqlglot's per-dialect renderer and are not listed as
+# functions; CAST is listed because it also appears in function form.
+portable_functions:
+  # string
+  - UPPER
+  - LOWER
+  - TRIM
+  - LTRIM
+  - RTRIM
+  - LENGTH
+  - CHAR_LENGTH
+  - SUBSTRING
+  - SUBSTR
+  - REPLACE
+  - CONCAT
+  - LPAD
+  - RPAD
+  - LEFT
+  - RIGHT
+  - REPEAT
+  # numeric
+  - ABS
+  - ROUND
+  - FLOOR
+  - CEIL
+  - CEILING
+  - MOD
+  - POWER
+  - SQRT
+  - SIGN
+  - GREATEST
+  - LEAST
+  # null / conditional
+  - COALESCE
+  - NULLIF
+  - CAST
+  # CASE / IF are the AST of the universal ANSI `CASE WHEN … END` construct:
+  # sqlglot parses a plain CASE into an exp.Case whose every WHEN branch is an
+  # exp.If, and re-renders both per dialect (CASE on Postgres/Snowflake, IF on
+  # Databricks/BigQuery/MySQL). Treating them as portable avoids a false
+  # "unknown_function" on every CASE expression.
+  - CASE
+  - IF
+  # date/time (portable extractor + current-time)
+  - EXTRACT
+  - CURRENT_DATE
+  - CURRENT_TIMESTAMP
+  # aggregate
+  - COUNT
+  - SUM
+  - AVG
+  - MIN
+  - MAX
+  # window (frame/partition rendered structurally; names are portable)
+  - ROW_NUMBER
+  - RANK
+  - DENSE_RANK
+  - NTILE
+  - LAG
+  - LEAD
+  - FIRST_VALUE
+  - LAST_VALUE

@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "workbench-po": {
+      "type": "http",
+      "url": "http://localhost:8000/po-mcp/",
+      "note": "Data Product Owner tools — browse, create, validate, deploy. Run: claude --mcp-config po.mcp.json --strict-mcp-config"
+    }
+  }
+}

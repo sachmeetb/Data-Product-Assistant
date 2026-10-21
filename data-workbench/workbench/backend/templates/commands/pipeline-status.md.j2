@@ -1,0 +1,15 @@
+---
+description: Show per-workflow stage statuses for this project
+---
+
+Fetch the live pipeline state from the Workbench backend and render it as a table.
+
+Run:
+
+```bash
+curl -s {{ backend_base_url }}/api/projects/{{ project.id }} | python -m json.tool
+```
+
+Then for each workflow in `workflows[]`, render a small table: `stage_number | stage_id | stage_name | status | cost_usd`. Highlight any stage in `running`, `awaiting_review`, or `failed` — those are the actionable ones. Stages in `pending` are waiting for their dependencies; stages in `complete` are done.
+
+Do NOT make any other API calls. Do NOT explore the project directory. Do NOT run git.

@@ -1,0 +1,39 @@
+{
+  "scenario": "modernization",
+  "external_ref": "estate-analyzer:finding-7710",
+  "hints": {
+    "domain": "customer"
+  },
+  "metadata": {
+    "report_id": "EA-2026-Q3-0091",
+    "analyzer_version": "3.7.1",
+    "analyzer_confidence": 0.78
+  },
+  "content": [
+    {
+      "kind": "text",
+      "title": "Modernization recommendation",
+      "media_type": "text/markdown",
+      "body": "## Modernize the customer analytics estate into data products\n\nThree overlapping reporting pipelines all re-derive customer and order facts from raw CRM and billing extracts. Recommend publishing two **source-aligned** products — a canonical **Customer Master** (from the CRM) and an **Orders** product (from the billing system) — then rebuilding the churn/marketing workloads as a single **consumer-aligned** product, **Customer 360 Features**, that CONSUMES both. The churn feature product needs customer demographics + order recency/frequency/monetary aggregates."
+    },
+    {
+      "kind": "json",
+      "title": "Application inventory",
+      "media_type": "application/json",
+      "body": {
+        "applications": [
+          {"name": "Salesforce CRM export", "system": "salesforce", "feeds": ["customers", "accounts"], "role": "source"},
+          {"name": "Zuora billing extract", "system": "zuora", "feeds": ["invoices", "orders", "line_items"], "role": "source"},
+          {"name": "Churn model (legacy notebook)", "system": "databricks", "consumes": ["customers", "orders"], "role": "consumer"},
+          {"name": "Marketing segmentation job", "system": "airflow", "consumes": ["customers"], "role": "consumer"}
+        ]
+      }
+    },
+    {
+      "kind": "odcs",
+      "title": "Proposed Customer 360 Features contract (draft)",
+      "media_type": "application/yaml",
+      "body": "apiVersion: v3.1.0\nkind: DataContract\nname: Customer 360 Features\ndomain: customer\ndescription: Per-customer demographics + RFM order aggregates for churn/marketing.\nschema:\n  - name: customer_features\n    properties:\n      - name: customer_id\n        logicalType: string\n        required: true\n      - name: signup_date\n        logicalType: date\n      - name: orders_last_90d\n        logicalType: integer\n      - name: revenue_last_365d\n        logicalType: number\n      - name: last_order_at\n        logicalType: timestamp\n"
+    }
+  ]
+}

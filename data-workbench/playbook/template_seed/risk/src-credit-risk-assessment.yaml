@@ -1,0 +1,844 @@
+apiVersion: v3.1.0
+kind: DataContract
+id: template:risk:src-credit-risk-assessment
+name: Credit Risk Assessment
+version: 1.0.0
+status: draft
+domain: Risk
+description: Borrower-level credit scoring, rating history, and overrides
+schema:
+- name: Credit Risk Assessment
+  physicalName: credit_risk_assessment
+  physicalType: table
+  description: Borrower-level credit scoring, rating history, and overrides
+  properties:
+  - name: score_id
+    physicalName: score_id
+    logicalName: Score ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a credit score event record, serving as the
+      primary key across scoring and rating entities.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: customer_id
+    physicalName: customer_id
+    logicalName: Customer ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier of the borrower whose credit risk is being assessed,
+      linking to the customer master.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: score_value
+    physicalName: score_value
+    logicalName: Score Value
+    logicalType: numeric
+    physicalType: numeric
+    description: Numeric credit score assigned to the borrower by the scoring model
+      for this assessment event.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: score_range_min
+    physicalName: score_range_min
+    logicalName: Score Range Min
+    logicalType: numeric
+    physicalType: numeric
+    description: Minimum value of the scoring model's possible range, providing context
+      for interpreting the score value.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: score_range_max
+    physicalName: score_range_max
+    logicalName: Score Range Max
+    logicalType: numeric
+    physicalType: numeric
+    description: Maximum value of the scoring model's possible range, used to normalize
+      and benchmark the score value.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: scoring_model_name
+    physicalName: scoring_model_name
+    logicalName: Scoring Model Name
+    logicalType: varchar
+    physicalType: varchar
+    description: Name of the internal or bureau scoring model used to generate the
+      credit score.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: model_version
+    physicalName: model_version
+    logicalName: Model Version
+    logicalType: varchar
+    physicalType: varchar
+    description: Version identifier of the scoring model used, enabling reproducibility
+      and model change tracking.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: score_date
+    physicalName: score_date
+    logicalName: Score Date
+    logicalType: date
+    physicalType: date
+    description: Date on which the credit score was generated for the borrower.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: score_valid_till
+    physicalName: score_valid_till
+    logicalName: Score Valid Till
+    logicalType: numeric
+    physicalType: numeric
+    description: Expiry date or number of days after which the credit score is no
+      longer considered current for underwriting decisions.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: score_status
+    physicalName: score_status
+    logicalName: Score Status
+    logicalType: numeric
+    physicalType: numeric
+    description: Current status of the credit score record (e.g. active, expired,
+      superseded by a newer score).
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: rating_id
+    physicalName: rating_id
+    logicalName: Rating ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a credit rating record assigned to the borrower
+      by the bank or an external agency.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: rating_grade
+    physicalName: rating_grade
+    logicalName: Rating Grade
+    logicalType: varchar
+    physicalType: varchar
+    description: Alphabetic or categorical credit grade assigned to the borrower (e.g.
+      AAA, BB+, substandard).
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: rating_scale
+    physicalName: rating_scale
+    logicalName: Rating Scale
+    logicalType: varchar
+    physicalType: varchar
+    description: Rating scale framework used for the credit grade, indicating the
+      range and meaning of the grade categories.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: rating_agency
+    physicalName: rating_agency
+    logicalName: Rating Agency
+    logicalType: varchar
+    physicalType: varchar
+    description: Name of the internal credit team or external rating agency that assigned
+      the credit rating.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: rating_date
+    physicalName: rating_date
+    logicalName: Rating Date
+    logicalType: date
+    physicalType: date
+    description: Date on which the credit rating was assigned or most recently reviewed.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: rating_valid_till
+    physicalName: rating_valid_till
+    logicalName: Rating Valid Till
+    logicalType: varchar
+    physicalType: varchar
+    description: Expiry date or validity period after which the credit rating must
+      be reviewed or renewed.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: rating_status
+    physicalName: rating_status
+    logicalName: Rating Status
+    logicalType: varchar
+    physicalType: varchar
+    description: Current status of the credit rating (e.g. active, under review, withdrawn,
+      expired).
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: rating_outlook
+    physicalName: rating_outlook
+    logicalName: Rating Outlook
+    logicalType: varchar
+    physicalType: varchar
+    description: Forward-looking opinion accompanying the credit rating, such as stable,
+      positive, or negative.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: override_id
+    physicalName: override_id
+    logicalName: Override ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a credit rating override record where the system-generated
+      rating was manually adjusted by a credit officer.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: original_rating_grade
+    physicalName: original_rating_grade
+    logicalName: Original Rating Grade
+    logicalType: varchar
+    physicalType: varchar
+    description: Credit grade produced by the automated scoring model before a human
+      override was applied.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: override_rating_grade
+    physicalName: override_rating_grade
+    logicalName: Override Rating Grade
+    logicalType: varchar
+    physicalType: varchar
+    description: Credit grade assigned by the credit officer as the result of overriding
+      the automated model output.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: override_reason_code
+    physicalName: override_reason_code
+    logicalName: Override Reason Code
+    logicalType: varchar
+    physicalType: varchar
+    description: Coded reason justifying the credit rating override (e.g. collateral
+      quality, management change, industry outlook).
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: requested_by_user_id
+    physicalName: requested_by_user_id
+    logicalName: Requested By User ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier of the credit officer or user who submitted the
+      override request.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: approved_by_user_id
+    physicalName: approved_by_user_id
+    logicalName: Approved By User ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier of the senior credit authority who approved the
+      override request.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: override_date
+    physicalName: override_date
+    logicalName: Override Date
+    logicalType: date
+    physicalType: date
+    description: Date on which the credit rating override was approved and became
+      effective.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: override_approval_status
+    physicalName: override_approval_status
+    logicalName: Override Approval Status
+    logicalType: varchar
+    physicalType: varchar
+    description: Status of the override approval workflow (e.g. pending, approved,
+      rejected, escalated).
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: enquiry_id
+    physicalName: enquiry_id
+    logicalName: Enquiry ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a credit bureau enquiry record initiated during
+      underwriting or periodic review.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: bureau_name
+    physicalName: bureau_name
+    logicalName: Bureau Name
+    logicalType: varchar
+    physicalType: varchar
+    description: Name of the credit information bureau whose database was queried
+      for this enquiry (e.g. CIBIL, Experian, Equifax).
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: enquiry_date
+    physicalName: enquiry_date
+    logicalName: Enquiry Date
+    logicalType: date
+    physicalType: date
+    description: Date on which the credit bureau was queried for the borrower's credit
+      report.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: enquiry_type
+    physicalName: enquiry_type
+    logicalName: Enquiry Type
+    logicalType: varchar
+    physicalType: varchar
+    description: Purpose of the credit bureau enquiry, such as loan application, periodic
+      review, or soft check.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: product_type
+    physicalName: product_type
+    logicalName: Product Type
+    logicalType: varchar
+    physicalType: varchar
+    description: Type of credit product being applied for or reviewed, which determines
+      the applicable bureau enquiry category.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: amount_requested
+    physicalName: amount_requested
+    logicalName: Amount Requested
+    logicalType: numeric
+    physicalType: numeric
+    description: Loan or credit amount requested by the borrower that triggered the
+      bureau enquiry.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: enquiry_result
+    physicalName: enquiry_result
+    logicalName: Enquiry Result
+    logicalType: varchar
+    physicalType: varchar
+    description: Outcome or summary result returned by the credit bureau for this
+      enquiry.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: bureau_reference_number
+    physicalName: bureau_reference_number
+    logicalName: Bureau Reference Number
+    logicalType: varchar
+    physicalType: varchar
+    description: Unique reference number assigned by the credit bureau to this enquiry
+      for audit and dispute resolution.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: report_id
+    physicalName: report_id
+    logicalName: Report ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a credit bureau report retrieved for the borrower.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: report_date
+    physicalName: report_date
+    logicalName: Report Date
+    logicalType: date
+    physicalType: date
+    description: Date on which the credit bureau report was pulled and made available.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: bureau_score
+    physicalName: bureau_score
+    logicalName: Bureau Score
+    logicalType: numeric
+    physicalType: numeric
+    description: Credit score as reported by the external credit bureau in this report.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: total_accounts_reported
+    physicalName: total_accounts_reported
+    logicalName: Total Accounts Reported
+    logicalType: numeric
+    physicalType: numeric
+    description: Total number of credit accounts (loans, cards, lines) reported by
+      all lenders for this borrower in the bureau report.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: total_enquiries_12m
+    physicalName: total_enquiries_12m
+    logicalName: Total Enquiries 12m
+    logicalType: varchar
+    physicalType: varchar
+    description: Total number of credit enquiries made against the borrower's bureau
+      record in the preceding 12 months.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: max_dpd_24m
+    physicalName: max_dpd_24m
+    logicalName: Max Dpd 24m
+    logicalType: varchar
+    physicalType: varchar
+    description: Maximum days-past-due recorded on any of the borrower's credit accounts
+      in the preceding 24 months.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: write_off_flag
+    physicalName: write_off_flag
+    logicalName: Write Off Flag
+    logicalType: boolean
+    physicalType: boolean
+    description: Boolean indicator that a write-off has been recorded against any
+      of the borrower's accounts in the bureau report.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: collateral_id
+    physicalName: collateral_id
+    logicalName: Collateral ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a collateral asset associated with the borrower's
+      credit risk exposure.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: collateral_type
+    physicalName: collateral_type
+    logicalName: Collateral Type
+    logicalType: varchar
+    physicalType: varchar
+    description: Type of collateral pledged against the borrower's credit facilities
+      (e.g. property, securities, gold, receivables).
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: market_value
+    physicalName: market_value
+    logicalName: Market Value
+    logicalType: numeric
+    physicalType: numeric
+    description: Current market value of the collateral asset as assessed for credit
+      risk coverage and LTV monitoring purposes.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: valuation_date
+    physicalName: valuation_date
+    logicalName: Valuation Date
+    logicalType: date
+    physicalType: date
+    description: Date on which the collateral was most recently valued for credit
+      risk monitoring.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: lien_status
+    physicalName: lien_status
+    logicalName: Lien Status
+    logicalType: varchar
+    physicalType: varchar
+    description: Status of the lien or charge registered on the collateral in favor
+      of the bank (e.g. registered, pending, released).
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: exposure_id
+    physicalName: exposure_id
+    logicalName: Exposure ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a credit exposure record summarizing the borrower's
+      outstanding credit obligations.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: limit_amount
+    physicalName: limit_amount
+    logicalName: Limit Amount
+    logicalType: numeric
+    physicalType: numeric
+    description: Total approved credit limit or sanctioned amount across the borrower's
+      credit facilities.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: outstanding_amount
+    physicalName: outstanding_amount
+    logicalName: Outstanding Amount
+    logicalType: numeric
+    physicalType: numeric
+    description: Current drawn or outstanding balance on the borrower's credit exposure
+      as of the reporting date.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: off_balance_exposure
+    physicalName: off_balance_exposure
+    logicalName: Off Balance Exposure
+    logicalType: numeric
+    physicalType: numeric
+    description: Undrawn or contingent credit exposure not yet reflected on the balance
+      sheet (e.g. unutilized credit lines, guarantees).
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: reporting_date
+    physicalName: reporting_date
+    logicalName: Reporting Date
+    logicalType: date
+    physicalType: date
+    description: Date as of which the credit exposure figures are reported.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: covenant_id
+    physicalName: covenant_id
+    logicalName: Covenant ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a loan covenant monitoring record associated
+      with the borrower's credit facility.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: covenant_type
+    physicalName: covenant_type
+    logicalName: Covenant Type
+    logicalType: varchar
+    physicalType: varchar
+    description: Type of financial or behavioral covenant the borrower is required
+      to maintain (e.g. leverage ratio, current ratio, dividend restriction).
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: threshold_value
+    physicalName: threshold_value
+    logicalName: Threshold Value
+    logicalType: numeric
+    physicalType: numeric
+    description: Numeric limit or target value for the covenant metric that the borrower
+      must not breach.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: observed_value
+    physicalName: observed_value
+    logicalName: Observed Value
+    logicalType: numeric
+    physicalType: numeric
+    description: Actual measured value of the covenant metric as reported by the borrower
+      for the observation date.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: observation_date
+    physicalName: observation_date
+    logicalName: Observation Date
+    logicalType: date
+    physicalType: date
+    description: Date as of which the covenant metric was measured or reported.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: breach_flag
+    physicalName: breach_flag
+    logicalName: Breach Flag
+    logicalType: boolean
+    physicalType: boolean
+    description: Boolean indicator that the observed covenant metric value has breached
+      the agreed threshold.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: breach_status
+    physicalName: breach_status
+    logicalName: Breach Status
+    logicalType: varchar
+    physicalType: varchar
+    description: Current status of a covenant breach event (e.g. notified, waived,
+      remediated, accelerated).
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  foreignKeys: []
+  transform:
+    grouping_keys:
+    - score_id
+    scd_policy:
+      type: scd2
+customProperties:
+  feasibility:
+    schema_version: '1.0'
+    spec_classification: internal
+    cadence: ''
+    freshness_history: scd2
+    freshness_description: ''
+    grain_keys:
+    - score_id
+    grain_description: ''
+    allowed_derivations:
+    - rename
+    - cast
+    composition:
+      join_keys: []
+      composed_of: []
+      description: ''
+productKind: source
+sourceSpecId: src_credit_risk_assessment

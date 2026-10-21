@@ -1,0 +1,47 @@
+apiVersion: workbench.platform/v1
+id: oracle
+displayName: Oracle Database
+adapterVersion: "0.1.0"
+adapterKind: jdbc
+supportedServerVersions: ">=12.1"
+
+driver:
+  package: oracledb
+  compatibility: ">=2.0"
+
+namespace:
+  parts: [schema, relation]
+  labels:
+    schema: Schema (User)
+    relation: Table / View
+
+capabilities:
+  connection: unsupported
+  discovery: unsupported
+  profiling: unsupported
+  read_query: unsupported
+  native_view: unsupported
+  dbt_materialized: unsupported
+  remediation: unsupported
+  semantic_qa: unsupported
+  # transfer_source: the DLT migration runner reads Oracle via SQLAlchemy
+  # (oracle+oracledb) and reflects the schema itself — no DiscoveryProvider is
+  # required for a raw / lift-and-shift migration (Phase 2). transfer_target uses
+  # dlt's SQLAlchemy destination.
+  transfer_source: preview
+  transfer_target: preview
+  lakehouse_export: unsupported
+  lakehouse_source: unsupported
+  volumetrics: unsupported
+  code_assets: unsupported
+
+notes: >
+  Phase 2 raw-migration source. Reachable by the data-migration (dmig) DLT
+  runner via the SQLAlchemy `oracle+oracledb` dialect; the type mapping lives in
+  platform.type_system (_oracle_profile). No in-Workbench DiscoveryProvider or
+  profiling yet — the migration generator reflects tables directly (--reflect).
+  Oracle-specific gotchas (see the migration-assessment-advisor corpus):
+  - DATE carries a time component (to the second) — it is NOT date-only.
+  - NUMBER without precision is arbitrary-precision; a fixed target scale caps it.
+  - Constraints may be DEFERRABLE / NOT VALIDATED; treat as informational.
+  - Identifiers are UPPERCASE unless quoted.

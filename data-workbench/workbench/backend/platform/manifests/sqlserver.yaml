@@ -1,0 +1,49 @@
+apiVersion: workbench.platform/v1
+id: sqlserver
+displayName: Microsoft SQL Server / Azure SQL
+adapterVersion: "0.1.0"
+adapterKind: jdbc
+supportedServerVersions: ">=2016"
+
+driver:
+  package: pyodbc
+  compatibility: ">=5.0"
+
+namespace:
+  parts: [database, schema, relation]
+  labels:
+    database: Database
+    schema: Schema
+    relation: Table / View
+
+capabilities:
+  connection: unsupported
+  discovery: unsupported
+  profiling: unsupported
+  read_query: unsupported
+  native_view: unsupported
+  dbt_materialized: unsupported
+  remediation: unsupported
+  semantic_qa: unsupported
+  # transfer_source: the DLT migration runner reads SQL Server / Azure SQL via
+  # SQLAlchemy (mssql+pyodbc) and reflects the schema itself — no DiscoveryProvider
+  # is required for a raw / lift-and-shift migration (Phase 2). transfer_target uses
+  # dlt's native mssql destination.
+  transfer_source: preview
+  transfer_target: preview
+  lakehouse_export: unsupported
+  lakehouse_source: unsupported
+  volumetrics: unsupported
+  code_assets: unsupported
+
+notes: >
+  Phase 2 raw-migration source (covers on-prem SQL Server AND Azure SQL Database —
+  same engine). Reachable by the data-migration (dmig) DLT runner via the
+  SQLAlchemy `mssql+pyodbc` dialect; the type mapping lives in
+  platform.type_system (_sqlserver_profile). No in-Workbench DiscoveryProvider or
+  profiling yet — the migration generator reflects tables directly (--reflect).
+  SQL Server-specific gotchas (see the migration-assessment-advisor corpus):
+  - `timestamp` / `rowversion` is an 8-byte auto-versioning BINARY, NOT a temporal
+    type — do not migrate it as a value; regenerate on the target.
+  - TINYINT is unsigned 0-255. DATETIME rounds to ~3.33 ms (DATETIME2 is exact).
+  - Three-level namespace: database.schema.table.

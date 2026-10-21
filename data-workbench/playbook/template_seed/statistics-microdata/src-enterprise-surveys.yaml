@@ -1,0 +1,423 @@
+apiVersion: v3.1.0
+kind: DataContract
+id: template:statistics-microdata:src-enterprise-surveys
+name: Enterprise Surveys
+version: 1.0.0
+status: draft
+domain: Statistics Microdata
+description: Survey microdata for establishments/firms covering production, prices,
+  exports/imports, employment, capex and expectations. Designed for compilation of
+  official statistics and BoP supplemental evidence; includes sampling, weights and
+  disclosure controls.
+schema:
+- name: Enterprise Surveys
+  physicalName: enterprise_surveys
+  physicalType: table
+  description: Survey microdata for establishments/firms covering production, prices,
+    exports/imports, employment, capex and expectations. Designed for compilation
+    of official statistics and BoP supplemental evidence; includes sampling, weights
+    and disclosure controls.
+  properties:
+  - name: survey_id
+    physicalName: survey_id
+    logicalName: Survey ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for an enterprise survey instrument or questionnaire
+      administered to a sample of establishments.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: wave
+    physicalName: wave
+    logicalName: Wave
+    logicalType: varchar
+    physicalType: varchar
+    description: Label for the survey collection round or wave, used to identify the
+      timing of data collection within a longitudinal survey cycle.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: frame_source
+    physicalName: frame_source
+    logicalName: Frame Source
+    logicalType: varchar
+    physicalType: varchar
+    description: Name or reference for the sampling frame used to select survey respondents
+      (e.g. business register, tax rolls, customs list).
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: strata
+    physicalName: strata
+    logicalName: Strata
+    logicalType: varchar
+    physicalType: varchar
+    description: Stratification variable or stratum identifier used in the sampling
+      design to ensure representativeness across size classes, industries, or regions.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: sample_weight
+    physicalName: sample_weight
+    logicalName: Sample Weight
+    logicalType: varchar
+    physicalType: varchar
+    description: Statistical weight assigned to each responding enterprise to expand
+      its data to represent the full target population.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: enterprise_id
+    physicalName: enterprise_id
+    logicalName: Enterprise ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for an establishment or firm responding to the
+      enterprise survey; primary key for microdata records.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: industry
+    physicalName: industry
+    logicalName: Industry
+    logicalType: varchar
+    physicalType: varchar
+    description: Industry classification of the enterprise, typically coded using
+      a standard taxonomy such as ISIC, NIC, or NAICS.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: size_class
+    physicalName: size_class
+    logicalName: Size Class
+    logicalType: numeric
+    physicalType: numeric
+    description: Size category of the enterprise based on headcount or turnover (e.g.
+      micro, small, medium, large) used for stratification and analysis.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: region
+    physicalName: region
+    logicalName: Region
+    logicalType: varchar
+    physicalType: varchar
+    description: Geographic region or administrative area where the enterprise is
+      located, used for regional disaggregation of official statistics.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: sales
+    physicalName: sales
+    logicalName: Sales
+    logicalType: varchar
+    physicalType: varchar
+    description: Reported total revenue or sales value of the enterprise for the survey
+      reference period.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: output_volume
+    physicalName: output_volume
+    logicalName: Output Volume
+    logicalType: varchar
+    physicalType: varchar
+    description: Reported physical output or production volume of the enterprise for
+      the survey reference period.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: exports
+    physicalName: exports
+    logicalName: Exports
+    logicalType: varchar
+    physicalType: varchar
+    description: Reported value of goods or services exported by the enterprise during
+      the survey reference period.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: imports
+    physicalName: imports
+    logicalName: Imports
+    logicalType: varchar
+    physicalType: varchar
+    description: Reported value of goods or materials imported by the enterprise during
+      the survey reference period.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: inventories
+    physicalName: inventories
+    logicalName: Inventories
+    logicalType: varchar
+    physicalType: varchar
+    description: Reported value of finished goods, work-in-progress, and raw material
+      inventories held by the enterprise.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: price_indices
+    physicalName: price_indices
+    logicalName: Price Indices
+    logicalType: numeric
+    physicalType: numeric
+    description: Producer price index or sector-specific price deflator applicable
+      to the enterprise's output, used for volume deflation in official statistics.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: unit_values
+    physicalName: unit_values
+    logicalName: Unit Values
+    logicalType: numeric
+    physicalType: numeric
+    description: Average unit value of exported or imported goods reported by the
+      enterprise, used for trade price index compilation.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: wage_costs
+    physicalName: wage_costs
+    logicalName: Wage Costs
+    logicalType: numeric
+    physicalType: numeric
+    description: Total wage bill and employee compensation costs reported by the enterprise
+      for the survey period.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: input_costs
+    physicalName: input_costs
+    logicalName: Input Costs
+    logicalType: numeric
+    physicalType: numeric
+    description: Total cost of raw materials, energy, and intermediate inputs consumed
+      by the enterprise in production.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: headcount
+    physicalName: headcount
+    logicalName: Headcount
+    logicalType: numeric
+    physicalType: numeric
+    description: Number of persons employed or engaged by the enterprise at the survey
+      reference date.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: hours
+    physicalName: hours
+    logicalName: Hours
+    logicalType: varchar
+    physicalType: varchar
+    description: Total hours worked by employees at the enterprise during the survey
+      reference period.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: capex_amount
+    physicalName: capex_amount
+    logicalName: Capex Amount
+    logicalType: numeric
+    physicalType: numeric
+    description: Capital expenditure incurred by the enterprise for acquisition of
+      fixed assets during the survey reference period.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: asset_type
+    physicalName: asset_type
+    logicalName: Asset Type
+    logicalType: varchar
+    physicalType: varchar
+    description: Type of fixed asset acquired through capital expenditure (e.g. machinery,
+      buildings, ICT equipment, vehicles).
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: next_3_6_12m_outlook_indicators
+    physicalName: next_3_6_12m_outlook_indicators
+    logicalName: Next 3 6 12m Outlook Indicators
+    logicalType: varchar
+    physicalType: varchar
+    description: Forward-looking expectation indicators reported by the enterprise
+      for the next 3, 6, and 12 months covering production, employment, and prices.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: mode
+    physicalName: mode
+    logicalName: Mode
+    logicalType: varchar
+    physicalType: varchar
+    description: Mode of survey administration used to collect this enterprise's response
+      (e.g. online form, postal, telephone, enumerator visit).
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: response_status
+    physicalName: response_status
+    logicalName: Response Status
+    logicalType: varchar
+    physicalType: varchar
+    description: Status of the enterprise's survey response (e.g. responded, partially
+      responded, imputed, non-response).
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: imputation_flag
+    physicalName: imputation_flag
+    logicalName: Imputation Flag
+    logicalType: boolean
+    physicalType: boolean
+    description: Boolean indicator that one or more of the enterprise's reported values
+      have been statistically imputed due to item non-response.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: confidentiality_key
+    physicalName: confidentiality_key
+    logicalName: Confidentiality Key
+    logicalType: varchar
+    physicalType: varchar
+    description: Anonymization or disclosure-control key applied to the enterprise's
+      microdata to prevent identification of individual respondents.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  foreignKeys: []
+  transform:
+    grouping_keys:
+    - enterprise_id
+    scd_policy:
+      type: latest_only
+customProperties:
+  feasibility:
+    schema_version: '1.0'
+    spec_classification: internal
+    cadence: ''
+    freshness_history: current
+    freshness_description: ''
+    grain_keys:
+    - enterprise_id
+    grain_description: ''
+    allowed_derivations:
+    - rename
+    - cast
+    composition:
+      join_keys: []
+      composed_of: []
+      description: ''
+productKind: source
+sourceSpecId: src_enterprise_surveys

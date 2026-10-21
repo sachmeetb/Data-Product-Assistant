@@ -1,0 +1,959 @@
+{
+  "schema_version": "v1",
+  "checksum": "sha256:860122b5b0a2bb2fb5f2cbdc93fe1a914599fa3509f45e0eaa2dab1894920aef",
+  "generated_at": "2026-08-13T19:43:39Z",
+  "generator": "data-transform-translation/scripts/build_artifact.py",
+  "source_skill": "data-transform-translation",
+  "platforms": [
+    "postgres",
+    "databricks",
+    "snowflake",
+    "bigquery",
+    "mysql"
+  ],
+  "portable_functions": [
+    "ABS",
+    "AVG",
+    "CASE",
+    "CAST",
+    "CEIL",
+    "CEILING",
+    "CHAR_LENGTH",
+    "COALESCE",
+    "CONCAT",
+    "COUNT",
+    "CURRENT_DATE",
+    "CURRENT_TIMESTAMP",
+    "DENSE_RANK",
+    "EXTRACT",
+    "FIRST_VALUE",
+    "FLOOR",
+    "GREATEST",
+    "IF",
+    "LAG",
+    "LAST_VALUE",
+    "LEAD",
+    "LEAST",
+    "LEFT",
+    "LENGTH",
+    "LOWER",
+    "LPAD",
+    "LTRIM",
+    "MAX",
+    "MIN",
+    "MOD",
+    "NTILE",
+    "NULLIF",
+    "POWER",
+    "RANK",
+    "REPEAT",
+    "REPLACE",
+    "RIGHT",
+    "ROUND",
+    "ROW_NUMBER",
+    "RPAD",
+    "RTRIM",
+    "SIGN",
+    "SQRT",
+    "SUBSTR",
+    "SUBSTRING",
+    "SUM",
+    "TRIM",
+    "UPPER"
+  ],
+  "functions": {
+    "AGE": {
+      "platforms": {
+        "postgres": {
+          "capability": "native",
+          "emit": "AGE({end}, {start})",
+          "notes": "Returns a SYMBOLIC interval (years, months, days) — NOT a scalar count. Do not translate verbatim; decompose to a date_difference op with an explicit semantics discriminator.",
+          "citation": "https://www.postgresql.org/docs/current/functions-datetime.html",
+          "status": "verified",
+          "engine": "PostgreSQL 12+"
+        },
+        "databricks": {
+          "capability": "unsupported",
+          "remediation": "Databricks has no AGE. Decompose to a date_difference op with an explicit semantics discriminator (completed_units via FLOOR(MONTHS_BETWEEN(...)/12), or boundary_count via YEAR(end)-YEAR(start)). A symbolic (yrs+mos+days) interval is not natively expressible.",
+          "citation": "https://docs.databricks.com/en/sql/language-manual/sql-ref-functions-builtin.html",
+          "status": "verified",
+          "engine": "Databricks Runtime 13+ / Apache Spark 3.4+ (Spark SQL)"
+        },
+        "snowflake": {
+          "capability": "unsupported",
+          "remediation": "Snowflake has no AGE. Decompose to a date_difference op (completed_units via FLOOR(MONTHS_BETWEEN(...)/12); boundary_count via DATEDIFF('year', start, end)). A symbolic interval is not natively expressible.",
+          "citation": "https://docs.snowflake.com/en/sql-reference/functions-date-time",
+          "status": "verified",
+          "engine": "Snowflake (current)"
+        },
+        "bigquery": {
+          "capability": "unsupported",
+          "remediation": "BigQuery has no AGE. Decompose to a date_difference op. boundary_count via DATE_DIFF(end, start, YEAR); completed_units needs a month/day boundary adjustment (see the date_difference op emit).",
+          "citation": "https://cloud.google.com/bigquery/docs/reference/standard-sql/date_functions",
+          "status": "verified",
+          "engine": "BigQuery Standard SQL (GoogleSQL, current)"
+        },
+        "mysql": {
+          "capability": "unsupported",
+          "remediation": "MySQL has no AGE. Decompose to a date_difference op (completed_units via TIMESTAMPDIFF(YEAR, start, end); boundary_count via YEAR(end)-YEAR(start)).",
+          "citation": "https://dev.mysql.com/doc/refman/8.0/en/date-and-time-functions.html",
+          "status": "verified",
+          "engine": "MySQL 8.0+"
+        }
+      }
+    },
+    "CONVERT_TIMEZONE": {
+      "platforms": {
+        "snowflake": {
+          "capability": "native",
+          "emit": "CONVERT_TIMEZONE({from_tz}, {to_tz}, {ts}) | CONVERT_TIMEZONE({to_tz}, {tz_aware_ts})",
+          "notes": "3-arg form converts a naive ts from source→target tz; 2-arg form converts a TZ-aware ts to target tz.",
+          "citation": "https://docs.snowflake.com/en/sql-reference/functions/convert_timezone",
+          "status": "conformance-verify",
+          "engine": "Snowflake (current)"
+        }
+      }
+    },
+    "DATEDIFF": {
+      "platforms": {
+        "postgres": {
+          "capability": "unsupported",
+          "remediation": "Postgres has no DATEDIFF. Use a date_difference op (boundary_count / completed_units) which lowers to AGE()/EXTRACT arithmetic.",
+          "citation": "https://www.postgresql.org/docs/current/functions-datetime.html",
+          "status": "verified",
+          "engine": "PostgreSQL 12+"
+        },
+        "databricks": {
+          "capability": "native",
+          "emit": "datediff({end}, {start})",
+          "notes": "Two-arg datediff(end, start) returns DAYS. The unit-form datediff(unit, start, end) also exists — pick deliberately; they differ.",
+          "citation": "https://docs.databricks.com/en/sql/language-manual/functions/datediff.html",
+          "status": "verified",
+          "engine": "Databricks Runtime 13+ / Apache Spark 3.4+ (Spark SQL)"
+        },
+        "snowflake": {
+          "capability": "native",
+          "emit": "DATEDIFF({part}, {start}, {end})",
+          "notes": "First arg is the date part; DATEDIFF('year', start, end) counts boundary crossings, NOT completed years.",
+          "citation": "https://docs.snowflake.com/en/sql-reference/functions/datediff",
+          "status": "verified",
+          "engine": "Snowflake (current)"
+        },
+        "bigquery": {
+          "capability": "unsupported",
+          "remediation": "BigQuery spells it DATE_DIFF(end, start, part), not DATEDIFF.",
+          "citation": "https://cloud.google.com/bigquery/docs/reference/standard-sql/date_functions#date_diff",
+          "status": "verified",
+          "engine": "BigQuery Standard SQL (GoogleSQL, current)"
+        },
+        "mysql": {
+          "capability": "native",
+          "emit": "DATEDIFF({end}, {start})",
+          "notes": "Two-arg DATEDIFF(end, start) returns DAYS only (no unit form).",
+          "citation": "https://dev.mysql.com/doc/refman/8.0/en/date-and-time-functions.html#function_datediff",
+          "status": "verified",
+          "engine": "MySQL 8.0+"
+        }
+      }
+    },
+    "DATE_ADD": {
+      "platforms": {
+        "snowflake": {
+          "capability": "native",
+          "emit": "DATEADD({unit}, {amount}, {date})",
+          "notes": "Author-facing DATEADD / TIMESTAMPADD; sqlglot canonicalises DATEADD→DATE_ADD under the snowflake dialect and renders back to DATEADD(part, value, date).",
+          "citation": "https://docs.snowflake.com/en/sql-reference/functions/dateadd",
+          "status": "conformance-verify",
+          "engine": "Snowflake (current)"
+        }
+      }
+    },
+    "DATE_DIFF": {
+      "platforms": {
+        "postgres": {
+          "capability": "unsupported",
+          "remediation": "Postgres has no DATE_DIFF. Use a date_difference op.",
+          "citation": "https://www.postgresql.org/docs/current/functions-datetime.html",
+          "status": "verified",
+          "engine": "PostgreSQL 12+"
+        },
+        "databricks": {
+          "capability": "unsupported",
+          "remediation": "Spark SQL exposes datediff, not DATE_DIFF. Use a date_difference op or datediff.",
+          "citation": "https://docs.databricks.com/en/sql/language-manual/functions/datediff.html",
+          "status": "verified",
+          "engine": "Databricks Runtime 13+ / Apache Spark 3.4+ (Spark SQL)"
+        },
+        "snowflake": {
+          "capability": "unsupported",
+          "remediation": "Snowflake spells it DATEDIFF({part}, start, end), not DATE_DIFF. Use DATEDIFF or a date_difference op.",
+          "citation": "https://docs.snowflake.com/en/sql-reference/functions/datediff",
+          "status": "verified",
+          "engine": "Snowflake (current)"
+        },
+        "bigquery": {
+          "capability": "native",
+          "emit": "DATE_DIFF({end}, {start}, {part})",
+          "notes": "DATE_DIFF(end, start, YEAR) counts calendar-year BOUNDARIES crossed, NOT completed elapsed years — a common off-by-one trap.",
+          "citation": "https://cloud.google.com/bigquery/docs/reference/standard-sql/date_functions#date_diff",
+          "status": "verified",
+          "engine": "BigQuery Standard SQL (GoogleSQL, current)"
+        },
+        "mysql": {
+          "capability": "unsupported",
+          "remediation": "MySQL spells it DATEDIFF(end, start) (days) or TIMESTAMPDIFF(unit, start, end), not DATE_DIFF.",
+          "citation": "https://dev.mysql.com/doc/refman/8.0/en/date-and-time-functions.html#function_datediff",
+          "status": "verified",
+          "engine": "MySQL 8.0+"
+        }
+      }
+    },
+    "DATE_FORMAT": {
+      "platforms": {
+        "postgres": {
+          "capability": "unsupported",
+          "remediation": "Postgres has no DATE_FORMAT. Use TO_CHAR({ts}, {format}) instead.",
+          "citation": "https://www.postgresql.org/docs/current/functions-formatting.html",
+          "status": "verified",
+          "engine": "PostgreSQL 12+"
+        },
+        "databricks": {
+          "capability": "native",
+          "emit": "date_format({ts}, {format})",
+          "notes": "Uses Java/Spark datetime pattern letters, NOT Postgres/Oracle TO_CHAR tokens.",
+          "citation": "https://docs.databricks.com/en/sql/language-manual/functions/date_format.html",
+          "status": "verified",
+          "engine": "Databricks Runtime 13+ / Apache Spark 3.4+ (Spark SQL)"
+        },
+        "snowflake": {
+          "capability": "unsupported",
+          "remediation": "No DATE_FORMAT. Use TO_CHAR({ts}, {format}).",
+          "citation": "https://docs.snowflake.com/en/sql-reference/functions/to_char",
+          "status": "verified",
+          "engine": "Snowflake (current)"
+        },
+        "bigquery": {
+          "capability": "unsupported",
+          "remediation": "No DATE_FORMAT. Use FORMAT_DATE / FORMAT_TIMESTAMP.",
+          "citation": "https://cloud.google.com/bigquery/docs/reference/standard-sql/date_functions#format_date",
+          "status": "verified",
+          "engine": "BigQuery Standard SQL (GoogleSQL, current)"
+        },
+        "mysql": {
+          "capability": "native",
+          "emit": "DATE_FORMAT({ts}, {format})",
+          "notes": "Uses MySQL format specifiers (%Y, %m, %d ...), NOT Postgres TO_CHAR tokens.",
+          "citation": "https://dev.mysql.com/doc/refman/8.0/en/date-and-time-functions.html#function_date-format",
+          "status": "verified",
+          "engine": "MySQL 8.0+"
+        }
+      }
+    },
+    "DATE_TRUNC": {
+      "platforms": {
+        "postgres": {
+          "capability": "native",
+          "emit": "DATE_TRUNC({unit}, {ts})",
+          "citation": "https://www.postgresql.org/docs/current/functions-datetime.html",
+          "status": "verified",
+          "engine": "PostgreSQL 12+"
+        },
+        "databricks": {
+          "capability": "native",
+          "emit": "date_trunc({unit}, {ts})",
+          "citation": "https://docs.databricks.com/en/sql/language-manual/functions/date_trunc.html",
+          "status": "verified",
+          "engine": "Databricks Runtime 13+ / Apache Spark 3.4+ (Spark SQL)"
+        },
+        "snowflake": {
+          "capability": "native",
+          "emit": "DATE_TRUNC({unit}, {ts})",
+          "citation": "https://docs.snowflake.com/en/sql-reference/functions/date_trunc",
+          "status": "verified",
+          "engine": "Snowflake (current)"
+        },
+        "bigquery": {
+          "capability": "native",
+          "emit": "DATE_TRUNC({date}, {part})",
+          "notes": "Arg order is (date, part) — the date comes FIRST, opposite of Postgres/Snowflake DATE_TRUNC(part, ts).",
+          "citation": "https://cloud.google.com/bigquery/docs/reference/standard-sql/date_functions#date_trunc",
+          "status": "verified",
+          "engine": "BigQuery Standard SQL (GoogleSQL, current)"
+        },
+        "mysql": {
+          "capability": "unsupported",
+          "remediation": "MySQL 8.0 has no DATE_TRUNC. Truncate via DATE_FORMAT + re-parse, or date arithmetic.",
+          "citation": "https://dev.mysql.com/doc/refman/8.0/en/date-and-time-functions.html",
+          "status": "verified",
+          "engine": "MySQL 8.0+"
+        }
+      }
+    },
+    "DECODE_CASE": {
+      "platforms": {
+        "snowflake": {
+          "capability": "native",
+          "emit": "DECODE({expr}, {search1}, {result1}, ..., {default})",
+          "notes": "Author-facing DECODE; sqlglot models it as a CASE-equivalent (DECODE_CASE). Snowflake DECODE uses NULL-safe equality (unlike a plain CASE =).",
+          "citation": "https://docs.snowflake.com/en/sql-reference/functions/decode",
+          "status": "conformance-verify",
+          "engine": "Snowflake (current)"
+        }
+      }
+    },
+    "DIGEST": {
+      "platforms": {
+        "postgres": {
+          "capability": "emulated",
+          "emit": "ENCODE(DIGEST({text}, '{algo}'), 'hex')",
+          "remediation": "Requires the pgcrypto extension (CREATE EXTENSION pgcrypto). No hex-string SHA without it.",
+          "notes": "digest() returns bytea; wrap in ENCODE(...,'hex').",
+          "citation": "https://www.postgresql.org/docs/current/pgcrypto.html",
+          "status": "verified",
+          "engine": "PostgreSQL 12+"
+        },
+        "databricks": {
+          "capability": "unsupported",
+          "remediation": "No pgcrypto DIGEST. Use sha2({text}, 256) / sha1() / md5().",
+          "citation": "https://docs.databricks.com/en/sql/language-manual/functions/sha2.html",
+          "status": "verified",
+          "engine": "Databricks Runtime 13+ / Apache Spark 3.4+ (Spark SQL)"
+        },
+        "snowflake": {
+          "capability": "unsupported",
+          "remediation": "No pgcrypto DIGEST. Use SHA2({text}, 256) / SHA1() / MD5().",
+          "citation": "https://docs.snowflake.com/en/sql-reference/functions/sha2",
+          "status": "verified",
+          "engine": "Snowflake (current)"
+        },
+        "bigquery": {
+          "capability": "unsupported",
+          "remediation": "No pgcrypto DIGEST. Use TO_HEX(SHA256({text})).",
+          "citation": "https://cloud.google.com/bigquery/docs/reference/standard-sql/hash_functions#sha256",
+          "status": "verified",
+          "engine": "BigQuery Standard SQL (GoogleSQL, current)"
+        },
+        "mysql": {
+          "capability": "unsupported",
+          "remediation": "No pgcrypto DIGEST. Use SHA2({text}, 256) / SHA1() / MD5().",
+          "citation": "https://dev.mysql.com/doc/refman/8.0/en/encryption-functions.html#function_sha2",
+          "status": "verified",
+          "engine": "MySQL 8.0+"
+        }
+      }
+    },
+    "GROUP_CONCAT": {
+      "platforms": {
+        "snowflake": {
+          "capability": "native",
+          "emit": "LISTAGG({expr}, {sep}) WITHIN GROUP (ORDER BY {sort})",
+          "notes": "Author-facing LISTAGG; sqlglot canonicalises LISTAGG→GROUP_CONCAT under the snowflake dialect and renders back to LISTAGG. Use WITHIN GROUP (ORDER BY …) for deterministic ordering.",
+          "citation": "https://docs.snowflake.com/en/sql-reference/functions/listagg",
+          "status": "conformance-verify",
+          "engine": "Snowflake (current)"
+        }
+      }
+    },
+    "MD5": {
+      "platforms": {
+        "postgres": {
+          "capability": "native",
+          "emit": "MD5({text})",
+          "notes": "Returns a 32-char hex string.",
+          "citation": "https://www.postgresql.org/docs/current/functions-string.html",
+          "status": "verified",
+          "engine": "PostgreSQL 12+"
+        },
+        "databricks": {
+          "capability": "native",
+          "emit": "md5({text})",
+          "notes": "Returns a 32-char hex string.",
+          "citation": "https://docs.databricks.com/en/sql/language-manual/functions/md5.html",
+          "status": "verified",
+          "engine": "Databricks Runtime 13+ / Apache Spark 3.4+ (Spark SQL)"
+        },
+        "snowflake": {
+          "capability": "native",
+          "emit": "MD5({text})",
+          "notes": "Returns a 32-char hex string.",
+          "citation": "https://docs.snowflake.com/en/sql-reference/functions/md5",
+          "status": "verified",
+          "engine": "Snowflake (current)"
+        },
+        "bigquery": {
+          "capability": "emulated",
+          "emit": "TO_HEX(MD5({text}))",
+          "notes": "MD5() returns BYTES; wrap in TO_HEX(...) to match the hex-string output of the other engines.",
+          "citation": "https://cloud.google.com/bigquery/docs/reference/standard-sql/hash_functions#md5",
+          "status": "verified",
+          "engine": "BigQuery Standard SQL (GoogleSQL, current)"
+        },
+        "mysql": {
+          "capability": "native",
+          "emit": "MD5({text})",
+          "notes": "Returns a 32-char hex string.",
+          "citation": "https://dev.mysql.com/doc/refman/8.0/en/encryption-functions.html#function_md5",
+          "status": "verified",
+          "engine": "MySQL 8.0+"
+        }
+      }
+    },
+    "MONTHS_BETWEEN": {
+      "platforms": {
+        "postgres": {
+          "capability": "unsupported",
+          "remediation": "Postgres has no MONTHS_BETWEEN. Compute via (EXTRACT(YEAR FROM AGE(...))*12 + EXTRACT(MONTH FROM AGE(...))).",
+          "citation": "https://www.postgresql.org/docs/current/functions-datetime.html",
+          "status": "verified",
+          "engine": "PostgreSQL 12+"
+        },
+        "databricks": {
+          "capability": "native",
+          "emit": "months_between({end}, {start})",
+          "notes": "Returns a fractional month count; FLOOR(.../12) gives completed years.",
+          "citation": "https://docs.databricks.com/en/sql/language-manual/functions/months_between.html",
+          "status": "verified",
+          "engine": "Databricks Runtime 13+ / Apache Spark 3.4+ (Spark SQL)"
+        },
+        "snowflake": {
+          "capability": "native",
+          "emit": "MONTHS_BETWEEN({end}, {start})",
+          "citation": "https://docs.snowflake.com/en/sql-reference/functions/months_between",
+          "status": "verified",
+          "engine": "Snowflake (current)"
+        },
+        "bigquery": {
+          "capability": "unsupported",
+          "remediation": "No MONTHS_BETWEEN. Use DATE_DIFF({end}, {start}, MONTH) (boundary count) or a date_difference op.",
+          "citation": "https://cloud.google.com/bigquery/docs/reference/standard-sql/date_functions#date_diff",
+          "status": "verified",
+          "engine": "BigQuery Standard SQL (GoogleSQL, current)"
+        },
+        "mysql": {
+          "capability": "unsupported",
+          "remediation": "No MONTHS_BETWEEN. Use TIMESTAMPDIFF(MONTH, {start}, {end}).",
+          "citation": "https://dev.mysql.com/doc/refman/8.0/en/date-and-time-functions.html#function_timestampdiff",
+          "status": "verified",
+          "engine": "MySQL 8.0+"
+        }
+      }
+    },
+    "NVL2": {
+      "platforms": {
+        "snowflake": {
+          "capability": "native",
+          "emit": "NVL2({expr}, {if_not_null}, {if_null})",
+          "citation": "https://docs.snowflake.com/en/sql-reference/functions/nvl2",
+          "status": "conformance-verify",
+          "engine": "Snowflake (current)"
+        }
+      }
+    },
+    "PARSE_JSON": {
+      "platforms": {
+        "snowflake": {
+          "capability": "native",
+          "emit": "PARSE_JSON({string})",
+          "notes": "Returns a VARIANT; pair with :path / [idx] accessors and TRY_PARSE_JSON for lenient parsing.",
+          "citation": "https://docs.snowflake.com/en/sql-reference/functions/parse_json",
+          "status": "conformance-verify",
+          "engine": "Snowflake (current)"
+        }
+      }
+    },
+    "REGEXP_REPLACE": {
+      "platforms": {
+        "postgres": {
+          "capability": "native",
+          "emit": "REGEXP_REPLACE({s}, {pattern}, {repl}, 'g')",
+          "notes": "Replaces only the FIRST match unless the 4th-arg flag 'g' is passed. sqlglot renders the flag per dialect.",
+          "citation": "https://www.postgresql.org/docs/current/functions-matching.html",
+          "status": "verified",
+          "engine": "PostgreSQL 12+"
+        },
+        "databricks": {
+          "capability": "native",
+          "emit": "regexp_replace({s}, {pattern}, {repl})",
+          "notes": "Global by default; no 'g' flag.",
+          "citation": "https://docs.databricks.com/en/sql/language-manual/functions/regexp_replace.html",
+          "status": "verified",
+          "engine": "Databricks Runtime 13+ / Apache Spark 3.4+ (Spark SQL)"
+        },
+        "snowflake": {
+          "capability": "native",
+          "emit": "REGEXP_REPLACE({s}, {pattern}, {repl})",
+          "notes": "Replaces all occurrences when neither position nor occurrence is given.",
+          "citation": "https://docs.snowflake.com/en/sql-reference/functions/regexp_replace",
+          "status": "verified",
+          "engine": "Snowflake (current)"
+        },
+        "bigquery": {
+          "capability": "native",
+          "emit": "REGEXP_REPLACE({s}, {pattern}, {repl})",
+          "notes": "Global by default; uses RE2 pattern syntax.",
+          "citation": "https://cloud.google.com/bigquery/docs/reference/standard-sql/string_functions#regexp_replace",
+          "status": "verified",
+          "engine": "BigQuery Standard SQL (GoogleSQL, current)"
+        },
+        "mysql": {
+          "capability": "native",
+          "emit": "REGEXP_REPLACE({s}, {pattern}, {repl})",
+          "notes": "MySQL 8.0+; global by default.",
+          "citation": "https://dev.mysql.com/doc/refman/8.0/en/regexp.html#function_regexp-replace",
+          "status": "verified",
+          "engine": "MySQL 8.0+"
+        }
+      }
+    },
+    "SHA1": {
+      "platforms": {
+        "postgres": {
+          "capability": "unsupported",
+          "remediation": "No native SHA1. Use DIGEST via pgcrypto: ENCODE(DIGEST({text}, 'sha1'), 'hex').",
+          "citation": "https://www.postgresql.org/docs/current/pgcrypto.html",
+          "status": "verified",
+          "engine": "PostgreSQL 12+"
+        },
+        "databricks": {
+          "capability": "native",
+          "emit": "sha1({text})",
+          "citation": "https://docs.databricks.com/en/sql/language-manual/functions/sha1.html",
+          "status": "verified",
+          "engine": "Databricks Runtime 13+ / Apache Spark 3.4+ (Spark SQL)"
+        },
+        "snowflake": {
+          "capability": "native",
+          "emit": "SHA1({text})",
+          "citation": "https://docs.snowflake.com/en/sql-reference/functions/sha1",
+          "status": "verified",
+          "engine": "Snowflake (current)"
+        },
+        "bigquery": {
+          "capability": "emulated",
+          "emit": "TO_HEX(SHA1({text}))",
+          "notes": "SHA1() returns BYTES; wrap in TO_HEX(...).",
+          "citation": "https://cloud.google.com/bigquery/docs/reference/standard-sql/hash_functions#sha1",
+          "status": "verified",
+          "engine": "BigQuery Standard SQL (GoogleSQL, current)"
+        },
+        "mysql": {
+          "capability": "native",
+          "emit": "SHA1({text})",
+          "citation": "https://dev.mysql.com/doc/refman/8.0/en/encryption-functions.html#function_sha1",
+          "status": "verified",
+          "engine": "MySQL 8.0+"
+        }
+      }
+    },
+    "SHA2": {
+      "platforms": {
+        "postgres": {
+          "capability": "unsupported",
+          "remediation": "No native SHA2. Use DIGEST via pgcrypto: ENCODE(DIGEST({text}, 'sha256'), 'hex').",
+          "citation": "https://www.postgresql.org/docs/current/pgcrypto.html",
+          "status": "verified",
+          "engine": "PostgreSQL 12+"
+        },
+        "databricks": {
+          "capability": "native",
+          "emit": "sha2({text}, 256)",
+          "notes": "Second arg is the bit length (0/224/256/384/512).",
+          "citation": "https://docs.databricks.com/en/sql/language-manual/functions/sha2.html",
+          "status": "verified",
+          "engine": "Databricks Runtime 13+ / Apache Spark 3.4+ (Spark SQL)"
+        },
+        "snowflake": {
+          "capability": "native",
+          "emit": "SHA2({text}, 256)",
+          "citation": "https://docs.snowflake.com/en/sql-reference/functions/sha2",
+          "status": "verified",
+          "engine": "Snowflake (current)"
+        },
+        "bigquery": {
+          "capability": "unsupported",
+          "remediation": "No bit-length SHA2(). Use SHA256({text}) / SHA512({text}) (both return BYTES; wrap in TO_HEX).",
+          "citation": "https://cloud.google.com/bigquery/docs/reference/standard-sql/hash_functions#sha256",
+          "status": "verified",
+          "engine": "BigQuery Standard SQL (GoogleSQL, current)"
+        },
+        "mysql": {
+          "capability": "native",
+          "emit": "SHA2({text}, 256)",
+          "citation": "https://dev.mysql.com/doc/refman/8.0/en/encryption-functions.html#function_sha2",
+          "status": "verified",
+          "engine": "MySQL 8.0+"
+        }
+      }
+    },
+    "SHA256": {
+      "platforms": {
+        "bigquery": {
+          "capability": "emulated",
+          "emit": "TO_HEX(SHA256({text}))",
+          "notes": "SHA256() returns BYTES; wrap in TO_HEX(...). BigQuery has SHA256/SHA512, not a bit-length SHA2().",
+          "citation": "https://cloud.google.com/bigquery/docs/reference/standard-sql/hash_functions#sha256",
+          "status": "verified",
+          "engine": "BigQuery Standard SQL (GoogleSQL, current)"
+        }
+      }
+    },
+    "SPLIT_PART": {
+      "platforms": {
+        "postgres": {
+          "capability": "native",
+          "emit": "SPLIT_PART({s}, {delim}, {idx})",
+          "notes": "1-based index; returns '' when idx exceeds the number of fields.",
+          "citation": "https://www.postgresql.org/docs/current/functions-string.html",
+          "status": "verified",
+          "engine": "PostgreSQL 12+"
+        },
+        "databricks": {
+          "capability": "native",
+          "emit": "split_part({s}, {delim}, {idx})",
+          "notes": "Available since Spark 3.1.1. 1-based index.",
+          "citation": "https://docs.databricks.com/en/sql/language-manual/functions/split_part.html",
+          "status": "verified",
+          "engine": "Databricks Runtime 13+ / Apache Spark 3.4+ (Spark SQL)"
+        },
+        "snowflake": {
+          "capability": "native",
+          "emit": "SPLIT_PART({s}, {delim}, {idx})",
+          "notes": "1-based index; index 0 is treated as 1.",
+          "citation": "https://docs.snowflake.com/en/sql-reference/functions/split_part",
+          "status": "verified",
+          "engine": "Snowflake (current)"
+        },
+        "bigquery": {
+          "capability": "unsupported",
+          "remediation": "BigQuery has no SPLIT_PART. Use SPLIT({s}, {delim})[SAFE_OFFSET({idx}-1)] (SPLIT returns a 0-based array).",
+          "citation": "https://cloud.google.com/bigquery/docs/reference/standard-sql/string_functions#split",
+          "status": "verified",
+          "engine": "BigQuery Standard SQL (GoogleSQL, current)"
+        },
+        "mysql": {
+          "capability": "unsupported",
+          "remediation": "MySQL has no SPLIT_PART. Use SUBSTRING_INDEX(SUBSTRING_INDEX({s}, {delim}, {idx}), {delim}, -1).",
+          "citation": "https://dev.mysql.com/doc/refman/8.0/en/string-functions.html#function_substring-index",
+          "status": "verified",
+          "engine": "MySQL 8.0+"
+        }
+      }
+    },
+    "TIMESTAMPDIFF": {
+      "platforms": {
+        "postgres": {
+          "capability": "unsupported",
+          "remediation": "Postgres has no TIMESTAMPDIFF. Use a date_difference op or interval arithmetic.",
+          "citation": "https://www.postgresql.org/docs/current/functions-datetime.html",
+          "status": "verified",
+          "engine": "PostgreSQL 12+"
+        },
+        "databricks": {
+          "capability": "unsupported",
+          "remediation": "No TIMESTAMPDIFF. Use a date_difference op, months_between, or datediff(unit, start, end).",
+          "citation": "https://docs.databricks.com/en/sql/language-manual/functions/datediff.html",
+          "status": "verified",
+          "engine": "Databricks Runtime 13+ / Apache Spark 3.4+ (Spark SQL)"
+        },
+        "snowflake": {
+          "capability": "native",
+          "emit": "TIMESTAMPDIFF({part}, {start}, {end})",
+          "notes": "Alias of DATEDIFF in Snowflake.",
+          "citation": "https://docs.snowflake.com/en/sql-reference/functions/timestampdiff",
+          "status": "verified",
+          "engine": "Snowflake (current)"
+        },
+        "bigquery": {
+          "capability": "unsupported",
+          "remediation": "No TIMESTAMPDIFF. Use TIMESTAMP_DIFF({end}, {start}, {part}) or DATE_DIFF for dates.",
+          "citation": "https://cloud.google.com/bigquery/docs/reference/standard-sql/timestamp_functions#timestamp_diff",
+          "status": "verified",
+          "engine": "BigQuery Standard SQL (GoogleSQL, current)"
+        },
+        "mysql": {
+          "capability": "native",
+          "emit": "TIMESTAMPDIFF({unit}, {start}, {end})",
+          "notes": "TIMESTAMPDIFF(YEAR, start, end) yields COMPLETED whole years (elapsed, not boundary).",
+          "citation": "https://dev.mysql.com/doc/refman/8.0/en/date-and-time-functions.html#function_timestampdiff",
+          "status": "verified",
+          "engine": "MySQL 8.0+"
+        }
+      }
+    },
+    "TO_CHAR": {
+      "platforms": {
+        "postgres": {
+          "capability": "native",
+          "emit": "TO_CHAR({value}, {format})",
+          "notes": "Postgres format model differs from Oracle/Snowflake tokens in edge cases; treat format tokens as a neutral set.",
+          "citation": "https://www.postgresql.org/docs/current/functions-formatting.html",
+          "status": "verified",
+          "engine": "PostgreSQL 12+"
+        },
+        "databricks": {
+          "capability": "unsupported",
+          "remediation": "No date TO_CHAR. Use date_format({ts}, {format}) for temporal formatting.",
+          "citation": "https://docs.databricks.com/en/sql/language-manual/functions/date_format.html",
+          "status": "verified",
+          "engine": "Databricks Runtime 13+ / Apache Spark 3.4+ (Spark SQL)"
+        },
+        "snowflake": {
+          "capability": "native",
+          "emit": "TO_CHAR({value}, {format})",
+          "notes": "Snowflake TO_CHAR/TO_VARCHAR format model; tokens differ from Postgres in edge cases.",
+          "citation": "https://docs.snowflake.com/en/sql-reference/functions/to_char",
+          "status": "verified",
+          "engine": "Snowflake (current)"
+        },
+        "bigquery": {
+          "capability": "unsupported",
+          "remediation": "No TO_CHAR. Use FORMAT_DATE / FORMAT_TIMESTAMP / FORMAT_DATETIME with strftime-style format elements.",
+          "citation": "https://cloud.google.com/bigquery/docs/reference/standard-sql/date_functions#format_date",
+          "status": "verified",
+          "engine": "BigQuery Standard SQL (GoogleSQL, current)"
+        },
+        "mysql": {
+          "capability": "unsupported",
+          "remediation": "No TO_CHAR. Use DATE_FORMAT({ts}, {format}) for temporal formatting.",
+          "citation": "https://dev.mysql.com/doc/refman/8.0/en/date-and-time-functions.html#function_date-format",
+          "status": "verified",
+          "engine": "MySQL 8.0+"
+        }
+      }
+    },
+    "TO_NUMBER": {
+      "platforms": {
+        "snowflake": {
+          "capability": "native",
+          "emit": "TO_NUMBER({expr}) | TRY_TO_NUMBER({expr})",
+          "notes": "Author-facing TO_NUMBER / TRY_TO_NUMBER both canonicalise to TO_NUMBER under the snowflake dialect; both are native (TRY_ variant returns NULL on failure).",
+          "citation": "https://docs.snowflake.com/en/sql-reference/functions/to_decimal",
+          "status": "conformance-verify",
+          "engine": "Snowflake (current)"
+        }
+      }
+    },
+    "TO_TIMESTAMP": {
+      "platforms": {
+        "snowflake": {
+          "capability": "native",
+          "emit": "TO_TIMESTAMP({expr} [, {format}])",
+          "notes": "Also TO_TIMESTAMP_LTZ/_TZ variants; the bare form respects the session TIMESTAMP mapping.",
+          "citation": "https://docs.snowflake.com/en/sql-reference/functions/to_timestamp",
+          "status": "conformance-verify",
+          "engine": "Snowflake (current)"
+        }
+      }
+    },
+    "TO_TIMESTAMP_NTZ": {
+      "platforms": {
+        "snowflake": {
+          "capability": "native",
+          "emit": "TO_TIMESTAMP_NTZ({expr} [, {format}])",
+          "notes": "Wall-clock (no timezone) timestamp.",
+          "citation": "https://docs.snowflake.com/en/sql-reference/functions/to_timestamp",
+          "status": "conformance-verify",
+          "engine": "Snowflake (current)"
+        }
+      }
+    },
+    "TRY_CAST": {
+      "platforms": {
+        "snowflake": {
+          "capability": "native",
+          "emit": "TRY_CAST({expr} AS {type})",
+          "notes": "Returns NULL instead of raising on an invalid cast.",
+          "citation": "https://docs.snowflake.com/en/sql-reference/functions/try_cast",
+          "status": "conformance-verify",
+          "engine": "Snowflake (current)"
+        }
+      }
+    },
+    "TS_OR_DS_TO_DATE": {
+      "platforms": {
+        "snowflake": {
+          "capability": "native",
+          "emit": "TO_DATE({expr} [, {format}])",
+          "notes": "Author-facing TO_DATE / TRY_TO_DATE canonicalise to sqlglot's TS_OR_DS_TO_DATE under the snowflake dialect; renders back to TO_DATE. Native.",
+          "citation": "https://docs.snowflake.com/en/sql-reference/functions/to_date",
+          "status": "conformance-verify",
+          "engine": "Snowflake (current)"
+        }
+      }
+    }
+  },
+  "ops": {
+    "date_difference": {
+      "semantics": {
+        "completed_units": {
+          "postgres": {
+            "capability": "native",
+            "emit": "EXTRACT(YEAR FROM AGE({end}, {start}))",
+            "notes": "AGE() yields a symbolic interval; EXTRACT(YEAR ...) reads completed whole years. Only YEAR shown; MONTH/DAY analogous.",
+            "status": "conformance-verify",
+            "citation": "https://www.postgresql.org/docs/current/functions-datetime.html",
+            "engine": "PostgreSQL 12+"
+          },
+          "databricks": {
+            "capability": "emulated",
+            "emit": "FLOOR(MONTHS_BETWEEN({end}, {start}) / 12)",
+            "notes": "Completed whole years. months_between is fractional; FLOOR after /12 yields completed years.",
+            "status": "conformance-verify",
+            "citation": "https://docs.databricks.com/en/sql/language-manual/functions/months_between.html",
+            "engine": "Databricks Runtime 13+ / Apache Spark 3.4+ (Spark SQL)"
+          },
+          "snowflake": {
+            "capability": "emulated",
+            "emit": "FLOOR(MONTHS_BETWEEN({end}, {start}) / 12)",
+            "notes": "Completed whole years.",
+            "status": "conformance-verify",
+            "citation": "https://docs.snowflake.com/en/sql-reference/functions/months_between",
+            "engine": "Snowflake (current)"
+          },
+          "bigquery": {
+            "capability": "emulated",
+            "emit": "DATE_DIFF({end}, {start}, YEAR) - IF((EXTRACT(MONTH FROM {end}), EXTRACT(DAY FROM {end})) < (EXTRACT(MONTH FROM {start}), EXTRACT(DAY FROM {start})), 1, 0)",
+            "notes": "DATE_DIFF YEAR counts boundaries; subtract 1 when the end's month/day is before the start's to get completed elapsed years.",
+            "status": "conformance-verify",
+            "citation": "https://cloud.google.com/bigquery/docs/reference/standard-sql/date_functions#date_diff",
+            "engine": "BigQuery Standard SQL (GoogleSQL, current)"
+          },
+          "mysql": {
+            "capability": "native",
+            "emit": "TIMESTAMPDIFF(YEAR, {start}, {end})",
+            "notes": "Completed whole years (elapsed).",
+            "status": "conformance-verify",
+            "citation": "https://dev.mysql.com/doc/refman/8.0/en/date-and-time-functions.html#function_timestampdiff",
+            "engine": "MySQL 8.0+"
+          }
+        },
+        "boundary_count": {
+          "postgres": {
+            "capability": "native",
+            "emit": "EXTRACT(YEAR FROM {end}) - EXTRACT(YEAR FROM {start})",
+            "notes": "Counts calendar-year boundaries crossed, NOT completed elapsed years.",
+            "status": "conformance-verify",
+            "citation": "https://www.postgresql.org/docs/current/functions-datetime.html",
+            "engine": "PostgreSQL 12+"
+          },
+          "databricks": {
+            "capability": "native",
+            "emit": "YEAR({end}) - YEAR({start})",
+            "notes": "Calendar-year boundaries crossed, NOT completed elapsed years.",
+            "status": "conformance-verify",
+            "citation": "https://docs.databricks.com/en/sql/language-manual/functions/year.html",
+            "engine": "Databricks Runtime 13+ / Apache Spark 3.4+ (Spark SQL)"
+          },
+          "snowflake": {
+            "capability": "native",
+            "emit": "DATEDIFF('year', {start}, {end})",
+            "notes": "Counts calendar-year boundaries, NOT completed elapsed years.",
+            "status": "conformance-verify",
+            "citation": "https://docs.snowflake.com/en/sql-reference/functions/datediff",
+            "engine": "Snowflake (current)"
+          },
+          "bigquery": {
+            "capability": "native",
+            "emit": "DATE_DIFF({end}, {start}, YEAR)",
+            "notes": "Counts calendar-year boundaries crossed.",
+            "status": "conformance-verify",
+            "citation": "https://cloud.google.com/bigquery/docs/reference/standard-sql/date_functions#date_diff",
+            "engine": "BigQuery Standard SQL (GoogleSQL, current)"
+          },
+          "mysql": {
+            "capability": "native",
+            "emit": "YEAR({end}) - YEAR({start})",
+            "notes": "Calendar-year boundaries crossed, NOT completed elapsed years.",
+            "status": "conformance-verify",
+            "citation": "https://dev.mysql.com/doc/refman/8.0/en/date-and-time-functions.html#function_year",
+            "engine": "MySQL 8.0+"
+          }
+        },
+        "symbolic_interval": {
+          "postgres": {
+            "capability": "native",
+            "emit": "AGE({end}, {start})",
+            "notes": "The composite years+months+days interval; only Postgres expresses this natively.",
+            "status": "verified",
+            "citation": "https://www.postgresql.org/docs/current/functions-datetime.html",
+            "engine": "PostgreSQL 12+"
+          },
+          "databricks": {
+            "capability": "unsupported",
+            "remediation": "No native symbolic (yrs+mos+days) interval. Emit separate completed_units per unit, or a struct of counts.",
+            "citation": "https://docs.databricks.com/en/sql/language-manual/sql-ref-datetime-pattern.html",
+            "status": "verified",
+            "engine": "Databricks Runtime 13+ / Apache Spark 3.4+ (Spark SQL)"
+          },
+          "snowflake": {
+            "capability": "unsupported",
+            "remediation": "No native symbolic (yrs+mos+days) interval. Emit separate completed_units per unit, or an OBJECT of counts.",
+            "citation": "https://docs.snowflake.com/en/sql-reference/functions-date-time",
+            "status": "verified",
+            "engine": "Snowflake (current)"
+          },
+          "bigquery": {
+            "capability": "unsupported",
+            "remediation": "No native symbolic (yrs+mos+days) interval. Emit separate completed_units per unit, or a STRUCT of counts.",
+            "citation": "https://cloud.google.com/bigquery/docs/reference/standard-sql/date_functions",
+            "status": "verified",
+            "engine": "BigQuery Standard SQL (GoogleSQL, current)"
+          },
+          "mysql": {
+            "capability": "unsupported",
+            "remediation": "No native symbolic (yrs+mos+days) interval. Emit separate completed_units per unit.",
+            "citation": "https://dev.mysql.com/doc/refman/8.0/en/date-and-time-functions.html",
+            "status": "verified",
+            "engine": "MySQL 8.0+"
+          }
+        }
+      }
+    },
+    "split_part": {
+      "semantics": {
+        "default": {
+          "postgres": {
+            "capability": "native",
+            "emit": "SPLIT_PART({s}, {delim}, {idx})",
+            "notes": "1-based index.",
+            "status": "verified",
+            "citation": "https://www.postgresql.org/docs/current/functions-string.html",
+            "engine": "PostgreSQL 12+"
+          },
+          "databricks": {
+            "capability": "native",
+            "emit": "split_part({s}, {delim}, {idx})",
+            "notes": "1-based index.",
+            "status": "verified",
+            "citation": "https://docs.databricks.com/en/sql/language-manual/functions/split_part.html",
+            "engine": "Databricks Runtime 13+ / Apache Spark 3.4+ (Spark SQL)"
+          },
+          "snowflake": {
+            "capability": "native",
+            "emit": "SPLIT_PART({s}, {delim}, {idx})",
+            "notes": "1-based index.",
+            "status": "verified",
+            "citation": "https://docs.snowflake.com/en/sql-reference/functions/split_part",
+            "engine": "Snowflake (current)"
+          },
+          "bigquery": {
+            "capability": "emulated",
+            "emit": "SPLIT({s}, {delim})[SAFE_OFFSET({idx} - 1)]",
+            "notes": "SPLIT returns a 0-based array; convert the 1-based neutral index. SAFE_OFFSET yields NULL (not error) when out of range, matching SPLIT_PART's empty-string tolerance loosely.",
+            "status": "conformance-verify",
+            "citation": "https://cloud.google.com/bigquery/docs/reference/standard-sql/string_functions#split",
+            "engine": "BigQuery Standard SQL (GoogleSQL, current)"
+          },
+          "mysql": {
+            "capability": "emulated",
+            "emit": "SUBSTRING_INDEX(SUBSTRING_INDEX({s}, {delim}, {idx}), {delim}, -1)",
+            "notes": "Emulates 1-based SPLIT_PART via nested SUBSTRING_INDEX.",
+            "status": "conformance-verify",
+            "citation": "https://dev.mysql.com/doc/refman/8.0/en/string-functions.html#function_substring-index",
+            "engine": "MySQL 8.0+"
+          }
+        }
+      }
+    }
+  }
+}

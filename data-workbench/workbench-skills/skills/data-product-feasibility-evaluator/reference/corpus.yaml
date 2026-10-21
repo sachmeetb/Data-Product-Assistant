@@ -1,0 +1,25 @@
+corpus_version: '1.1'
+generated_from: playbook/discovery/reference_data_products.yaml
+generated_at: '2026-08-18T02:32:08.384250+00:00'
+spec_count: 41
+domains:
+- Aggregated
+- Cards
+- Channel
+- Commercial Lending
+- Credit registry
+- Customer
+- Data Sharing & Consent
+- Digital
+- Enterprise
+- Everyday Banking
+- External Sector & Macro Research
+- Marketing & Sales
+- Master Reference
+- Operation
+- Payments
+- Retail Banking
+- Retail Lending
+- Risk
+- Statistics Microdata
+- Wealth

@@ -1,0 +1,376 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 820" width="1600" height="820" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif">
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#94A3B8"/>
+    </marker>
+    <marker id="arr-grn" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#16A34A"/>
+    </marker>
+    <marker id="arr-pur" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#7C3AED"/>
+    </marker>
+    <marker id="arr-blu" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#2563EB"/>
+    </marker>
+    <marker id="arr-pur-rev" viewBox="0 0 10 10" refX="1" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 10 0 L 0 5 L 10 10 z" fill="#7C3AED"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1600" height="820" fill="#F8FAFC"/>
+
+  <!-- ===================== TITLE BAR ===================== -->
+  <rect width="1600" height="52" fill="#0F172A"/>
+  <text x="800" y="28" text-anchor="middle" font-size="19" font-weight="700" fill="white">Data Workbench — Data Product Journey</text>
+  <text x="800" y="44" text-anchor="middle" font-size="11" fill="#94A3B8">v3 of 3 · End-to-End Flow · How a Data Product Goes from Idea to Marketplace</text>
+
+  <!-- ===================== PERSONA TRACKS ===================== -->
+  <!-- PO track label -->
+  <rect x="10" y="62" width="112" height="22" rx="4" fill="#DBEAFE" stroke="#3B82F6" stroke-width="1"/>
+  <text x="66" y="77" text-anchor="middle" font-size="9" font-weight="700" fill="#1D4ED8">Data Product Owner</text>
+  <!-- dotted guide line for PO -->
+  <line x1="122" y1="73" x2="1540" y2="73" stroke="#BFDBFE" stroke-width="1" stroke-dasharray="4,4"/>
+
+  <!-- Engineer track label -->
+  <rect x="10" y="90" width="112" height="22" rx="4" fill="#FEF3C7" stroke="#D97706" stroke-width="1"/>
+  <text x="66" y="105" text-anchor="middle" font-size="9" font-weight="700" fill="#92400E">Data Engineer</text>
+  <!-- dotted guide line for Engineer -->
+  <line x1="122" y1="101" x2="1540" y2="101" stroke="#FDE68A" stroke-width="1" stroke-dasharray="4,4"/>
+
+  <!-- ===================== PHASE BOXES (top flow) ===================== -->
+  <!-- 6 phases: x=130, 385, 640, 895, 1150, 1345 (last one smaller - marketplace) -->
+  <!-- Phase box: w=228, h=132, gap=17 -->
+  <!-- x: 130, 375, 620, 865, 1110, 1370 -->
+
+  <!-- ===== PHASE 1: Ideate & Define ===== -->
+  <rect x="130" y="60" width="228" height="132" rx="7" fill="#EFF6FF" stroke="#3B82F6" stroke-width="2"/>
+  <!-- PO indicator -->
+  <rect x="130" y="60" width="228" height="8" rx="7" fill="#3B82F6"/>
+  <text x="244" y="83" text-anchor="middle" font-size="11" font-weight="700" fill="#1D4ED8">① Ideate &amp; Define</text>
+  <text x="244" y="97" text-anchor="middle" font-size="8.5" fill="#374151">PO has a data product idea</text>
+  <text x="244" y="110" text-anchor="middle" font-size="8.5" fill="#374151">Chat assistant guides naming,</text>
+  <text x="244" y="123" text-anchor="middle" font-size="8.5" fill="#374151">schema, domain, quality rules</text>
+  <text x="244" y="137" text-anchor="middle" font-size="8.5" fill="#374151">→ Contract-first ODCS spec drafted</text>
+  <text x="244" y="152" text-anchor="middle" font-size="8" fill="#64748B">9-step wizard · Chat panel</text>
+  <text x="244" y="165" text-anchor="middle" font-size="7.5" fill="#3B82F6">PO-driven</text>
+  <text x="244" y="178" text-anchor="middle" font-size="7.5" fill="#94A3B8">product-authoring-assistant</text>
+
+  <!-- arrow → -->
+  <line x1="358" y1="126" x2="373" y2="126" stroke="#94A3B8" stroke-width="2" marker-end="url(#arr)"/>
+
+  <!-- ===== PHASE 2: Source Discovery ===== -->
+  <rect x="375" y="60" width="228" height="132" rx="7" fill="#FFFBF0" stroke="#D97706" stroke-width="2"/>
+  <!-- Engineer indicator -->
+  <rect x="375" y="60" width="228" height="8" rx="7" fill="#D97706"/>
+  <text x="489" y="83" text-anchor="middle" font-size="11" font-weight="700" fill="#92400E">② Source Discovery</text>
+  <text x="489" y="97" text-anchor="middle" font-size="8.5" fill="#374151">Engineer runs discovery on source DB</text>
+  <text x="489" y="110" text-anchor="middle" font-size="8.5" fill="#374151">Tables, columns, FKs catalogued</text>
+  <text x="489" y="123" text-anchor="middle" font-size="8.5" fill="#374151">Statistical profiling executed</text>
+  <text x="489" y="137" text-anchor="middle" font-size="8.5" fill="#374151">→ Full catalog written to Neo4j</text>
+  <text x="489" y="152" text-anchor="middle" font-size="8" fill="#64748B">Pipeline · Workbench UI</text>
+  <text x="489" y="165" text-anchor="middle" font-size="7.5" fill="#D97706">Engineer-driven</text>
+  <text x="489" y="178" text-anchor="middle" font-size="7.5" fill="#94A3B8">data-discovery · data-profiling</text>
+
+  <!-- arrow → -->
+  <line x1="603" y1="126" x2="618" y2="126" stroke="#94A3B8" stroke-width="2" marker-end="url(#arr)"/>
+
+  <!-- ===== PHASE 3: Assess & Enrich ===== -->
+  <rect x="620" y="60" width="228" height="132" rx="7" fill="#FFFBF0" stroke="#D97706" stroke-width="2"/>
+  <rect x="620" y="60" width="228" height="8" rx="7" fill="#D97706"/>
+  <text x="734" y="83" text-anchor="middle" font-size="11" font-weight="700" fill="#92400E">③ Assess &amp; Enrich</text>
+  <text x="734" y="97" text-anchor="middle" font-size="8.5" fill="#374151">DQ rules generated from profiling</text>
+  <text x="734" y="110" text-anchor="middle" font-size="8.5" fill="#374151">Column descriptions + names enriched</text>
+  <text x="734" y="123" text-anchor="middle" font-size="8.5" fill="#374151">Table relationship types classified</text>
+  <text x="734" y="137" text-anchor="middle" font-size="8.5" fill="#374151">→ Enriched catalog ready for PO review</text>
+  <text x="734" y="152" text-anchor="middle" font-size="8" fill="#64748B">Pipeline · Reviews tab</text>
+  <text x="734" y="165" text-anchor="middle" font-size="7.5" fill="#D97706">Engineer-driven</text>
+  <text x="734" y="178" text-anchor="middle" font-size="7.5" fill="#94A3B8">metadata-enrichment · data-quality-*</text>
+
+  <!-- arrow → -->
+  <line x1="848" y1="126" x2="863" y2="126" stroke="#94A3B8" stroke-width="2" marker-end="url(#arr)"/>
+
+  <!-- ===== PHASE 4: Shape & Validate ===== -->
+  <!-- Both PO + Engineer here - use gradient/split -->
+  <rect x="865" y="60" width="228" height="132" rx="7" fill="#F5F0FF" stroke="#7C3AED" stroke-width="2"/>
+  <rect x="865" y="60" width="228" height="8" rx="7" fill="#7C3AED"/>
+  <text x="979" y="83" text-anchor="middle" font-size="11" font-weight="700" fill="#4C1D95">④ Shape &amp; Validate</text>
+  <text x="979" y="97" text-anchor="middle" font-size="8.5" fill="#374151">PO reviews: names + descriptions + rules</text>
+  <text x="979" y="110" text-anchor="middle" font-size="8.5" fill="#374151">PO binds source products (consumer)</text>
+  <text x="979" y="123" text-anchor="middle" font-size="8.5" fill="#374151">Gap analysis: can spec be satisfied?</text>
+  <text x="979" y="137" text-anchor="middle" font-size="8.5" fill="#374151">→ Approved ODCS spec committed</text>
+  <text x="979" y="152" text-anchor="middle" font-size="8" fill="#64748B">Validation gate · Wizard step 8</text>
+  <!-- Dual persona indicator -->
+  <rect x="875" y="161" width="90" height="14" rx="3" fill="#DBEAFE"/>
+  <text x="920" y="171" text-anchor="middle" font-size="7.5" fill="#1D4ED8">PO-driven</text>
+  <rect x="975" y="161" width="108" height="14" rx="3" fill="#FEF3C7"/>
+  <text x="1029" y="171" text-anchor="middle" font-size="7.5" fill="#92400E">Engineer reviews</text>
+  <text x="979" y="188" text-anchor="middle" font-size="7.5" fill="#94A3B8">gap-analyzer · archetype-classifier</text>
+
+  <!-- arrow → -->
+  <line x1="1093" y1="126" x2="1108" y2="126" stroke="#94A3B8" stroke-width="2" marker-end="url(#arr)"/>
+
+  <!-- ===== PHASE 5: Map & Serve ===== -->
+  <rect x="1110" y="60" width="228" height="132" rx="7" fill="#FFFBF0" stroke="#D97706" stroke-width="2"/>
+  <rect x="1110" y="60" width="228" height="8" rx="7" fill="#D97706"/>
+  <text x="1224" y="83" text-anchor="middle" font-size="11" font-weight="700" fill="#92400E">⑤ Map &amp; Serve</text>
+  <text x="1224" y="97" text-anchor="middle" font-size="8.5" fill="#374151">AI maps source → target columns</text>
+  <text x="1224" y="110" text-anchor="middle" font-size="8.5" fill="#374151">Engineer reviews + approves/replaces</text>
+  <text x="1224" y="123" text-anchor="middle" font-size="8.5" fill="#374151">Virtual SQL views generated + deployed</text>
+  <text x="1224" y="137" text-anchor="middle" font-size="8.5" fill="#374151">→ Deployable data product ready</text>
+  <text x="1224" y="152" text-anchor="middle" font-size="8" fill="#64748B">MappingReviewPanel · Pipeline</text>
+  <text x="1224" y="165" text-anchor="middle" font-size="7.5" fill="#D97706">Engineer-driven</text>
+  <text x="1224" y="178" text-anchor="middle" font-size="7.5" fill="#94A3B8">data-mapping-neo4j · data-serving-virtual-view</text>
+
+  <!-- arrow → -->
+  <line x1="1338" y1="126" x2="1353" y2="126" stroke="#94A3B8" stroke-width="2" marker-end="url(#arr)"/>
+
+  <!-- ===== PHASE 6: Marketplace ===== -->
+  <rect x="1355" y="60" width="210" height="132" rx="7" fill="#EFF6FF" stroke="#2563EB" stroke-width="2"/>
+  <rect x="1355" y="60" width="210" height="8" rx="7" fill="#2563EB"/>
+  <text x="1460" y="83" text-anchor="middle" font-size="11" font-weight="700" fill="#1D4ED8">⑥ Publish</text>
+  <text x="1460" y="97" text-anchor="middle" font-size="8.5" fill="#374151">PO deploys + publishes product</text>
+  <text x="1460" y="110" text-anchor="middle" font-size="8.5" fill="#374151">OSI readiness scored</text>
+  <text x="1460" y="123" text-anchor="middle" font-size="8.5" fill="#374151">Product visible in Marketplace</text>
+  <text x="1460" y="137" text-anchor="middle" font-size="8.5" fill="#374151">Consumers can discover + consume</text>
+  <text x="1460" y="152" text-anchor="middle" font-size="8" fill="#64748B">Marketplace · Score OSI now</text>
+  <text x="1460" y="165" text-anchor="middle" font-size="7.5" fill="#3B82F6">PO-driven</text>
+  <text x="1460" y="178" text-anchor="middle" font-size="7.5" fill="#94A3B8">data-product-question-analyzer</text>
+
+  <!-- ===================== AGENT SKILLS ENGINE ROOM ===================== -->
+  <!-- Header connecting to phase flow -->
+  <text x="800" y="210" text-anchor="middle" font-size="9" fill="#64748B">↓  Each phase is executed by Agent Skills via the Agent Harness  ↓</text>
+
+  <!-- Big skills container -->
+  <rect x="10" y="222" width="1580" height="282" rx="10" fill="#F0FFF4" stroke="#16A34A" stroke-width="3"/>
+  <rect x="10" y="222" width="1580" height="34" rx="10" fill="#16A34A"/>
+  <rect x="10" y="242" width="1580" height="14" fill="#16A34A"/>
+  <text x="420" y="245" text-anchor="middle" font-size="13" font-weight="700" fill="white">Agent Skills Ecosystem  +  Agent Harness</text>
+  <text x="1050" y="243" text-anchor="middle" font-size="9" fill="rgba(255,255,255,0.9)">Goal → Model call → Loop until achieved · SDK: Claude Code (now) → Anthropic Agent SDK (target) · Anthropic Models</text>
+
+  <!-- Phase-to-skills mapping - shows which skills power which phase -->
+  <!-- Phase columns aligned to phases above (shifted slightly for skill section) -->
+  <!-- Col x: 15, 260, 505, 750, 995, 1365 ... let me recalculate from SVG left -->
+  <!-- Skills section spans full width 10-1590 = 1580px -->
+  <!-- 6 cols: each (1580-60)/6 = 253px, gap=10 → 6*253 = 1518 + 5*10 = 1568. With pad 16: ok -->
+
+  <!-- Skill group 1: Product Authoring -->
+  <rect x="24" y="264" width="243" height="230" rx="6" fill="white" stroke="#86EFAC" stroke-width="1.5"/>
+  <rect x="24" y="264" width="243" height="20" rx="6" fill="#BBF7D0"/>
+  <rect x="24" y="274" width="243" height="10" fill="#BBF7D0"/>
+  <text x="145" y="278" text-anchor="middle" font-size="10" font-weight="700" fill="#14532D">Skills: Product Authoring</text>
+  <text x="145" y="296" text-anchor="middle" font-size="8.5" fill="#166534">product-authoring-assistant</text>
+  <text x="145" y="309" text-anchor="middle" font-size="8.5" fill="#166534">data-product-name-advisor</text>
+  <text x="145" y="322" text-anchor="middle" font-size="8.5" fill="#166534">data-product-schema-advisor</text>
+  <text x="145" y="335" text-anchor="middle" font-size="8.5" fill="#166534">data-product-spec-writer</text>
+  <line x1="38" y1="345" x2="254" y2="345" stroke="#D1FAE5" stroke-width="1"/>
+  <text x="145" y="360" text-anchor="middle" font-size="8" font-weight="600" fill="#15803D">What they do:</text>
+  <text x="145" y="374" text-anchor="middle" font-size="8" fill="#374151">Guide PO through ODCS spec</text>
+  <text x="145" y="387" text-anchor="middle" font-size="8" fill="#374151">authoring. Suggest names, schema</text>
+  <text x="145" y="400" text-anchor="middle" font-size="8" fill="#374151">columns, quality rules. Preview</text>
+  <text x="145" y="413" text-anchor="middle" font-size="8" fill="#374151">gap check vs available sources.</text>
+  <line x1="38" y1="423" x2="254" y2="423" stroke="#D1FAE5" stroke-width="1"/>
+  <text x="145" y="437" text-anchor="middle" font-size="8" fill="#7C3AED">Neo4j: writes :DataContract</text>
+  <text x="145" y="450" text-anchor="middle" font-size="8" fill="#7C3AED">:DataContractSchema</text>
+  <text x="145" y="463" text-anchor="middle" font-size="8" fill="#7C3AED">:PropertyShape (rules)</text>
+  <rect x="34" y="473" width="222" height="14" rx="7" fill="#DCFCE7" stroke="#86EFAC" stroke-width="1"/>
+  <text x="145" y="484" text-anchor="middle" font-size="7.5" fill="#15803D">Powered by Phase ① (Ideate &amp; Define)</text>
+
+  <!-- Skill group 2: Discovery + Profiling -->
+  <rect x="281" y="264" width="243" height="230" rx="6" fill="white" stroke="#86EFAC" stroke-width="1.5"/>
+  <rect x="281" y="264" width="243" height="20" rx="6" fill="#BBF7D0"/>
+  <rect x="281" y="274" width="243" height="10" fill="#BBF7D0"/>
+  <text x="402" y="278" text-anchor="middle" font-size="10" font-weight="700" fill="#14532D">Skills: Discovery + Profiling</text>
+  <text x="402" y="296" text-anchor="middle" font-size="8.5" fill="#166534">data-discovery</text>
+  <text x="402" y="309" text-anchor="middle" font-size="8.5" fill="#166534">data-discovery-mysql</text>
+  <text x="402" y="322" text-anchor="middle" font-size="8.5" fill="#166534">data-profiling</text>
+  <text x="402" y="335" text-anchor="middle" font-size="8.5" fill="#166534">data-profiling-to-dqv-neo4j</text>
+  <line x1="295" y1="345" x2="511" y2="345" stroke="#D1FAE5" stroke-width="1"/>
+  <text x="402" y="360" text-anchor="middle" font-size="8" font-weight="600" fill="#15803D">What they do:</text>
+  <text x="402" y="374" text-anchor="middle" font-size="8" fill="#374151">Extract schema from source DB.</text>
+  <text x="402" y="387" text-anchor="middle" font-size="8" fill="#374151">Statistical column profiling. FK</text>
+  <text x="402" y="400" text-anchor="middle" font-size="8" fill="#374151">relationship discovery. Write full</text>
+  <text x="402" y="413" text-anchor="middle" font-size="8" fill="#374151">catalog to Neo4j.</text>
+  <line x1="295" y1="423" x2="511" y2="423" stroke="#D1FAE5" stroke-width="1"/>
+  <text x="402" y="437" text-anchor="middle" font-size="8" fill="#7C3AED">Neo4j: writes :Catalog</text>
+  <text x="402" y="450" text-anchor="middle" font-size="8" fill="#7C3AED">:Dataset · :Column</text>
+  <text x="402" y="463" text-anchor="middle" font-size="8" fill="#7C3AED">:ProfilingRun · :ColumnProfile</text>
+  <rect x="291" y="473" width="222" height="14" rx="7" fill="#DCFCE7" stroke="#86EFAC" stroke-width="1"/>
+  <text x="402" y="484" text-anchor="middle" font-size="7.5" fill="#15803D">Powered by Phase ② (Source Discovery)</text>
+
+  <!-- Skill group 3: Enrichment + DQ -->
+  <rect x="538" y="264" width="243" height="230" rx="6" fill="white" stroke="#86EFAC" stroke-width="1.5"/>
+  <rect x="538" y="264" width="243" height="20" rx="6" fill="#BBF7D0"/>
+  <rect x="538" y="274" width="243" height="10" fill="#BBF7D0"/>
+  <text x="659" y="278" text-anchor="middle" font-size="10" font-weight="700" fill="#14532D">Skills: Enrichment + Quality</text>
+  <text x="659" y="296" text-anchor="middle" font-size="8.5" fill="#166534">metadata-enrichment</text>
+  <text x="659" y="309" text-anchor="middle" font-size="8.5" fill="#166534">column-name-standardizer</text>
+  <text x="659" y="322" text-anchor="middle" font-size="8.5" fill="#166534">data-quality-rule-generation</text>
+  <text x="659" y="335" text-anchor="middle" font-size="8.5" fill="#166534">domain-rule-enhancement</text>
+  <line x1="552" y1="345" x2="768" y2="345" stroke="#D1FAE5" stroke-width="1"/>
+  <text x="659" y="360" text-anchor="middle" font-size="8" font-weight="600" fill="#15803D">What they do:</text>
+  <text x="659" y="374" text-anchor="middle" font-size="8" fill="#374151">LLM descriptions for columns +</text>
+  <text x="659" y="387" text-anchor="middle" font-size="8" fill="#374151">tables. Standardize names. Generate</text>
+  <text x="659" y="400" text-anchor="middle" font-size="8" fill="#374151">DQ rules from profiling + domain</text>
+  <text x="659" y="413" text-anchor="middle" font-size="8" fill="#374151">catalog. Table classification.</text>
+  <line x1="552" y1="423" x2="768" y2="423" stroke="#D1FAE5" stroke-width="1"/>
+  <text x="659" y="437" text-anchor="middle" font-size="8" fill="#7C3AED">Neo4j: writes :ColumnDescription</text>
+  <text x="659" y="450" text-anchor="middle" font-size="8" fill="#7C3AED">:TableDescription</text>
+  <text x="659" y="463" text-anchor="middle" font-size="8" fill="#7C3AED">:PropertyShape (DQ rules)</text>
+  <rect x="548" y="473" width="222" height="14" rx="7" fill="#DCFCE7" stroke="#86EFAC" stroke-width="1"/>
+  <text x="659" y="484" text-anchor="middle" font-size="7.5" fill="#15803D">Powered by Phase ③ (Assess &amp; Enrich)</text>
+
+  <!-- Skill group 4: Gap Analysis + Ingest -->
+  <rect x="795" y="264" width="243" height="230" rx="6" fill="white" stroke="#86EFAC" stroke-width="1.5"/>
+  <rect x="795" y="264" width="243" height="20" rx="6" fill="#BBF7D0"/>
+  <rect x="795" y="274" width="243" height="10" fill="#BBF7D0"/>
+  <text x="916" y="278" text-anchor="middle" font-size="10" font-weight="700" fill="#14532D">Skills: Validation + Ingest</text>
+  <text x="916" y="296" text-anchor="middle" font-size="8.5" fill="#166534">data-product-gap-analyzer</text>
+  <text x="916" y="309" text-anchor="middle" font-size="8.5" fill="#166534">data-product-archetype-classifier</text>
+  <text x="916" y="322" text-anchor="middle" font-size="8.5" fill="#166534">data-product-discovery-advisor</text>
+  <text x="916" y="335" text-anchor="middle" font-size="8.5" fill="#166534">odcs-to-graph</text>
+  <line x1="809" y1="345" x2="1025" y2="345" stroke="#D1FAE5" stroke-width="1"/>
+  <text x="916" y="360" text-anchor="middle" font-size="8" font-weight="600" fill="#15803D">What they do:</text>
+  <text x="916" y="374" text-anchor="middle" font-size="8" fill="#374151">Gap analysis: can spec columns be</text>
+  <text x="916" y="387" text-anchor="middle" font-size="8" fill="#374151">sourced? Classify product archetype.</text>
+  <text x="916" y="400" text-anchor="middle" font-size="8" fill="#374151">Suggest source candidates. Persist</text>
+  <text x="916" y="413" text-anchor="middle" font-size="8" fill="#374151">ODCS spec to Neo4j graph.</text>
+  <line x1="809" y1="423" x2="1025" y2="423" stroke="#D1FAE5" stroke-width="1"/>
+  <text x="916" y="437" text-anchor="middle" font-size="8" fill="#7C3AED">Neo4j: writes :DataContract v2</text>
+  <text x="916" y="450" text-anchor="middle" font-size="8" fill="#7C3AED">:CONSUMES edges</text>
+  <text x="916" y="463" text-anchor="middle" font-size="8" fill="#7C3AED">:DataContractSchema confirmed</text>
+  <rect x="805" y="473" width="222" height="14" rx="7" fill="#DCFCE7" stroke="#86EFAC" stroke-width="1"/>
+  <text x="916" y="484" text-anchor="middle" font-size="7.5" fill="#15803D">Powered by Phase ④ (Shape &amp; Validate)</text>
+
+  <!-- Skill group 5: Mapping + Serving -->
+  <rect x="1052" y="264" width="243" height="230" rx="6" fill="white" stroke="#86EFAC" stroke-width="1.5"/>
+  <rect x="1052" y="264" width="243" height="20" rx="6" fill="#BBF7D0"/>
+  <rect x="1052" y="274" width="243" height="10" fill="#BBF7D0"/>
+  <text x="1173" y="278" text-anchor="middle" font-size="10" font-weight="700" fill="#14532D">Skills: Mapping + Serving</text>
+  <text x="1173" y="296" text-anchor="middle" font-size="8.5" fill="#166534">data-mapping-neo4j</text>
+  <text x="1173" y="309" text-anchor="middle" font-size="8.5" fill="#166534">data-serving-virtual-view</text>
+  <text x="1173" y="322" text-anchor="middle" font-size="8.5" fill="#166534">data-product-spec-to-dprod-neo4j</text>
+  <text x="1173" y="335" text-anchor="middle" font-size="8.5" fill="#166534">data-mapping-rationale-summarizer</text>
+  <line x1="1066" y1="345" x2="1282" y2="345" stroke="#D1FAE5" stroke-width="1"/>
+  <text x="1173" y="360" text-anchor="middle" font-size="8" font-weight="600" fill="#15803D">What they do:</text>
+  <text x="1173" y="374" text-anchor="middle" font-size="8" fill="#374151">AI maps source → target columns.</text>
+  <text x="1173" y="387" text-anchor="middle" font-size="8" fill="#374151">FK inference for join construction.</text>
+  <text x="1173" y="400" text-anchor="middle" font-size="8" fill="#374151">DDL view generation + deployment.</text>
+  <text x="1173" y="413" text-anchor="middle" font-size="8" fill="#374151">Mapping rationale report.</text>
+  <line x1="1066" y1="423" x2="1282" y2="423" stroke="#D1FAE5" stroke-width="1"/>
+  <text x="1173" y="437" text-anchor="middle" font-size="8" fill="#7C3AED">Neo4j: writes :ColumnMapping</text>
+  <text x="1173" y="450" text-anchor="middle" font-size="8" fill="#7C3AED">:DProdDataProduct</text>
+  <text x="1173" y="463" text-anchor="middle" font-size="8" fill="#7C3AED">:ServingDefinition</text>
+  <rect x="1062" y="473" width="222" height="14" rx="7" fill="#DCFCE7" stroke="#86EFAC" stroke-width="1"/>
+  <text x="1173" y="484" text-anchor="middle" font-size="7.5" fill="#15803D">Powered by Phase ⑤ (Map &amp; Serve)</text>
+
+  <!-- Skill group 6: Analysis + Scoring -->
+  <rect x="1309" y="264" width="271" height="230" rx="6" fill="white" stroke="#86EFAC" stroke-width="1.5"/>
+  <rect x="1309" y="264" width="271" height="20" rx="6" fill="#BBF7D0"/>
+  <rect x="1309" y="274" width="271" height="10" fill="#BBF7D0"/>
+  <text x="1444" y="278" text-anchor="middle" font-size="10" font-weight="700" fill="#14532D">Skills: Analysis + Scoring</text>
+  <text x="1444" y="296" text-anchor="middle" font-size="8.5" fill="#166534">data-product-question-analyzer</text>
+  <text x="1444" y="309" text-anchor="middle" font-size="8.5" fill="#166534">data-product-question-executor</text>
+  <text x="1444" y="322" text-anchor="middle" font-size="8.5" fill="#166534">data-scoring (OSI readiness)</text>
+  <text x="1444" y="335" text-anchor="middle" font-size="8.5" fill="#166534">data-product-osi-advisor</text>
+  <line x1="1323" y1="345" x2="1567" y2="345" stroke="#D1FAE5" stroke-width="1"/>
+  <text x="1444" y="360" text-anchor="middle" font-size="8" font-weight="600" fill="#15803D">What they do:</text>
+  <text x="1444" y="374" text-anchor="middle" font-size="8" fill="#374151">Generate + execute QA questions</text>
+  <text x="1444" y="387" text-anchor="middle" font-size="8" fill="#374151">against deployed views. OSI score.</text>
+  <text x="1444" y="400" text-anchor="middle" font-size="8" fill="#374151">Readiness assessment before publish.</text>
+  <text x="1444" y="413" text-anchor="middle" font-size="8" fill="#374151">Marketplace enrichment.</text>
+  <line x1="1323" y1="423" x2="1567" y2="423" stroke="#D1FAE5" stroke-width="1"/>
+  <text x="1444" y="437" text-anchor="middle" font-size="8" fill="#7C3AED">Neo4j: writes :QAEvaluation</text>
+  <text x="1444" y="450" text-anchor="middle" font-size="8" fill="#7C3AED">:OSIScore</text>
+  <text x="1444" y="463" text-anchor="middle" font-size="8" fill="#7C3AED">:DataContract {lifecycle: published}</text>
+  <rect x="1319" y="473" width="251" height="14" rx="7" fill="#DCFCE7" stroke="#86EFAC" stroke-width="1"/>
+  <text x="1444" y="484" text-anchor="middle" font-size="7.5" fill="#15803D">Powered by Phase ⑥ (Publish)</text>
+
+  <!-- ===== ARROWS: Skills → Data ===== -->
+  <line x1="710" y1="504" x2="710" y2="520" stroke="#7C3AED" stroke-width="2" marker-end="url(#arr-pur)"/>
+  <line x1="726" y1="520" x2="726" y2="504" stroke="#7C3AED" stroke-width="2" marker-end="url(#arr-pur)"/>
+  <text x="750" y="515" font-size="8.5" fill="#6D28D9">all skills read + write Neo4j</text>
+
+  <!-- ===================== DATA LAYER ===================== -->
+  <rect x="10" y="522" width="1580" height="176" rx="8" fill="#FAF5FF" stroke="#7C3AED" stroke-width="1.5"/>
+  <rect x="10" y="522" width="1580" height="28" rx="8" fill="#7C3AED"/>
+  <rect x="10" y="538" width="1580" height="12" fill="#7C3AED"/>
+  <text x="280" y="540" text-anchor="middle" font-size="12" font-weight="700" fill="white">Data &amp; Memory Layer</text>
+  <text x="900" y="538" text-anchor="middle" font-size="9" fill="rgba(255,255,255,0.88)">All journey artifacts are persisted here — enabling explainability, traceability, and continuous improvement</text>
+
+  <!-- Neo4j (large, prominent) -->
+  <rect x="24" y="558" width="900" height="130" rx="6" fill="white" stroke="#C4B5FD" stroke-width="1.5"/>
+  <rect x="24" y="558" width="900" height="22" rx="6" fill="#7C3AED"/>
+  <rect x="24" y="568" width="900" height="12" fill="#7C3AED"/>
+  <text x="474" y="574" text-anchor="middle" font-size="11" font-weight="700" fill="white">Neo4j Knowledge Graph  ·  System of Record  ·  Brain of the Data Workbench</text>
+  <text x="474" y="596" text-anchor="middle" font-size="9" fill="#4C1D95">Captures every step of the journey: Discovery → Profiling → Enrichment → Product spec → Mappings → Views → Publication</text>
+  <text x="474" y="612" text-anchor="middle" font-size="9" fill="#4C1D95">Context graph: all artifacts and their interdependencies in one queryable knowledge store</text>
+  <text x="474" y="628" text-anchor="middle" font-size="8.5" fill="#6D28D9">Light Domain Ontology (business concepts) · PROV-O provenance on every decision · Explainability &amp; traceability</text>
+  <text x="474" y="644" text-anchor="middle" font-size="8.5" fill="#6D28D9">Ontologies: SHACL · PROV-O · DCAT-2 · W3C · Custom product graph</text>
+  <text x="474" y="660" text-anchor="middle" font-size="7.5" fill="#8B5CF6">Insight Extraction Engine reads from here → improves agent playbooks + skills (feedback loop)</text>
+  <!-- Feedback arrow hint -->
+  <path d="M 924 650 C 960 650 960 390 924 390" stroke="#16A34A" stroke-width="1.5" fill="none" stroke-dasharray="5,3" marker-end="url(#arr-grn)"/>
+  <text x="970" y="520" font-size="8" fill="#15803D" text-anchor="middle" transform="rotate(90,970,520)">Insight Loop</text>
+
+  <!-- SQLite -->
+  <rect x="944" y="558" width="350" height="130" rx="6" fill="white" stroke="#C4B5FD" stroke-width="1.5"/>
+  <rect x="944" y="558" width="350" height="22" rx="6" fill="#7C3AED"/>
+  <rect x="944" y="568" width="350" height="12" fill="#7C3AED"/>
+  <text x="1119" y="574" text-anchor="middle" font-size="11" font-weight="700" fill="white">SQLite  ·  Structured Memory</text>
+  <text x="1119" y="596" text-anchor="middle" font-size="9" fill="#4C1D95">Project data + scoping</text>
+  <text x="1119" y="612" text-anchor="middle" font-size="9" fill="#4C1D95">Workflow + stage run records</text>
+  <text x="1119" y="628" text-anchor="middle" font-size="8.5" fill="#6D28D9">Guide-me history · Product requests</text>
+  <text x="1119" y="644" text-anchor="middle" font-size="8.5" fill="#6D28D9">Chat sessions · Ingest drafts</text>
+  <text x="1119" y="660" text-anchor="middle" font-size="7.5" fill="#94A3B8">CLI reads project context from here</text>
+
+  <!-- Harness Memory -->
+  <rect x="1314" y="558" width="266" height="130" rx="6" fill="white" stroke="#C4B5FD" stroke-width="1.5"/>
+  <rect x="1314" y="558" width="266" height="22" rx="6" fill="#7C3AED"/>
+  <rect x="1314" y="568" width="266" height="12" fill="#7C3AED"/>
+  <text x="1447" y="574" text-anchor="middle" font-size="11" font-weight="700" fill="white">Harness Memory  ·  Unstructured</text>
+  <text x="1447" y="596" text-anchor="middle" font-size="9" fill="#4C1D95">Agent SDK managed</text>
+  <text x="1447" y="612" text-anchor="middle" font-size="9" fill="#4C1D95">Conversational + task state</text>
+  <text x="1447" y="628" text-anchor="middle" font-size="8.5" fill="#6D28D9">Per-session context</text>
+  <text x="1447" y="644" text-anchor="middle" font-size="8.5" fill="#6D28D9">Harness-level persistence</text>
+  <text x="1447" y="660" text-anchor="middle" font-size="7.5" fill="#94A3B8">Distinct from SQLite</text>
+
+  <!-- ===================== FOOTER NOTES ===================== -->
+  <rect x="10" y="710" width="1580" height="98" rx="6" fill="#F1F5F9" stroke="#E2E8F0" stroke-width="1"/>
+  <text x="20" y="728" font-size="10" font-weight="700" fill="#334155">Key Architecture Principles</text>
+
+  <rect x="20" y="735" width="245" height="65" rx="4" fill="white" stroke="#E2E8F0" stroke-width="1"/>
+  <text x="142" y="753" text-anchor="middle" font-size="9" font-weight="700" fill="#0F172A">Contract-First Design</text>
+  <text x="142" y="768" text-anchor="middle" font-size="8" fill="#475569">PO defines the product contract</text>
+  <text x="142" y="781" text-anchor="middle" font-size="8" fill="#475569">before binding to sources (dpe-cf)</text>
+  <text x="142" y="794" text-anchor="middle" font-size="7.5" fill="#64748B">ODCS as the spec standard</text>
+
+  <rect x="275" y="735" width="245" height="65" rx="4" fill="white" stroke="#E2E8F0" stroke-width="1"/>
+  <text x="397" y="753" text-anchor="middle" font-size="9" font-weight="700" fill="#0F172A">Bidirectional Feedback</text>
+  <text x="397" y="768" text-anchor="middle" font-size="8" fill="#475569">PO ↔ Engineer loops for pushbacks,</text>
+  <text x="397" y="781" text-anchor="middle" font-size="8" fill="#475569">source candidate requests, edits</text>
+  <text x="397" y="794" text-anchor="middle" font-size="7.5" fill="#64748B">Not a linear waterfall</text>
+
+  <rect x="530" y="735" width="245" height="65" rx="4" fill="white" stroke="#E2E8F0" stroke-width="1"/>
+  <text x="652" y="753" text-anchor="middle" font-size="9" font-weight="700" fill="#0F172A">Portability</text>
+  <text x="652" y="768" text-anchor="middle" font-size="8" fill="#475569">Off-the-shelf harness — no bespoke build.</text>
+  <text x="652" y="781" text-anchor="middle" font-size="8" fill="#475569">Skills + concepts portable to any</text>
+  <text x="652" y="794" text-anchor="middle" font-size="7.5" fill="#64748B">compatible agent harness</text>
+
+  <rect x="785" y="735" width="265" height="65" rx="4" fill="white" stroke="#E2E8F0" stroke-width="1"/>
+  <text x="917" y="753" text-anchor="middle" font-size="9" font-weight="700" fill="#0F172A">Self-Improving Skills</text>
+  <text x="917" y="768" text-anchor="middle" font-size="8" fill="#475569">Insight Extraction Engine reads</text>
+  <text x="917" y="781" text-anchor="middle" font-size="8" fill="#475569">Neo4j artifacts → improves playbooks</text>
+  <text x="917" y="794" text-anchor="middle" font-size="7.5" fill="#64748B">Reflector → Curator → Updated skills</text>
+
+  <rect x="1060" y="735" width="245" height="65" rx="4" fill="white" stroke="#E2E8F0" stroke-width="1"/>
+  <text x="1182" y="753" text-anchor="middle" font-size="9" font-weight="700" fill="#0F172A">Full Provenance</text>
+  <text x="1182" y="768" text-anchor="middle" font-size="8" fill="#475569">Every decision traced with W3C PROV-O</text>
+  <text x="1182" y="781" text-anchor="middle" font-size="8" fill="#475569">Who approved what, when, and why</text>
+  <text x="1182" y="794" text-anchor="middle" font-size="7.5" fill="#64748B">Engineer · PO · AI · Steward agents</text>
+
+  <rect x="1315" y="735" width="265" height="65" rx="4" fill="white" stroke="#E2E8F0" stroke-width="1"/>
+  <text x="1447" y="753" text-anchor="middle" font-size="9" font-weight="700" fill="#0F172A">Light Semantic Layer</text>
+  <text x="1447" y="768" text-anchor="middle" font-size="8" fill="#475569">Neo4j domain graph exposes business</text>
+  <text x="1447" y="781" text-anchor="middle" font-size="8" fill="#475569">concepts extracted from all products</text>
+  <text x="1447" y="794" text-anchor="middle" font-size="7.5" fill="#64748B">Not a full semantic layer implementation</text>
+</svg>

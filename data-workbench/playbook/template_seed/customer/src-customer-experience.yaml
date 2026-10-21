@@ -1,0 +1,421 @@
+apiVersion: v3.1.0
+kind: DataContract
+id: template:customer:src-customer-experience
+name: Customer Experience
+version: 1.0.0
+status: draft
+domain: Customer
+description: Captured customer interactions such as feedback, service complaints,
+  resolution status, root cause, follow-up actions (e.g., callbacks, compensations
+  etc.)
+schema:
+- name: Customer Experience
+  physicalName: customer_experience
+  physicalType: table
+  description: Captured customer interactions such as feedback, service complaints,
+    resolution status, root cause, follow-up actions (e.g., callbacks, compensations
+    etc.)
+  properties:
+  - name: survey_id
+    physicalName: survey_id
+    logicalName: Survey ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a customer satisfaction survey, used to group
+      response scores and verbatim comments linked to a customer interaction.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: name
+    physicalName: name
+    logicalName: Name
+    logicalType: varchar
+    physicalType: varchar
+    description: The name or title of the customer satisfaction survey programme,
+      such as NPS or post-transaction feedback.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: channel
+    physicalName: channel
+    logicalName: Channel
+    logicalType: varchar
+    physicalType: varchar
+    description: The delivery channel through which the survey was administered, such
+      as email, SMS, in-app, or post-call IVR.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: launch_date
+    physicalName: launch_date
+    logicalName: Launch Date
+    logicalType: date
+    physicalType: date
+    description: The date on which the survey was launched and made available to customers
+      for response.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: journey_id
+    physicalName: journey_id
+    logicalName: Journey ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a customer journey instance, grouping all touchpoints
+      and events that form a single end-to-end experience.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: journey_status
+    physicalName: journey_status
+    logicalName: Journey Status
+    logicalType: varchar
+    physicalType: varchar
+    description: The current state of the customer journey, such as in_progress, completed,
+      or abandoned.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: customer_id
+    physicalName: customer_id
+    logicalName: Customer ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier linking all experience events and feedback records
+      to the bank customer whose journey is being tracked.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: start_time
+    physicalName: start_time
+    logicalName: Start Time
+    logicalType: varchar
+    physicalType: varchar
+    description: The timestamp marking the beginning of the customer journey or touchpoint
+      interaction.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: end_time
+    physicalName: end_time
+    logicalName: End Time
+    logicalType: varchar
+    physicalType: varchar
+    description: The timestamp marking when the customer journey or touchpoint interaction
+      concluded.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: cx_event_id
+    physicalName: cx_event_id
+    logicalName: Cx Event ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a discrete customer experience event within
+      a journey, such as a service interaction, feedback submission, or complaint.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: event_type
+    physicalName: event_type
+    logicalName: Event Type
+    logicalType: varchar
+    physicalType: varchar
+    description: The category of the customer experience event, such as complaint_raised,
+      feedback_submitted, or escalation_triggered.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: status
+    physicalName: status
+    logicalName: Status
+    logicalType: varchar
+    physicalType: varchar
+    description: The current processing status of the customer experience event, such
+      as open, in_progress, resolved, or closed.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: txn_id
+    physicalName: txn_id
+    logicalName: Txn ID
+    logicalType: bigint
+    physicalType: bigint
+    description: The unique identifier of the underlying financial transaction that
+      triggered or is associated with this customer experience event.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: created_at
+    physicalName: created_at
+    logicalName: Created At
+    logicalType: varchar
+    physicalType: varchar
+    description: The timestamp at which the customer experience event record was first
+      created in the system.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: resolved_at
+    physicalName: resolved_at
+    logicalName: Resolved At
+    logicalType: varchar
+    physicalType: varchar
+    description: The timestamp at which the customer experience event was resolved
+      and the case closed.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: feedback_id
+    physicalName: feedback_id
+    logicalName: Feedback ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a customer feedback submission, linking survey
+      scores and verbatim comments to the experience event record.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: score
+    physicalName: score
+    logicalName: Score
+    logicalType: numeric
+    physicalType: numeric
+    description: The numeric customer satisfaction or effort score provided in the
+      feedback submission, typically rated on a standard scale.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: comment
+    physicalName: comment
+    logicalName: Comment
+    logicalType: varchar
+    physicalType: varchar
+    description: The free-text qualitative comment provided by the customer alongside
+      their numeric feedback score.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: complaint_id
+    physicalName: complaint_id
+    logicalName: Complaint ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a formal customer complaint raised against
+      the bank's products or services.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: category
+    physicalName: category
+    logicalName: Category
+    logicalType: varchar
+    physicalType: varchar
+    description: The functional classification of the complaint, such as fees_dispute,
+      service_failure, product_issue, or regulatory_breach.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: priority_level
+    physicalName: priority_level
+    logicalName: Priority Level
+    logicalType: varchar
+    physicalType: varchar
+    description: The urgency classification of the complaint, determining the response
+      SLA and escalation path.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: resolved_by
+    physicalName: resolved_by
+    logicalName: Resolved By
+    logicalType: varchar
+    physicalType: varchar
+    description: The name or identifier of the agent, team, or system that resolved
+      the complaint.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: resolved_timestamp
+    physicalName: resolved_timestamp
+    logicalName: Resolved Timestamp
+    logicalType: timestamp
+    physicalType: timestamp
+    description: The exact date and time at which the complaint was formally resolved
+      and closed.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: sla_hours
+    physicalName: sla_hours
+    logicalName: Sla Hours
+    logicalType: varchar
+    physicalType: varchar
+    description: The maximum number of hours within which the complaint must be resolved
+      under the applicable service-level agreement.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: resolution_id
+    physicalName: resolution_id
+    logicalName: Resolution ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for the resolution record documenting the outcome
+      and action taken to close the complaint.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: action_taken
+    physicalName: action_taken
+    logicalName: Action Taken
+    logicalType: varchar
+    physicalType: varchar
+    description: A description of the corrective action, compensation, or process
+      change applied to resolve the customer complaint.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: resolution_type
+    physicalName: resolution_type
+    logicalName: Resolution Type
+    logicalType: varchar
+    physicalType: varchar
+    description: The classification of how the complaint was resolved, such as full_refund,
+      partial_refund, explanation_given, or escalated_to_regulator.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  foreignKeys: []
+  transform:
+    grouping_keys:
+    - customer_id
+    scd_policy:
+      type: latest_only
+customProperties:
+  feasibility:
+    schema_version: '1.0'
+    spec_classification: internal
+    cadence: ''
+    freshness_history: current
+    freshness_description: ''
+    grain_keys:
+    - customer_id
+    grain_description: ''
+    allowed_derivations:
+    - rename
+    - cast
+    composition:
+      join_keys: []
+      composed_of: []
+      description: ''
+productKind: source
+sourceSpecId: src_customer_experience

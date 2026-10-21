@@ -10,6 +10,7 @@ export default function ChatPane({
   allowUpload, onUpload, uploading,
   pendingFile, onUseFile, onDismissFile,
   editFormOpen, requirementData, glossaryData, onEditSubmit, onEditClose,
+  sessionId,
 }) {
   const bottomRef = useRef(null)
   const [downloading, setDownloading] = useState(false)
@@ -130,7 +131,7 @@ export default function ChatPane({
 
       <div className="messages" id="chat-messages">
         {messages.map(msg => (
-          <MessageRow key={msg.id} msg={msg} onChipClick={handleChipClick} />
+          <MessageRow key={msg.id} msg={msg} onChipClick={handleChipClick} sessionId={sessionId} />
         ))}
         <div ref={bottomRef} />
       </div>
@@ -198,6 +199,8 @@ export default function ChatPane({
               view={messages.slice().reverse().find(m => m.data_contract_view)?.data_contract_view || DEFAULT_BRONZE_CONTRACT}
               isModal={true}
               onClose={() => setContractModalOpen(false)}
+              sessionId={sessionId}
+              apiBase={import.meta.env.VITE_API_URL || ''}
             />
           </div>
         </div>

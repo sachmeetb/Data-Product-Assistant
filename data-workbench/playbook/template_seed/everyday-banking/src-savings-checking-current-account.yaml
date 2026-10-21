@@ -1,0 +1,596 @@
+apiVersion: v3.1.0
+kind: DataContract
+id: template:everyday-banking:src-savings-checking-current-account
+name: Savings/Checking/Current Account
+version: 1.0.0
+status: draft
+domain: Everyday Banking
+description: Deposit accounts for individuals and businesses, including both interest-bearing
+  (e.g., savings) and non-interest-bearing (e.g., current) variants. Features include
+  interest accrual (for applicable accounts), balance tracking, withdrawal limits,
+  and overdraft options (for business accounts). These accounts support high transaction
+  volumes and maintain detailed logs of all deposits and withdrawals—capturing amount,
+  channel, and denomination mix.
+schema:
+- name: Savings/Checking/Current Account
+  physicalName: savings_checking_current_account
+  physicalType: table
+  description: Deposit accounts for individuals and businesses, including both interest-bearing
+    (e.g., savings) and non-interest-bearing (e.g., current) variants. Features include
+    interest accrual (for applicable accounts), balance tracking, withdrawal limits,
+    and overdraft options (for business accounts). These accounts support high transaction
+    volumes and maintain detailed logs of all deposits and withdrawals—capturing amount,
+    channel, and denomination mix.
+  properties:
+  - name: account_id
+    physicalName: account_id
+    logicalName: Account ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique internal identifier for the deposit account, used as the primary
+      key across all account-related entities.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: product_code
+    physicalName: product_code
+    logicalName: Product Code
+    logicalType: varchar
+    physicalType: varchar
+    description: Code identifying the specific deposit product variant (e.g. savings,
+      current, basic savings) as defined in the product catalog.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: account_number
+    physicalName: account_number
+    logicalName: Account Number
+    logicalType: numeric
+    physicalType: numeric
+    description: Customer-facing account number assigned to the deposit account; masked
+      or tokenized for PII compliance.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: pii
+    examples: []
+    logicalTypeOptions: {}
+  - name: opened_date
+    physicalName: opened_date
+    logicalName: Opened Date
+    logicalType: date
+    physicalType: date
+    description: Date on which the deposit account was opened and became active.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: status
+    physicalName: status
+    logicalName: Status
+    logicalType: varchar
+    physicalType: varchar
+    description: Current lifecycle status of the account (e.g. active, dormant, closed,
+      frozen).
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: currency
+    physicalName: currency
+    logicalName: Currency
+    logicalType: varchar
+    physicalType: varchar
+    description: ISO currency code in which the account is denominated and balances
+      are maintained.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: interest_rate
+    physicalName: interest_rate
+    logicalName: Interest Rate
+    logicalType: numeric
+    physicalType: numeric
+    description: Annual interest rate applied to the account balance for eligible
+      interest-bearing accounts such as savings.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: min_balance
+    physicalName: min_balance
+    logicalName: Min Balance
+    logicalType: numeric
+    physicalType: numeric
+    description: Minimum ledger balance required to maintain the account in good standing
+      and avoid charges.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: overdraft_limit
+    physicalName: overdraft_limit
+    logicalName: Overdraft Limit
+    logicalType: numeric
+    physicalType: numeric
+    description: Maximum negative balance the account holder is permitted to carry;
+      applies primarily to current and business accounts.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: lien_flag
+    physicalName: lien_flag
+    logicalName: Lien Flag
+    logicalType: boolean
+    physicalType: boolean
+    description: Boolean indicator that a lien or hold has been placed on the account,
+      restricting full withdrawal of funds.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: snapshot_date
+    physicalName: snapshot_date
+    logicalName: Snapshot Date
+    logicalType: date
+    physicalType: date
+    description: Date for which the account balance and attribute values in this row
+      are captured, used for point-in-time reporting.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: ledger_balance
+    physicalName: ledger_balance
+    logicalName: Ledger Balance
+    logicalType: numeric
+    physicalType: numeric
+    description: Total book balance of the account including all posted transactions
+      and accrued items as of the snapshot date.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: available_balance
+    physicalName: available_balance
+    logicalName: Available Balance
+    logicalType: numeric
+    physicalType: numeric
+    description: Funds immediately accessible for withdrawal, calculated as ledger
+      balance minus holds, liens, and uncollected items.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: float_amount
+    physicalName: float_amount
+    logicalName: Float Amount
+    logicalType: numeric
+    physicalType: numeric
+    description: Amount in transit or pending clearing that has been credited to the
+      account but not yet collected from the payer bank.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: uncollected_funds
+    physicalName: uncollected_funds
+    logicalName: Uncollected Funds
+    logicalType: varchar
+    physicalType: varchar
+    description: Deposits or items credited to the account that have not yet been
+      collected and are therefore unavailable for withdrawal.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: txn_id
+    physicalName: txn_id
+    logicalName: Txn ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for an individual debit or credit transaction posted
+      to the account.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: txn_date
+    physicalName: txn_date
+    logicalName: Txn Date
+    logicalType: date
+    physicalType: date
+    description: Date on which the customer-initiated transaction occurred or was
+      authorized.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: post_date
+    physicalName: post_date
+    logicalName: Post Date
+    logicalType: date
+    physicalType: date
+    description: Date on which the transaction was posted to the account's ledger
+      and reflected in the ledger balance.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: amount
+    physicalName: amount
+    logicalName: Amount
+    logicalType: numeric
+    physicalType: numeric
+    description: Monetary value of the transaction in the account's denomination currency.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: txn_type
+    physicalName: txn_type
+    logicalName: Txn Type
+    logicalType: varchar
+    physicalType: varchar
+    description: Classification of the transaction type, such as debit, credit, ATM
+      withdrawal, NEFT, UPI, or standing instruction.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: channel
+    physicalName: channel
+    logicalName: Channel
+    logicalType: varchar
+    physicalType: varchar
+    description: Delivery channel through which the transaction was initiated, such
+      as branch, ATM, internet banking, or mobile app.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: counterparty_info
+    physicalName: counterparty_info
+    logicalName: Counterparty Info
+    logicalType: numeric
+    physicalType: numeric
+    description: Identifier or reference for the other party involved in the transaction,
+      such as the remitter or beneficiary.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: narration
+    physicalName: narration
+    logicalName: Narration
+    logicalType: numeric
+    physicalType: numeric
+    description: Free-text description or payment reference attached to the transaction
+      for reconciliation purposes.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: fee_id
+    physicalName: fee_id
+    logicalName: Fee ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a fee or charge record levied on the account.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: fee_type
+    physicalName: fee_type
+    logicalName: Fee Type
+    logicalType: numeric
+    physicalType: numeric
+    description: Category and amount of a fee or charge applied to the account, such
+      as maintenance fee, below-minimum-balance penalty, or SMS alert charge.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: accrual_ts
+    physicalName: accrual_ts
+    logicalName: Accrual Ts
+    logicalType: timestamp
+    physicalType: timestamp
+    description: Timestamp at which interest was accrued or a fee was computed for
+      the account.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: mandate_id
+    physicalName: mandate_id
+    logicalName: Mandate ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a standing instruction or auto-debit mandate
+      registered on the account.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: type
+    physicalName: type
+    logicalName: Type
+    logicalType: varchar
+    physicalType: varchar
+    description: Classification of the mandate or standing instruction, such as ECS,
+      NACH, or periodic transfer.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: beneficiary_id
+    physicalName: beneficiary_id
+    logicalName: Beneficiary ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for the registered payee or beneficiary linked
+      to a mandate or standing instruction on this account.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: frequency
+    physicalName: frequency
+    logicalName: Frequency
+    logicalType: varchar
+    physicalType: varchar
+    description: Payment frequency of the mandate or standing instruction (e.g. monthly,
+      quarterly, weekly).
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: cheque_number_masked
+    physicalName: cheque_number_masked
+    logicalName: Cheque Number Masked
+    logicalType: varchar
+    physicalType: varchar
+    description: Masked cheque leaf number associated with a cheque transaction, with
+      sensitive digits redacted.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: issue_date
+    physicalName: issue_date
+    logicalName: Issue Date
+    logicalType: date
+    physicalType: date
+    description: Date on which a cheque was issued by the account holder.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: clear_date
+    physicalName: clear_date
+    logicalName: Clear Date
+    logicalType: date
+    physicalType: date
+    description: Date on which a cheque was presented and cleared through the clearing
+      system.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: stop_payment_flag
+    physicalName: stop_payment_flag
+    logicalName: Stop Payment Flag
+    logicalType: boolean
+    physicalType: boolean
+    description: Boolean indicator that the account holder has issued a stop-payment
+      instruction on a specific cheque.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: statement_id
+    physicalName: statement_id
+    logicalName: Statement ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a periodic account statement generated for
+      the account.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: period_start_end
+    physicalName: period_start_end
+    logicalName: Period Start End
+    logicalType: varchar
+    physicalType: varchar
+    description: Date range string defining the start and end dates of an account
+      statement period.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: opening_balance
+    physicalName: opening_balance
+    logicalName: Opening Balance
+    logicalType: numeric
+    physicalType: numeric
+    description: Ledger balance at the beginning of a statement period before any
+      transactions in that period.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: closing_balance
+    physicalName: closing_balance
+    logicalName: Closing Balance
+    logicalType: numeric
+    physicalType: numeric
+    description: Ledger balance at the end of a statement period after all transactions
+      in that period have been applied.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  foreignKeys: []
+  transform:
+    grouping_keys:
+    - account_id
+    scd_policy:
+      type: snapshot
+customProperties:
+  feasibility:
+    schema_version: '1.0'
+    spec_classification: confidential
+    cadence: ''
+    freshness_history: snapshot
+    freshness_description: ''
+    grain_keys:
+    - account_id
+    grain_description: ''
+    allowed_derivations:
+    - rename
+    - cast
+    composition:
+      join_keys: []
+      composed_of: []
+      description: ''
+    attr_derivations:
+      min_balance:
+      - currency_normalize
+      overdraft_limit:
+      - currency_normalize
+      ledger_balance:
+      - currency_normalize
+      available_balance:
+      - currency_normalize
+      float_amount:
+      - currency_normalize
+      amount:
+      - currency_normalize
+      fee_type:
+      - currency_normalize
+      opening_balance:
+      - currency_normalize
+      closing_balance:
+      - currency_normalize
+productKind: source
+sourceSpecId: src_savings_checking_current_account

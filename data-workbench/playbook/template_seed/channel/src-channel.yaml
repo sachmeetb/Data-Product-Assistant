@@ -1,0 +1,349 @@
+apiVersion: v3.1.0
+kind: DataContract
+id: template:channel:src-channel
+name: Channel
+version: 1.0.0
+status: draft
+domain: Channel
+description: Reference and telemetry for bank channels and touchpoints.
+schema:
+- name: Channel
+  physicalName: channel
+  physicalType: table
+  description: Reference and telemetry for bank channels and touchpoints.
+  properties:
+  - name: channel_id
+    physicalName: channel_id
+    logicalName: Channel ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique numeric identifier for a bank channel (e.g. branch, ATM, mobile
+      app, web), used as the primary key linking events and touchpoints to their originating
+      channel.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: channel_type
+    physicalName: channel_type
+    logicalName: Channel Type
+    logicalType: varchar
+    physicalType: varchar
+    description: Categorical label classifying the channel by mode of delivery, such
+      as branch, digital, ATM, call center, or self-service kiosk.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: description
+    physicalName: description
+    logicalName: Description
+    logicalType: varchar
+    physicalType: varchar
+    description: Free-text narrative describing the purpose or characteristics of
+      the channel or touchpoint.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: touchpoint_id
+    physicalName: touchpoint_id
+    logicalName: Touchpoint ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a specific customer interaction point within
+      a channel, such as a page, screen, terminal, or desk.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: name
+    physicalName: name
+    logicalName: Name
+    logicalType: varchar
+    physicalType: varchar
+    description: Human-readable display name of the touchpoint or channel, used for
+      reporting and labeling in dashboards.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: path
+    physicalName: path
+    logicalName: Path
+    logicalType: varchar
+    physicalType: varchar
+    description: The navigation or URL path the customer traversed to reach a touchpoint,
+      capturing the digital or physical route within the channel.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: event_id
+    physicalName: event_id
+    logicalName: Event ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a discrete channel event (e.g. page view, button
+      click, transaction attempt), enabling event-level telemetry analysis.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: event_type
+    physicalName: event_type
+    logicalName: Event Type
+    logicalType: varchar
+    physicalType: varchar
+    description: Category of the channel event, such as login, page_view, transaction_initiated,
+      or session_timeout.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: timestamp
+    physicalName: timestamp
+    logicalName: Timestamp
+    logicalType: timestamp
+    physicalType: timestamp
+    description: The exact date and time at which the channel event occurred, used
+      for session and journey time-series analysis.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: journey_id
+    physicalName: journey_id
+    logicalName: Journey ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier grouping all events and touchpoints belonging to
+      a single end-to-end customer journey (e.g. a loan application or onboarding
+      session).
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: customer_id
+    physicalName: customer_id
+    logicalName: Customer ID
+    logicalType: bigint
+    physicalType: bigint
+    description: The unique identifier linking the channel journey and events to a
+      specific bank customer's profile.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: start_time
+    physicalName: start_time
+    logicalName: Start Time
+    logicalType: varchar
+    physicalType: varchar
+    description: The timestamp marking when a customer journey or touchpoint interaction
+      began.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: end_time
+    physicalName: end_time
+    logicalName: End Time
+    logicalType: varchar
+    physicalType: varchar
+    description: The timestamp marking when a customer journey or touchpoint interaction
+      concluded.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: outage_id
+    physicalName: outage_id
+    logicalName: Outage ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a recorded channel outage or service disruption
+      incident.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: start_ts
+    physicalName: start_ts
+    logicalName: Start Ts
+    logicalType: timestamp
+    physicalType: timestamp
+    description: The precise timestamp at which the channel outage or downtime period
+      began.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: end_ts
+    physicalName: end_ts
+    logicalName: End Ts
+    logicalType: timestamp
+    physicalType: timestamp
+    description: The precise timestamp at which the channel outage or downtime period
+      was resolved.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: severity
+    physicalName: severity
+    logicalName: Severity
+    logicalType: varchar
+    physicalType: varchar
+    description: Categorical rating of the impact level of a channel outage, such
+      as low, medium, high, or critical.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: root_cause
+    physicalName: root_cause
+    logicalName: Root Cause
+    logicalType: varchar
+    physicalType: varchar
+    description: Free-text or coded description identifying the underlying cause of
+      a channel outage or service disruption.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: impacted_regions
+    physicalName: impacted_regions
+    logicalName: Impacted Regions
+    logicalType: varchar
+    physicalType: varchar
+    description: Comma-separated or encoded list of geographic regions or branch areas
+      affected by a channel outage.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: sla_id
+    physicalName: sla_id
+    logicalName: Sla ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a channel service-level agreement definition,
+      linking the channel to its contracted performance targets.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: metric
+    physicalName: metric
+    logicalName: Metric
+    logicalType: varchar
+    physicalType: varchar
+    description: The name of the SLA performance measure being tracked, such as availability,
+      response_time, or throughput.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: target
+    physicalName: target
+    logicalName: Target
+    logicalType: varchar
+    physicalType: varchar
+    description: The contractual target value or threshold for the SLA metric, expressed
+      as a percentage, seconds, or count.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  foreignKeys: []
+  transform:
+    grouping_keys:
+    - channel_id
+    scd_policy:
+      type: latest_only
+customProperties:
+  feasibility:
+    schema_version: '1.0'
+    spec_classification: internal
+    cadence: ''
+    freshness_history: current
+    freshness_description: ''
+    grain_keys:
+    - channel_id
+    grain_description: ''
+    allowed_derivations:
+    - rename
+    - cast
+    composition:
+      join_keys: []
+      composed_of: []
+      description: ''
+productKind: source
+sourceSpecId: src_channel

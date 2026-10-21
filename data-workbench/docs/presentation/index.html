@@ -1,0 +1,1434 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Data Workbench — Concepts & Operator Guide</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reset.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/theme/night.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/highlight/monokai.css">
+  <style>
+    :root {
+      --color-bg: #0f172a;
+      --color-surface: #1e293b;
+      --color-text: #e2e8f0;
+      --color-muted: #94a3b8;
+      --color-po: #8b5cf6;
+      --color-eng: #3b82f6;
+      --color-accent: #f59e0b;
+      --color-success: #10b981;
+      --color-warning: #ef4444;
+    }
+    html, body { background: var(--color-bg); }
+    /* Shrink the global base. reveal.js@5 default is ~42px which overflows content-dense slides. */
+    .reveal { --r-main-font-size: 26px; font-size: 26px; font-family: 'Inter', system-ui, -apple-system, sans-serif; color: var(--color-text); line-height: 1.35; }
+    .reveal h1, .reveal h2, .reveal h3, .reveal h4 { font-weight: 600; letter-spacing: -0.02em; text-transform: none; color: var(--color-text); margin: 0 0 0.4em 0; line-height: 1.2; }
+    .reveal h1 { font-size: 2.2em; }
+    .reveal h2 { font-size: 1.45em; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 0.25em; }
+    .reveal h3 { font-size: 1.1em; }
+    .reveal p { margin: 0.4em 0; }
+    .reveal section { text-align: left; }
+    .reveal section.center-text { text-align: center; }
+    .reveal pre { box-shadow: none; font-size: 0.72em; width: 100%; margin: 0.4em 0; }
+    .reveal pre code { max-height: 420px; padding: 0.8em; border-radius: 6px; line-height: 1.35; }
+    .reveal code { font-family: 'JetBrains Mono', 'Fira Code', monospace; font-size: 0.95em; }
+    .reveal ul, .reveal ol { margin: 0.3em 0 0.3em 1em; }
+    .reveal li { margin-bottom: 0.18em; }
+    .reveal a { color: var(--color-eng); }
+
+    /* Section divider slides */
+    .section-divider {
+      display: flex !important;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100% !important;
+      text-align: center;
+    }
+    .section-divider .num {
+      font-size: 7em;
+      font-weight: 700;
+      color: var(--color-accent);
+      line-height: 1;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .section-divider .name {
+      font-size: 1.4em;
+      color: var(--color-text);
+      margin-top: 0.3em;
+      max-width: 700px;
+    }
+    .section-divider .desc {
+      font-size: 0.8em;
+      color: var(--color-muted);
+      margin-top: 1.5em;
+      max-width: 600px;
+    }
+
+    /* Pillars */
+    .pillar {
+      border-radius: 12px;
+      padding: 0.9em 1em;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      font-size: 0.92em;
+    }
+    .pillar.po { border-top: 4px solid var(--color-po); }
+    .pillar.eng { border-top: 4px solid var(--color-eng); }
+    .pillar h3 { margin-top: 0; font-size: 1.15em; }
+    .pillar ul { font-size: 0.95em; }
+
+    /* Tiles */
+    .tile-grid { display: grid; gap: 0.6em; margin-top: 0.4em; }
+    .tile-grid.cols-2 { grid-template-columns: 1fr 1fr; }
+    .tile-grid.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+    .tile-grid.cols-4 { grid-template-columns: repeat(4, 1fr); }
+    .tile-grid.cols-5 { grid-template-columns: repeat(5, 1fr); }
+    .tile {
+      border-radius: 8px;
+      padding: 0.55em 0.7em;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      font-size: 0.82em;
+    }
+    .tile-title { font-weight: 600; color: var(--color-eng); font-family: 'JetBrains Mono', monospace; font-size: 1em; }
+    .tile-title.po { color: var(--color-po); }
+    .tile-title.accent { color: var(--color-accent); }
+    .tile-body { color: var(--color-muted); margin-top: 0.25em; line-height: 1.4; font-size: 0.92em; }
+
+    /* Chips */
+    .chip {
+      display: inline-block;
+      padding: 0.1em 0.5em;
+      border-radius: 999px;
+      font-size: 0.78em;
+      font-family: 'JetBrains Mono', monospace;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.15);
+      margin: 0.1em 0.15em 0.1em 0;
+    }
+    .chip.po { color: var(--color-po); border-color: rgba(139,92,246,0.5); }
+    .chip.eng { color: var(--color-eng); border-color: rgba(59,130,246,0.5); }
+    .chip.accent { color: var(--color-accent); border-color: rgba(245,158,11,0.5); }
+    .chip.success { color: var(--color-success); border-color: rgba(16,185,129,0.5); }
+
+    /* Tables */
+    .reveal table { font-size: 0.78em; margin: 0.4em 0; }
+    .reveal table th { color: var(--color-eng); border-bottom: 1px solid rgba(255,255,255,0.15); text-align: left; padding: 0.35em 0.7em; font-weight: 600; }
+    .reveal table td { padding: 0.3em 0.7em; border-bottom: 1px solid rgba(255,255,255,0.04); vertical-align: top; }
+
+    .small { font-size: 0.85em; color: var(--color-muted); }
+    .muted { color: var(--color-muted); }
+    .accent { color: var(--color-accent); }
+    .po-color { color: var(--color-po); }
+    .eng-color { color: var(--color-eng); }
+
+    /* Inline SVG diagram defaults */
+    svg.diagram { width: 100%; height: auto; max-height: 420px; display: block; margin: 0 auto; }
+    svg.diagram text { font-family: 'Inter', system-ui, sans-serif; fill: #e2e8f0; }
+    svg.diagram text.mono { font-family: 'JetBrains Mono', monospace; }
+    svg.diagram text.muted { fill: #94a3b8; }
+    svg.diagram rect.node { fill: rgba(59,130,246,0.10); stroke: #3b82f6; stroke-width: 1.5; }
+    svg.diagram rect.node.po { fill: rgba(139,92,246,0.10); stroke: #8b5cf6; }
+    svg.diagram rect.node.accent { fill: rgba(245,158,11,0.12); stroke: #f59e0b; }
+    svg.diagram rect.node.success { fill: rgba(16,185,129,0.10); stroke: #10b981; }
+    svg.diagram path.flow, svg.diagram line.flow { fill: none; stroke: #94a3b8; stroke-width: 2; }
+    svg.diagram path.flow.dashed, svg.diagram line.flow.dashed { stroke-dasharray: 6 4; }
+    svg.diagram .arrow-head { fill: #94a3b8; }
+
+    /* UI mockup bezel for screenshots */
+    .ui-mock {
+      display: inline-block;
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 8px;
+      padding: 4px;
+      background: #000;
+    }
+    .ui-mock img { display: block; max-height: 460px; border-radius: 4px; }
+
+    /* Code with inline label */
+    pre.labeled { position: relative; }
+    pre.labeled::before {
+      content: attr(data-label);
+      position: absolute;
+      top: 6px; right: 12px;
+      font-size: 0.55em;
+      color: var(--color-muted);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* Two-column layout helper */
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1em; align-items: start; }
+    .two-col.narrow-left { grid-template-columns: 280px 1fr; }
+    .two-col.narrow-right { grid-template-columns: 1fr 280px; }
+
+    /* Terminal mockup */
+    .terminal {
+      background: #020617;
+      border-radius: 8px;
+      padding: 0.8em 1em;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72em;
+      line-height: 1.45;
+      color: #cbd5e1;
+      border: 1px solid rgba(255,255,255,0.08);
+      white-space: pre-wrap;
+    }
+    .terminal .prompt { color: var(--color-success); }
+    .terminal .comment { color: var(--color-muted); }
+    .terminal .out { color: #cbd5e1; }
+    .terminal .ok { color: var(--color-success); }
+    .terminal .info { color: var(--color-eng); }
+  </style>
+</head>
+<body>
+<div class="reveal">
+  <div class="slides">
+
+    <!-- =============================================
+         SECTION 1 — THE PARADIGM (slides 1-6)
+    ============================================== -->
+
+    <!-- Slide 1: Title -->
+    <section class="center-text">
+      <h1 style="font-size: 2.2em; margin-bottom: 0.2em;">Data Workbench</h1>
+      <p style="color: var(--color-muted); font-size: 1.2em; margin: 0;">Orchestrated, contract-first data engineering</p>
+      <div style="margin-top: 3em;">
+        <span class="chip po">Product Workbench</span>
+        <span class="chip eng">Engineering Workbench</span>
+        <span class="chip accent">Neo4j knowledge graph</span>
+        <span class="chip">Claude Code SDK</span>
+      </div>
+      <p class="small" style="margin-top: 3em;">A walk-through for product owners, engineers, and the people who decide what to build.</p>
+      <aside class="notes">
+        Welcome. This deck walks through what the Data Workbench is, why it exists, and how it actually works in day-to-day use.
+        Five sections plus a short appendix. About 25-30 minutes if presented end-to-end.
+      </aside>
+    </section>
+
+    <!-- Slide 2: Section divider for Section 1 -->
+    <section class="section-divider">
+      <div class="num">01</div>
+      <div class="name">The paradigm</div>
+      <div class="desc">What problem are we solving, and how do data products fit?</div>
+    </section>
+
+    <!-- Slide 3: The problem -->
+    <section>
+      <h2>The problem</h2>
+      <ul style="margin-top: 1em;">
+        <li>Data products require <strong>many roles</strong> — Product Owners declare intent, Engineers build the pipeline, Stewards govern semantics, Quality Analysts validate.</li>
+        <li>Each step generates <strong>artifacts</strong>: schemas, profiling reports, quality rules, lineage, contracts, served views.</li>
+        <li>Without orchestration, those artifacts <strong>drift</strong> away from the contract they should fulfill.</li>
+        <li>Hand-coded glue between roles slows delivery and leaves <strong>accountability gaps</strong>.</li>
+        <li>The "right" data product is the one where the contract, the underlying data, the quality rules, and the served view <strong>all match</strong>.</li>
+      </ul>
+      <p class="small" style="margin-top: 1em;">The Workbench's job is to keep the contract, the graph, and the produced SQL in sync as the pipeline runs.</p>
+      <aside class="notes">
+        We're solving the coordination problem, not just the SQL problem. Each role produces artifacts that need to stay coherent
+        with a single declared contract. The Workbench is opinionated about that coherence.
+      </aside>
+    </section>
+
+    <!-- Slide 4: The solution -->
+    <section>
+      <h2>The solution</h2>
+      <p style="margin-top: 0.5em;">A web orchestrator built around <span class="accent">contract-first data products</span> and a <span class="accent">knowledge-graph backbone</span>:</p>
+      <div class="tile-grid cols-2" style="margin-top: 1em;">
+        <div class="tile">
+          <div class="tile-title accent">One product = one contract</div>
+          <div class="tile-body">ODCS (Open Data Contract Standard) v3.1 declares what's promised. Authored in the wizard, or synthesised from approved graph state.</div>
+        </div>
+        <div class="tile">
+          <div class="tile-title accent">Graph-native</div>
+          <div class="tile-body">DCAT-2 datasets, DQV measurements, SHACL rules, PROV-O provenance, ODCS contracts, DPROD products — all in Neo4j.</div>
+        </div>
+        <div class="tile">
+          <div class="tile-title accent">Pipelines as workflows</div>
+          <div class="tile-body">Each archetype scaffolds an opinionated default; engineers add or remove workflow groups from a catalog.</div>
+        </div>
+        <div class="tile">
+          <div class="tile-title accent">Skill-driven stages</div>
+          <div class="tile-body">Each step is a Claude-driven skill with explicit inputs, outputs, and review surfaces. Same stages whether run from UI or CLI.</div>
+        </div>
+      </div>
+      <aside class="notes">
+        Four pillars. The contract is the source of truth, the graph is the persistence layer, workflows compose into pipelines,
+        and skills are the unit of work. Skills are reusable Claude Code agents living in ~/.claude/skills/.
+      </aside>
+    </section>
+
+    <!-- Slide 5: Two personas -->
+    <section>
+      <h2>Two persona-scoped shells, one backend</h2>
+      <div class="tile-grid cols-2" style="margin-top: 0.8em;">
+        <div class="pillar po">
+          <h3 class="po-color">Product Workbench</h3>
+          <p class="small" style="margin: 0 0 0.5em 0;">Data Product Owner — <code>/product/*</code></p>
+          <ul style="font-size: 0.95em;">
+            <li>New Product wizard (consumer-aligned, 8 steps)</li>
+            <li>New Source Product wizard (3 steps)</li>
+            <li>My Products: in-flight, approved, published</li>
+            <li>PO source-validation gate</li>
+            <li>Marketplace browse + Deploy + Score OSI</li>
+            <li><strong>Guide me</strong> chat coach with Apply protocol</li>
+          </ul>
+        </div>
+        <div class="pillar eng">
+          <h3 class="eng-color">Engineering Workbench</h3>
+          <p class="small" style="margin: 0 0 0.5em 0;">Data Engineer — <code>/engineer/*</code></p>
+          <ul style="font-size: 0.95em;">
+            <li>Project list + Incoming queue (PO submissions)</li>
+            <li>Per-project pipeline, reviews, output stream</li>
+            <li>Transform editor with 15 column-kinds + Shape</li>
+            <li><strong>Ask</strong> panel — project-scoped Neo4j Q&A</li>
+            <li>CLI session via <code>/run-stage &lt;stage_id&gt;</code></li>
+            <li>Joins-override panel for FK escape hatches</li>
+          </ul>
+        </div>
+      </div>
+      <p class="small" style="margin-top: 1em; text-align: center;">A <strong>Switch</strong> button in the header toggles personas. Per-shell theme + tab favicon avoid multi-tab confusion.</p>
+      <aside class="notes">
+        Same backend, two shells. PO sees product-shaped UI (wizards, marketplace); engineer sees pipeline-shaped UI
+        (run buttons, output streams, review queues). Role selection inside each shell further filters what's actionable.
+      </aside>
+    </section>
+
+    <!-- Slide 6: Architecture at a glance -->
+    <section>
+      <h2>Architecture at a glance</h2>
+      <svg class="diagram" viewBox="0 0 900 460" style="margin-top: 0.5em;">
+        <rect class="node po" x="60" y="20" width="340" height="80" rx="8"/>
+        <text x="230" y="50" text-anchor="middle" font-size="18" font-weight="600">Product Workbench (PO)</text>
+        <text x="230" y="78" text-anchor="middle" font-size="12" class="muted">Wizards · My Products · Marketplace · Guide-me</text>
+
+        <rect class="node" x="500" y="20" width="340" height="80" rx="8"/>
+        <text x="670" y="50" text-anchor="middle" font-size="18" font-weight="600">Engineering Workbench (DE)</text>
+        <text x="670" y="78" text-anchor="middle" font-size="12" class="muted">Projects · Pipeline · Reviews · Ask · CLI</text>
+
+        <line class="flow" x1="230" y1="100" x2="350" y2="160" marker-end="url(#arrowhead)"/>
+        <line class="flow" x1="670" y1="100" x2="550" y2="160" marker-end="url(#arrowhead)"/>
+        <text x="450" y="130" text-anchor="middle" font-size="11" class="muted">REST · WebSocket · HTTP/SSE</text>
+
+        <rect class="node accent" x="60" y="160" width="780" height="110" rx="8"/>
+        <text x="450" y="190" text-anchor="middle" font-size="18" font-weight="600">FastAPI backend</text>
+        <text x="200" y="218" text-anchor="middle" font-size="12">SQLite pipeline state</text>
+        <text x="450" y="218" text-anchor="middle" font-size="12">Claude Code SDK</text>
+        <text x="700" y="218" text-anchor="middle" font-size="12">Neo4j queries · Chat agents</text>
+        <text x="200" y="238" text-anchor="middle" font-size="12" class="muted">Workflow catalog · Reviews</text>
+        <text x="450" y="238" text-anchor="middle" font-size="12" class="muted">Agent-to-user messaging</text>
+        <text x="700" y="238" text-anchor="middle" font-size="12" class="muted">Apply protocol · Reflection</text>
+
+        <line class="flow" x1="240" y1="270" x2="200" y2="330" marker-end="url(#arrowhead)"/>
+        <line class="flow" x1="660" y1="270" x2="700" y2="330" marker-end="url(#arrowhead)"/>
+
+        <rect class="node" x="40" y="330" width="320" height="110" rx="8"/>
+        <text x="200" y="360" text-anchor="middle" font-size="16" font-weight="600">Claude Code + Skills</text>
+        <text x="200" y="382" text-anchor="middle" font-size="12" class="mono muted">~/.claude/skills/</text>
+        <text x="200" y="402" text-anchor="middle" font-size="11" class="muted">discovery · profiling · enrichment</text>
+        <text x="200" y="420" text-anchor="middle" font-size="11" class="muted">rules · scoring · mapping · serving</text>
+
+        <rect class="node" x="540" y="330" width="320" height="110" rx="8"/>
+        <text x="700" y="360" text-anchor="middle" font-size="16" font-weight="600">Neo4j + PostgreSQL</text>
+        <text x="700" y="382" text-anchor="middle" font-size="12" class="muted">DCAT-2 · DQV · SHACL · PROV-O</text>
+        <text x="700" y="402" text-anchor="middle" font-size="12" class="muted">ODCS · DPROD</text>
+        <text x="700" y="420" text-anchor="middle" font-size="11" class="muted">+ source PostgreSQL DB</text>
+
+        <defs>
+          <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+            <polygon class="arrow-head" points="0 0, 8 3, 0 6"/>
+          </marker>
+        </defs>
+      </svg>
+      <aside class="notes">
+        Two React shells over one FastAPI backend. The backend dispatches stages through the Claude Code SDK, which invokes
+        skills from ~/.claude/skills/. Skills do the actual work and write to Neo4j or PostgreSQL. SQLite holds pipeline state
+        — stage status, run history, chat messages. CORS allows localhost:5173 (frontend) and localhost:3000.
+      </aside>
+    </section>
+
+    <!-- Slide 7: KG standards -->
+    <section>
+      <h2>Standards on top of the graph</h2>
+      <p class="small">Every artifact lives in Neo4j as typed graph nodes — no proprietary schema, no lock-in.</p>
+      <div class="tile-grid cols-3" style="margin-top: 1em;">
+        <div class="tile">
+          <div class="tile-title">DCAT-2</div>
+          <div class="tile-body">W3C Data Catalog Vocabulary. <code>:Catalog</code> · <code>:Dataset</code> · <code>:Column</code>. Models the source database structure.</div>
+        </div>
+        <div class="tile">
+          <div class="tile-title">DQV</div>
+          <div class="tile-body">W3C Data Quality Vocabulary. Per-column measurements: nulls, distinct counts, percentiles, top values.</div>
+        </div>
+        <div class="tile">
+          <div class="tile-title">SHACL-inspired</div>
+          <div class="tile-body">Validation rules as <code>:PropertyShape</code> nodes anchored to <code>:Column</code> or <code>:DProdColumn</code>.</div>
+        </div>
+        <div class="tile">
+          <div class="tile-title">PROV-O</div>
+          <div class="tile-body">W3C Provenance Ontology. Audit trail for every review decision — who, when, with what evidence.</div>
+        </div>
+        <div class="tile">
+          <div class="tile-title">ODCS v3.1</div>
+          <div class="tile-body">Open Data Contract Standard. The <code>:DataContract</code> node. Authored in the wizard or synthesised from approved graph state.</div>
+        </div>
+        <div class="tile">
+          <div class="tile-title">DPROD</div>
+          <div class="tile-body">Data Product representation. <code>:DProdDataProduct → :DProdOutputDataset → :DProdColumn</code> chain.</div>
+        </div>
+      </div>
+      <p class="small" style="margin-top: 1em;">Project-scoped URIs (<code>catalog:{project_code}:...</code>) keep two projects from colliding on shared tables. <code>:CONSUMES</code> is the only cross-project edge — it links a consumer contract to a source product.</p>
+      <aside class="notes">
+        Why standards matter: a future operator could query the graph directly with any DCAT-aware tool. Nothing here is
+        Workbench-specific. The project-scoped URIs and the :CONSUMES contract are the only two opinionated choices.
+      </aside>
+    </section>
+
+    <!-- =============================================
+         SECTION 2 — HOW IT WORKS (slides 8-15)
+    ============================================== -->
+
+    <section class="section-divider">
+      <div class="num">02</div>
+      <div class="name">How it works</div>
+      <div class="desc">Archetypes, workflows, walkthroughs, and the review gates.</div>
+    </section>
+
+    <!-- Slide 9: Project archetypes -->
+    <section>
+      <h2>Project archetypes</h2>
+      <p class="small">A project is a container of named workflow groups. The archetype picks the defaults.</p>
+      <table style="margin-top: 0.8em;">
+        <thead>
+          <tr><th>Archetype</th><th>Persona-initiated</th><th>What it scaffolds</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="chip eng">dd</span> Data Discovery</td>
+            <td>Engineer</td>
+            <td>Discover, profile, enrich, score quality, apply domain rules, remediate. Standalone — no product output.</td>
+          </tr>
+          <tr>
+            <td><span class="chip eng">dq</span> Data Quality</td>
+            <td>Engineer</td>
+            <td>Quality-only sub-flow on an already-discovered source. DQ rules, testing, scoring.</td>
+          </tr>
+          <tr>
+            <td><span class="chip po">dpe-sa</span> Source-aligned</td>
+            <td>PO (3-step wizard)</td>
+            <td>Discovery-first product. Engineer profiles the source DB; PO validates names + descriptions + observation rules + table classifications; engineer materialises ODCS from approved graph state.</td>
+          </tr>
+          <tr>
+            <td><span class="chip po">dpe-cf</span> Consumer-aligned</td>
+            <td>PO (8-step wizard)</td>
+            <td>Contract-first product. PO declares ODCS schema + which source products to <code>:CONSUMES</code>; engineer maps source columns into the contract; serves as a virtual view.</td>
+          </tr>
+        </tbody>
+      </table>
+      <p class="small" style="margin-top: 1em;"><strong>Coming soon:</strong> Data Modernization (<code>dmod</code>) · Data Migration (<code>dmig</code>).</p>
+      <aside class="notes">
+        Four implemented archetypes. The key split is dpe-sa vs dpe-cf — source-aligned products are discovery-first
+        (the source DB is the starting point); consumer-aligned products are contract-first (the PO writes the schema
+        before any source is touched). Engineer-only archetypes (dd, dq) are for analysis without producing a contract.
+      </aside>
+    </section>
+
+    <!-- Slide 10: Workflows compose -->
+    <section>
+      <h2>Workflows compose into a pipeline</h2>
+      <svg class="diagram" viewBox="0 0 900 320" style="margin-top: 0.5em;">
+        <rect class="node" x="20" y="40" width="170" height="220" rx="8"/>
+        <text x="105" y="68" text-anchor="middle" font-size="14" font-weight="600">Source Discovery</text>
+        <text x="105" y="86" text-anchor="middle" font-size="11" class="muted">workflow group</text>
+        <rect x="40" y="105" width="130" height="22" rx="3" fill="rgba(255,255,255,0.06)"/>
+        <text x="105" y="121" text-anchor="middle" font-size="11" class="mono">data_discovery</text>
+        <rect x="40" y="135" width="130" height="22" rx="3" fill="rgba(255,255,255,0.06)"/>
+        <text x="105" y="151" text-anchor="middle" font-size="11" class="mono">data_profiling</text>
+        <rect x="40" y="165" width="130" height="22" rx="3" fill="rgba(16,185,129,0.15)" stroke="#10b981" stroke-width="1"/>
+        <text x="105" y="181" text-anchor="middle" font-size="11" class="mono">complete</text>
+
+        <line class="flow" x1="190" y1="150" x2="240" y2="150" marker-end="url(#a2)"/>
+
+        <rect class="node accent" x="240" y="40" width="200" height="220" rx="8"/>
+        <text x="340" y="68" text-anchor="middle" font-size="14" font-weight="600">Metadata Enrichment</text>
+        <text x="340" y="86" text-anchor="middle" font-size="11" class="muted">workflow group</text>
+        <rect x="260" y="105" width="160" height="22" rx="3" fill="rgba(255,255,255,0.06)"/>
+        <text x="340" y="121" text-anchor="middle" font-size="11" class="mono">metadata_enrichment</text>
+        <rect x="260" y="135" width="160" height="22" rx="3" fill="rgba(245,158,11,0.15)" stroke="#f59e0b" stroke-width="1"/>
+        <text x="340" y="151" text-anchor="middle" font-size="11" class="mono">awaiting_review</text>
+        <text x="340" y="175" text-anchor="middle" font-size="10" class="muted">descriptions queue</text>
+
+        <line class="flow dashed" x1="440" y1="150" x2="490" y2="150" marker-end="url(#a2)"/>
+
+        <rect class="node po" x="490" y="40" width="200" height="220" rx="8"/>
+        <text x="590" y="68" text-anchor="middle" font-size="14" font-weight="600">PO Validation Gate</text>
+        <text x="590" y="86" text-anchor="middle" font-size="11" class="muted">workflow group</text>
+        <rect x="510" y="105" width="160" height="22" rx="3" fill="rgba(255,255,255,0.06)"/>
+        <text x="590" y="121" text-anchor="middle" font-size="11" class="mono">po_source_validation</text>
+        <text x="590" y="148" text-anchor="middle" font-size="10" class="muted">Names · Descriptions</text>
+        <text x="590" y="164" text-anchor="middle" font-size="10" class="muted">Tables · Rules</text>
+
+        <line class="flow" x1="690" y1="150" x2="740" y2="150" marker-end="url(#a2)"/>
+
+        <rect class="node" x="740" y="40" width="150" height="220" rx="8"/>
+        <text x="815" y="68" text-anchor="middle" font-size="14" font-weight="600">Materialise</text>
+        <text x="815" y="86" text-anchor="middle" font-size="11" class="muted">workflow group</text>
+        <rect x="752" y="105" width="126" height="22" rx="3" fill="rgba(255,255,255,0.06)"/>
+        <text x="815" y="121" text-anchor="middle" font-size="10" class="mono">synthesize_odcs</text>
+        <rect x="752" y="135" width="126" height="22" rx="3" fill="rgba(255,255,255,0.06)"/>
+        <text x="815" y="151" text-anchor="middle" font-size="10" class="mono">odcs_to_dprod</text>
+        <rect x="752" y="165" width="126" height="22" rx="3" fill="rgba(255,255,255,0.06)"/>
+        <text x="815" y="181" text-anchor="middle" font-size="10" class="mono">serving</text>
+
+        <text x="450" y="295" text-anchor="middle" font-size="11" class="muted">Engineer adds / removes workflow groups via "+ Add Workflow" against the catalog.</text>
+
+        <defs>
+          <marker id="a2" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+            <polygon fill="#94a3b8" points="0 0, 8 3, 0 6"/>
+          </marker>
+        </defs>
+      </svg>
+      <aside class="notes">
+        The pipeline is workflow groups, each containing stages. Solid arrows mean "next stage runs"; dashed means "review gate".
+        Reviews block downstream stages until cleared. This is the default scaffolding for a dpe-sa project — engineer can
+        add Quality Assessment / Quality Testing / Remediation via "+ Add Workflow" if needed.
+      </aside>
+    </section>
+
+    <!-- Slide 11: SA walkthrough -->
+    <section>
+      <h2>Source-aligned walkthrough <span class="chip po">dpe-sa</span></h2>
+      <svg class="diagram" viewBox="0 0 900 360" style="margin-top: 0.4em;">
+        <rect class="node po" x="40" y="40" width="160" height="60" rx="8"/>
+        <text x="120" y="68" text-anchor="middle" font-size="14" font-weight="600">PO submits</text>
+        <text x="120" y="86" text-anchor="middle" font-size="11" class="muted">idea + domain + name</text>
+
+        <line class="flow" x1="200" y1="70" x2="240" y2="70" marker-end="url(#a3)"/>
+
+        <rect class="node" x="240" y="40" width="170" height="60" rx="8"/>
+        <text x="325" y="68" text-anchor="middle" font-size="14" font-weight="600">Engineer profiles</text>
+        <text x="325" y="86" text-anchor="middle" font-size="11" class="muted">discovery + profiling</text>
+
+        <line class="flow" x1="410" y1="70" x2="450" y2="70" marker-end="url(#a3)"/>
+
+        <rect class="node" x="450" y="40" width="180" height="60" rx="8"/>
+        <text x="540" y="68" text-anchor="middle" font-size="14" font-weight="600">Enrichment + naming</text>
+        <text x="540" y="86" text-anchor="middle" font-size="11" class="muted">descriptions + standard names</text>
+
+        <line class="flow" x1="630" y1="70" x2="670" y2="70" marker-end="url(#a3)"/>
+
+        <rect class="node po" x="670" y="40" width="200" height="60" rx="8"/>
+        <text x="770" y="68" text-anchor="middle" font-size="14" font-weight="600">PO validates</text>
+        <text x="770" y="86" text-anchor="middle" font-size="11" class="muted">names · desc · tables · rules</text>
+
+        <line class="flow" x1="770" y1="100" x2="770" y2="160" marker-end="url(#a3)"/>
+
+        <rect class="node accent" x="600" y="160" width="270" height="60" rx="8"/>
+        <text x="735" y="188" text-anchor="middle" font-size="14" font-weight="600">Engineer materialises</text>
+        <text x="735" y="206" text-anchor="middle" font-size="11" class="muted">synthesize ODCS → DPROD → auto-map → serving</text>
+
+        <line class="flow" x1="600" y1="190" x2="540" y2="190" marker-end="url(#a3)"/>
+
+        <rect class="node success" x="320" y="160" width="220" height="60" rx="8"/>
+        <text x="430" y="188" text-anchor="middle" font-size="14" font-weight="600">Published</text>
+        <text x="430" y="206" text-anchor="middle" font-size="11" class="muted">marketplace listing + virtual view</text>
+
+        <text x="450" y="270" text-anchor="middle" font-size="12" class="muted" font-style="italic">"Mirror of employee master" — the simplest case: source columns become product columns 1-to-1.</text>
+        <text x="450" y="290" text-anchor="middle" font-size="12" class="muted">No PO authoring of schema; the schema IS the source. PO validates the engineer's discovery output.</text>
+
+        <defs>
+          <marker id="a3" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+            <polygon fill="#94a3b8" points="0 0, 8 3, 0 6"/>
+          </marker>
+        </defs>
+      </svg>
+      <aside class="notes">
+        Source-aligned is the discovery-first flow. PO sends a lightweight idea ("mirror of employee master") with a name and domain.
+        Engineer does discovery and enrichment. PO then opens a combined validation panel with four tabs — Names, Descriptions,
+        Tables, Rules — and approves each. Engineer then runs the materialization stages, which synthesize the ODCS contract from
+        approved graph state and emit a virtual view.
+      </aside>
+    </section>
+
+    <!-- Slide 12: CF walkthrough -->
+    <section>
+      <h2>Consumer-aligned walkthrough <span class="chip po">dpe-cf</span></h2>
+      <svg class="diagram" viewBox="0 0 900 360" style="margin-top: 0.4em;">
+        <rect class="node po" x="40" y="40" width="230" height="80" rx="8"/>
+        <text x="155" y="64" text-anchor="middle" font-size="14" font-weight="600">PO authors contract</text>
+        <text x="155" y="84" text-anchor="middle" font-size="11" class="muted">8-step wizard:</text>
+        <text x="155" y="102" text-anchor="middle" font-size="10" class="muted">idea · domain · inputs · shape · schema · details · rules · OSI</text>
+
+        <line class="flow" x1="270" y1="80" x2="310" y2="80" marker-end="url(#a4)"/>
+
+        <rect class="node accent" x="310" y="40" width="200" height="80" rx="8"/>
+        <text x="410" y="64" text-anchor="middle" font-size="14" font-weight="600">Contract → graph</text>
+        <text x="410" y="84" text-anchor="middle" font-size="11" class="muted">odcs_to_dprod</text>
+        <text x="410" y="102" text-anchor="middle" font-size="10" class="muted">:CONSUMES edges to source products</text>
+
+        <line class="flow" x1="510" y1="80" x2="550" y2="80" marker-end="url(#a4)"/>
+
+        <rect class="node" x="550" y="40" width="180" height="80" rx="8"/>
+        <text x="640" y="64" text-anchor="middle" font-size="14" font-weight="600">Engineer maps</text>
+        <text x="640" y="84" text-anchor="middle" font-size="11" class="muted">source :DProdColumn</text>
+        <text x="640" y="102" text-anchor="middle" font-size="10" class="muted">→ consumer :DProdColumn</text>
+
+        <line class="flow" x1="730" y1="80" x2="770" y2="80" marker-end="url(#a4)"/>
+
+        <rect class="node" x="770" y="40" width="110" height="80" rx="8"/>
+        <text x="825" y="64" text-anchor="middle" font-size="14" font-weight="600">Serve</text>
+        <text x="825" y="84" text-anchor="middle" font-size="11" class="muted">CREATE VIEW</text>
+        <text x="825" y="102" text-anchor="middle" font-size="10" class="muted">over sources</text>
+
+        <rect class="node" x="40" y="180" width="200" height="50" rx="8"/>
+        <text x="140" y="205" text-anchor="middle" font-size="12" font-weight="600">Source product A</text>
+        <text x="140" y="222" text-anchor="middle" font-size="10" class="muted">dpe-sa "employee master"</text>
+
+        <rect class="node" x="280" y="180" width="200" height="50" rx="8"/>
+        <text x="380" y="205" text-anchor="middle" font-size="12" font-weight="600">Source product B</text>
+        <text x="380" y="222" text-anchor="middle" font-size="10" class="muted">dpe-sa "department catalog"</text>
+
+        <text x="280" y="265" text-anchor="middle" font-size="11" class="muted">consumer product reads from these via :CONSUMES</text>
+
+        <line class="flow dashed" x1="140" y1="180" x2="350" y2="125" marker-end="url(#a4)"/>
+        <line class="flow dashed" x1="380" y1="180" x2="400" y2="125" marker-end="url(#a4)"/>
+
+        <text x="450" y="320" text-anchor="middle" font-size="12" class="muted">No discovery / profiling needed — the consumer inherits that context from its :CONSUMES'd source products.</text>
+
+        <defs>
+          <marker id="a4" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+            <polygon fill="#94a3b8" points="0 0, 8 3, 0 6"/>
+          </marker>
+        </defs>
+      </svg>
+      <aside class="notes">
+        Consumer-aligned is contract-first. PO writes the wizard: declares the schema, picks which already-published source
+        products to :CONSUMES, optionally authors Shape (dataset-level grain / filter / SCD / grouping). Engineer's job is
+        purely mapping — link source columns from the consumed products into the consumer's contract columns. Serving stage
+        emits a CREATE VIEW that joins across the source products' served views.
+      </aside>
+    </section>
+
+    <!-- Slide 13: Reviews + approval gates -->
+    <section>
+      <h2>Reviews &amp; approval gates</h2>
+      <div class="two-col" style="margin-top: 0.8em;">
+        <div>
+          <p class="small" style="margin-top: 0;">Every review surface is role-scoped and ties back to PROV-O provenance.</p>
+          <table>
+            <thead><tr><th>Surface</th><th>Owned by</th></tr></thead>
+            <tbody>
+              <tr><td>Descriptions</td><td>Steward (DQ/DD) · PO (dpe-sa)</td></tr>
+              <tr><td>Mappings</td><td>Reviewer</td></tr>
+              <tr><td>Unmapped columns</td><td>Engineer</td></tr>
+              <tr><td>Transformation escalations</td><td>Steward</td></tr>
+              <tr><td>Domain rules</td><td>DQ Analyst / Reviewer</td></tr>
+              <tr><td>Source product validation</td><td>PO (dpe-sa only)</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div>
+          <p class="small" style="margin-top: 0;">Three actions on every queue:</p>
+          <div class="tile" style="margin-bottom: 0.4em;">
+            <div class="tile-title success" style="color: var(--color-success);">Approve</div>
+            <div class="tile-body">Quality rating (acceptable / good / excellent). Auto-completes the stage when the queue empties.</div>
+          </div>
+          <div class="tile" style="margin-bottom: 0.4em;">
+            <div class="tile-title" style="color: var(--color-warning);">Reject</div>
+            <div class="tile-body">Structured category + free-text. Re-runs go straight to the next stage; the rejection survives as :ProvRejectionReason.</div>
+          </div>
+          <div class="tile">
+            <div class="tile-title accent">Escalate (mappings only)</div>
+            <div class="tile-body">Flips mapping status to <code>steward_review</code>. Steward answers inline or adds to the catalog.</div>
+          </div>
+        </div>
+      </div>
+      <aside class="notes">
+        Reviews are first-class. Approve/reject decisions become PROV-O activities in the graph — full audit trail of
+        who reviewed what, when, with what quality rating, and any rejection reason. The Workbench auto-flips stage status
+        to "complete" when its review queue empties, so engineers don't have to manually close stages.
+      </aside>
+    </section>
+
+    <!-- Slide 14: DQ rules four sources -->
+    <section>
+      <h2>DQ rules: four sources</h2>
+      <p class="small">A single rule lifecycle ('pending_review' → 'approved' / 'rejected'); the <code>ruleSource</code> tells you where it came from.</p>
+      <div class="tile-grid cols-2" style="margin-top: 0.8em;">
+        <div class="tile">
+          <div class="tile-title">observation</div>
+          <div class="tile-body">
+            Auto-discovered by <code>data-quality-rule-generation</code> from profiling stats. Anchored to <code>:Column</code>.
+            <br><em class="muted">e.g. "this column is 99.4% non-null → propose mandatory rule"</em>
+          </div>
+        </div>
+        <div class="tile">
+          <div class="tile-title">domain</div>
+          <div class="tile-body">
+            Generated from <code>playbook/domain_catalogs/{domain}.yaml</code> reference files. Anchored to <code>:DProdColumn</code>.
+            <br><em class="muted">e.g. HR domain says "employee_id must be 7-digit numeric"</em>
+          </div>
+        </div>
+        <div class="tile">
+          <div class="tile-title">user</div>
+          <div class="tile-body">
+            PO-authored via wizard chat assistant (<code>applies_to: rule_create</code>). Auto-approved.
+            <br><em class="muted">e.g. "tenure_years must be &gt;= 0"</em>
+          </div>
+        </div>
+        <div class="tile">
+          <div class="tile-title">spec</div>
+          <div class="tile-body">
+            Embedded in ingested ODCS <code>quality[]</code> blocks. Materialised by <code>_materialise_spec_rules</code>. Status <code>approved</code>.
+            <br><em class="muted">e.g. inherited from another team's published contract</em>
+          </div>
+        </div>
+      </div>
+      <p class="small" style="margin-top: 1em;">The Workbench summary card filters by source so reviewers see exactly the bucket they own.</p>
+      <aside class="notes">
+        The four-source taxonomy is one of the more load-bearing design choices. observation rules are evidence-based;
+        domain rules are policy-based; user rules are PO declarations; spec rules ride along with an ingested contract.
+        Reviewers see them all in one detail view but can filter to their own bucket.
+      </aside>
+    </section>
+
+    <!-- Slide 15: DQ scoring -->
+    <section>
+      <h2>DQ scoring: 8 dimensions</h2>
+      <svg class="diagram" viewBox="0 0 900 360" style="margin-top: 0.5em;">
+        <rect x="40" y="30" width="820" height="30" rx="4" fill="rgba(255,255,255,0.04)"/>
+        <rect x="40" y="30" width="205" height="30" rx="4" fill="rgba(16,185,129,0.5)"/>
+        <text x="50" y="50" font-size="13" font-weight="600">Completeness</text>
+        <text x="850" y="50" text-anchor="end" font-size="13" class="mono">25%</text>
+
+        <rect x="40" y="70" width="820" height="30" rx="4" fill="rgba(255,255,255,0.04)"/>
+        <rect x="40" y="70" width="164" height="30" rx="4" fill="rgba(16,185,129,0.45)"/>
+        <text x="50" y="90" font-size="13" font-weight="600">Uniqueness</text>
+        <text x="850" y="90" text-anchor="end" font-size="13" class="mono">20%</text>
+
+        <rect x="40" y="110" width="820" height="30" rx="4" fill="rgba(255,255,255,0.04)"/>
+        <rect x="40" y="110" width="164" height="30" rx="4" fill="rgba(59,130,246,0.45)"/>
+        <text x="50" y="130" font-size="13" font-weight="600">Validity</text>
+        <text x="850" y="130" text-anchor="end" font-size="13" class="mono">20%</text>
+
+        <rect x="40" y="150" width="820" height="30" rx="4" fill="rgba(255,255,255,0.04)"/>
+        <rect x="40" y="150" width="123" height="30" rx="4" fill="rgba(59,130,246,0.4)"/>
+        <text x="50" y="170" font-size="13" font-weight="600">Consistency</text>
+        <text x="850" y="170" text-anchor="end" font-size="13" class="mono">15%</text>
+
+        <rect x="40" y="190" width="820" height="30" rx="4" fill="rgba(255,255,255,0.04)"/>
+        <rect x="40" y="190" width="82" height="30" rx="4" fill="rgba(245,158,11,0.4)"/>
+        <text x="50" y="210" font-size="13" font-weight="600">Schema Conformance</text>
+        <text x="850" y="210" text-anchor="end" font-size="13" class="mono">10%</text>
+
+        <rect x="40" y="230" width="820" height="30" rx="4" fill="rgba(255,255,255,0.04)"/>
+        <rect x="40" y="230" width="82" height="30" rx="4" fill="rgba(245,158,11,0.4)"/>
+        <text x="50" y="250" font-size="13" font-weight="600">Rule Coverage</text>
+        <text x="850" y="250" text-anchor="end" font-size="13" class="mono">10%</text>
+
+        <text x="40" y="300" font-size="12" class="muted">Plus two extension dimensions: <tspan class="mono">Documentation</tspan> · <tspan class="mono">Grounding</tspan> (semantic-readiness)</text>
+        <text x="40" y="325" font-size="11" class="muted">Composite score = weighted average. Colour bands: green ≥ 80% · amber 60–79% · red &lt; 60%.</text>
+      </svg>
+      <aside class="notes">
+        Scoring reads existing graph evidence — no new SQL gets run. The score is a function of what's been measured
+        (DQV) plus what's been declared (PropertyShape rules). Documentation and Grounding extend the classic 6 dimensions
+        with governance maturity signals. Re-scoring after remediation lets teams track quality improvement over time.
+      </aside>
+    </section>
+
+    <!-- Slide 16: Marketplace -->
+    <section>
+      <h2>Data Marketplace</h2>
+      <div class="two-col" style="margin-top: 0.8em;">
+        <div>
+          <ul style="font-size: 0.85em;">
+            <li><strong>Browse</strong> published products with kind chips (<span class="chip eng">Source</span> <span class="chip accent">Consumer</span>) and OSI Readiness %.</li>
+            <li><strong>Filter</strong> by kind + domain at the list level.</li>
+            <li><strong>Product detail</strong> tabs: Overview · Schema · Quality · <strong>Lineage</strong> · Serving · Terms.</li>
+            <li><strong>Lineage canvas</strong> renders the mapping graph; SA products show one box per output dataset.</li>
+            <li><strong>:CONSUMES cross-refs</strong>: every product shows what it consumes and what consumes it — click to pivot.</li>
+            <li><strong>Quality tab</strong> groups rules by table × category with severity / source filters.</li>
+            <li><strong>Score OSI now</strong> button surfaces the OSI advisor on demand.</li>
+          </ul>
+        </div>
+        <div>
+          <div class="ui-mock" style="text-align: center;">
+            <img src="images/ui-marketplace.png" alt="Marketplace UI capture" style="max-width: 100%;">
+          </div>
+          <p class="small" style="text-align: center; margin-top: 0.4em;">Marketplace list (actual UI)</p>
+        </div>
+      </div>
+      <p class="small" style="margin-top: 1em;">"Coming soon" products are those with a contract + DPROD subgraph but no served view yet. Becomes "Published" once the engineering pipeline completes and PO clicks Deploy.</p>
+      <aside class="notes">
+        The marketplace is the discovery surface for consumers. Beyond just listing products, the cross-references on the
+        Overview tab let a consumer click into the source products their target relies on — building a navigable lineage
+        without leaving the page.
+      </aside>
+    </section>
+
+    <!-- =============================================
+         SECTION 3 — DATA TRANSFORMATIONS (slides 17-24)
+    ============================================== -->
+
+    <section class="section-divider">
+      <div class="num">03</div>
+      <div class="name">Data transformations</div>
+      <div class="desc">Column-level kinds, dataset-level Shape, SCDs, and multi-dialect SQL.</div>
+    </section>
+
+    <!-- Slide 18: Transformations overview -->
+    <section>
+      <h2>Two layers of transformation</h2>
+      <div class="two-col" style="margin-top: 0.8em;">
+        <div class="pillar">
+          <h3 class="eng-color">Column-level</h3>
+          <p class="small">One <code>:ColumnMapping</code> per (source columns → product column). Structured DSL, not free-text SQL.</p>
+          <p class="small">Each mapping carries:</p>
+          <ul style="font-size: 0.85em;">
+            <li><code>transformKind</code> — one of 15 kinds</li>
+            <li><code>transformInputs[]</code> — source columns</li>
+            <li><code>transformParams</code> — kind-specific config</li>
+            <li><code>transformDecorators</code> — trim / upper / lower / etc.</li>
+            <li><code>transformAuthor</code> — provenance bucket</li>
+          </ul>
+        </div>
+        <div class="pillar">
+          <h3 class="eng-color">Dataset-level Shape</h3>
+          <p class="small">One <code>:DatasetTransform</code> per output dataset. Layers as SQL CTEs above the SELECT.</p>
+          <p class="small">Each shape carries:</p>
+          <ul style="font-size: 0.85em;">
+            <li><code>filter</code> — raw WHERE fragment</li>
+            <li><code>dedupe</code> — ROW_NUMBER over keys</li>
+            <li><code>grouping_keys</code> — GROUP BY columns</li>
+            <li><code>joins[]</code> — explicit FROM/JOIN graph</li>
+            <li><code>scd_policy</code> · <code>suppressed_columns</code> · <code>window_specs</code></li>
+          </ul>
+        </div>
+      </div>
+      <p class="small" style="margin-top: 1em;"><strong>Four-source <code>transformAuthor</code></strong> mirrors the DQ rules pattern:
+        <span class="chip po">po_hint</span> <span class="chip">→ steward_catalog</span> <span class="chip eng">→ engineer</span> <span class="chip accent">→ ai_suggestion</span> — fallback order when seeding the mapping queue.</p>
+      <aside class="notes">
+        Column-level says "how does THIS column get computed". Dataset-level says "what's the shape of the whole output table".
+        They compose: column transforms compile into SELECT expressions; dataset Shape wraps them in CTEs (filter, dedupe,
+        grouping, joins, SCD).
+      </aside>
+    </section>
+
+    <!-- Slide 19: Column kinds grid -->
+    <section>
+      <h2>Column-level transformation kinds</h2>
+      <div class="tile-grid cols-5">
+        <div class="tile"><div class="tile-title">direct</div><div class="tile-body">1:1 passthrough</div></div>
+        <div class="tile"><div class="tile-title">cast</div><div class="tile-body">type coercion</div></div>
+        <div class="tile"><div class="tile-title">format</div><div class="tile-body">string template</div></div>
+        <div class="tile"><div class="tile-title">concat</div><div class="tile-body">a || b || c</div></div>
+        <div class="tile"><div class="tile-title">split</div><div class="tile-body">N-th token of delim</div></div>
+        <div class="tile"><div class="tile-title">substring</div><div class="tile-body">FROM/FOR slice</div></div>
+        <div class="tile"><div class="tile-title">case</div><div class="tile-body">CASE WHEN chain</div></div>
+        <div class="tile"><div class="tile-title">arithmetic</div><div class="tile-body">a + b · a * 100</div></div>
+        <div class="tile"><div class="tile-title">lookup</div><div class="tile-body">LEFT JOIN ref</div></div>
+        <div class="tile"><div class="tile-title">literal</div><div class="tile-body">fixed value</div></div>
+        <div class="tile"><div class="tile-title">expression</div><div class="tile-body">raw SQL escape</div></div>
+        <div class="tile"><div class="tile-title accent">bucket</div><div class="tile-body">discretise into bands</div></div>
+        <div class="tile"><div class="tile-title accent">mask</div><div class="tile-body">format-preserving redact</div></div>
+        <div class="tile"><div class="tile-title accent">hash</div><div class="tile-body">md5/sha1/sha256 digest</div></div>
+        <div class="tile"><div class="tile-title accent">window</div><div class="tile-body">LAG/LEAD/RANK over spec</div></div>
+      </div>
+      <p class="small" style="margin-top: 1em;">Each kind has a dedicated form in the <strong>Transform Editor</strong> with a live SQL preview. <code>expression</code> is the escape hatch when structured kinds don't fit.</p>
+      <p class="small">Decorators wrap any kind: <code>trim</code> · <code>upper</code> · <code>lower</code> · <code>normalize_whitespace</code> · <code>default_if_null</code></p>
+      <aside class="notes">
+        15 column-level kinds, accumulated across Phase 1-7 of the transformation rollout. The orange highlighted ones
+        (bucket, mask, hash, window) are the more interesting ones we'll deep-dive next. The structured DSL means the
+        engineer doesn't write SQL — they fill in a form, and view-DDL compiles it to dialect-specific SQL.
+      </aside>
+    </section>
+
+    <!-- Slide 20: Deep dive — bucket / mask / hash -->
+    <section>
+      <h2>Deep dive — <code>bucket</code> · <code>mask</code> · <code>hash</code></h2>
+      <div class="two-col" style="margin-top: 0.5em;">
+        <div>
+          <div class="tile" style="margin-bottom: 0.5em;">
+            <div class="tile-title accent">bucket</div>
+            <div class="tile-body">Continuous → ordered bands. <code>{boundaries: [30, 50, 70], labels: ["young", "adult", "senior", "elder"]}</code> compiles to a CASE WHEN chain. N+1 labels for N boundaries.</div>
+          </div>
+          <div class="tile" style="margin-bottom: 0.5em;">
+            <div class="tile-title accent">mask</div>
+            <div class="tile-body">Format-preserving redaction. <code>{algorithm: "keep_last", keep_n: 4, mask_char: "X", keep_format: true}</code> turns <code>4111-1111-1111-1234</code> into <code>XXXX-XXXX-XXXX-1234</code>.</div>
+          </div>
+          <div class="tile">
+            <div class="tile-title accent">hash</div>
+            <div class="tile-body">Irreversible digest. <code>{algorithm: "sha256", salt: "..."}</code>. md5 is built-in PG; sha1/sha256 use pgcrypto's <code>digest()</code>. <strong>Not a security primitive</strong> — salt is for namespace separation, not protection.</div>
+          </div>
+        </div>
+        <div>
+<pre data-label="generated SQL"><code class="sql">-- bucket(age)
+CASE WHEN age &lt; 30 THEN 'young'
+     WHEN age &lt; 50 THEN 'adult'
+     WHEN age &lt; 70 THEN 'senior'
+     ELSE 'elder' END AS age_band
+
+-- mask(card_number, keep_last, keep_n=4)
+REGEXP_REPLACE(
+  SUBSTRING(card_number FROM 1
+    FOR LENGTH(card_number) - 4),
+  '[A-Za-z0-9]', 'X', 'g'
+) || RIGHT(card_number, 4)
+  AS card_masked
+
+-- hash(ssn, sha256)
+encode(
+  digest(ssn || 'salt', 'sha256'),
+  'hex'
+) AS ssn_hash</code></pre>
+        </div>
+      </div>
+      <aside class="notes">
+        bucket = discretization. mask = format-preserving redaction. hash = irreversible digest. All three are very common
+        privacy / governance asks. Generated SQL shown for PostgreSQL; Snowflake / BigQuery emit slightly different syntax
+        for the hash one — that's covered in the dialects slide.
+      </aside>
+    </section>
+
+    <!-- Slide 21: Deep dive — lookup strategies -->
+    <section>
+      <h2>Deep dive — <code>lookup</code> selection strategies</h2>
+      <div class="tile-grid cols-2">
+        <div class="tile">
+          <div class="tile-title">equi <span class="small muted">— default</span></div>
+          <div class="tile-body">
+            <code>LEFT JOIN ref ON src.fk = lk.key</code>
+            <br>Returns <code>lk.value_column</code>.
+            <br><em class="muted">Classic dimension lookup.</em>
+          </div>
+        </div>
+        <div class="tile">
+          <div class="tile-title">latest</div>
+          <div class="tile-body">
+            Derived-table join with <code>ROW_NUMBER() OVER (PARTITION BY key ORDER BY {order_by_column} DESC) = 1</code>.
+            <br><em class="muted">For <code>current_X</code> / <code>most_recent_X</code> patterns.</em>
+          </div>
+        </div>
+        <div class="tile">
+          <div class="tile-title">aggregate</div>
+          <div class="tile-body">
+            Derived-table join with <code>GROUP BY key</code>. Function ∈ SUM · COUNT · AVG · MIN · MAX · COUNT_DISTINCT.
+            <br><em class="muted">For <code>total_orders</code> / <code>avg_score</code> patterns.</em>
+          </div>
+        </div>
+        <div class="tile">
+          <div class="tile-title">exists</div>
+          <div class="tile-body">
+            Same equi shape, but SELECT becomes <code>(lk.key IS NOT NULL)</code>.
+            <br><em class="muted">For <code>has_X</code> / <code>is_X</code> boolean flags.</em>
+          </div>
+        </div>
+      </div>
+      <p class="small" style="margin-top: 1em;"><strong>Dedup:</strong> two product columns sharing the same history-table scan emit one derived-table join, not two — view-DDL dedups by <code>(table, key, strategy, order_by, filter_clause)</code>.</p>
+      <aside class="notes">
+        Lookup is the heaviest-used kind. Four strategies cover the common patterns: classic equi-join, latest-row-per-key,
+        aggregated-per-key, and existence-flag. The derived-table dedup is important — without it, a product with 10
+        history-table fields would emit 10 redundant scans.
+      </aside>
+    </section>
+
+    <!-- Slide 22: Deep dive — window -->
+    <section>
+      <h2>Deep dive — <code>window</code> functions</h2>
+      <div class="two-col" style="margin-top: 0.5em;">
+        <div>
+          <p class="small" style="margin-top: 0;">Windows are <strong>declared at the dataset level</strong> in <code>:DatasetTransform.window_specs</code> and <strong>referenced by name</strong> from column mappings.</p>
+          <p class="small">Why separate? Reuse — one named window is often referenced by several columns.</p>
+          <div class="tile" style="font-size: 0.95em;">
+            <div class="tile-title">Supported functions</div>
+            <div class="tile-body">LAG · LEAD · ROW_NUMBER · RANK · DENSE_RANK · NTILE · PERCENT_RANK · CUME_DIST · SUM · AVG · MIN · MAX · COUNT · COUNT_DISTINCT · FIRST_VALUE · LAST_VALUE · NTH_VALUE</div>
+          </div>
+        </div>
+        <div>
+<pre data-label="dataset window_specs + column ref"><code class="json">// dataset-level
+"window_specs": {
+  "by_employee_date": {
+    "partition_by": ["employee_id"],
+    "order_by": [
+      {"column": "hire_date", "direction": "asc"}
+    ],
+    "frame": "ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW"
+  }
+}
+
+// column-level mapping
+{
+  "transformKind": "window",
+  "transformInputs": ["salary"],
+  "transformParams": {
+    "window": "by_employee_date",
+    "function": "LAG",
+    "offset": 1,
+    "default": null
+  }
+}</code></pre>
+        </div>
+      </div>
+      <p class="small" style="margin-top: 0.8em;">Compiles to: <code>LAG(salary, 1, NULL) OVER (PARTITION BY employee_id ORDER BY hire_date ASC ROWS BETWEEN ...) AS prev_salary</code></p>
+      <aside class="notes">
+        Windows let the Workbench emit any of the standard PARTITION BY / ORDER BY analytics patterns. Named so they can
+        be shared — three columns "previous salary", "salary rank", "running total" can all share one by_employee_date
+        window. Unknown window names fall through to OVER () and surface as warnings in the serving summary.
+      </aside>
+    </section>
+
+    <!-- Slide 23: Dataset-level Shape -->
+    <section>
+      <h2>Dataset-level Shape</h2>
+      <p class="small">Schema-level peer of column-level transforms. One <code>:DatasetTransform</code> per output dataset. Each field layers as a CTE.</p>
+      <div class="tile-grid cols-4" style="margin-top: 0.8em;">
+        <div class="tile">
+          <div class="tile-title">filter</div>
+          <div class="tile-body">Raw WHERE fragment applied as the first CTE.</div>
+        </div>
+        <div class="tile">
+          <div class="tile-title">dedupe</div>
+          <div class="tile-body">ROW_NUMBER OVER keys, latest per natural key.</div>
+        </div>
+        <div class="tile">
+          <div class="tile-title">grouping_keys</div>
+          <div class="tile-body">GROUP BY keys; activates per-column <code>aggregateFunction</code>.</div>
+        </div>
+        <div class="tile">
+          <div class="tile-title">joins[]</div>
+          <div class="tile-body">Explicit FROM/JOIN — bypasses FK auto-discovery.</div>
+        </div>
+        <div class="tile">
+          <div class="tile-title">scd_policy</div>
+          <div class="tile-body"><code>latest_only</code> · <code>scd2</code> · <code>snapshot</code> (next slide).</div>
+        </div>
+        <div class="tile">
+          <div class="tile-title">suppressed_columns</div>
+          <div class="tile-body">Drop from view; stays in contract / lineage. PK refusal.</div>
+        </div>
+        <div class="tile">
+          <div class="tile-title">window_specs</div>
+          <div class="tile-body">Named windows referenced by <code>window</code>-kind mappings.</div>
+        </div>
+        <div class="tile">
+          <div class="tile-title">grain_prose</div>
+          <div class="tile-body">"One row per X" documentation; no SQL effect.</div>
+        </div>
+      </div>
+      <p class="small" style="margin-top: 1em;">PO authors these in the wizard's <strong>Shape</strong> and <strong>Shape the Schema</strong> steps; engineer can override per-output-dataset via the <strong>Joins override</strong> panel on the project dashboard.</p>
+      <aside class="notes">
+        Eight fields, all optional. When none are set, view-DDL emits a flat SELECT (source-aligned products that mirror
+        the source 1:1 usually need nothing here). The fields layer in a fixed order: filter → dedupe → grouping → final
+        SELECT, so the CTE chain is predictable.
+      </aside>
+    </section>
+
+    <!-- Slide 24: SCD policies -->
+    <section>
+      <h2>Slowly-Changing Dimensions</h2>
+      <svg class="diagram" viewBox="0 0 900 400" style="margin-top: 0.4em;">
+        <text x="20" y="30" font-size="14" font-weight="600">latest_only</text>
+        <line class="flow muted" x1="120" y1="55" x2="850" y2="55" stroke="#475569"/>
+        <circle cx="200" cy="55" r="6" fill="#475569"/>
+        <circle cx="350" cy="55" r="6" fill="#475569"/>
+        <circle cx="500" cy="55" r="6" fill="#475569"/>
+        <circle cx="650" cy="55" r="6" fill="#475569"/>
+        <circle cx="800" cy="55" r="10" fill="#10b981" stroke="#10b981" stroke-width="2"/>
+        <text x="800" y="80" text-anchor="middle" font-size="11" class="muted">kept</text>
+        <text x="120" y="100" font-size="12" class="muted">View synthesises a <tspan class="mono">dedupe</tspan> over PK + temporal column → 1 row per natural key.</text>
+
+        <text x="20" y="155" font-size="14" font-weight="600">scd2</text>
+        <line class="flow muted" x1="120" y1="180" x2="850" y2="180" stroke="#475569"/>
+        <rect x="195" y="170" width="120" height="20" fill="#3b82f6" opacity="0.6" rx="2"/>
+        <rect x="320" y="170" width="170" height="20" fill="#3b82f6" opacity="0.6" rx="2"/>
+        <rect x="495" y="170" width="160" height="20" fill="#3b82f6" opacity="0.6" rx="2"/>
+        <rect x="660" y="170" width="190" height="20" fill="#10b981" opacity="0.7" rx="2"/>
+        <text x="855" y="183" font-size="10" fill="#10b981">is_current</text>
+        <text x="120" y="225" font-size="12" class="muted">History preserved. <tspan class="mono">effective_column</tspan> / <tspan class="mono">expiration_column</tspan> validated; optional derived <tspan class="mono">is_current</tspan>.</text>
+
+        <text x="20" y="280" font-size="14" font-weight="600">snapshot</text>
+        <line class="flow muted" x1="120" y1="305" x2="850" y2="305" stroke="#475569"/>
+        <circle cx="200" cy="305" r="6" fill="#475569"/>
+        <circle cx="350" cy="305" r="6" fill="#475569"/>
+        <circle cx="500" cy="305" r="10" fill="#f59e0b" stroke="#f59e0b" stroke-width="2"/>
+        <text x="500" y="290" text-anchor="middle" font-size="11" fill="#f59e0b">as_of_date</text>
+        <circle cx="650" cy="305" r="6" fill="#475569"/>
+        <circle cx="800" cy="305" r="6" fill="#475569"/>
+        <text x="120" y="350" font-size="12" class="muted">View synthesises a WHERE predicate pinning to one point-in-time slice.</text>
+      </svg>
+      <aside class="notes">
+        Three SCD types covered today. latest_only synthesises a dedupe and is the most common. scd2 keeps history and is
+        the right choice for slowly-changing dimensions where downstream wants the change record. snapshot pins the view
+        to one as_of_date — useful for regulatory reporting where you need to reproduce yesterday's view.
+      </aside>
+    </section>
+
+    <!-- Slide 25: Multi-dialect -->
+    <section>
+      <h2>Multi-dialect SQL emission</h2>
+      <p class="small">One Dialect abstraction; five target platforms.</p>
+      <table style="margin-top: 0.5em;">
+        <thead><tr><th>Dialect</th><th>Cast</th><th>SHA-256</th><th>REGEXP_REPLACE flag</th></tr></thead>
+        <tbody>
+          <tr><td><span class="chip eng">postgres</span></td><td><code>value::type</code></td><td><code>encode(digest(t,'sha256'),'hex')</code> (pgcrypto)</td><td>explicit <code>'g'</code></td></tr>
+          <tr><td><span class="chip">snowflake</span></td><td><code>CAST(value AS type)</code></td><td><code>SHA2(t, 256)</code></td><td>global by default</td></tr>
+          <tr><td><span class="chip">databricks</span></td><td><code>CAST(value AS type)</code></td><td><code>sha2(t, 256)</code></td><td>global by default</td></tr>
+          <tr><td><span class="chip">bigquery</span></td><td><code>CAST(value AS type)</code></td><td><code>TO_HEX(SHA256(t))</code></td><td>global by default</td></tr>
+          <tr><td><span class="chip muted">ansi</span></td><td><code>CAST(value AS type)</code></td><td>fallback</td><td>portable</td></tr>
+        </tbody>
+      </table>
+      <p class="small" style="margin-top: 1em;">Picked via the serving stage's <strong>"Target SQL dialect"</strong> dropdown. The chosen dialect rides through to <code>:ServingDefinition.targetPlatform</code> so the persisted DDL knows its flavor.</p>
+      <p class="small">Most rendered SQL (SUBSTRING ... FROM ... FOR · ROW_NUMBER OVER · LEFT JOIN · <code>||</code>) is already portable; the Dialect class only abstracts where targets diverge.</p>
+      <aside class="notes">
+        Multi-dialect emission means a consumer running on Snowflake doesn't get pgcrypto-flavored DDL. Adding a new
+        dialect: subclass Dialect, override only what differs, register in _DIALECTS. The vast majority of view-DDL is
+        already cross-platform — only cast, SHA hashing, and regex flags diverge in practice.
+      </aside>
+    </section>
+
+    <!-- =============================================
+         SECTION 4 — CAPABILITIES (slides 26-29)
+    ============================================== -->
+
+    <section class="section-divider">
+      <div class="num">04</div>
+      <div class="name">Capabilities you'll use daily</div>
+      <div class="desc">Chat assistants, Apply protocol, active learning, CLI execution.</div>
+    </section>
+
+    <!-- Slide 27: Chat assistants -->
+    <section>
+      <h2>Two chat assistants, one graph</h2>
+      <div class="two-col" style="margin-top: 0.8em;">
+        <div class="pillar po">
+          <h3 class="po-color">Guide me (PO)</h3>
+          <p class="small">In every wizard step. Coaches the PO through authoring.</p>
+          <ul style="font-size: 0.85em;">
+            <li>Suggests idea / domain / name / dataset name</li>
+            <li>Drafts descriptions and purpose statements</li>
+            <li>Proposes columns from the domain catalog</li>
+            <li>Authors quality rules (auto-approved)</li>
+            <li>Sets column-level transform hints</li>
+            <li>Authors dataset-level Shape (filter / SCD / grouping)</li>
+            <li>Sibling sub-skill <strong>data-product-name-advisor</strong></li>
+          </ul>
+        </div>
+        <div class="pillar eng">
+          <h3 class="eng-color">Ask (Engineer)</h3>
+          <p class="small">Right-side drawer on every project page. Read-only.</p>
+          <ul style="font-size: 0.85em;">
+            <li>Ad-hoc Cypher queries against project's Neo4j</li>
+            <li>Quality-score interpretation</li>
+            <li>Lineage walking (where does X come from?)</li>
+            <li>Failure diagnosis (what went wrong in stage Y?)</li>
+            <li>Workbench-concept explanations in-context</li>
+            <li>Every fact backed by a visible Cypher query</li>
+            <li>Suggestion chips adapt to the current screen</li>
+          </ul>
+        </div>
+      </div>
+      <p class="small" style="margin-top: 1em;">Both chats run on Claude Code SDK with constrained tools. Engineer Ask is hard-scoped to its project via <code>--project-code</code> at every Cypher call.</p>
+      <aside class="notes">
+        Two different sub-skills, two different system prompts, two different sets of allowed tools. The PO chat can write
+        suggestions but doesn't directly mutate state (the wizard's Apply protocol does that). The engineer chat is
+        read-only end-to-end — its job is explanation, not mutation.
+      </aside>
+    </section>
+
+    <!-- Slide 28: Apply protocol -->
+    <section>
+      <h2>Apply protocol</h2>
+      <p class="small">PO chat emits structured suggestion blocks; the wizard auto-applies them into form fields.</p>
+      <svg class="diagram" viewBox="0 0 900 250" style="margin-top: 0.5em;">
+        <rect class="node po" x="40" y="40" width="220" height="100" rx="8"/>
+        <text x="150" y="70" text-anchor="middle" font-size="14" font-weight="600">PO chat</text>
+        <text x="150" y="95" text-anchor="middle" font-size="11" class="muted">"Add a hire_date column"</text>
+        <text x="150" y="115" text-anchor="middle" font-size="11" class="muted">"It should be a DATE, not null"</text>
+
+        <line class="flow" x1="260" y1="90" x2="340" y2="90" marker-end="url(#a5)"/>
+        <text x="300" y="80" text-anchor="middle" font-size="10" class="muted">emit</text>
+
+        <rect class="node accent" x="340" y="40" width="240" height="100" rx="8"/>
+        <text x="460" y="70" text-anchor="middle" font-size="14" font-weight="600">```suggestion JSON</text>
+        <text x="460" y="90" text-anchor="middle" font-size="10" class="mono muted">{ applies_to: "schema_add_columns",</text>
+        <text x="460" y="105" text-anchor="middle" font-size="10" class="mono muted">  columns: [{name: "hire_date",</text>
+        <text x="460" y="120" text-anchor="middle" font-size="10" class="mono muted">    type: "DATE", required: true}] }</text>
+
+        <line class="flow" x1="580" y1="90" x2="660" y2="90" marker-end="url(#a5)"/>
+        <text x="620" y="80" text-anchor="middle" font-size="10" class="muted">Apply</text>
+
+        <rect class="node" x="660" y="40" width="200" height="100" rx="8"/>
+        <text x="760" y="70" text-anchor="middle" font-size="14" font-weight="600">Wizard form</text>
+        <text x="760" y="95" text-anchor="middle" font-size="11" class="muted">column rows update</text>
+        <text x="760" y="115" text-anchor="middle" font-size="11" class="muted">live, no re-load</text>
+
+        <text x="450" y="200" text-anchor="middle" font-size="12" class="muted">Apply types: <tspan class="mono">idea</tspan> · <tspan class="mono">domain</tspan> · <tspan class="mono">name</tspan> · <tspan class="mono">schema_add_columns</tspan> · <tspan class="mono">schema_pick_columns</tspan> · <tspan class="mono">rule_create</tspan></text>
+        <text x="450" y="220" text-anchor="middle" font-size="12" class="muted"><tspan class="mono">rule_decisions</tspan> · <tspan class="mono">column_transform_set</tspan> · <tspan class="mono">shape_set</tspan> · OSI advisor metric / relationship / context cards</text>
+        <defs>
+          <marker id="a5" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+            <polygon fill="#94a3b8" points="0 0, 8 3, 0 6"/>
+          </marker>
+        </defs>
+      </svg>
+      <p class="small" style="margin-top: 0.5em;"><strong>Partial-update semantics</strong> across all Apply types: absent fields preserve current state. The PO can iterate ("now also add a department_id") without losing earlier authoring.</p>
+      <aside class="notes">
+        Apply turns natural-language coaching into form mutations. Critically the chat doesn't directly write the contract;
+        it emits a suggestion the wizard applies. The PO sees the Apply card render in chat with a button, can click to
+        accept or ignore. This keeps human authorship in the driver's seat.
+      </aside>
+    </section>
+
+    <!-- Slide 29: Active learning -->
+    <section>
+      <h2>Active learning</h2>
+      <svg class="diagram" viewBox="0 0 900 320" style="margin-top: 0.5em;">
+        <circle cx="450" cy="160" r="120" fill="none" stroke="#475569" stroke-width="1.5" stroke-dasharray="4 4"/>
+
+        <rect class="node" x="370" y="20" width="160" height="60" rx="8"/>
+        <text x="450" y="48" text-anchor="middle" font-size="13" font-weight="600">Review</text>
+        <text x="450" y="66" text-anchor="middle" font-size="11" class="muted">approve / reject + reason</text>
+
+        <rect class="node accent" x="620" y="130" width="160" height="60" rx="8"/>
+        <text x="700" y="158" text-anchor="middle" font-size="13" font-weight="600">Reflect</text>
+        <text x="700" y="176" text-anchor="middle" font-size="11" class="muted">analyse rejection patterns</text>
+
+        <rect class="node" x="370" y="250" width="160" height="60" rx="8"/>
+        <text x="450" y="278" text-anchor="middle" font-size="13" font-weight="600">Refined playbook</text>
+        <text x="450" y="296" text-anchor="middle" font-size="11" class="muted">domain rules updated</text>
+
+        <rect class="node po" x="120" y="130" width="160" height="60" rx="8"/>
+        <text x="200" y="158" text-anchor="middle" font-size="13" font-weight="600">Re-run stage</text>
+        <text x="200" y="176" text-anchor="middle" font-size="11" class="muted">baseline vs refined</text>
+
+        <path class="flow" d="M 530 50 Q 620 80 660 130" marker-end="url(#a6)"/>
+        <path class="flow" d="M 700 190 Q 660 240 530 280" marker-end="url(#a6)"/>
+        <path class="flow" d="M 370 280 Q 280 240 230 190" marker-end="url(#a6)"/>
+        <path class="flow" d="M 230 130 Q 290 80 370 50" marker-end="url(#a6)"/>
+
+        <defs>
+          <marker id="a6" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+            <polygon fill="#94a3b8" points="0 0, 8 3, 0 6"/>
+          </marker>
+        </defs>
+      </svg>
+      <p class="small" style="margin-top: 0.5em;">The <code>playbook-reflector</code> skill analyses approve/reject decisions plus high-quality examples and proposes generic domain-playbook rule updates. A <strong>:PlaybookVersion</strong> tracks every cycle so engineers can roll back. Next time the relevant stage runs, a baseline-vs-refined picker lets the engineer choose which playbook to use.</p>
+      <aside class="notes">
+        Active learning closes the loop. Reviewers reject descriptions or mappings with reasons; reflect-on-reviews analyses
+        the patterns and proposes generic rule updates to the domain playbook. Versioned, so a bad reflection cycle is
+        rollback-able. The Learning History dashboard card surfaces how many cycles have run for a project.
+      </aside>
+    </section>
+
+    <!-- Slide 30: CLI execution -->
+    <section>
+      <h2>CLI execution for engineers</h2>
+      <p class="small">Same pipeline as the UI, but streamed to a Claude Code terminal session.</p>
+      <div class="two-col narrow-right" style="margin-top: 0.5em;">
+        <div class="terminal">
+<span class="prompt">$</span> curl -X POST http://localhost:8000/api/projects/1/cli-bootstrap
+<span class="out">{ "commands": ["run-stage", "pipeline-status", ...] }</span>
+<span class="prompt">$</span> cd projects/dpe-sa-05112026-01 &amp;&amp; claude
+<span class="comment"># inside the Claude Code session:</span>
+<span class="info">/run-stage data_discovery</span>
+<span class="out">[tool] mcp__bash: psql -c "\dt"</span>
+<span class="out">[tool] mcp__bash: python ~/.claude/skills/data-discovery/...</span>
+<span class="out">Wrote schema.yaml + tables.yaml</span>
+<span class="ok">✓ stage complete (cost $0.12)</span>
+<span class="info">/pipeline-status</span>
+<span class="out">data_discovery       complete</span>
+<span class="out">data_profiling       pending</span>
+<span class="out">metadata_enrichment  pending</span>
+<span class="info">/reviews-pending</span>
+<span class="out">descriptions: 24 pending  (use browser to approve)</span>
+        </div>
+        <div>
+          <p class="small" style="margin-top: 0;"><strong>11 slash commands:</strong></p>
+          <div style="font-size: 0.7em; line-height: 1.7;">
+            <span class="chip eng">/run-stage</span>
+            <span class="chip eng">/pipeline-status</span>
+            <span class="chip eng">/workflow-list</span>
+            <span class="chip eng">/workflow-add</span>
+            <span class="chip">/reviews-pending</span>
+            <span class="chip">/review-show</span>
+            <span class="chip">/stage-log</span>
+            <span class="chip accent">/refresh-context</span>
+            <span class="chip">/joins-override-get</span>
+            <span class="chip">/joins-override-set</span>
+            <span class="chip">/generate-report</span>
+          </div>
+          <p class="small" style="margin-top: 0.8em;">Backend mirrors the WebSocket dispatch path: same <code>build_prompt</code>, same <code>StageRun</code> / <code>StageExecution</code> rows. Browser tab sees status flips live.</p>
+        </div>
+      </div>
+      <p class="small" style="margin-top: 0.8em;"><strong>v1 limitations:</strong> review approvals require the browser (transform editor is too rich for terminal); DQ-test runs (GX / Pandera) bypass the SSE path.</p>
+      <aside class="notes">
+        CLI path was added so engineers running inside a Claude Code session can dispatch stages without alt-tabbing.
+        Same backend, just a different transport — HTTP/SSE instead of WebSocket. The 11 slash commands are auto-rendered
+        into projects/{code}/.claude/commands/ on cli-bootstrap. Read-only review inspection is supported; the actual
+        approve/reject still happens in the browser.
+      </aside>
+    </section>
+
+    <!-- =============================================
+         SECTION 5 — WRAP-UP (slides 31-32)
+    ============================================== -->
+
+    <section class="section-divider">
+      <div class="num">05</div>
+      <div class="name">Wrap-up</div>
+      <div class="desc">What you can do next.</div>
+    </section>
+
+    <!-- Slide 32: Quick start -->
+    <section>
+      <h2>What you can do next</h2>
+      <div class="tile-grid cols-2" style="margin-top: 0.8em;">
+        <div class="pillar po">
+          <h3 class="po-color">If you're a Product Owner</h3>
+          <ul style="font-size: 0.95em;">
+            <li>Open <strong>Product Workbench</strong>, click <strong>+ New Product</strong></li>
+            <li>Pick consumer-aligned wizard if you have sources to consume; source-aligned if you're standing up a new mirror of a raw DB</li>
+            <li>Let <strong>Guide me</strong> draft the schema; review and accept each Apply card</li>
+            <li>When the engineer's pipeline completes, click <strong>Deploy</strong> in marketplace</li>
+            <li>Refresh OSI scoring at any time via <strong>Score OSI now</strong></li>
+          </ul>
+        </div>
+        <div class="pillar eng">
+          <h3 class="eng-color">If you're an Engineer</h3>
+          <ul style="font-size: 0.95em;">
+            <li>Open <strong>Engineering Workbench</strong>, find a project in <strong>Incoming</strong></li>
+            <li>Run the pipeline stages in order; check <strong>Reviews</strong> tab as each one flips to <em>awaiting_review</em></li>
+            <li>For mapping work, use the <strong>Transform Editor</strong>; escalate ambiguous transforms to Steward</li>
+            <li>Or run from CLI: <code>POST /cli-bootstrap</code>, then <code>/run-stage &lt;id&gt;</code> inside a Claude Code session</li>
+            <li>Use <strong>Ask</strong> drawer for "where does X come from" / "why is score low" / failure diagnosis</li>
+          </ul>
+        </div>
+      </div>
+      <p class="small" style="margin-top: 1em;"><strong>Setup</strong>: see <code>README.md</code> for backend + frontend quick-start. <strong>Deeper reference</strong>: <code>userguide.md</code>, <code>architecture.md</code>, and root <code>CLAUDE.md</code>.</p>
+      <aside class="notes">
+        Two on-ramps. POs go through the wizard. Engineers pick up an Incoming request and run the pipeline. The two
+        roles converge at the PO validation gate (for SA) or the mapping review (for CF). Setup is in README.md; deeper
+        reference docs are linked.
+      </aside>
+    </section>
+
+    <!-- Slide 33: Thank you / Q&A -->
+    <section class="center-text">
+      <h1 style="font-size: 2.4em; margin-bottom: 0.2em;">Questions?</h1>
+      <p style="color: var(--color-muted); font-size: 1.1em; margin-top: 1em;">Data Workbench</p>
+      <div style="margin-top: 2em;">
+        <span class="chip po">Product Workbench</span>
+        <span class="chip eng">Engineering Workbench</span>
+        <span class="chip accent">Skills</span>
+        <span class="chip">Neo4j</span>
+        <span class="chip">Claude Code SDK</span>
+      </div>
+      <p class="small" style="margin-top: 3em;">
+        Source: <code>README.md</code> · <code>userguide.md</code> · <code>architecture.md</code> · <code>CLAUDE.md</code><br>
+        Demo flow: <code>notes/demo_script.md</code>
+      </p>
+      <p class="small" style="margin-top: 1em;">
+        <em>Press <kbd>S</kbd> for speaker notes · <kbd>F</kbd> for fullscreen · <kbd>ESC</kbd> for overview</em>
+      </p>
+    </section>
+
+    <!-- =============================================
+         APPENDIX
+    ============================================== -->
+
+    <section class="section-divider">
+      <div class="num">06</div>
+      <div class="name">Appendix</div>
+      <div class="desc">Advanced topics for follow-up reading.</div>
+    </section>
+
+    <!-- Appendix 1: Auto-bridge & FK inference -->
+    <section>
+      <h2>Appendix · Auto-bridge &amp; FK inference</h2>
+      <p class="small">When the engineer maps columns from two tables that aren't directly FK-connected, view-DDL discovers a join path through unmapped intermediates.</p>
+      <ul style="font-size: 0.85em;">
+        <li><strong>BFS over the FK graph</strong> — shortest path between mapped tables. Unmapped intermediates are auto-included in FROM/JOIN scope (no SELECT contribution).</li>
+        <li><strong>Name-similarity ranking</strong> when multiple shortest paths exist: a junction whose name contains both endpoint names (<code>department_employee</code>) outranks one that contains only one (<code>department_manager</code>).</li>
+        <li><strong>Relationship-kind tie-break</strong>: <code>general_membership</code> ≫ <code>fact</code> / <code>lookup_dimension</code> ≫ <code>specialization</code>. Classification set during metadata enrichment, approved by PO in Tables tab, propagated to <code>:DProdOutputDataset.relationshipKind</code>.</li>
+        <li><strong>Temporal-bridge wrapping</strong>: if the bridge has <code>to_date</code> / <code>valid_to</code> / <code>*_at</code> columns, auto-wrap with <code>ROW_NUMBER() OVER (...) = 1</code> so the bridge contributes the latest row per natural key.</li>
+        <li><strong>Multiplication warnings</strong> for non-bridge temporal sources — engineer must author explicit <code>:DatasetTransform.dedupe</code>.</li>
+      </ul>
+      <p class="small" style="margin-top: 1em;">Override at any time: declare explicit <code>joins[]</code> in the dataset Shape, or use the engineer's Joins override panel.</p>
+    </section>
+
+    <!-- Appendix 2: PROV-O audit trail -->
+    <section>
+      <h2>Appendix · PROV-O audit trail</h2>
+      <p class="small">Every review decision becomes a graph node — full audit trail.</p>
+      <ul style="font-size: 0.85em;">
+        <li><code>:ProvActivity</code> — the act of reviewing (with <code>activityType: 'description_review' | 'mapping_review' | ...</code>)</li>
+        <li><code>:ProvAgent</code> — the user (role + email)</li>
+        <li><code>:ProvRejectionReason</code> — structured category + free-text on reject</li>
+        <li><code>:ProvQuality</code> — quality rating on approve (acceptable / good / excellent)</li>
+        <li><code>:ColumnDescription</code> · <code>:ColumnMapping</code> · <code>:PropertyShape</code> — link to the activity that approved them</li>
+      </ul>
+      <p class="small" style="margin-top: 1em;">Surfaces in the UI: every detail row's <strong>Provenance</strong> column shows a <strong>View</strong> button that opens the audit trail — who generated it, who reviewed it, when, what was rejected before, and the final approval evidence.</p>
+      <p class="small">Used in chat too: when the Engineer Ask agent makes a claim about data quality, the supporting Cypher walks through the PROV-O chain to back it up.</p>
+    </section>
+
+    <!-- Appendix 3: Versioned contracts -->
+    <section>
+      <h2>Appendix · Versioned contracts</h2>
+      <p class="small">Editing a published product branches a new <code>:DataContract</code> version so the public listing doesn't leak draft edits.</p>
+      <ul style="font-size: 0.85em;">
+        <li><strong>First save</strong> after Edit click triggers <code>CREATE_NEW_VERSION</code>: v2 starts at <code>lifecycleState='draft', isCurrent=true</code>; v1 stays at prior state with <code>isCurrent=false</code>.</li>
+        <li><strong>Linked</strong> via <code>:PROV_WAS_DERIVED_FROM</code>.</li>
+        <li><strong>Marketplace pinning</strong>: <code>head(collect(dc) ORDER BY lifecycleVersion DESC)</code> pins to the latest <em>published / superseded</em> version, falling back to <code>isCurrent=true</code> only if no version was ever deployed.</li>
+        <li><strong>dprod-leak mitigation</strong>: <code>:DProdColumn</code> / <code>:DProdOutputDataset</code> are NOT versioned. <code>_generate_dprod</code> wipes and rebuilds them from whatever is <code>isCurrent=true</code>. Wizard skips <code>/generate-dprod</code> when hydrated state is <code>published</code> so column data doesn't flip mid-edit.</li>
+        <li><strong>Engineer banner</strong>: shows when an <code>edit</code>-kind ProductRequest is pending; client-side diff computed via <code>lib/editDiffImpact.ts</code> for impact preview.</li>
+      </ul>
+    </section>
+
+    <!-- Appendix 4: Skill registry -->
+    <section>
+      <h2>Appendix · Skill registry</h2>
+      <p class="small">Skills live in <code>~/.claude/skills/&lt;name&gt;/</code>. Each has <code>SKILL.md</code> + <code>scripts/</code>. All Neo4j-querying scripts accept <code>--project-code</code> for isolation.</p>
+      <div class="tile-grid cols-3" style="margin-top: 0.6em;">
+        <div class="tile"><div class="tile-title">data-discovery</div><div class="tile-body">PostgreSQL metadata → YAML</div></div>
+        <div class="tile"><div class="tile-title">data-discovery-to-dcat-neo4j</div><div class="tile-body">YAML → DCAT-2 graph</div></div>
+        <div class="tile"><div class="tile-title">data-profiling</div><div class="tile-body">column statistics</div></div>
+        <div class="tile"><div class="tile-title">data-profiling-to-dqv-neo4j</div><div class="tile-body">profiles → DQV graph</div></div>
+        <div class="tile"><div class="tile-title">metadata-enrichment</div><div class="tile-body">column + table descriptions</div></div>
+        <div class="tile"><div class="tile-title">column-name-standardizer</div><div class="tile-body">SA naming recommendations</div></div>
+        <div class="tile"><div class="tile-title">data-quality-rule-generation</div><div class="tile-body">observation rules</div></div>
+        <div class="tile"><div class="tile-title">domain-rule-enhancement</div><div class="tile-body">domain rules from YAML</div></div>
+        <div class="tile"><div class="tile-title">data-scoring</div><div class="tile-body">8-dimension composite</div></div>
+        <div class="tile"><div class="tile-title">data-mapping-neo4j</div><div class="tile-body">--source-mode catalog/dprod</div></div>
+        <div class="tile"><div class="tile-title">data-serving-virtual-view</div><div class="tile-body">CREATE VIEW per dataset</div></div>
+        <div class="tile"><div class="tile-title">data-quality-testing-gx</div><div class="tile-body">Great Expectations runs</div></div>
+        <div class="tile"><div class="tile-title">data-quality-testing-python</div><div class="tile-body">Pandera runs</div></div>
+        <div class="tile"><div class="tile-title">playbook-reflector</div><div class="tile-body">active-learning loop</div></div>
+        <div class="tile"><div class="tile-title">project-chat-assistant</div><div class="tile-body">engineer Ask drawer</div></div>
+        <div class="tile"><div class="tile-title">product-authoring-assistant</div><div class="tile-body">PO Guide-me coach</div></div>
+        <div class="tile"><div class="tile-title">odcs-to-graph</div><div class="tile-body">ODCS → dprod transformation</div></div>
+        <div class="tile"><div class="tile-title">data-remediation-analysis</div><div class="tile-body">issue impact estimation</div></div>
+      </div>
+      <p class="small" style="margin-top: 0.8em;">Each archetype picks a subset; engineers can install / customise skills outside the Workbench.</p>
+    </section>
+
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/highlight/highlight.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/notes/notes.js"></script>
+<script>
+  Reveal.initialize({
+    hash: true,
+    slideNumber: 'c/t',
+    width: 1280,
+    height: 720,
+    margin: 0.05,
+    controls: true,
+    progress: true,
+    transition: 'fade',
+    plugins: [RevealHighlight, RevealNotes],
+  });
+</script>
+</body>
+</html>

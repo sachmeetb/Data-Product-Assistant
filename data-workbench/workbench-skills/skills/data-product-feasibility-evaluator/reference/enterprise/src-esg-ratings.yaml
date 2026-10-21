@@ -1,0 +1,154 @@
+spec_id: src_esg_ratings
+name: ESG Ratings
+domain: Enterprise
+product_kind: source
+description: Ratings that assess the bank's performance across Environmental, Social,
+  and Governance (ESG) factors, reflecting its commitment to sustainability and responsible
+  practices.
+schema_version: '1.0'
+classification: internal
+grain:
+  keys:
+  - issuer_id
+  description: ''
+freshness:
+  history: scd2
+  cadence: ''
+  description: ''
+allowed_derivations:
+- rename
+- cast
+attributes:
+- name: issuer_id
+  type: bigint
+  concept: Issuer ID
+  description: Unique numeric identifier for the company or entity being rated across ESG dimensions.
+  required: true
+  is_key: true
+  classification: internal
+- name: name
+  type: varchar
+  concept: Name
+  description: Legal or trading name of the rated issuer entity.
+  required: true
+  is_key: false
+  classification: internal
+- name: country
+  type: numeric
+  concept: Country
+  description: Numeric country code indicating the issuer's domicile or primary place of incorporation.
+  required: false
+  is_key: false
+  classification: internal
+- name: sector
+  type: varchar
+  concept: Sector
+  description: Industry sector classification of the issuer, used for peer-group benchmarking in ESG analysis.
+  required: false
+  is_key: false
+  classification: internal
+- name: rating_id
+  type: bigint
+  concept: Rating ID
+  description: Unique identifier for a specific ESG rating event or assessment record.
+  required: true
+  is_key: true
+  classification: internal
+- name: provider
+  type: varchar
+  concept: Provider
+  description: Name of the external ESG rating agency or data provider that produced this rating.
+  required: false
+  is_key: false
+  classification: internal
+- name: score
+  type: numeric
+  concept: Score
+  description: Composite numeric ESG score assigned to the issuer by the rating provider.
+  required: true
+  is_key: false
+  classification: internal
+- name: grade
+  type: varchar
+  concept: Grade
+  description: Alphabetic or categorical grade summarizing the issuer's overall ESG performance (e.g. AA, B+).
+  required: false
+  is_key: false
+  classification: internal
+- name: date
+  type: date
+  concept: Date
+  description: Calendar date on which the ESG rating or score was published or became effective.
+  required: true
+  is_key: false
+  classification: internal
+- name: metric_id
+  type: bigint
+  concept: Metric ID
+  description: Unique identifier for a specific ESG sub-metric or indicator within the rating framework.
+  required: true
+  is_key: true
+  classification: internal
+- name: category
+  type: varchar
+  concept: Category
+  description: ESG dimension or pillar the metric belongs to, such as Environmental, Social, or Governance.
+  required: false
+  is_key: false
+  classification: internal
+- name: value
+  type: numeric
+  concept: Value
+  description: Numeric measurement of the issuer's performance on a specific ESG sub-metric.
+  required: true
+  is_key: false
+  classification: internal
+- name: period
+  type: varchar
+  concept: Period
+  description: Reporting period (e.g. calendar year, quarter) to which the metric value relates.
+  required: false
+  is_key: false
+  classification: internal
+- name: event_id
+  type: bigint
+  concept: Event ID
+  description: Unique identifier for a material ESG-related event, controversy, or disclosure incident.
+  required: true
+  is_key: true
+  classification: internal
+- name: severity
+  type: varchar
+  concept: Severity
+  description: Qualitative severity rating of an ESG event or controversy, such as High, Medium, or Low.
+  required: false
+  is_key: false
+  classification: internal
+- name: start_date
+  type: date
+  concept: Start Date
+  description: Date on which the ESG event or controversy began.
+  required: true
+  is_key: false
+  classification: internal
+- name: end_date
+  type: date
+  concept: End Date
+  description: Date on which the ESG event or controversy concluded or was resolved.
+  required: true
+  is_key: false
+  classification: internal
+- name: source_id
+  type: bigint
+  concept: Source ID
+  description: Unique identifier for the data source or feed that supplied the ESG rating or metric data.
+  required: true
+  is_key: true
+  classification: internal
+- name: refresh_frequency
+  type: varchar
+  concept: Refresh Frequency
+  description: Cadence at which the ESG rating or metric is updated by the provider (e.g. annual, quarterly, monthly).
+  required: false
+  is_key: false
+  classification: internal

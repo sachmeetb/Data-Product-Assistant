@@ -1,0 +1,211 @@
+spec_id: src_enterprise_surveys
+name: Enterprise Surveys
+domain: Statistics Microdata
+product_kind: source
+description: Survey microdata for establishments/firms covering production, prices,
+  exports/imports, employment, capex and expectations. Designed for compilation of
+  official statistics and BoP supplemental evidence; includes sampling, weights and
+  disclosure controls.
+schema_version: '1.0'
+classification: internal
+grain:
+  keys:
+  - enterprise_id
+  description: ''
+freshness:
+  history: current
+  cadence: ''
+  description: ''
+allowed_derivations:
+- rename
+- cast
+attributes:
+- name: survey_id
+  type: bigint
+  concept: Survey ID
+  description: Unique identifier for an enterprise survey instrument or questionnaire administered to a sample of establishments.
+  required: true
+  is_key: true
+  classification: internal
+- name: wave
+  type: varchar
+  concept: Wave
+  description: Label for the survey collection round or wave, used to identify the timing of data collection within a longitudinal survey cycle.
+  required: false
+  is_key: false
+  classification: internal
+- name: frame_source
+  type: varchar
+  concept: Frame Source
+  description: Name or reference for the sampling frame used to select survey respondents (e.g. business register, tax rolls, customs list).
+  required: false
+  is_key: false
+  classification: internal
+- name: strata
+  type: varchar
+  concept: Strata
+  description: Stratification variable or stratum identifier used in the sampling design to ensure representativeness across size classes, industries, or regions.
+  required: false
+  is_key: false
+  classification: internal
+- name: sample_weight
+  type: varchar
+  concept: Sample Weight
+  description: Statistical weight assigned to each responding enterprise to expand its data to represent the full target population.
+  required: false
+  is_key: false
+  classification: internal
+- name: enterprise_id
+  type: bigint
+  concept: Enterprise ID
+  description: Unique identifier for an establishment or firm responding to the enterprise survey; primary key for microdata records.
+  required: true
+  is_key: true
+  classification: internal
+- name: industry
+  type: varchar
+  concept: Industry
+  description: Industry classification of the enterprise, typically coded using a standard taxonomy such as ISIC, NIC, or NAICS.
+  required: false
+  is_key: false
+  classification: internal
+- name: size_class
+  type: numeric
+  concept: Size Class
+  description: Size category of the enterprise based on headcount or turnover (e.g. micro, small, medium, large) used for stratification and analysis.
+  required: false
+  is_key: false
+  classification: internal
+- name: region
+  type: varchar
+  concept: Region
+  description: Geographic region or administrative area where the enterprise is located, used for regional disaggregation of official statistics.
+  required: false
+  is_key: false
+  classification: internal
+- name: sales
+  type: varchar
+  concept: Sales
+  description: Reported total revenue or sales value of the enterprise for the survey reference period.
+  required: false
+  is_key: false
+  classification: internal
+- name: output_volume
+  type: varchar
+  concept: Output Volume
+  description: Reported physical output or production volume of the enterprise for the survey reference period.
+  required: false
+  is_key: false
+  classification: internal
+- name: exports
+  type: varchar
+  concept: Exports
+  description: Reported value of goods or services exported by the enterprise during the survey reference period.
+  required: false
+  is_key: false
+  classification: internal
+- name: imports
+  type: varchar
+  concept: Imports
+  description: Reported value of goods or materials imported by the enterprise during the survey reference period.
+  required: false
+  is_key: false
+  classification: internal
+- name: inventories
+  type: varchar
+  concept: Inventories
+  description: Reported value of finished goods, work-in-progress, and raw material inventories held by the enterprise.
+  required: false
+  is_key: false
+  classification: internal
+- name: price_indices
+  type: numeric
+  concept: Price Indices
+  description: Producer price index or sector-specific price deflator applicable to the enterprise's output, used for volume deflation in official statistics.
+  required: false
+  is_key: false
+  classification: internal
+- name: unit_values
+  type: numeric
+  concept: Unit Values
+  description: Average unit value of exported or imported goods reported by the enterprise, used for trade price index compilation.
+  required: true
+  is_key: false
+  classification: internal
+- name: wage_costs
+  type: numeric
+  concept: Wage Costs
+  description: Total wage bill and employee compensation costs reported by the enterprise for the survey period.
+  required: false
+  is_key: false
+  classification: internal
+- name: input_costs
+  type: numeric
+  concept: Input Costs
+  description: Total cost of raw materials, energy, and intermediate inputs consumed by the enterprise in production.
+  required: false
+  is_key: false
+  classification: internal
+- name: headcount
+  type: numeric
+  concept: Headcount
+  description: Number of persons employed or engaged by the enterprise at the survey reference date.
+  required: false
+  is_key: false
+  classification: internal
+- name: hours
+  type: varchar
+  concept: Hours
+  description: Total hours worked by employees at the enterprise during the survey reference period.
+  required: false
+  is_key: false
+  classification: internal
+- name: capex_amount
+  type: numeric
+  concept: Capex Amount
+  description: Capital expenditure incurred by the enterprise for acquisition of fixed assets during the survey reference period.
+  required: true
+  is_key: false
+  classification: internal
+- name: asset_type
+  type: varchar
+  concept: Asset Type
+  description: Type of fixed asset acquired through capital expenditure (e.g. machinery, buildings, ICT equipment, vehicles).
+  required: true
+  is_key: false
+  classification: internal
+- name: next_3_6_12m_outlook_indicators
+  type: varchar
+  concept: Next 3 6 12m Outlook Indicators
+  description: Forward-looking expectation indicators reported by the enterprise for the next 3, 6, and 12 months covering production, employment, and prices.
+  required: false
+  is_key: false
+  classification: internal
+- name: mode
+  type: varchar
+  concept: Mode
+  description: Mode of survey administration used to collect this enterprise's response (e.g. online form, postal, telephone, enumerator visit).
+  required: false
+  is_key: false
+  classification: internal
+- name: response_status
+  type: varchar
+  concept: Response Status
+  description: Status of the enterprise's survey response (e.g. responded, partially responded, imputed, non-response).
+  required: true
+  is_key: false
+  classification: internal
+- name: imputation_flag
+  type: boolean
+  concept: Imputation Flag
+  description: Boolean indicator that one or more of the enterprise's reported values have been statistically imputed due to item non-response.
+  required: false
+  is_key: false
+  classification: internal
+- name: confidentiality_key
+  type: varchar
+  concept: Confidentiality Key
+  description: Anonymization or disclosure-control key applied to the enterprise's microdata to prevent identification of individual respondents.
+  required: false
+  is_key: false
+  classification: internal

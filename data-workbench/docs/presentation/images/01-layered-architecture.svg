@@ -1,0 +1,245 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 760" font-family="-apple-system, 'Segoe UI', Roboto, sans-serif">
+  <title>Data Agents — Layered Reference Architecture</title>
+  <desc>Six layers stacked vertically with four cross-cutting concerns running down the right-hand side. Top layer: Experience. Bottom layer: Infrastructure.</desc>
+
+  <defs>
+    <linearGradient id="lg-experience" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0" stop-color="#eef4ff"/>
+      <stop offset="1" stop-color="#dbe7ff"/>
+    </linearGradient>
+    <linearGradient id="lg-orchestration" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0" stop-color="#f1ecff"/>
+      <stop offset="1" stop-color="#dfd3ff"/>
+    </linearGradient>
+    <linearGradient id="lg-agent" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0" stop-color="#fff0f4"/>
+      <stop offset="1" stop-color="#ffd6e0"/>
+    </linearGradient>
+    <linearGradient id="lg-knowledge" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0" stop-color="#eafaf0"/>
+      <stop offset="1" stop-color="#cfeed8"/>
+    </linearGradient>
+    <linearGradient id="lg-state" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0" stop-color="#fff7e6"/>
+      <stop offset="1" stop-color="#ffe7b3"/>
+    </linearGradient>
+    <linearGradient id="lg-infra" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0" stop-color="#f4f4f6"/>
+      <stop offset="1" stop-color="#dedee4"/>
+    </linearGradient>
+    <linearGradient id="lg-cross" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0" stop-color="#fefefe"/>
+      <stop offset="1" stop-color="#eef0f3"/>
+    </linearGradient>
+    <filter id="shadow" x="-5%" y="-5%" width="110%" height="115%">
+      <feDropShadow dx="0" dy="2" stdDeviation="2" flood-opacity="0.12"/>
+    </filter>
+  </defs>
+
+  <!-- Title -->
+  <text x="600" y="38" font-size="22" font-weight="700" text-anchor="middle" fill="#111">Data Agents — Layered Reference Architecture</text>
+  <text x="600" y="62" font-size="13" text-anchor="middle" fill="#555">Framework-agnostic blueprint. Vertical = data flow; right-hand spine = cross-cutting concerns.</text>
+
+  <!-- Layer geometry: x=40 to x=940 width=900; cross-cutting x=970 to 1170 width=200 -->
+  <!-- Layer heights: 6 layers across y=90..720 -->
+
+  <!-- Layer 1: Experience -->
+  <g filter="url(#shadow)">
+    <rect x="40" y="90" width="900" height="100" rx="10" fill="url(#lg-experience)" stroke="#5b7cc9" stroke-width="1.5"/>
+  </g>
+  <text x="60" y="112" font-size="13" font-weight="700" fill="#1f2c5e">1 — Experience layer</text>
+  <text x="60" y="128" font-size="11" fill="#3a4a7a">Persona-scoped UIs · streaming output · review surfaces · embedded chat · marketplace</text>
+  <g font-size="11" fill="#1f2c5e">
+    <rect x="60"  y="140" width="160" height="38" rx="6" fill="#fff" stroke="#7d97cf"/>
+    <text x="140" y="155" text-anchor="middle" font-weight="600">Workflow UI</text>
+    <text x="140" y="170" text-anchor="middle" fill="#555">stages · streams · reviews</text>
+
+    <rect x="240" y="140" width="160" height="38" rx="6" fill="#fff" stroke="#7d97cf"/>
+    <text x="320" y="155" text-anchor="middle" font-weight="600">Embedded chat</text>
+    <text x="320" y="170" text-anchor="middle" fill="#555">context-aware sidekick</text>
+
+    <rect x="420" y="140" width="160" height="38" rx="6" fill="#fff" stroke="#7d97cf"/>
+    <text x="500" y="155" text-anchor="middle" font-weight="600">Authoring wizard</text>
+    <text x="500" y="170" text-anchor="middle" fill="#555">Apply protocol · forms</text>
+
+    <rect x="600" y="140" width="160" height="38" rx="6" fill="#fff" stroke="#7d97cf"/>
+    <text x="680" y="155" text-anchor="middle" font-weight="600">Marketplace</text>
+    <text x="680" y="170" text-anchor="middle" fill="#555">catalog · scores · lineage</text>
+
+    <rect x="780" y="140" width="140" height="38" rx="6" fill="#fff" stroke="#7d97cf"/>
+    <text x="850" y="155" text-anchor="middle" font-weight="600">HITL prompts</text>
+    <text x="850" y="170" text-anchor="middle" fill="#555">mid-run questions</text>
+  </g>
+
+  <!-- Layer 2: Orchestration -->
+  <g filter="url(#shadow)">
+    <rect x="40" y="200" width="900" height="100" rx="10" fill="url(#lg-orchestration)" stroke="#7c5fc7" stroke-width="1.5"/>
+  </g>
+  <text x="60" y="222" font-size="13" font-weight="700" fill="#3b1d77">2 — Orchestration layer</text>
+  <text x="60" y="238" font-size="11" fill="#553a8c">Workflow engine · stage state machine · dependency resolver · agent dispatch</text>
+  <g font-size="11" fill="#3b1d77">
+    <rect x="60"  y="250" width="180" height="38" rx="6" fill="#fff" stroke="#9b80d4"/>
+    <text x="150" y="265" text-anchor="middle" font-weight="600">Workflow registry</text>
+    <text x="150" y="280" text-anchor="middle" fill="#555">archetypes · templates · catalog</text>
+
+    <rect x="260" y="250" width="180" height="38" rx="6" fill="#fff" stroke="#9b80d4"/>
+    <text x="350" y="265" text-anchor="middle" font-weight="600">Stage FSM</text>
+    <text x="350" y="280" text-anchor="middle" fill="#555">pending → running → review → done</text>
+
+    <rect x="460" y="250" width="180" height="38" rx="6" fill="#fff" stroke="#9b80d4"/>
+    <text x="550" y="265" text-anchor="middle" font-weight="600">Dependency graph</text>
+    <text x="550" y="280" text-anchor="middle" fill="#555">cross-workflow gates</text>
+
+    <rect x="660" y="250" width="260" height="38" rx="6" fill="#fff" stroke="#9b80d4"/>
+    <text x="790" y="265" text-anchor="middle" font-weight="600">Agent dispatcher / orphan reaper</text>
+    <text x="790" y="280" text-anchor="middle" fill="#555">spawn · resume · reconcile</text>
+  </g>
+
+  <!-- Layer 3: Agent runtime -->
+  <g filter="url(#shadow)">
+    <rect x="40" y="310" width="900" height="100" rx="10" fill="url(#lg-agent)" stroke="#c44d6f" stroke-width="1.5"/>
+  </g>
+  <text x="60" y="332" font-size="13" font-weight="700" fill="#7b1f3a">3 — Agent runtime layer</text>
+  <text x="60" y="348" font-size="11" fill="#9e3957">LLM client · tool runtime · skill loader · prompt assembler · sub-agent dispatcher</text>
+  <g font-size="11" fill="#7b1f3a">
+    <rect x="60"  y="360" width="150" height="38" rx="6" fill="#fff" stroke="#d97a93"/>
+    <text x="135" y="375" text-anchor="middle" font-weight="600">LLM client</text>
+    <text x="135" y="390" text-anchor="middle" fill="#555">streaming · tool-use</text>
+
+    <rect x="225" y="360" width="150" height="38" rx="6" fill="#fff" stroke="#d97a93"/>
+    <text x="300" y="375" text-anchor="middle" font-weight="600">Tool runtime</text>
+    <text x="300" y="390" text-anchor="middle" fill="#555">FS · shell · DB · IPC</text>
+
+    <rect x="390" y="360" width="150" height="38" rx="6" fill="#fff" stroke="#d97a93"/>
+    <text x="465" y="375" text-anchor="middle" font-weight="600">Skill loader</text>
+    <text x="465" y="390" text-anchor="middle" fill="#555">discover · cache</text>
+
+    <rect x="555" y="360" width="170" height="38" rx="6" fill="#fff" stroke="#d97a93"/>
+    <text x="640" y="375" text-anchor="middle" font-weight="600">Prompt assembler</text>
+    <text x="640" y="390" text-anchor="middle" fill="#555">template · system · playbook</text>
+
+    <rect x="740" y="360" width="180" height="38" rx="6" fill="#fff" stroke="#d97a93"/>
+    <text x="830" y="375" text-anchor="middle" font-weight="600">Sub-agent dispatcher</text>
+    <text x="830" y="390" text-anchor="middle" fill="#555">skill calls skill</text>
+  </g>
+
+  <!-- Layer 4: Knowledge -->
+  <g filter="url(#shadow)">
+    <rect x="40" y="420" width="900" height="100" rx="10" fill="url(#lg-knowledge)" stroke="#3a8c5a" stroke-width="1.5"/>
+  </g>
+  <text x="60" y="442" font-size="13" font-weight="700" fill="#1f4a31">4 — Knowledge layer</text>
+  <text x="60" y="458" font-size="11" fill="#2c6743">Metadata graph · ontologies · unstructured content · source-data connectors</text>
+  <g font-size="11" fill="#1f4a31">
+    <rect x="60"  y="470" width="200" height="38" rx="6" fill="#fff" stroke="#74b294"/>
+    <text x="160" y="485" text-anchor="middle" font-weight="600">Knowledge graph</text>
+    <text x="160" y="500" text-anchor="middle" fill="#555">DCAT · DQV · SHACL · PROV · ODCS · DPROD</text>
+
+    <rect x="280" y="470" width="200" height="38" rx="6" fill="#fff" stroke="#74b294"/>
+    <text x="380" y="485" text-anchor="middle" font-weight="600">Content store</text>
+    <text x="380" y="500" text-anchor="middle" fill="#555">project dirs · skills · playbooks</text>
+
+    <rect x="500" y="470" width="200" height="38" rx="6" fill="#fff" stroke="#74b294"/>
+    <text x="600" y="485" text-anchor="middle" font-weight="600">Source connectors</text>
+    <text x="600" y="500" text-anchor="middle" fill="#555">PG · MySQL · Snowflake · BQ</text>
+
+    <rect x="720" y="470" width="200" height="38" rx="6" fill="#fff" stroke="#74b294"/>
+    <text x="820" y="485" text-anchor="middle" font-weight="600">Provenance / lineage</text>
+    <text x="820" y="500" text-anchor="middle" fill="#555">PROV-O edges · scores history</text>
+  </g>
+
+  <!-- Layer 5: State & Event -->
+  <g filter="url(#shadow)">
+    <rect x="40" y="530" width="900" height="100" rx="10" fill="url(#lg-state)" stroke="#c08a2a" stroke-width="1.5"/>
+  </g>
+  <text x="60" y="552" font-size="13" font-weight="700" fill="#7a4f0a">5 — State &amp; event layer</text>
+  <text x="60" y="568" font-size="11" fill="#9c6817">Run state DB · event log · message queue · streaming bus</text>
+  <g font-size="11" fill="#7a4f0a">
+    <rect x="60"  y="580" width="200" height="38" rx="6" fill="#fff" stroke="#d8a955"/>
+    <text x="160" y="595" text-anchor="middle" font-weight="600">Run state DB</text>
+    <text x="160" y="610" text-anchor="middle" fill="#555">projects · workflows · stages</text>
+
+    <rect x="280" y="580" width="200" height="38" rx="6" fill="#fff" stroke="#d8a955"/>
+    <text x="380" y="595" text-anchor="middle" font-weight="600">Event log (sourced)</text>
+    <text x="380" y="610" text-anchor="middle" fill="#555">tokens · tool-use · cost · session</text>
+
+    <rect x="500" y="580" width="200" height="38" rx="6" fill="#fff" stroke="#d8a955"/>
+    <text x="600" y="595" text-anchor="middle" font-weight="600">HITL message queue</text>
+    <text x="600" y="610" text-anchor="middle" fill="#555">agent ↔ human, durable, async</text>
+
+    <rect x="720" y="580" width="200" height="38" rx="6" fill="#fff" stroke="#d8a955"/>
+    <text x="820" y="595" text-anchor="middle" font-weight="600">Streaming bus</text>
+    <text x="820" y="610" text-anchor="middle" fill="#555">WS / SSE / gRPC</text>
+  </g>
+
+  <!-- Layer 6: Infrastructure -->
+  <g filter="url(#shadow)">
+    <rect x="40" y="640" width="900" height="80" rx="10" fill="url(#lg-infra)" stroke="#666" stroke-width="1.5"/>
+  </g>
+  <text x="60" y="662" font-size="13" font-weight="700" fill="#222">6 — Infrastructure layer</text>
+  <text x="60" y="678" font-size="11" fill="#444">Compute · object storage · secret manager · identity provider · network · scheduling</text>
+  <g font-size="11" fill="#222">
+    <rect x="60"  y="688" width="120" height="22" rx="5" fill="#fff" stroke="#888"/>
+    <text x="120" y="703" text-anchor="middle">Compute</text>
+    <rect x="200" y="688" width="120" height="22" rx="5" fill="#fff" stroke="#888"/>
+    <text x="260" y="703" text-anchor="middle">Object storage</text>
+    <rect x="340" y="688" width="120" height="22" rx="5" fill="#fff" stroke="#888"/>
+    <text x="400" y="703" text-anchor="middle">Secrets</text>
+    <rect x="480" y="688" width="120" height="22" rx="5" fill="#fff" stroke="#888"/>
+    <text x="540" y="703" text-anchor="middle">Identity (OIDC)</text>
+    <rect x="620" y="688" width="120" height="22" rx="5" fill="#fff" stroke="#888"/>
+    <text x="680" y="703" text-anchor="middle">Network / VPC</text>
+    <rect x="760" y="688" width="160" height="22" rx="5" fill="#fff" stroke="#888"/>
+    <text x="840" y="703" text-anchor="middle">Scheduler / cron</text>
+  </g>
+
+  <!-- Cross-cutting spine -->
+  <g filter="url(#shadow)">
+    <rect x="970" y="90" width="200" height="630" rx="10" fill="url(#lg-cross)" stroke="#777" stroke-width="1.5"/>
+  </g>
+  <text x="1070" y="112" font-size="13" font-weight="700" text-anchor="middle" fill="#222">Cross-cutting concerns</text>
+
+  <g font-size="11" fill="#222">
+    <rect x="990" y="135" width="160" height="60" rx="6" fill="#fff" stroke="#999"/>
+    <text x="1070" y="153" text-anchor="middle" font-weight="700">Observability</text>
+    <text x="1070" y="170" text-anchor="middle" fill="#555">event stream · tool counts</text>
+    <text x="1070" y="184" text-anchor="middle" fill="#555">cost · session · traces</text>
+
+    <rect x="990" y="210" width="160" height="60" rx="6" fill="#fff" stroke="#999"/>
+    <text x="1070" y="228" text-anchor="middle" font-weight="700">Identity &amp; auth</text>
+    <text x="1070" y="245" text-anchor="middle" fill="#555">personas · ACLs</text>
+    <text x="1070" y="259" text-anchor="middle" fill="#555">PROV agent stamping</text>
+
+    <rect x="990" y="285" width="160" height="60" rx="6" fill="#fff" stroke="#999"/>
+    <text x="1070" y="303" text-anchor="middle" font-weight="700">Governance &amp; policy</text>
+    <text x="1070" y="320" text-anchor="middle" fill="#555">tool allowlists</text>
+    <text x="1070" y="334" text-anchor="middle" fill="#555">anti-exploration · isolation</text>
+
+    <rect x="990" y="360" width="160" height="60" rx="6" fill="#fff" stroke="#999"/>
+    <text x="1070" y="378" text-anchor="middle" font-weight="700">Continuous learning</text>
+    <text x="1070" y="395" text-anchor="middle" fill="#555">reflectors · playbooks</text>
+    <text x="1070" y="409" text-anchor="middle" fill="#555">domain catalogs</text>
+
+    <rect x="990" y="435" width="160" height="60" rx="6" fill="#fff" stroke="#999"/>
+    <text x="1070" y="453" text-anchor="middle" font-weight="700">Cost &amp; budgets</text>
+    <text x="1070" y="470" text-anchor="middle" fill="#555">per-stage · per-project</text>
+    <text x="1070" y="484" text-anchor="middle" fill="#555">model routing</text>
+
+    <rect x="990" y="510" width="160" height="60" rx="6" fill="#fff" stroke="#999"/>
+    <text x="1070" y="528" text-anchor="middle" font-weight="700">Resilience</text>
+    <text x="1070" y="545" text-anchor="middle" fill="#555">orphan reconcile</text>
+    <text x="1070" y="559" text-anchor="middle" fill="#555">event-replay recovery</text>
+
+    <rect x="990" y="585" width="160" height="60" rx="6" fill="#fff" stroke="#999"/>
+    <text x="1070" y="603" text-anchor="middle" font-weight="700">Multi-tenancy</text>
+    <text x="1070" y="620" text-anchor="middle" fill="#555">project-scoped URIs</text>
+    <text x="1070" y="634" text-anchor="middle" fill="#555">choke-point queries</text>
+
+    <rect x="990" y="660" width="160" height="50" rx="6" fill="#fff" stroke="#999"/>
+    <text x="1070" y="678" text-anchor="middle" font-weight="700">Schema evolution</text>
+    <text x="1070" y="695" text-anchor="middle" fill="#555">idempotent migrations</text>
+  </g>
+
+  <!-- footer -->
+  <text x="40" y="745" font-size="10" fill="#777">Read top-to-bottom for data flow. Each layer is replaceable; the cross-cutting spine governs all layers uniformly.</text>
+</svg>

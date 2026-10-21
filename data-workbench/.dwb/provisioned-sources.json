@@ -1,0 +1,63 @@
+{
+  "sources": [
+    {
+      "name": "banking-postgres",
+      "platform": "postgres",
+      "host": "postgres",
+      "port": 5432,
+      "database": "banking",
+      "username": "workbench",
+      "password": "workbenchpass",
+      "schema": "edw",
+      "sample": "banking",
+      "mode": "compose"
+    },
+    {
+      "name": "hr-postgres",
+      "platform": "postgres",
+      "host": "postgres",
+      "port": 5432,
+      "database": "hr",
+      "username": "workbench",
+      "password": "workbenchpass",
+      "schema": "hr_core",
+      "sample": "hr",
+      "mode": "compose"
+    },
+    {
+      "name": "products_sales-postgres",
+      "platform": "postgres",
+      "host": "postgres",
+      "port": 5432,
+      "database": "products_sales",
+      "username": "workbench",
+      "password": "workbenchpass",
+      "schema": "products_sales",
+      "sample": "products_sales",
+      "mode": "compose"
+    },
+    {
+      "name": "hr-mysql",
+      "platform": "mysql",
+      "host": "mysql-hr",
+      "port": 3306,
+      "database": "hr_core",
+      "username": "root",
+      "password": "hrpass",
+      "schema": "hr_core",
+      "sample": "hr-mysql",
+      "mode": "compose"
+    },
+    {
+      "name": "seaweedfs",
+      "platform": "s3",
+      "host": "seaweedfs",
+      "port": 8333,
+      "database": "data-workbench",
+      "username": "workbench",
+      "password": "workbenchsecret",
+      "schema": "",
+      "mode": "compose"
+    }
+  ]
+}

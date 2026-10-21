@@ -1,0 +1,108 @@
+platform: databricks
+engine: "Databricks Runtime 13+ / Apache Spark 3.4+ (Spark SQL)"
+
+functions:
+  AGE:
+    capability: unsupported
+    remediation: "Databricks has no AGE. Decompose to a date_difference op with an explicit semantics discriminator (completed_units via FLOOR(MONTHS_BETWEEN(...)/12), or boundary_count via YEAR(end)-YEAR(start)). A symbolic (yrs+mos+days) interval is not natively expressible."
+    citation: "https://docs.databricks.com/en/sql/language-manual/sql-ref-functions-builtin.html"
+    status: verified
+  SPLIT_PART:
+    capability: native
+    emit: "split_part({s}, {delim}, {idx})"
+    notes: "Available since Spark 3.1.1. 1-based index."
+    citation: "https://docs.databricks.com/en/sql/language-manual/functions/split_part.html"
+    status: verified
+  DATE_FORMAT:
+    capability: native
+    emit: "date_format({ts}, {format})"
+    notes: "Uses Java/Spark datetime pattern letters, NOT Postgres/Oracle TO_CHAR tokens."
+    citation: "https://docs.databricks.com/en/sql/language-manual/functions/date_format.html"
+    status: verified
+  DATEDIFF:
+    capability: native
+    emit: "datediff({end}, {start})"
+    notes: "Two-arg datediff(end, start) returns DAYS. The unit-form datediff(unit, start, end) also exists — pick deliberately; they differ."
+    citation: "https://docs.databricks.com/en/sql/language-manual/functions/datediff.html"
+    status: verified
+  MONTHS_BETWEEN:
+    capability: native
+    emit: "months_between({end}, {start})"
+    notes: "Returns a fractional month count; FLOOR(.../12) gives completed years."
+    citation: "https://docs.databricks.com/en/sql/language-manual/functions/months_between.html"
+    status: verified
+  DATE_TRUNC:
+    capability: native
+    emit: "date_trunc({unit}, {ts})"
+    citation: "https://docs.databricks.com/en/sql/language-manual/functions/date_trunc.html"
+    status: verified
+  MD5:
+    capability: native
+    emit: "md5({text})"
+    notes: "Returns a 32-char hex string."
+    citation: "https://docs.databricks.com/en/sql/language-manual/functions/md5.html"
+    status: verified
+  SHA1:
+    capability: native
+    emit: "sha1({text})"
+    citation: "https://docs.databricks.com/en/sql/language-manual/functions/sha1.html"
+    status: verified
+  SHA2:
+    capability: native
+    emit: "sha2({text}, 256)"
+    notes: "Second arg is the bit length (0/224/256/384/512)."
+    citation: "https://docs.databricks.com/en/sql/language-manual/functions/sha2.html"
+    status: verified
+  REGEXP_REPLACE:
+    capability: native
+    emit: "regexp_replace({s}, {pattern}, {repl})"
+    notes: "Global by default; no 'g' flag."
+    citation: "https://docs.databricks.com/en/sql/language-manual/functions/regexp_replace.html"
+    status: verified
+  TO_CHAR:
+    capability: unsupported
+    remediation: "No date TO_CHAR. Use date_format({ts}, {format}) for temporal formatting."
+    citation: "https://docs.databricks.com/en/sql/language-manual/functions/date_format.html"
+    status: verified
+  DATE_DIFF:
+    capability: unsupported
+    remediation: "Spark SQL exposes datediff, not DATE_DIFF. Use a date_difference op or datediff."
+    citation: "https://docs.databricks.com/en/sql/language-manual/functions/datediff.html"
+    status: verified
+  TIMESTAMPDIFF:
+    capability: unsupported
+    remediation: "No TIMESTAMPDIFF. Use a date_difference op, months_between, or datediff(unit, start, end)."
+    citation: "https://docs.databricks.com/en/sql/language-manual/functions/datediff.html"
+    status: verified
+  DIGEST:
+    capability: unsupported
+    remediation: "No pgcrypto DIGEST. Use sha2({text}, 256) / sha1() / md5()."
+    citation: "https://docs.databricks.com/en/sql/language-manual/functions/sha2.html"
+    status: verified
+
+ops:
+  date_difference:
+    completed_units:
+      capability: emulated
+      emit: "FLOOR(MONTHS_BETWEEN({end}, {start}) / 12)"
+      notes: "Completed whole years. months_between is fractional; FLOOR after /12 yields completed years."
+      status: conformance-verify
+      citation: "https://docs.databricks.com/en/sql/language-manual/functions/months_between.html"
+    boundary_count:
+      capability: native
+      emit: "YEAR({end}) - YEAR({start})"
+      notes: "Calendar-year boundaries crossed, NOT completed elapsed years."
+      status: conformance-verify
+      citation: "https://docs.databricks.com/en/sql/language-manual/functions/year.html"
+    symbolic_interval:
+      capability: unsupported
+      remediation: "No native symbolic (yrs+mos+days) interval. Emit separate completed_units per unit, or a struct of counts."
+      citation: "https://docs.databricks.com/en/sql/language-manual/sql-ref-datetime-pattern.html"
+      status: verified
+  split_part:
+    default:
+      capability: native
+      emit: "split_part({s}, {delim}, {idx})"
+      notes: "1-based index."
+      status: verified
+      citation: "https://docs.databricks.com/en/sql/language-manual/functions/split_part.html"

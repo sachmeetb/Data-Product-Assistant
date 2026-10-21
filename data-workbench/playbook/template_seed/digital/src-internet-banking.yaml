@@ -1,0 +1,405 @@
+apiVersion: v3.1.0
+kind: DataContract
+id: template:digital:src-internet-banking
+name: Internet Banking
+version: 1.0.0
+status: draft
+domain: Digital
+description: Login sessions, device/browser fingerprints, transactions, failed attempts.
+schema:
+- name: Internet Banking
+  physicalName: internet_banking
+  physicalType: table
+  description: Login sessions, device/browser fingerprints, transactions, failed attempts.
+  properties:
+  - name: customer_id
+    physicalName: customer_id
+    logicalName: Customer ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for the bank customer whose internet banking session
+      and activity are recorded.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: session_id
+    physicalName: session_id
+    logicalName: Session ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a single internet banking login session, grouping
+      all events and transactions performed during that session.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: timestamp
+    physicalName: timestamp
+    logicalName: Timestamp
+    logicalType: timestamp
+    physicalType: timestamp
+    description: The date and time at which the internet banking session was initiated
+      or the recorded event occurred.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: ip_address
+    physicalName: ip_address
+    logicalName: IP Address
+    logicalType: varchar
+    physicalType: varchar
+    description: The IP address from which the customer accessed the internet banking
+      portal, used for fraud detection and audit purposes.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: pii
+    examples: []
+    logicalTypeOptions: {}
+  - name: session_duration
+    physicalName: session_duration
+    logicalName: Session Duration
+    logicalType: numeric
+    physicalType: numeric
+    description: The total time in seconds the customer was active within the internet
+      banking session before logout or timeout.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: authentication_method
+    physicalName: authentication_method
+    logicalName: Authentication Method
+    logicalType: varchar
+    physicalType: varchar
+    description: The mechanism used by the customer to authenticate into internet
+      banking, such as OTP, password, or biometric.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: login_status
+    physicalName: login_status
+    logicalName: Login Status
+    logicalType: varchar
+    physicalType: varchar
+    description: The outcome of the login attempt, indicating whether it succeeded,
+      failed, or was blocked due to security rules.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: reaaon_for_failure
+    physicalName: reaaon_for_failure
+    logicalName: Reaaon For Failure
+    logicalType: varchar
+    physicalType: varchar
+    description: The reason code explaining why the login attempt failed, such as
+      incorrect_password, account_locked, or OTP_expired.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: device_id
+    physicalName: device_id
+    logicalName: Device ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for the device used to access internet banking,
+      enabling new or suspicious device detection.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: device_type
+    physicalName: device_type
+    logicalName: Device Type
+    logicalType: varchar
+    physicalType: varchar
+    description: The category of device used to access internet banking, such as desktop,
+      laptop, or tablet.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: user_agent_hash
+    physicalName: user_agent_hash
+    logicalName: User Agent Hash
+    logicalType: varchar
+    physicalType: varchar
+    description: A hashed fingerprint of the browser's user agent string, used to
+      identify and track the device browser environment.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: pii
+    examples: []
+    logicalTypeOptions: {}
+  - name: first_seen_ts
+    physicalName: first_seen_ts
+    logicalName: First Seen Ts
+    logicalType: timestamp
+    physicalType: timestamp
+    description: The timestamp of the first recorded internet banking session for
+      this device, used for new-device detection.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: last_seen_ts
+    physicalName: last_seen_ts
+    logicalName: Last Seen Ts
+    logicalType: timestamp
+    physicalType: timestamp
+    description: The timestamp of the most recent internet banking session recorded
+      for this device, enabling device activity age assessment.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: txn_id
+    physicalName: txn_id
+    logicalName: Txn ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a financial transaction initiated through internet
+      banking during the session.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: transaction_type
+    physicalName: transaction_type
+    logicalName: Transaction Type
+    logicalType: varchar
+    physicalType: varchar
+    description: The category of the internet banking transaction, such as funds_transfer,
+      bill_payment, fixed_deposit_creation, or statement_request.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: amount
+    physicalName: amount
+    logicalName: Amount
+    logicalType: numeric
+    physicalType: numeric
+    description: The monetary value of the transaction initiated through internet
+      banking.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: initiation_and_completion_timestamp
+    physicalName: initiation_and_completion_timestamp
+    logicalName: Initiation And Completion Timestamp
+    logicalType: timestamp
+    physicalType: timestamp
+    description: The paired timestamps recording when the internet banking transaction
+      was submitted and when it was confirmed or completed.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: beneficiary_id
+    physicalName: beneficiary_id
+    logicalName: Beneficiary ID
+    logicalType: bigint
+    physicalType: bigint
+    description: The unique identifier of the payee or beneficiary account to which
+      the internet banking transaction was directed.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: status
+    physicalName: status
+    logicalName: Status
+    logicalType: varchar
+    physicalType: varchar
+    description: The current state of the internet banking transaction, such as pending,
+      successful, failed, or reversed.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: currency
+    physicalName: currency
+    logicalName: Currency
+    logicalType: varchar
+    physicalType: varchar
+    description: The ISO currency code of the internet banking transaction amount.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: reason_for_failure
+    physicalName: reason_for_failure
+    logicalName: Reason For Failure
+    logicalType: varchar
+    physicalType: varchar
+    description: The reason the internet banking transaction failed, such as insufficient_funds,
+      beneficiary_invalid, or system_error.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: event_id
+    physicalName: event_id
+    logicalName: Event ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a discrete security or activity event within
+      the internet banking session, such as a failed login or suspicious access attempt.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: failed_login_count
+    physicalName: failed_login_count
+    logicalName: Failed Login Count
+    logicalType: numeric
+    physicalType: numeric
+    description: The number of consecutive failed login attempts recorded before the
+      session or account was locked.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: password_reset
+    physicalName: password_reset
+    logicalName: Password Reset
+    logicalType: varchar
+    physicalType: varchar
+    description: An indicator or timestamp recording whether and when the customer
+      reset their internet banking password during the session.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: otp_resend_count
+    physicalName: otp_resend_count
+    logicalName: OTP Resend Count
+    logicalType: numeric
+    physicalType: numeric
+    description: The number of times the customer requested a new OTP during the login
+      or transaction authentication flow.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: anomaly_flags
+    physicalName: anomaly_flags
+    logicalName: Anomaly Flags
+    logicalType: varchar
+    physicalType: varchar
+    description: A set of indicator codes marking detected anomalies in the session,
+      such as unusual_location, new_device, or high_risk_transaction.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  foreignKeys: []
+  transform:
+    grouping_keys:
+    - customer_id
+    scd_policy:
+      type: latest_only
+customProperties:
+  feasibility:
+    schema_version: '1.0'
+    spec_classification: confidential
+    cadence: ''
+    freshness_history: current
+    freshness_description: ''
+    grain_keys:
+    - customer_id
+    grain_description: ''
+    allowed_derivations:
+    - rename
+    - cast
+    composition:
+      join_keys: []
+      composed_of: []
+      description: ''
+    attr_derivations:
+      amount:
+      - currency_normalize
+productKind: source
+sourceSpecId: src_internet_banking

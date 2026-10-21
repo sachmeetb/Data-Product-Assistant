@@ -1,0 +1,16 @@
+{
+  "scenario": "modernization",
+  "external_ref": "estate-analyzer:finding-9333",
+  "metadata": {
+    "report_id": "EA-2026-Q3-0311",
+    "analyzer_confidence": 0.29
+  },
+  "content": [
+    {
+      "kind": "text",
+      "title": "High-level finding",
+      "media_type": "text/plain",
+      "body": "Finance has several spreadsheets and a couple of Access databases that different teams treat as the source of truth for vendor spend. There's appetite to modernize this into something governed and reusable so people stop emailing spreadsheets around. Not clear yet what the authoritative sources should be or who owns them — probably a vendor master and a spend/invoice fact of some kind, with a reporting product on top. Needs a product owner to shape it."
+    }
+  ]
+}

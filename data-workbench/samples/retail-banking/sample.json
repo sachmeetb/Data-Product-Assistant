@@ -1,0 +1,9 @@
+{
+  "name": "retail-banking",
+  "platform": "postgres",
+  "domain": "Retail Banking",
+  "description": "Brownfield retail-bank estate — siloed source systems (CRM/KYC, core deposit banking, cards, lending, payments) modelled as separate schemas in one Postgres database, for Connected-Estate discovery, feasibility and Product Assembly demos.",
+  "database": "retail_banking",
+  "schemas": ["crm", "core_banking", "cards", "lending", "payments", "ops_noise", "retailbank_views"],
+  "primary_schema": "crm"
+}

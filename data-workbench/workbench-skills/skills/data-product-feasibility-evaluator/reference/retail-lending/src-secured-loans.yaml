@@ -1,0 +1,307 @@
+spec_id: src_secured_loans
+name: Secured Loans
+domain: Retail Lending
+product_kind: source
+description: Loans backed by collateral such as mortgage, car, gold, and loan against
+  property. Includes disbursement, repayment, and collateral tracking.
+schema_version: '1.0'
+classification: confidential
+grain:
+  keys:
+  - customer_id
+  description: ''
+freshness:
+  history: scd2
+  cadence: ''
+  description: ''
+allowed_derivations:
+- rename
+- cast
+attributes:
+- name: customer_id
+  type: bigint
+  concept: Customer ID
+  description: Unique identifier for the borrower, used as a primary key to link secured loan records to the customer master.
+  required: true
+  is_key: true
+  classification: internal
+- name: name
+  type: varchar
+  concept: Name
+  description: Full name of the borrower associated with the secured loan.
+  required: true
+  is_key: false
+  classification: internal
+- name: contact_info
+  type: varchar
+  concept: Contact Info
+  description: Contact details of the borrower (phone number, email address), classified as PII.
+  required: false
+  is_key: false
+  classification: pii
+- name: credit_score
+  type: numeric
+  concept: Credit Score
+  description: Numeric credit score of the borrower at the time of loan origination or most recent review, indicating their creditworthiness.
+  required: true
+  is_key: false
+  classification: internal
+- name: loan_id
+  type: bigint
+  concept: Loan ID
+  description: Unique identifier for a secured loan account, used as a primary key across disbursement, repayment, and collateral records.
+  required: true
+  is_key: true
+  classification: internal
+- name: product
+  type: varchar
+  concept: Product
+  description: Name or code of the secured lending product (e.g. home loan, auto loan, gold loan, loan against property).
+  required: false
+  is_key: false
+  classification: internal
+- name: sanction_amount
+  type: numeric
+  concept: Sanction Amount
+  description: Total loan amount approved and sanctioned by the credit committee or underwriting team.
+  required: true
+  is_key: false
+  classification: internal
+- name: disbursed_amount
+  type: numeric
+  concept: Disbursed Amount
+  description: Actual monetary amount disbursed to the borrower, which may be less than the sanctioned amount.
+  required: true
+  is_key: false
+  classification: internal
+- name: rate_type
+  type: varchar
+  concept: Rate Type
+  description: Classification of the interest rate structure applied to the loan, such as fixed, floating, or hybrid.
+  required: true
+  is_key: false
+  classification: internal
+- name: spread
+  type: numeric
+  concept: Spread
+  description: Margin in basis points added above the benchmark rate to determine the borrower's effective floating interest rate.
+  required: false
+  is_key: false
+  classification: internal
+- name: emi_amount
+  type: numeric
+  concept: Emi Amount
+  description: Fixed equated monthly installment amount the borrower is required to repay each month.
+  required: true
+  is_key: false
+  classification: internal
+- name: tenor
+  type: varchar
+  concept: Tenor
+  description: Original loan term or repayment period expressed as a duration (e.g. 15Y, 20Y, 60M).
+  required: false
+  is_key: false
+  classification: internal
+- name: start_date
+  type: date
+  concept: Start Date
+  description: Date on which the secured loan was disbursed and the repayment schedule commenced.
+  required: true
+  is_key: false
+  classification: internal
+- name: maturity_date
+  type: date
+  concept: Maturity Date
+  description: Date on which the final installment of the secured loan is due and the loan is expected to be fully repaid.
+  required: true
+  is_key: false
+  classification: internal
+- name: status
+  type: varchar
+  concept: Status
+  description: Current lifecycle status of the secured loan (e.g. active, closed, written off, non-performing, restructured).
+  required: true
+  is_key: false
+  classification: internal
+- name: collateral_id
+  type: bigint
+  concept: Collateral ID
+  description: Unique identifier for a collateral asset pledged against the secured loan.
+  required: true
+  is_key: true
+  classification: internal
+- name: type
+  type: varchar
+  concept: Type
+  description: Type of collateral pledged, such as residential property, vehicle, gold, commercial property, or fixed deposit.
+  required: true
+  is_key: false
+  classification: internal
+- name: identifier
+  type: varchar
+  concept: Identifier
+  description: Legal or registration identifier for the collateral asset (e.g. property registration number, vehicle chassis number).
+  required: false
+  is_key: false
+  classification: internal
+- name: valuation_amount
+  type: numeric
+  concept: Valuation Amount
+  description: Appraised market value of the collateral asset as assessed by an approved valuer.
+  required: true
+  is_key: false
+  classification: internal
+- name: valuation_date
+  type: date
+  concept: Valuation Date
+  description: Date on which the most recent collateral valuation was conducted.
+  required: true
+  is_key: false
+  classification: internal
+- name: ltv
+  type: varchar
+  concept: LTV
+  description: Loan-to-Value ratio expressing the outstanding loan balance as a percentage of the collateral's current assessed value.
+  required: false
+  is_key: false
+  classification: internal
+- name: lien_charge_details
+  type: varchar
+  concept: Lien Charge Details
+  description: Details of the lien or equitable mortgage charge registered against the collateral in favor of the bank.
+  required: false
+  is_key: false
+  classification: internal
+- name: insurance_policy_id
+  type: bigint
+  concept: Insurance Policy ID
+  description: Unique identifier for an insurance policy linked to the loan to cover the borrower or the collateral asset.
+  required: true
+  is_key: true
+  classification: internal
+- name: schedule_id
+  type: bigint
+  concept: Schedule ID
+  description: Unique identifier for the repayment schedule record defining installment dates and amounts for the secured loan.
+  required: true
+  is_key: true
+  classification: internal
+- name: installment_no
+  type: varchar
+  concept: Installment No
+  description: Sequential installment number within the repayment schedule identifying which EMI this record represents.
+  required: false
+  is_key: false
+  classification: internal
+- name: due_date
+  type: date
+  concept: Due Date
+  description: Date on which a specific loan installment payment is due from the borrower.
+  required: true
+  is_key: false
+  classification: internal
+- name: principal_component
+  type: varchar
+  concept: Principal Component
+  description: Portion of the installment amount that repays the outstanding principal balance of the secured loan.
+  required: false
+  is_key: false
+  classification: internal
+- name: interest_component
+  type: varchar
+  concept: Interest Component
+  description: Portion of the installment amount that covers accrued interest on the outstanding principal.
+  required: false
+  is_key: false
+  classification: internal
+- name: paid_flag
+  type: boolean
+  concept: Paid Flag
+  description: Boolean indicator that a specific installment has been paid by the borrower on or before its due date.
+  required: false
+  is_key: false
+  classification: internal
+- name: processing_fee
+  type: numeric
+  concept: Processing Fee
+  description: One-time fee charged to the borrower for processing and sanctioning the loan application.
+  required: false
+  is_key: false
+  classification: internal
+- name: prepayment_penalty
+  type: varchar
+  concept: Prepayment Penalty
+  description: Charge levied on the borrower for repaying a portion or all of the loan before the scheduled maturity date.
+  required: false
+  is_key: false
+  classification: internal
+- name: late_fee
+  type: numeric
+  concept: Late Fee
+  description: Penalty fee charged to the borrower when an installment payment is not received by its due date.
+  required: false
+  is_key: false
+  classification: internal
+- name: days_past_due
+  type: varchar
+  concept: Days Past Due
+  description: Number of calendar days elapsed since the most recent missed installment payment due date.
+  required: false
+  is_key: false
+  classification: internal
+- name: bucket
+  type: varchar
+  concept: Bucket
+  description: Delinquency bucket classifying the loan by its days-past-due band for collections and provisioning purposes (e.g. 0-30, 31-60, 61-90 days).
+  required: false
+  is_key: false
+  classification: internal
+- name: legal_stage
+  type: varchar
+  concept: Legal Stage
+  description: Current stage in the legal or collections process for a delinquent secured loan (e.g. notice issued, suit filed, recovery proceedings).
+  required: false
+  is_key: false
+  classification: internal
+- name: promise_to_pay_date
+  type: date
+  concept: Promise To Pay Date
+  description: Date on which the borrower committed to making an overdue payment during a collections interaction.
+  required: true
+  is_key: false
+  classification: internal
+- name: repossession_flag
+  type: boolean
+  concept: Repossession Flag
+  description: Boolean indicator that the bank has initiated or completed repossession of the collateral asset for this loan.
+  required: false
+  is_key: false
+  classification: internal
+- name: program_id
+  type: bigint
+  concept: Program ID
+  description: Unique identifier for a loan restructuring, moratorium, or special program applied to the secured loan.
+  required: true
+  is_key: true
+  classification: internal
+- name: moratorium_period
+  type: varchar
+  concept: Moratorium Period
+  description: Duration during which the borrower is permitted to defer loan repayments under a regulatory or bank-approved moratorium.
+  required: false
+  is_key: false
+  classification: internal
+- name: revised_tenor
+  type: varchar
+  concept: Revised Tenor
+  description: Updated loan repayment period following a restructuring, moratorium extension, or modification of the original loan terms.
+  required: false
+  is_key: false
+  classification: internal
+- name: modification_date
+  type: date
+  concept: Modification Date
+  description: Date on which the loan terms were formally modified, such as a rate reset, restructuring, or tenure extension.
+  required: true
+  is_key: false
+  classification: internal

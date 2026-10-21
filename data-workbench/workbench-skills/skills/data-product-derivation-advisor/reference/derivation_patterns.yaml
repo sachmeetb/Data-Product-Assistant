@@ -1,0 +1,54 @@
+# Curated, GLOBAL composite-derivation catalog (feasibility Round 3).
+#
+# Each pattern names a target attribute (by alias-equality), a NEUTRAL operator
+# (the semantic intent — NOT executable SQL), and the component roles that compose
+# it (each role with its own candidate aliases). The backend loads this
+# deterministically (feasibility_derivations.load_patterns) and matches a spec
+# attribute to a pattern by alias-equality, then resolves each component role to a
+# DISTINCT column of ONE candidate table (same-table only in v1).
+#
+# Composition targets NON-KEY attributes only and NEVER satisfies a grain/key gate.
+# Keep this global — do not edit the 38 corpus specs to reference patterns.
+patterns:
+  - id: full_name_concat
+    target_aliases: [name, full_name, full name, customer_name, display_name, person_name, contact_name]
+    kind: concat
+    operator: join_with_separator
+    separator: " "
+    components:
+      - {role: given_name,  aliases: [first_name, given_name, forename, fname]}
+      - {role: family_name, aliases: [last_name, family_name, surname, lname]}
+
+  - id: full_address_concat
+    target_aliases: [full_address, mailing_address, postal_address, address]
+    kind: concat
+    operator: format_address
+    components:
+      - {role: street_address, aliases: [address, street, address_line1, street_address, addr1]}
+      - {role: city,           aliases: [city, town, locality]}
+      - {role: region,         aliases: [state, province, region, state_province]}
+      - {role: postal_code,    aliases: [postal_code, zip, zip_code, postcode]}
+
+  - id: age_from_dob
+    target_aliases: [age]
+    kind: compute
+    operator: age_in_completed_years
+    components:
+      - {role: birth_date, aliases: [birth_date, date_of_birth, dob, birthdate], type_family: temporal}
+
+  - id: gross_amount_compute
+    target_aliases: [gross_amount, total_amount, amount_gross, gross]
+    kind: compute
+    operator: sum_components
+    components:
+      - {role: net_amount, aliases: [net_amount, amount, subtotal, net], type_family: numeric}
+      - {role: tax_amount, aliases: [tax_amount, tax, vat, tax_total], type_family: numeric}
+
+  - id: full_period_concat
+    target_aliases: [period, reporting_period, year_month, yearmonth]
+    kind: concat
+    operator: join_with_separator
+    separator: "-"
+    components:
+      - {role: year,  aliases: [year, fiscal_year, yr]}
+      - {role: month, aliases: [month, fiscal_month, mo]}

@@ -1,0 +1,393 @@
+apiVersion: v3.1.0
+kind: DataContract
+id: template:cards:src-prepaid-card
+name: Prepaid Card
+version: 1.0.0
+status: draft
+domain: Cards
+description: Cards loaded with fixed value, not linked to an account, typically used
+  for gifting, travel, or salary disbursements.
+schema:
+- name: Prepaid Card
+  physicalName: prepaid_card
+  physicalType: table
+  description: Cards loaded with fixed value, not linked to an account, typically
+    used for gifting, travel, or salary disbursements.
+  properties:
+  - name: card_id
+    physicalName: card_id
+    logicalName: Card ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a payment card issued to a customer, serving
+      as the primary key for all card-related records.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: card_type
+    physicalName: card_type
+    logicalName: Card Type
+    logicalType: varchar
+    physicalType: varchar
+    description: Category of payment card by product tier or type, such as classic,
+      gold, platinum, or corporate.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: card_status
+    physicalName: card_status
+    logicalName: Card Status
+    logicalType: varchar
+    physicalType: varchar
+    description: Current status of the card, such as active, blocked, expired, or
+      hotlisted.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: issue_date
+    physicalName: issue_date
+    logicalName: Issue Date
+    logicalType: date
+    physicalType: date
+    description: Date on which a card, bond, or document was issued.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: expiry_date
+    physicalName: expiry_date
+    logicalName: Expiry Date
+    logicalType: date
+    physicalType: date
+    description: Date on which a card, offer, consent, or financial instrument expires
+      and becomes invalid.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: card_face_value
+    physicalName: card_face_value
+    logicalName: Card Face Value
+    logicalType: numeric
+    physicalType: numeric
+    description: Nominal or face value loaded onto a prepaid card at issuance or top-up.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: usage_limit
+    physicalName: usage_limit
+    logicalName: Usage Limit
+    logicalType: numeric
+    physicalType: numeric
+    description: Transactional usage limit set on a card, which may differ from the
+      credit limit.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: customer_id
+    physicalName: customer_id
+    logicalName: Customer ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique numeric identifier for a customer record, serving as the primary
+      join key across all customer-related entities.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: kyc_id
+    physicalName: kyc_id
+    logicalName: KYC ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a KYC (Know Your Customer) verification record
+      for a customer.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: status
+    physicalName: status
+    logicalName: Status
+    logicalType: varchar
+    physicalType: varchar
+    description: Current operational or lifecycle status of a record, account, or
+      product.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: verification_date
+    physicalName: verification_date
+    logicalName: Verification Date
+    logicalType: date
+    physicalType: date
+    description: Date on which a KYC document, identity, or credential was verified.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: txn_id
+    physicalName: txn_id
+    logicalName: Txn ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a payment card transaction.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: txn_date
+    physicalName: txn_date
+    logicalName: Txn Date
+    logicalType: date
+    physicalType: date
+    description: Date on which a payment card transaction was processed.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: merchant
+    physicalName: merchant
+    logicalName: Merchant
+    logicalType: varchar
+    physicalType: varchar
+    description: Name or identifier of the merchant at which a card transaction was
+      made.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: amount
+    physicalName: amount
+    logicalName: Amount
+    logicalType: numeric
+    physicalType: numeric
+    description: Monetary value associated with a transaction, payment, or financial
+      event, denominated in the account's base currency.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: txn_type
+    physicalName: txn_type
+    logicalName: Txn Type
+    logicalType: varchar
+    physicalType: varchar
+    description: Type of card transaction, such as purchase, cash advance, or balance
+      transfer.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: usage_id
+    physicalName: usage_id
+    logicalName: Usage ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a product usage or service consumption event.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: location
+    physicalName: location
+    logicalName: Location
+    logicalType: varchar
+    physicalType: varchar
+    description: Geographic location of a branch, ATM, customer, or event.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: timestamp
+    physicalName: timestamp
+    logicalName: Timestamp
+    logicalType: timestamp
+    physicalType: timestamp
+    description: Date and time at which an event, transaction, or record was created
+      or updated.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: reward_id
+    physicalName: reward_id
+    logicalName: Reward ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a reward or loyalty programme transaction.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: points
+    physicalName: points
+    logicalName: Points
+    logicalType: numeric
+    physicalType: numeric
+    description: Number of reward or loyalty points accrued on a customer's account.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: points_accured_date
+    physicalName: points_accured_date
+    logicalName: Points Accured Date
+    logicalType: date
+    physicalType: date
+    description: Date on which reward points were accrued to a customer's loyalty
+      account.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: points_expiry_date
+    physicalName: points_expiry_date
+    logicalName: Points Expiry Date
+    logicalType: date
+    physicalType: date
+    description: Date on which accrued reward points expire if not redeemed.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: charge_id
+    physicalName: charge_id
+    logicalName: Charge ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a fee or charge applied to an account.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: charge_type
+    physicalName: charge_type
+    logicalName: Charge Type
+    logicalType: varchar
+    physicalType: varchar
+    description: Classification of the charge by type, such as annual fee, late payment
+      fee, or service charge.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: date
+    physicalName: date
+    logicalName: Date
+    logicalType: date
+    physicalType: date
+    description: Calendar date associated with a record, event, or observation.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  foreignKeys: []
+  transform:
+    grouping_keys:
+    - card_id
+    scd_policy:
+      type: latest_only
+customProperties:
+  feasibility:
+    schema_version: '1.0'
+    spec_classification: internal
+    cadence: ''
+    freshness_history: current
+    freshness_description: ''
+    grain_keys:
+    - card_id
+    grain_description: ''
+    allowed_derivations:
+    - rename
+    - cast
+    composition:
+      join_keys: []
+      composed_of: []
+      description: ''
+productKind: source
+sourceSpecId: src_prepaid_card

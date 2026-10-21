@@ -1,0 +1,430 @@
+apiVersion: v3.1.0
+kind: DataContract
+id: template:retail-lending:src-unsecured-loans
+name: Unsecured Loans
+version: 1.0.0
+status: draft
+domain: Retail Lending
+description: Loans without collateral like personal loans and education loans. Captures
+  application, credit scoring, disbursement, and performance.
+schema:
+- name: Unsecured Loans
+  physicalName: unsecured_loans
+  physicalType: table
+  description: Loans without collateral like personal loans and education loans. Captures
+    application, credit scoring, disbursement, and performance.
+  properties:
+  - name: loan_id
+    physicalName: loan_id
+    logicalName: Loan ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for an unsecured loan account, used as the primary
+      key across application, disbursement, and repayment records.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: customer_id
+    physicalName: customer_id
+    logicalName: Customer ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier of the borrower, linking the unsecured loan to
+      the customer master.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: loan_type
+    physicalName: loan_type
+    logicalName: Loan Type
+    logicalType: varchar
+    physicalType: varchar
+    description: Classification of the unsecured loan product (e.g. personal loan,
+      education loan, consumer durable loan, salary advance).
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: principal_amount
+    physicalName: principal_amount
+    logicalName: Principal Amount
+    logicalType: numeric
+    physicalType: numeric
+    description: Total principal amount borrowed under the unsecured loan.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: interest_rate
+    physicalName: interest_rate
+    logicalName: Interest Rate
+    logicalType: numeric
+    physicalType: numeric
+    description: Annual interest rate applied to the outstanding principal balance
+      for this unsecured loan.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: start_date
+    physicalName: start_date
+    logicalName: Start Date
+    logicalType: date
+    physicalType: date
+    description: Date on which the unsecured loan was disbursed and the repayment
+      obligation began.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: maturity_date
+    physicalName: maturity_date
+    logicalName: Maturity Date
+    logicalType: date
+    physicalType: date
+    description: Scheduled date by which the unsecured loan must be fully repaid.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: name
+    physicalName: name
+    logicalName: Name
+    logicalType: varchar
+    physicalType: varchar
+    description: Full name of the borrower as recorded in the loan application and
+      agreements.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: contact_info
+    physicalName: contact_info
+    logicalName: Contact Info
+    logicalType: varchar
+    physicalType: varchar
+    description: Contact details of the borrower including phone number and email
+      address, classified as PII.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: pii
+    examples: []
+    logicalTypeOptions: {}
+  - name: credit_score
+    physicalName: credit_score
+    logicalName: Credit Score
+    logicalType: numeric
+    physicalType: numeric
+    description: Numeric credit score used in the underwriting decision for this loan,
+      reflecting the borrower's creditworthiness at origination.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: repayment_id
+    physicalName: repayment_id
+    logicalName: Repayment ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a repayment transaction record against the
+      unsecured loan.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: repayment_date
+    physicalName: repayment_date
+    logicalName: Repayment Date
+    logicalType: date
+    physicalType: date
+    description: Date on which a repayment installment was received from the borrower.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: amount
+    physicalName: amount
+    logicalName: Amount
+    logicalType: numeric
+    physicalType: numeric
+    description: Monetary value of the repayment received, which may cover principal,
+      interest, or fees.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: payment_method
+    physicalName: payment_method
+    logicalName: Payment Method
+    logicalType: varchar
+    physicalType: varchar
+    description: Method used by the borrower to make the repayment (e.g. NACH auto-debit,
+      online transfer, cash deposit, cheque).
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: disbursement_id
+    physicalName: disbursement_id
+    logicalName: Disbursement ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a disbursement event, recording the release
+      of loan funds to the borrower.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: disbursement_date
+    physicalName: disbursement_date
+    logicalName: Disbursement Date
+    logicalType: date
+    physicalType: date
+    description: Date on which loan funds were disbursed to the borrower's account
+      or paid to a third party.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: method
+    physicalName: method
+    logicalName: Method
+    logicalType: varchar
+    physicalType: varchar
+    description: Mechanism by which the loan was disbursed (e.g. NEFT transfer to
+      account, cheque, direct payment to institution).
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: dpd
+    physicalName: dpd
+    logicalName: Dpd
+    logicalType: varchar
+    physicalType: varchar
+    description: Number of days the loan installment payment is past its due date,
+      used for delinquency classification and provisioning.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: bucket
+    physicalName: bucket
+    logicalName: Bucket
+    logicalType: varchar
+    physicalType: varchar
+    description: Delinquency bucket classifying the loan by its days-past-due band
+      for provisioning and collections purposes.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: status
+    physicalName: status
+    logicalName: Status
+    logicalType: varchar
+    physicalType: varchar
+    description: Current lifecycle status of the unsecured loan (e.g. active, closed,
+      written off, non-performing, restructured).
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: application_id
+    physicalName: application_id
+    logicalName: Application ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for the loan application record from which this
+      unsecured loan was originated.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: scorecards
+    physicalName: scorecards
+    logicalName: Scorecards
+    logicalType: numeric
+    physicalType: numeric
+    description: Composite or component scorecard values from the credit scoring model
+      used to evaluate the loan application.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: decision
+    physicalName: decision
+    logicalName: Decision
+    logicalType: varchar
+    physicalType: varchar
+    description: Underwriting or credit decision outcome for the loan application
+      (e.g. approved, declined, referred).
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: reasons
+    physicalName: reasons
+    logicalName: Reasons
+    logicalType: varchar
+    physicalType: varchar
+    description: Coded reasons or decline codes associated with the underwriting decision,
+      used for regulatory reporting and borrower communication.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: overrides
+    physicalName: overrides
+    logicalName: Overrides
+    logicalType: varchar
+    physicalType: varchar
+    description: Details of any manual overrides applied to the automated underwriting
+      decision, including the override authority and rationale.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: origination_fee
+    physicalName: origination_fee
+    logicalName: Origination Fee
+    logicalType: numeric
+    physicalType: numeric
+    description: One-time processing or origination fee charged to the borrower at
+      loan disbursement.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: late_fee
+    physicalName: late_fee
+    logicalName: Late Fee
+    logicalType: numeric
+    physicalType: numeric
+    description: Penalty charged to the borrower for each installment payment received
+      after its scheduled due date.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: foreclosure_charges
+    physicalName: foreclosure_charges
+    logicalName: Foreclosure Charges
+    logicalType: numeric
+    physicalType: numeric
+    description: Fee levied on the borrower for fully repaying the unsecured loan
+      before the scheduled maturity date.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  foreignKeys: []
+  transform:
+    grouping_keys:
+    - loan_id
+    scd_policy:
+      type: scd2
+customProperties:
+  feasibility:
+    schema_version: '1.0'
+    spec_classification: confidential
+    cadence: ''
+    freshness_history: scd2
+    freshness_description: ''
+    grain_keys:
+    - loan_id
+    grain_description: ''
+    allowed_derivations:
+    - rename
+    - cast
+    composition:
+      join_keys: []
+      composed_of: []
+      description: ''
+productKind: source
+sourceSpecId: src_unsecured_loans

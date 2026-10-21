@@ -1,0 +1,243 @@
+spec_id: src_wealth_product
+name: Wealth product
+domain: Wealth
+product_kind: source
+description: Holdings, transactions and valuations for investment and advisory products.
+schema_version: '1.0'
+classification: internal
+grain:
+  keys:
+  - portfolio_id
+  description: ''
+freshness:
+  history: snapshot
+  cadence: ''
+  description: ''
+allowed_derivations:
+- rename
+- cast
+attributes:
+- name: portfolio_id
+  type: bigint
+  concept: Portfolio ID
+  description: Unique identifier for a customer's investment or advisory portfolio, used as the primary key across holdings and performance records.
+  required: true
+  is_key: true
+  classification: internal
+- name: customer_id
+  type: bigint
+  concept: Customer ID
+  description: Unique identifier of the wealth customer who owns the portfolio.
+  required: true
+  is_key: true
+  classification: internal
+- name: account_id
+  type: bigint
+  concept: Account ID
+  description: Identifier of the banking or custody account linked to the investment portfolio.
+  required: true
+  is_key: true
+  classification: internal
+- name: base_currency
+  type: varchar
+  concept: Base Currency
+  description: ISO currency code in which portfolio valuations, returns, and performance are reported.
+  required: true
+  is_key: false
+  classification: internal
+- name: inception_date
+  type: date
+  concept: Inception Date
+  description: Date on which the investment portfolio was opened and the advisory or investment mandate began.
+  required: true
+  is_key: false
+  classification: internal
+- name: risk_profile
+  type: varchar
+  concept: Risk Profile
+  description: Customer's risk tolerance classification (e.g. conservative, moderate, aggressive) used to determine investment strategy and suitability.
+  required: false
+  is_key: false
+  classification: internal
+- name: suitability_status
+  type: varchar
+  concept: Suitability Status
+  description: Suitability assessment status indicating whether the portfolio's current investments are appropriate for the customer's declared profile and objectives.
+  required: true
+  is_key: false
+  classification: internal
+- name: position_id
+  type: bigint
+  concept: Position ID
+  description: Unique identifier for an individual investment position held within the portfolio.
+  required: true
+  is_key: true
+  classification: internal
+- name: instrument_id
+  type: bigint
+  concept: Instrument ID
+  description: Unique identifier for the financial instrument held in the position (e.g. equity, bond, mutual fund, structured product).
+  required: true
+  is_key: true
+  classification: internal
+- name: quantity
+  type: varchar
+  concept: Quantity
+  description: Number of units or face value of the financial instrument held in the position.
+  required: false
+  is_key: false
+  classification: internal
+- name: cost
+  type: numeric
+  concept: Cost
+  description: Total acquisition cost of the position, used as the cost basis for unrealized gain/loss calculations.
+  required: false
+  is_key: false
+  classification: internal
+- name: market_price
+  type: numeric
+  concept: Market Price
+  description: Current market price per unit of the instrument, used to compute the marked-to-market value of the position.
+  required: false
+  is_key: false
+  classification: internal
+- name: order_id
+  type: bigint
+  concept: Order ID
+  description: Unique identifier for a trade or investment order placed for the portfolio.
+  required: true
+  is_key: true
+  classification: internal
+- name: side
+  type: varchar
+  concept: Side
+  description: Direction of the order (buy or sell) indicating whether the trade is increasing or reducing the portfolio's exposure to an instrument.
+  required: false
+  is_key: false
+  classification: internal
+- name: price
+  type: numeric
+  concept: Price
+  description: Limit or requested price specified in the trade order.
+  required: false
+  is_key: false
+  classification: internal
+- name: timestamp
+  type: timestamp
+  concept: Timestamp
+  description: Date and time at which the order was placed or the trade event occurred.
+  required: false
+  is_key: false
+  classification: internal
+- name: trade_id
+  type: bigint
+  concept: Trade ID
+  description: Unique identifier for an executed trade record, generated when an order is matched and confirmed by the exchange or counterparty.
+  required: true
+  is_key: true
+  classification: internal
+- name: execution_price
+  type: numeric
+  concept: Execution Price
+  description: Actual price at which the trade was executed in the market.
+  required: false
+  is_key: false
+  classification: internal
+- name: execution_time
+  type: varchar
+  concept: Execution Time
+  description: Time at which the trade execution was confirmed by the exchange or counterparty.
+  required: false
+  is_key: false
+  classification: internal
+- name: perf_id
+  type: bigint
+  concept: Perf ID
+  description: Unique identifier for a portfolio performance measurement record covering a defined period.
+  required: true
+  is_key: true
+  classification: internal
+- name: period
+  type: varchar
+  concept: Period
+  description: Measurement period for which portfolio performance is calculated (e.g. MTD, QTD, YTD, 1Y, since-inception).
+  required: false
+  is_key: false
+  classification: internal
+- name: return
+  type: varchar
+  concept: Return
+  description: Portfolio return for the measurement period, expressed as a percentage and typically calculated on a time-weighted or money-weighted basis.
+  required: false
+  is_key: false
+  classification: internal
+- name: benchmark
+  type: varchar
+  concept: Benchmark
+  description: Name or identifier of the market index or benchmark used to compare the portfolio's relative performance.
+  required: false
+  is_key: false
+  classification: internal
+- name: ca_id
+  type: bigint
+  concept: Ca ID
+  description: Unique identifier for a corporate action event affecting a security held in the portfolio (e.g. dividend, rights issue, stock split).
+  required: true
+  is_key: true
+  classification: internal
+- name: type
+  type: varchar
+  concept: Type
+  description: Type of corporate action event affecting the held security (e.g. cash dividend, stock dividend, rights issue, bonus shares, merger).
+  required: true
+  is_key: false
+  classification: internal
+- name: record_date
+  type: date
+  concept: Record Date
+  description: Date on which an investor must be a registered holder of the security to be entitled to the corporate action benefit.
+  required: true
+  is_key: false
+  classification: internal
+- name: ex_date
+  type: date
+  concept: Ex Date
+  description: Ex-dividend or ex-rights date; securities purchased on or after this date do not carry entitlement to the corporate action.
+  required: true
+  is_key: false
+  classification: internal
+- name: payable_date
+  type: date
+  concept: Payable Date
+  description: Date on which corporate action proceeds (e.g. dividend cash, bonus shares) are credited to the investor's account.
+  required: true
+  is_key: false
+  classification: internal
+- name: fee_id
+  type: bigint
+  concept: Fee ID
+  description: Unique identifier for a fee or charge record associated with the portfolio.
+  required: true
+  is_key: true
+  classification: internal
+- name: mgmt_fee
+  type: numeric
+  concept: Mgmt Fee
+  description: Management fee charged for professional discretionary portfolio management services.
+  required: false
+  is_key: false
+  classification: internal
+- name: advisory_fee
+  type: numeric
+  concept: Advisory Fee
+  description: Advisory fee charged for investment advice provided under an advisory (non-discretionary) mandate.
+  required: false
+  is_key: false
+  classification: internal
+- name: brokerage_fee
+  type: numeric
+  concept: Brokerage Fee
+  description: Commission or brokerage charge levied for executing trade orders on behalf of the portfolio.
+  required: false
+  is_key: false
+  classification: internal

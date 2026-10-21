@@ -11,10 +11,11 @@ COPY data_contracts/ ./data_contracts/
 COPY knowledge/ ./knowledge/
 COPY mappings/ ./mappings/
 COPY prompts/ ./prompts/
+COPY samples/ ./samples/
 COPY tools/ ./tools/
 COPY pipeline.py session_store.py server.py main.py ./
 
 ENV PORT=8080
 EXPOSE 8080
 
-CMD ["sh", "-c", "uvicorn server:app --host 0.0.0.0 --port ${PORT}"]
+CMD ["sh", "-c", "uvicorn server:app --host 0.0.0.0 --port ${PORT} --timeout-keep-alive 1800"]

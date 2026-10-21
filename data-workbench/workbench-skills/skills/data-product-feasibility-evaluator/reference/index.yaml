@@ -1,0 +1,359 @@
+corpus_version: '1.1'
+generated_at: '2026-08-25'
+spec_count: 41
+specs:
+- spec_id: agg_collections_360
+  name: Collections 360
+  domain: Aggregated
+  product_kind: aggregate
+  description: Collections data on delinquency, treatments, promises and payments
+    to optimise recovery strategies and operations.
+  required_count: 87
+  total_count: 144
+- spec_id: agg_compliance_360
+  name: Compliance 360
+  domain: Aggregated
+  product_kind: aggregate
+  description: KYC, AML, sanctions and regulatory case data consolidated for monitoring,
+    investigations and reporting.
+  required_count: 85
+  total_count: 191
+- spec_id: agg_customer_360
+  name: Customer 360
+  domain: Aggregated
+  product_kind: aggregate
+  description: Unified view of customer identifiers, demographics, relationships,
+    products, balances and transactions for analytics and servicing.
+  required_count: 137
+  total_count: 238
+- spec_id: agg_esg_360
+  name: ESG 360
+  domain: Aggregated
+  product_kind: aggregate
+  description: Aggregated environmental, social and governance ratings, disclosures
+    and metrics for portfolio assessment and reporting.
+  required_count: 69
+  total_count: 124
+- spec_id: agg_interaction_360
+  name: Interaction 360
+  domain: Aggregated
+  product_kind: aggregate
+  description: Consolidated record of customer interactions and digital engagement
+    across channels for journey analytics and targeting.
+  required_count: 73
+  total_count: 182
+- spec_id: agg_portfolio_360
+  name: Portfolio 360
+  domain: Aggregated
+  product_kind: aggregate
+  description: Holistic view of portfolios across products, balances, performance
+    and exposures for management and optimisation.
+  required_count: 116
+  total_count: 217
+- spec_id: agg_risk_360
+  name: Risk 360
+  domain: Aggregated
+  product_kind: aggregate
+  description: Centralised risk data across credit, market and liquidity measures,
+    exposures and models for decisioning and reporting.
+  required_count: 164
+  total_count: 335
+- spec_id: agg_rm_wealth_management_360
+  name: RM & Wealth Management 360
+  domain: Aggregated
+  product_kind: aggregate
+  description: Integrated view of client profiles, holdings, goals and RM activities
+    to support advisory and sales.
+  required_count: 129
+  total_count: 281
+- spec_id: src_credit_card
+  name: Credit Card
+  domain: Cards
+  product_kind: source
+  description: Credit limit, outstanding balance, transaction history, disputes, chargebacks,
+    statement cycles, payment behavior, penalities and rewards.
+  required_count: 28
+  total_count: 31
+- spec_id: src_debit_card
+  name: Debit Card
+  domain: Cards
+  product_kind: source
+  description: Data on issued debit cards-linked accounts, usage limits, PIN status,
+    transaction history, disputes, and chargebacks and card lifecycle with disputes
+    and chargebacks
+  required_count: 22
+  total_count: 24
+- spec_id: src_prepaid_card
+  name: Prepaid Card
+  domain: Cards
+  product_kind: source
+  description: Cards loaded with fixed value, not linked to an account, typically
+    used for gifting, travel, or salary disbursements.
+  required_count: 22
+  total_count: 26
+- spec_id: src_channel
+  name: Channel
+  domain: Channel
+  product_kind: source
+  description: Reference and telemetry for bank channels and touchpoints.
+  required_count: 10
+  total_count: 22
+- spec_id: src_contact_center_interactions
+  name: Contact Center Interactions
+  domain: Channel
+  product_kind: source
+  description: Call logs, IVR paths, agent notes, complaint tickets, authentication
+    steps.
+  required_count: 12
+  total_count: 32
+- spec_id: src_corporate_loans
+  name: Corporate Loans
+  domain: Commercial Lending
+  product_kind: source
+  description: All types of corporate loans including term loans, asset finance, working
+    capital, and business loans—includes financials, covenants, collateral, bank overdraft
+    with limit tracking, utilization etc. and disbursement structure.
+  required_count: 24
+  total_count: 28
+- spec_id: src_trade_finance
+  name: Trade Finance
+  domain: Commercial Lending
+  product_kind: source
+  description: Captures data for Letters of Credit, Bank Guarantees, Bills for Collection,
+    and Export/Import transactions. Includes issuance, amendment, claims, remittances,
+    buyer/seller details, currency, Incoterms, and documentation status.
+  required_count: 17
+  total_count: 26
+- spec_id: src_external_claims_liabilities
+  name: External Claims/Liabilities
+  domain: Credit registry
+  product_kind: source
+  description: Bank-reported cross-border positions and flows by instrument, sector
+    and currency for BoP/IIP (ITRS/BPM6/BPM7 aligned). Supports capital-flow monitoring,
+    EWI indicators, and residency/sector breakdowns.
+  required_count: 4
+  total_count: 23
+- spec_id: src_customer_data_product
+  name: Customer data product
+  domain: Customer
+  product_kind: source
+  description: Customer's core identity and demographic informattion, contant info,
+    KYC Details, account features, account status history, account limits, nominee
+    details, marketing & channel, preferences, mapping of customers to assigned RMs
+    or service agenst along with all the arrangement keys with other FDPs
+  required_count: 19
+  total_count: 37
+- spec_id: src_customer_experience
+  name: Customer Experience
+  domain: Customer
+  product_kind: source
+  description: Captured customer interactions such as feedback, service complaints,
+    resolution status, root cause, follow-up actions (e.g., callbacks, compensations
+    etc.)
+  required_count: 15
+  total_count: 27
+- spec_id: src_open_banking
+  name: Open Banking
+  domain: Data Sharing & Consent
+  product_kind: source
+  description: Detailed logs of API calls made by third‑party providers under open‑banking
+    arrangements. Captures request metadata, consent, data accessed and response times.
+    Supports monitoring of API usage, customer consent, fraud and performance management.
+    Open banking allows third‑party providers to access consumer financial data via
+    secure APIs, fostering innovation and personalised services.
+  required_count: 15
+  total_count: 26
+- spec_id: src_internet_banking
+  name: Internet Banking
+  domain: Digital
+  product_kind: source
+  description: Login sessions, device/browser fingerprints, transactions, failed attempts.
+  required_count: 12
+  total_count: 26
+- spec_id: src_mobile_banking
+  name: Mobile Banking
+  domain: Digital
+  product_kind: source
+  description: App activity, screen flows, push notifications, crash logs, and feature
+    adoption.
+  required_count: 8
+  total_count: 23
+- spec_id: src_esg_ratings
+  name: ESG Ratings
+  domain: Enterprise
+  product_kind: source
+  description: Ratings that assess the bank's performance across Environmental, Social,
+    and Governance (ESG) factors, reflecting its commitment to sustainability and
+    responsible practices.
+  required_count: 11
+  total_count: 19
+- spec_id: src_savings_checking_current_account
+  name: Savings/Checking/Current Account
+  domain: Everyday Banking
+  product_kind: source
+  description: Deposit accounts for individuals and businesses, including both interest-bearing
+    (e.g., savings) and non-interest-bearing (e.g., current) variants. Features include
+    interest accrual (for applicable accounts), balance tracking, withdrawal limits,
+    and overdraft options (for business accounts). These accounts support high transaction
+    volumes and maintain detailed logs of all deposits and withdrawals—capturing amount,
+    channel, and denomination mix.
+  required_count: 26
+  total_count: 38
+- spec_id: src_market_prices_spreads
+  name: Market Prices & Spreads
+  domain: External Sector & Macro Research
+  product_kind: source
+  description: Normalized feed of market quotes and reference curves used for FX/interest-rate
+    pass-through, BoP valuation effects, reserves analytics, and policy monitoring.
+    Includes spot/forward FX, rates (OIS/IRS/bonds/bills), equities/commodities where
+    relevant, and CDS spreads.
+  required_count: 5
+  total_count: 29
+- spec_id: src_campaign_management
+  name: Campaign Management
+  domain: Marketing & Sales
+  product_kind: source
+  description: 'Storing raw metadata about active and historical marketing campaigns
+    (eg: Campaign type, product targeted, budget etc.) and their targeting'
+  required_count: 11
+  total_count: 24
+- spec_id: src_market_research_data
+  name: Market Research Data
+  domain: Marketing & Sales
+  product_kind: source
+  description: Normalized feed of competitor deposit product rates and offer terms
+    (savings/current/term deposits) plus key benchmarks (policy/overnight). Used by
+    the Deposit Pricing Engine and product teams to monitor market levels, detect
+    changes, and set rates/offers by segment and region
+  required_count: 12
+  total_count: 34
+- spec_id: src_marketing_execution_and_conversion_log
+  name: Marketing Execution and Conversion Log
+  domain: Marketing & Sales
+  product_kind: source
+  description: Data tracking lead-to-opportunity-to-closure and drop-off points, in
+    other words - capturing customer-level response to campaigns-opens, clicks, redemptions,
+    conversions.
+  required_count: 10
+  total_count: 20
+- spec_id: src_branch_master
+  name: Branch Master
+  domain: Master Reference
+  product_kind: source
+  description: Core Identity and Operational Information, Geographical and Contact
+    details, timings and operational constraints, services offered, channels assigned
+    to physical branches, branch status history. Cash Inventory
+  required_count: 10
+  total_count: 17
+- spec_id: src_product_catalog
+  name: Product Catalog
+  domain: Master Reference
+  product_kind: source
+  description: Master list of all active and retired products listing - type, features,
+    terms and conditions, product Fees and charges, eligibility criteria, lifecycle
+    status. Also mapping which products are offered through which channels, and the
+    status of products - launched, modified, sunset, regulatory phase-out
+  required_count: 8
+  total_count: 19
+- spec_id: src_transaction_master
+  name: Transaction Master
+  domain: Master Reference
+  product_kind: source
+  description: Detailed transaction logs across savings cards, UPI, type, amount,
+    status, balance, parties. Also includes transactional and non-transactional charges
+    - schedules, waivers  and reversals
+  required_count: 12
+  total_count: 21
+- spec_id: src_atm
+  name: ATM
+  domain: Operation
+  product_kind: source
+  description: ATM withdrawals, deposits, PIN changes, mini statements, and transaction
+    status.
+  required_count: 10
+  total_count: 27
+- spec_id: src_balance_of_payment
+  name: Balance of Payment
+  domain: Payments
+  product_kind: source
+  description: Transaction-level cross-border payments used to construct BoP/ITRS
+    flows (inflows/outflows) across channels—RTGS, correspondent banking (SWIFT/ISO
+    20022), remittance/ACH and card networks.
+  required_count: 10
+  total_count: 24
+- spec_id: src_payments_data_product
+  name: Payments Data product
+  domain: Payments
+  product_kind: source
+  description: Unified view of domestic and international payments including NEFT,
+    UPI, ACH, remittances, bill, and merchant payments. Captures transaction details,
+    status, FX rates, and merchant info
+  required_count: 22
+  total_count: 37
+- spec_id: src_secured_loans
+  name: Secured Loans
+  domain: Retail Lending
+  product_kind: source
+  description: Loans backed by collateral such as mortgage, car, gold, and loan against
+    property. Includes disbursement, repayment, and collateral tracking.
+  required_count: 21
+  total_count: 41
+- spec_id: src_unsecured_loans
+  name: Unsecured Loans
+  domain: Retail Lending
+  product_kind: source
+  description: Loans without collateral like personal loans and education loans. Captures
+    application, credit scoring, disbursement, and performance.
+  required_count: 17
+  total_count: 28
+- spec_id: src_credit_risk_assessment
+  name: Credit Risk Assessment
+  domain: Risk
+  product_kind: source
+  description: Borrower-level credit scoring, rating history, and overrides
+  required_count: 42
+  total_count: 58
+- spec_id: src_enterprise_surveys
+  name: Enterprise Surveys
+  domain: Statistics Microdata
+  product_kind: source
+  description: Survey microdata for establishments/firms covering production, prices,
+    exports/imports, employment, capex and expectations. Designed for compilation
+    of official statistics and BoP supplemental evidence; includes sampling, weights
+    and disclosure controls.
+  required_count: 6
+  total_count: 27
+- spec_id: src_wealth_product
+  name: Wealth product
+  domain: Wealth
+  product_kind: source
+  description: Holdings, transactions and valuations for investment and advisory products.
+  required_count: 17
+  total_count: 32
+- spec_id: agg_customer_banking_360
+  name: Customer Banking 360
+  domain: Retail Banking
+  product_kind: aggregate
+  description: Unified retail-banking view of a customer — identity and KYC, their deposit
+    accounts and balances, and their issued cards and limits — assembled from the party,
+    core-banking and card source systems for servicing, marketing and analytics.
+  required_count: 19
+  total_count: 21
+- spec_id: agg_customer_lending_exposure
+  name: Customer Lending Exposure
+  domain: Retail Banking
+  product_kind: aggregate
+  description: Per-customer lending exposure view — their loans, repayment behaviour and
+    delinquency status, plus card credit limits — assembled from the party, lending and
+    card source systems for credit-risk monitoring and collections.
+  required_count: 15
+  total_count: 16
+- spec_id: cns_wealth_portfolio_360
+  name: Wealth Portfolio 360
+  domain: Retail Banking
+  product_kind: consumer
+  description: Investment/wealth view of a customer's managed portfolios — holdings, instruments,
+    valuations and performance — for wealth advisory and reporting. Requires a wealth/investment
+    source system that this estate does not contain (expected to grade absent).
+  required_count: 12
+  total_count: 12

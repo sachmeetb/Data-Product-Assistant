@@ -74,7 +74,9 @@ def _get_client() -> genai.Client:
     if _client_instance is None:
         if GCP_PROJECT_ID and not os.environ.get("GOOGLE_GENAI_USE_VERTEXAI"):
             os.environ["GOOGLE_GENAI_USE_VERTEXAI"] = "1"
-        _client_instance = genai.Client()
+        _client_instance = genai.Client(
+            http_options={"timeout": 1800000},  # 1800s (value is milliseconds) — multi-agent LLM calls are slow
+        )
         log.info(
             "google.genai Client initialised: project=%s location=%s model=%s",
             GCP_PROJECT_ID,

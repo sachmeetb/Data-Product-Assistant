@@ -1,0 +1,181 @@
+spec_id: src_mobile_banking
+name: Mobile Banking
+domain: Digital
+product_kind: source
+description: App activity, screen flows, push notifications, crash logs, and feature
+  adoption.
+schema_version: '1.0'
+classification: confidential
+grain:
+  keys:
+  - session_id
+  description: ''
+freshness:
+  history: current
+  cadence: ''
+  description: ''
+allowed_derivations:
+- rename
+- cast
+attributes:
+- name: session_id
+  type: bigint
+  concept: Session ID
+  description: Unique identifier for a mobile banking app session, grouping all events, transactions, and interactions performed by the customer during that session.
+  required: true
+  is_key: true
+  classification: internal
+- name: customer_id
+  type: bigint
+  concept: Customer ID
+  description: Unique identifier of the bank customer whose mobile banking activity is captured in this session record.
+  required: true
+  is_key: true
+  classification: internal
+- name: device_id
+  type: bigint
+  concept: Device ID
+  description: Unique identifier for the mobile device used to access the banking app, enabling device history and fraud detection.
+  required: true
+  is_key: true
+  classification: internal
+- name: session_start_and_end
+  type: varchar
+  concept: Session Start And End
+  description: The paired start and end timestamps for the mobile banking session, used to compute session duration and identify abandonment.
+  required: false
+  is_key: false
+  classification: internal
+- name: os_version
+  type: varchar
+  concept: Os Version
+  description: The operating system version running on the customer's mobile device at the time of the session.
+  required: false
+  is_key: false
+  classification: internal
+- name: app_version
+  type: varchar
+  concept: App Version
+  description: The version of the mobile banking application installed on the customer's device during the session.
+  required: false
+  is_key: false
+  classification: internal
+- name: network_information
+  type: varchar
+  concept: Network Information
+  description: Details about the network connection type and quality during the session, such as WiFi, 4G, or 5G.
+  required: false
+  is_key: false
+  classification: internal
+- name: tap_click_events
+  type: varchar
+  concept: Tap Click Events
+  description: A log or count of the customer's in-app tap and click interactions, used for UX analytics and feature adoption tracking.
+  required: false
+  is_key: false
+  classification: internal
+- name: imei_number
+  type: varchar
+  concept: Imei Number
+  description: The International Mobile Equipment Identity number of the customer's device, used for device-level fraud monitoring.
+  required: false
+  is_key: false
+  classification: internal
+- name: app_permissions
+  type: varchar
+  concept: App Permissions
+  description: The set of device permissions granted to the mobile banking app, such as location, camera, or biometric access.
+  required: false
+  is_key: false
+  classification: internal
+- name: notifications_enabled
+  type: varchar
+  concept: Notifications Enabled
+  description: An indicator of whether the customer has enabled push notification delivery for the mobile banking app.
+  required: false
+  is_key: false
+  classification: internal
+- name: txn_id
+  type: bigint
+  concept: Txn ID
+  description: Unique identifier for a financial transaction initiated by the customer through the mobile banking app.
+  required: true
+  is_key: true
+  classification: internal
+- name: type
+  type: varchar
+  concept: Type
+  description: The category of the mobile banking transaction, such as fund_transfer, bill_payment, mobile_recharge, or UPI_payment.
+  required: true
+  is_key: false
+  classification: internal
+- name: amount
+  type: numeric
+  concept: Amount
+  description: The monetary value of the transaction initiated through the mobile banking app.
+  required: true
+  is_key: false
+  classification: internal
+- name: linked_account_number
+  type: numeric
+  concept: Linked Account Number
+  description: The masked account number from which the mobile banking transaction was debited.
+  required: false
+  is_key: false
+  classification: pii
+- name: beneficiary
+  type: varchar
+  concept: Beneficiary
+  description: The name or identifier of the recipient of the mobile banking transaction.
+  required: false
+  is_key: false
+  classification: internal
+- name: timestamp
+  type: timestamp
+  concept: Timestamp
+  description: The date and time at which the mobile banking transaction or event was recorded.
+  required: false
+  is_key: false
+  classification: internal
+- name: auth_method
+  type: varchar
+  concept: Auth Method
+  description: The authentication method used to authorise the mobile banking transaction, such as PIN, biometric, or OTP.
+  required: false
+  is_key: false
+  classification: internal
+- name: status
+  type: varchar
+  concept: Status
+  description: The outcome state of the mobile banking transaction, such as successful, failed, or pending.
+  required: true
+  is_key: false
+  classification: internal
+- name: failture_reasons
+  type: varchar
+  concept: Failture Reasons
+  description: The reason code or description explaining why the mobile banking transaction failed, such as network_error or insufficient_balance.
+  required: false
+  is_key: false
+  classification: internal
+- name: error_id
+  type: bigint
+  concept: Error ID
+  description: Unique identifier for an application error or crash event recorded during the mobile banking session.
+  required: true
+  is_key: true
+  classification: internal
+- name: error_message
+  type: varchar
+  concept: Error Message
+  description: A descriptive message associated with the application error or crash, used for debugging and stability monitoring.
+  required: false
+  is_key: false
+  classification: internal
+- name: crash_report
+  type: varchar
+  concept: Crash Report
+  description: A structured or free-text log capturing the stack trace and context of an application crash during the mobile banking session.
+  required: false
+  is_key: false
+  classification: internal

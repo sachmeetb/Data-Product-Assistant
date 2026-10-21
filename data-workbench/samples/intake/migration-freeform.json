@@ -1,0 +1,19 @@
+{
+  "scenario": "migration",
+  "external_ref": "estate-analyzer:finding-9001",
+  "hints": {
+    "source_platform": "SQL Server"
+  },
+  "metadata": {
+    "report_id": "EA-2026-Q3-0207",
+    "analyzer_confidence": 0.41
+  },
+  "content": [
+    {
+      "kind": "text",
+      "title": "Analyst notes (unstructured)",
+      "media_type": "text/plain",
+      "body": "During the app-portfolio review we found an old HR reporting database running on a SQL Server box in the datacenter (hostname sql-hr-01). Nobody owns it anymore but Finance still pulls a monthly headcount extract from it. There look to be a handful of tables about employees, departments, and some kind of pay-grade lookup, plus a big audit/history table that's probably append-only. Types weren't captured. The team wants to get off the aging hardware; a straight copy of the data somewhere modern would be enough for now — they haven't decided where it lands yet. No transformations needed, just get the data out before the box is retired at end of year."
+    }
+  ]
+}

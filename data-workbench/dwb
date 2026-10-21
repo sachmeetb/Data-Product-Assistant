@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+# Data Workbench launcher — thin shim that forwards to the `cli` package.
+#
+# Runs with the SYSTEM python3 on purpose (stdlib only): `dwb doctor` and
+# `dwb up --mode host` must work before any venv exists — they can create it.
+set -euo pipefail
+ROOT="$(cd "$(dirname "$0")" && pwd)"
+cd "$ROOT"
+exec python3 -m cli "$@"

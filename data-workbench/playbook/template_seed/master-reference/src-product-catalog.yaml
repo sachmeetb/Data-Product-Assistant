@@ -1,0 +1,310 @@
+apiVersion: v3.1.0
+kind: DataContract
+id: template:master-reference:src-product-catalog
+name: Product Catalog
+version: 1.0.0
+status: draft
+domain: Master Reference
+description: Master list of all active and retired products listing - type, features,
+  terms and conditions, product Fees and charges, eligibility criteria, lifecycle
+  status. Also mapping which products are offered through which channels, and the
+  status of products - launched, modified, sunset, regulatory phase-out
+schema:
+- name: Product Catalog
+  physicalName: product_catalog
+  physicalType: table
+  description: Master list of all active and retired products listing - type, features,
+    terms and conditions, product Fees and charges, eligibility criteria, lifecycle
+    status. Also mapping which products are offered through which channels, and the
+    status of products - launched, modified, sunset, regulatory phase-out
+  properties:
+  - name: product_id
+    physicalName: product_id
+    logicalName: Product ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a bank product record in the master product
+      catalog.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: name
+    physicalName: name
+    logicalName: Name
+    logicalType: varchar
+    physicalType: varchar
+    description: Official name of the bank product as presented to customers and used
+      in regulatory reporting.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: category
+    physicalName: category
+    logicalName: Category
+    logicalType: varchar
+    physicalType: varchar
+    description: Product category classifying the offering, such as deposits, loans,
+      cards, investments, or insurance.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: status
+    physicalName: status
+    logicalName: Status
+    logicalType: varchar
+    physicalType: varchar
+    description: Current availability status of the product (e.g. active, sunset,
+      regulatory phase-out, archived).
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: lifecycle_state
+    physicalName: lifecycle_state
+    logicalName: Lifecycle State
+    logicalType: varchar
+    physicalType: varchar
+    description: Detailed lifecycle stage of the product (e.g. launched, modified,
+      sunset) tracking its market history.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: channel_availability
+    physicalName: channel_availability
+    logicalName: Channel Availability
+    logicalType: varchar
+    physicalType: varchar
+    description: List of channels through which the product is offered to customers,
+      such as branch, mobile app, internet banking, or partner.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: feature_id
+    physicalName: feature_id
+    logicalName: Feature ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a specific feature or attribute associated
+      with a bank product.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: description
+    physicalName: description
+    logicalName: Description
+    logicalType: varchar
+    physicalType: varchar
+    description: Human-readable description of a product feature, detailing its functionality
+      and customer benefit.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: pricing_id
+    physicalName: pricing_id
+    logicalName: Pricing ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a pricing record defining the rate, fee, or
+      charge applicable to a bank product.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: rate
+    physicalName: rate
+    logicalName: Rate
+    logicalType: varchar
+    physicalType: varchar
+    description: Interest rate, return rate, or other applicable rate for the product,
+      expressed as a percentage or formula.
+    primaryKey: false
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: fee
+    physicalName: fee
+    logicalName: Fee
+    logicalType: numeric
+    physicalType: numeric
+    description: Monetary fee or charge levied for the product or a specific transaction,
+      such as an annual fee or processing charge.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: tier
+    physicalName: tier
+    logicalName: Tier
+    logicalType: varchar
+    physicalType: varchar
+    description: Customer tier, balance band, or product variant to which a particular
+      pricing rate or fee applies.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: rule_id
+    physicalName: rule_id
+    logicalName: Rule ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for an eligibility or product bundling rule defined
+      in the product catalog.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: criterion
+    physicalName: criterion
+    logicalName: Criterion
+    logicalType: varchar
+    physicalType: varchar
+    description: Specific condition or requirement a customer must meet to be eligible
+      for the product (e.g. minimum age, income threshold).
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: threshold
+    physicalName: threshold
+    logicalName: Threshold
+    logicalType: varchar
+    physicalType: varchar
+    description: Numeric or qualitative limit associated with an eligibility criterion,
+      such as a minimum income amount or credit score cutoff.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: bundle_id
+    physicalName: bundle_id
+    logicalName: Bundle ID
+    logicalType: bigint
+    physicalType: bigint
+    description: Unique identifier for a product bundle grouping multiple bank products
+      sold together with shared pricing or features.
+    primaryKey: true
+    required: true
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: product_ids
+    physicalName: product_ids
+    logicalName: Product Ids
+    logicalType: bigint
+    physicalType: bigint
+    description: Identifiers of the individual products included in a bundle offering.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: discounts
+    physicalName: discounts
+    logicalName: Discounts
+    logicalType: numeric
+    physicalType: numeric
+    description: Discount amount or percentage applied to bundled products when purchased
+      together.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  - name: conditions
+    physicalName: conditions
+    logicalName: Conditions
+    logicalType: varchar
+    physicalType: varchar
+    description: Qualifying conditions or terms that must be met to receive the bundled
+      product discount or benefit.
+    primaryKey: false
+    required: false
+    criticalDataElement: false
+    pii: false
+    classification: internal
+    examples: []
+    logicalTypeOptions: {}
+  foreignKeys: []
+  transform:
+    grouping_keys:
+    - product_id
+    scd_policy:
+      type: latest_only
+customProperties:
+  feasibility:
+    schema_version: '1.0'
+    spec_classification: internal
+    cadence: ''
+    freshness_history: current
+    freshness_description: ''
+    grain_keys:
+    - product_id
+    grain_description: ''
+    allowed_derivations:
+    - rename
+    - cast
+    composition:
+      join_keys: []
+      composed_of: []
+      description: ''
+productKind: source
+sourceSpecId: src_product_catalog

@@ -247,7 +247,7 @@ function agentAvatarClass(agentName) {
   return 'agent'
 }
 
-export default function MessageRow({ msg, onChipClick }) {
+export default function MessageRow({ msg, onChipClick, sessionId }) {
   const isUser = msg.role === 'user'
   const bubbleRef = useRef(null)
   const [tooLong, setTooLong] = useState(false)
@@ -341,7 +341,7 @@ export default function MessageRow({ msg, onChipClick }) {
                     {wrapInfoSections(dedupBulletsAgainstParagraph(splitBronzeNarrative(msg.text)))}
                   </ReactMarkdown>
                 )}
-                {msg.data_contract_view && <DataContractCard view={msg.data_contract_view} />}
+                {msg.data_contract_view && <DataContractCard view={msg.data_contract_view} sessionId={sessionId} apiBase={import.meta.env.VITE_API_URL || ''} />}
                 <STTMCard view={msg.bronze_transform_view} variant="bronze" />
               </>
             ) : msg.data_contract_view ? (
@@ -351,7 +351,7 @@ export default function MessageRow({ msg, onChipClick }) {
                     {wrapInfoSections(cleanAgentText(msg.text))}
                   </ReactMarkdown>
                 )}
-                <DataContractCard view={msg.data_contract_view} />
+                <DataContractCard view={msg.data_contract_view} sessionId={sessionId} apiBase={import.meta.env.VITE_API_URL || ''} />
               </>
             ) : isChallAgent ? (
               <ChallengerNarrative text={msg.text} />

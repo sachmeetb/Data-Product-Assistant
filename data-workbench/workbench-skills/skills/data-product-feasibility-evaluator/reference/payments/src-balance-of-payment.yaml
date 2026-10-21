@@ -1,0 +1,195 @@
+spec_id: src_balance_of_payment
+name: Balance of Payment
+domain: Payments
+product_kind: source
+description: Transaction-level cross-border payments used to construct BoP/ITRS flows
+  (inflows/outflows) across channels—RTGS, correspondent banking (SWIFT/ISO 20022),
+  remittance/ACH and card networks.
+schema_version: '1.0'
+classification: internal
+grain:
+  keys:
+  - txn_id
+  description: ''
+freshness:
+  history: current
+  cadence: ''
+  description: ''
+allowed_derivations:
+- rename
+- cast
+attributes:
+- name: txn_id
+  type: bigint
+  concept: Txn ID
+  description: Unique identifier for a cross-border transaction record used in BoP/ITRS flow compilation.
+  required: true
+  is_key: true
+  classification: internal
+- name: uetr_message_id
+  type: bigint
+  concept: UETR Message ID
+  description: SWIFT Unique End-to-End Transaction Reference (UETR) or message identifier uniquely tracking the payment through the correspondent network.
+  required: true
+  is_key: true
+  classification: internal
+- name: channel
+  type: varchar
+  concept: Channel
+  description: Payment channel through which the cross-border transaction was processed (e.g. RTGS, SWIFT, ACH, remittance).
+  required: false
+  is_key: false
+  classification: internal
+- name: amount
+  type: numeric
+  concept: Amount
+  description: Gross monetary value of the cross-border transaction in the original transaction currency.
+  required: true
+  is_key: false
+  classification: internal
+  derivations:
+  - currency_normalize
+- name: currency
+  type: varchar
+  concept: Currency
+  description: ISO currency code of the transaction amount before FX conversion.
+  required: true
+  is_key: false
+  classification: internal
+- name: fx_rate
+  type: numeric
+  concept: FX Rate
+  description: Exchange rate applied to convert the transaction amount from the transaction currency to the reporting currency.
+  required: true
+  is_key: false
+  classification: internal
+- name: charges
+  type: numeric
+  concept: Charges
+  description: Bank charges or correspondent fees deducted from the transaction amount.
+  required: false
+  is_key: false
+  classification: internal
+  derivations:
+  - currency_normalize
+- name: net_amount
+  type: numeric
+  concept: Net Amount
+  description: Net monetary value of the transaction after deduction of charges, expressed in the reporting currency.
+  required: true
+  is_key: false
+  classification: internal
+  derivations:
+  - currency_normalize
+- name: inflow_outflow
+  type: varchar
+  concept: Inflow Outflow
+  description: Direction of the cross-border payment relative to the domestic economy, used for BoP categorization (inflow or outflow).
+  required: false
+  is_key: false
+  classification: internal
+- name: payer_country
+  type: numeric
+  concept: Payer Country
+  description: Numeric country code of the country from which the cross-border payment originates.
+  required: false
+  is_key: false
+  classification: internal
+- name: beneficiary_country
+  type: numeric
+  concept: Beneficiary Country
+  description: Numeric country code of the country to which the cross-border payment is destined.
+  required: false
+  is_key: false
+  classification: internal
+- name: residency_status
+  type: varchar
+  concept: Residency Status
+  description: Residency classification of the counterparty (resident or non-resident) used for BoP regulatory reporting requirements.
+  required: true
+  is_key: false
+  classification: internal
+- name: purpose_code
+  type: varchar
+  concept: Purpose Code
+  description: Regulatory purpose code assigned to the transaction indicating the economic nature of the cross-border transfer (e.g. trade, remittance, investment income).
+  required: false
+  is_key: false
+  classification: internal
+- name: goods_services_travel_income_classification
+  type: numeric
+  concept: Goods Services Travel Income Classification
+  description: BoP standard account classification of the transaction under current account components (goods, services, travel, or primary income).
+  required: false
+  is_key: false
+  classification: internal
+- name: bic_lei
+  type: varchar
+  concept: BIC LEI
+  description: Bank Identifier Code (BIC) or Legal Entity Identifier (LEI) of the correspondent or counterparty institution involved in the payment.
+  required: false
+  is_key: false
+  classification: internal
+- name: account_ids
+  type: bigint
+  concept: Account Ids
+  description: Identifiers of the payer and beneficiary accounts involved in the cross-border transaction.
+  required: false
+  is_key: false
+  classification: internal
+- name: correspondent_chain
+  type: varchar
+  concept: Correspondent Chain
+  description: Ordered list of correspondent banks through which the payment was routed from originator to beneficiary.
+  required: false
+  is_key: false
+  classification: internal
+- name: msg_type
+  type: varchar
+  concept: Msg Type
+  description: Messaging standard and message type used for the payment instruction (e.g. MT103, pacs.008, MT202).
+  required: true
+  is_key: false
+  classification: internal
+- name: settlement_date
+  type: date
+  concept: Settlement Date
+  description: Date on which the cross-border payment was settled between the transacting institutions.
+  required: true
+  is_key: false
+  classification: internal
+- name: status
+  type: varchar
+  concept: Status
+  description: Current processing status of the cross-border transaction (e.g. settled, pending, returned, cancelled).
+  required: true
+  is_key: false
+  classification: internal
+- name: reversal_flag
+  type: boolean
+  concept: Reversal Flag
+  description: Boolean indicator that this transaction is a reversal or return of a previously processed cross-border payment.
+  required: false
+  is_key: false
+  classification: internal
+- name: source_system
+  type: varchar
+  concept: Source System
+  description: Name of the originating system (e.g. RTGS, SWIFT hub, remittance platform) from which the transaction record was ingested.
+  required: false
+  is_key: false
+  classification: internal
+- name: enrichment_flags
+  type: varchar
+  concept: Enrichment Flags
+  description: Set of indicator flags documenting post-ingestion data enrichments applied to the record, such as country code normalization or purpose code inference.
+  required: false
+  is_key: false
+  classification: internal
+- name: screening_result
+  type: varchar
+  concept: Screening Result
+  description: Outcome of sanctions, AML, or compliance screening applied to the cross-border transaction.
+  required: false
+  is_key: false
+  classification: internal

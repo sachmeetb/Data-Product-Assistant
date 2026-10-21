@@ -1,0 +1,390 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 1110" width="1440" height="1110" font-family="'Segoe UI', Helvetica Neue, Arial, sans-serif">
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#94A3B8"/>
+    </marker>
+    <marker id="arr-rev" viewBox="0 0 10 10" refX="1" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 10 0 L 0 5 L 10 10 z" fill="#94A3B8"/>
+    </marker>
+    <marker id="arr-grn" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#16A34A"/>
+    </marker>
+    <marker id="arr-amb" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#D97706"/>
+    </marker>
+    <marker id="arr-pur" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#7C3AED"/>
+    </marker>
+    <marker id="arr-pur-rev" viewBox="0 0 10 10" refX="1" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 10 0 L 0 5 L 10 10 z" fill="#7C3AED"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1440" height="1110" fill="#F8FAFC"/>
+
+  <!-- ===================== TITLE BAR ===================== -->
+  <rect width="1440" height="52" fill="#0F172A"/>
+  <text x="720" y="28" text-anchor="middle" font-size="19" font-weight="700" fill="white">Data Workbench — System Architecture</text>
+  <text x="720" y="44" text-anchor="middle" font-size="11" fill="#94A3B8">v1 of 3 · Full Layered Stack · Client &amp; Stakeholder Overview</text>
+
+  <!-- Layer labels (left margin) -->
+  <text x="11" y="110" text-anchor="middle" font-size="8" font-weight="600" fill="#CBD5E1" transform="rotate(-90,11,110)">INTERFACES</text>
+  <text x="11" y="255" text-anchor="middle" font-size="8" font-weight="600" fill="#CBD5E1" transform="rotate(-90,11,255)">WORKBENCH</text>
+  <text x="11" y="415" text-anchor="middle" font-size="8" font-weight="600" fill="#CBD5E1" transform="rotate(-90,11,415)">HARNESS</text>
+  <text x="11" y="640" text-anchor="middle" font-size="8" font-weight="600" fill="#CBD5E1" transform="rotate(-90,11,640)">SKILLS</text>
+  <text x="11" y="900" text-anchor="middle" font-size="8" font-weight="600" fill="#CBD5E1" transform="rotate(-90,11,900)">DATA</text>
+
+  <!-- ===================== CHAT INTERFACES ===================== -->
+  <!-- Box 1: DPO Chat -->
+  <rect x="28" y="63" width="433" height="80" rx="7" fill="#EFF6FF" stroke="#3B82F6" stroke-width="1.5"/>
+  <rect x="28" y="63" width="433" height="28" rx="7" fill="#3B82F6"/>
+  <rect x="28" y="77" width="433" height="14" fill="#3B82F6"/>
+  <text x="244" y="81" text-anchor="middle" font-size="11" font-weight="700" fill="white">Data Product Owner Chat</text>
+  <text x="244" y="107" text-anchor="middle" font-size="9.5" fill="#1D4ED8">Guides POs through product definition, naming,</text>
+  <text x="244" y="120" text-anchor="middle" font-size="9.5" fill="#1D4ED8">schema authoring, domain rules &amp; quality decisions</text>
+
+  <!-- Box 2: DE Chat -->
+  <rect x="504" y="63" width="433" height="80" rx="7" fill="#EFF6FF" stroke="#3B82F6" stroke-width="1.5"/>
+  <rect x="504" y="63" width="433" height="28" rx="7" fill="#3B82F6"/>
+  <rect x="504" y="77" width="433" height="14" fill="#3B82F6"/>
+  <text x="720" y="81" text-anchor="middle" font-size="11" font-weight="700" fill="white">Data Engineer Chat</text>
+  <text x="720" y="107" text-anchor="middle" font-size="9.5" fill="#1D4ED8">Assists with discovery, mapping, quality assessment,</text>
+  <text x="720" y="120" text-anchor="middle" font-size="9.5" fill="#1D4ED8">graph queries, lineage &amp; pipeline decisions</text>
+
+  <!-- Box 3: Semantic Chat -->
+  <rect x="980" y="63" width="433" height="80" rx="7" fill="#EFF6FF" stroke="#3B82F6" stroke-width="1.5"/>
+  <rect x="980" y="63" width="433" height="28" rx="7" fill="#3B82F6"/>
+  <rect x="980" y="77" width="433" height="14" fill="#3B82F6"/>
+  <text x="1196" y="81" text-anchor="middle" font-size="11" font-weight="700" fill="white">Semantic Layer Chat  ⚡ Light</text>
+  <text x="1196" y="107" text-anchor="middle" font-size="9.5" fill="#1D4ED8">Business concept queries powered by the Neo4j</text>
+  <text x="1196" y="120" text-anchor="middle" font-size="9.5" fill="#1D4ED8">domain ontology · Not a full semantic layer</text>
+
+  <!-- Arrows: chats → workbench -->
+  <line x1="244" y1="143" x2="244" y2="158" stroke="#94A3B8" stroke-width="1.5" marker-end="url(#arr)"/>
+  <line x1="720" y1="143" x2="720" y2="158" stroke="#94A3B8" stroke-width="1.5" marker-end="url(#arr)"/>
+  <line x1="1196" y1="143" x2="1196" y2="158" stroke="#94A3B8" stroke-width="1.5" marker-end="url(#arr)"/>
+
+  <!-- ===================== DATA WORKBENCH ===================== -->
+  <rect x="28" y="160" width="1384" height="153" rx="8" fill="#EFF6FF" stroke="#2563EB" stroke-width="2"/>
+  <!-- Header -->
+  <rect x="28" y="160" width="1384" height="32" rx="8" fill="#2563EB"/>
+  <rect x="28" y="178" width="1384" height="14" fill="#2563EB"/>
+  <text x="175" y="181" text-anchor="middle" font-size="13" font-weight="700" fill="white">Data Workbench</text>
+  <!-- Annotation pills -->
+  <rect x="330" y="165" width="132" height="19" rx="9" fill="rgba(255,255,255,0.22)"/>
+  <text x="396" y="178" text-anchor="middle" font-size="8.5" fill="white">Role-Based Access</text>
+  <rect x="472" y="165" width="118" height="19" rx="9" fill="rgba(255,255,255,0.22)"/>
+  <text x="531" y="178" text-anchor="middle" font-size="8.5" fill="white">Python + React</text>
+  <rect x="600" y="165" width="130" height="19" rx="9" fill="rgba(255,255,255,0.22)"/>
+  <text x="665" y="178" text-anchor="middle" font-size="8.5" fill="white">ODCS Spec Standard</text>
+  <rect x="740" y="165" width="110" height="19" rx="9" fill="rgba(255,255,255,0.22)"/>
+  <text x="795" y="178" text-anchor="middle" font-size="8.5" fill="white">Project Scoping</text>
+  <rect x="860" y="165" width="120" height="19" rx="9" fill="rgba(255,255,255,0.22)"/>
+  <text x="920" y="178" text-anchor="middle" font-size="8.5" fill="white">WebSocket Streaming</text>
+
+  <!-- PO UI inner box -->
+  <rect x="48" y="202" width="570" height="97" rx="5" fill="white" stroke="#93C5FD" stroke-width="1"/>
+  <text x="333" y="221" text-anchor="middle" font-size="11" font-weight="700" fill="#1D4ED8">Data Product Owner UI (Product Workbench)</text>
+  <text x="333" y="238" text-anchor="middle" font-size="9" fill="#475569">Contract-first 9-step wizard · Marketplace · My Products</text>
+  <text x="333" y="252" text-anchor="middle" font-size="9" fill="#475569">Product validation gate · Ingest existing products</text>
+  <text x="333" y="266" text-anchor="middle" font-size="9" fill="#475569">Source candidate requests · Chat assistant panel</text>
+  <text x="333" y="286" text-anchor="middle" font-size="8" fill="#64748B">Source-aligned (dpe-sa) · Consumer-aligned (dpe-cf)</text>
+
+  <!-- Engineer UI inner box -->
+  <rect x="638" y="202" width="754" height="97" rx="5" fill="white" stroke="#93C5FD" stroke-width="1"/>
+  <text x="1015" y="221" text-anchor="middle" font-size="11" font-weight="700" fill="#1D4ED8">Data Engineer UI (Engineering Workbench)</text>
+  <!-- Workbench sub-box -->
+  <rect x="658" y="233" width="340" height="58" rx="4" fill="#EFF6FF" stroke="#BFDBFE" stroke-width="1"/>
+  <text x="828" y="250" text-anchor="middle" font-size="10" font-weight="600" fill="#1E40AF">Workbench UI</text>
+  <text x="828" y="265" text-anchor="middle" font-size="8.5" fill="#3B82F6">Pipeline · Reviews · Dashboard</text>
+  <text x="828" y="279" text-anchor="middle" font-size="8.5" fill="#3B82F6">Schema · Lineage · Chat panel</text>
+  <!-- CLI sub-box -->
+  <rect x="1012" y="233" width="360" height="58" rx="4" fill="#EFF6FF" stroke="#BFDBFE" stroke-width="1"/>
+  <text x="1192" y="250" text-anchor="middle" font-size="10" font-weight="600" fill="#1E40AF">CLI Interface</text>
+  <text x="1192" y="265" text-anchor="middle" font-size="8.5" fill="#3B82F6">Requires workbench services</text>
+  <text x="1192" y="279" text-anchor="middle" font-size="8.5" fill="#3B82F6">+ project context from SQLite</text>
+
+  <!-- Arrow: workbench → harness -->
+  <line x1="720" y1="313" x2="720" y2="332" stroke="#D97706" stroke-width="2" marker-end="url(#arr-amb)"/>
+  <rect x="730" y="315" width="100" height="16" rx="3" fill="#FEF9C3"/>
+  <text x="780" y="326" text-anchor="middle" font-size="9" fill="#92400E">Delegates tasks</text>
+
+  <!-- ===================== AGENT HARNESS ===================== -->
+  <rect x="28" y="334" width="1384" height="122" rx="8" fill="#FFFBF0" stroke="#D97706" stroke-width="1.5"/>
+  <rect x="28" y="334" width="1384" height="30" rx="8" fill="#D97706"/>
+  <rect x="28" y="350" width="1384" height="14" fill="#D97706"/>
+  <text x="145" y="353" text-anchor="middle" font-size="13" font-weight="700" fill="white">Agent Harness</text>
+  <text x="830" y="351" text-anchor="middle" font-size="9" fill="rgba(255,255,255,0.9)">Off-the-shelf · No bespoke build required · Skills + concepts portable to any compatible harness</text>
+
+  <!-- SDK box -->
+  <rect x="48" y="372" width="290" height="73" rx="4" fill="white" stroke="#FCD34D" stroke-width="1"/>
+  <text x="193" y="390" text-anchor="middle" font-size="10" font-weight="700" fill="#92400E">SDK</text>
+  <text x="193" y="407" text-anchor="middle" font-size="8.5" fill="#78350F">Current: Claude Code SDK (interim)</text>
+  <text x="193" y="421" text-anchor="middle" font-size="8.5" fill="#78350F">Target: Anthropic Agent SDK</text>
+  <text x="193" y="436" text-anchor="middle" font-size="8" fill="#B45309">High similarity · Low migration friction</text>
+
+  <!-- Execution Model box -->
+  <rect x="352" y="372" width="285" height="73" rx="4" fill="white" stroke="#FCD34D" stroke-width="1"/>
+  <text x="494" y="390" text-anchor="middle" font-size="10" font-weight="700" fill="#92400E">Execution Model</text>
+  <text x="494" y="407" text-anchor="middle" font-size="8.5" fill="#78350F">Goal definition → Model call</text>
+  <text x="494" y="421" text-anchor="middle" font-size="8.5" fill="#78350F">→ Loop until goal achieved</text>
+  <text x="494" y="436" text-anchor="middle" font-size="8" fill="#78350F">→ Repeat as many iterations as needed</text>
+
+  <!-- Models box -->
+  <rect x="651" y="372" width="220" height="73" rx="4" fill="white" stroke="#FCD34D" stroke-width="1"/>
+  <text x="761" y="390" text-anchor="middle" font-size="10" font-weight="700" fill="#92400E">Anthropic Models</text>
+  <text x="761" y="407" text-anchor="middle" font-size="8.5" fill="#78350F">Sonnet · Opus · Haiku</text>
+  <text x="761" y="421" text-anchor="middle" font-size="8.5" fill="#78350F">Configurable per harness</text>
+  <text x="761" y="436" text-anchor="middle" font-size="8" fill="#78350F">Default: Sonnet</text>
+
+  <!-- Core Tools box -->
+  <rect x="885" y="372" width="210" height="73" rx="4" fill="white" stroke="#FCD34D" stroke-width="1"/>
+  <text x="990" y="390" text-anchor="middle" font-size="10" font-weight="700" fill="#92400E">Built-in Core Tools</text>
+  <text x="990" y="407" text-anchor="middle" font-size="8.5" fill="#78350F">Read · Write · Edit · Bash</text>
+  <text x="990" y="421" text-anchor="middle" font-size="8.5" fill="#78350F">Grep · Glob · WebFetch</text>
+  <text x="990" y="436" text-anchor="middle" font-size="8" fill="#78350F">Native harness toolset</text>
+
+  <!-- Memory box -->
+  <rect x="1109" y="372" width="285" height="73" rx="4" fill="white" stroke="#FCD34D" stroke-width="1"/>
+  <text x="1251" y="390" text-anchor="middle" font-size="10" font-weight="700" fill="#92400E">Memory (Unstructured)</text>
+  <text x="1251" y="407" text-anchor="middle" font-size="8.5" fill="#78350F">Agent SDK managed</text>
+  <text x="1251" y="421" text-anchor="middle" font-size="8.5" fill="#78350F">Conversational + task state</text>
+  <text x="1251" y="436" text-anchor="middle" font-size="8" fill="#78350F">Separate from SQLite structured memory</text>
+
+  <!-- Arrow: harness → skills -->
+  <line x1="720" y1="456" x2="720" y2="472" stroke="#16A34A" stroke-width="2.5" marker-end="url(#arr-grn)"/>
+
+  <!-- ===================== AGENT SKILLS (MOST PROMINENT) ===================== -->
+  <rect x="20" y="474" width="1400" height="305" rx="10" fill="#F0FFF4" stroke="#16A34A" stroke-width="3"/>
+  <!-- Header -->
+  <rect x="20" y="474" width="1400" height="38" rx="10" fill="#16A34A"/>
+  <rect x="20" y="492" width="1400" height="20" fill="#16A34A"/>
+  <text x="350" y="498" text-anchor="middle" font-size="14" font-weight="700" fill="white">Agent Skills Ecosystem</text>
+  <text x="940" y="496" text-anchor="middle" font-size="9" fill="rgba(255,255,255,0.92)">★  What the Data Workbench uniquely brings — not provided by the agent harness out of the box</text>
+
+  <!-- Skill anatomy legend (top right) -->
+  <rect x="1255" y="518" width="155" height="100" rx="5" fill="white" stroke="#86EFAC" stroke-width="1.5"/>
+  <text x="1332" y="535" text-anchor="middle" font-size="9" font-weight="700" fill="#15803D">Every Skill Contains:</text>
+  <text x="1268" y="551" font-size="8.5" fill="#166534">① skill.md — capability spec</text>
+  <text x="1268" y="565" font-size="8.5" fill="#166534">② Scripts — tool executors</text>
+  <text x="1268" y="579" font-size="8.5" fill="#166534">③ Tools — executable actions</text>
+  <text x="1268" y="593" font-size="8.5" fill="#166534">④ Reference Content — knowledge</text>
+  <rect x="1265" y="600" width="132" height="14" rx="7" fill="#DCFCE7" stroke="#86EFAC" stroke-width="1"/>
+  <text x="1331" y="611" text-anchor="middle" font-size="7.5" fill="#15803D">⊕ Domain Knowledge (select skills)</text>
+
+  <!-- ===== 6 SKILL COLUMNS ===== -->
+  <!-- x positions: col w=192, gap=12, start=34 -->
+  <!-- Col 1 start=34, col 2=238, col 3=442, col 4=646, col 5=850, col 6=1054 -->
+
+  <!-- DISCOVERY -->
+  <rect x="34" y="520" width="192" height="248" rx="5" fill="white" stroke="#86EFAC" stroke-width="1.5"/>
+  <rect x="34" y="520" width="192" height="24" rx="5" fill="#BBF7D0"/>
+  <rect x="34" y="532" width="192" height="12" fill="#BBF7D0"/>
+  <text x="130" y="537" text-anchor="middle" font-size="10.5" font-weight="700" fill="#14532D">Discovery</text>
+  <text x="130" y="560" text-anchor="middle" font-size="8.5" fill="#15803D">Table + column metadata</text>
+  <text x="130" y="573" text-anchor="middle" font-size="8.5" fill="#15803D">FK + relationship discovery</text>
+  <text x="130" y="586" text-anchor="middle" font-size="8.5" fill="#15803D">Schema cataloguing</text>
+  <text x="130" y="599" text-anchor="middle" font-size="8.5" fill="#15803D">Multi-dialect SQL support</text>
+  <line x1="48" y1="610" x2="212" y2="610" stroke="#D1FAE5" stroke-width="1"/>
+  <rect x="48" y="616" width="108" height="14" rx="7" fill="#DCFCE7" stroke="#86EFAC" stroke-width="1"/>
+  <text x="102" y="627" text-anchor="middle" font-size="7.5" fill="#166534">⊕ Domain Knowledge</text>
+  <text x="130" y="650" text-anchor="middle" font-size="8" fill="#64748B">Reads: Source DB</text>
+  <text x="130" y="663" text-anchor="middle" font-size="8" fill="#64748B">Writes: :Catalog</text>
+  <text x="130" y="676" text-anchor="middle" font-size="8" fill="#64748B">:Dataset · :Column</text>
+  <line x1="48" y1="687" x2="212" y2="687" stroke="#D1FAE5" stroke-width="1"/>
+  <text x="130" y="700" text-anchor="middle" font-size="7.5" fill="#94A3B8">data-discovery</text>
+  <text x="130" y="713" text-anchor="middle" font-size="7.5" fill="#94A3B8">data-discovery-mysql</text>
+  <text x="130" y="726" text-anchor="middle" font-size="7.5" fill="#94A3B8">DCAT-2 Neo4j export</text>
+  <text x="130" y="760" text-anchor="middle" font-size="7.5" fill="#CBD5E1">DISCOVERY</text>
+
+  <!-- PROFILING -->
+  <rect x="238" y="520" width="192" height="248" rx="5" fill="white" stroke="#86EFAC" stroke-width="1.5"/>
+  <rect x="238" y="520" width="192" height="24" rx="5" fill="#BBF7D0"/>
+  <rect x="238" y="532" width="192" height="12" fill="#BBF7D0"/>
+  <text x="334" y="537" text-anchor="middle" font-size="10.5" font-weight="700" fill="#14532D">Profiling</text>
+  <text x="334" y="560" text-anchor="middle" font-size="8.5" fill="#15803D">Statistical column profiling</text>
+  <text x="334" y="573" text-anchor="middle" font-size="8.5" fill="#15803D">Null rates · cardinality</text>
+  <text x="334" y="586" text-anchor="middle" font-size="8.5" fill="#15803D">Value distributions + patterns</text>
+  <text x="334" y="599" text-anchor="middle" font-size="8.5" fill="#15803D">Row-level DQ signal detection</text>
+  <line x1="252" y1="610" x2="416" y2="610" stroke="#D1FAE5" stroke-width="1"/>
+  <rect x="252" y="616" width="108" height="14" rx="7" fill="#DCFCE7" stroke="#86EFAC" stroke-width="1"/>
+  <text x="306" y="627" text-anchor="middle" font-size="7.5" fill="#166534">⊕ Domain Knowledge</text>
+  <text x="334" y="650" text-anchor="middle" font-size="8" fill="#64748B">Reads: :Dataset</text>
+  <text x="334" y="663" text-anchor="middle" font-size="8" fill="#64748B">Writes: :ProfilingRun</text>
+  <text x="334" y="676" text-anchor="middle" font-size="8" fill="#64748B">:ColumnProfile</text>
+  <line x1="252" y1="687" x2="416" y2="687" stroke="#D1FAE5" stroke-width="1"/>
+  <text x="334" y="700" text-anchor="middle" font-size="7.5" fill="#94A3B8">data-profiling</text>
+  <text x="334" y="713" text-anchor="middle" font-size="7.5" fill="#94A3B8">data-profiling-to-dqv-neo4j</text>
+  <text x="334" y="760" text-anchor="middle" font-size="7.5" fill="#CBD5E1">PROFILING</text>
+
+  <!-- DATA QUALITY -->
+  <rect x="442" y="520" width="192" height="248" rx="5" fill="white" stroke="#86EFAC" stroke-width="1.5"/>
+  <rect x="442" y="520" width="192" height="24" rx="5" fill="#BBF7D0"/>
+  <rect x="442" y="532" width="192" height="12" fill="#BBF7D0"/>
+  <text x="538" y="537" text-anchor="middle" font-size="10.5" font-weight="700" fill="#14532D">Data Quality</text>
+  <text x="538" y="560" text-anchor="middle" font-size="8.5" fill="#15803D">Rule generation (profiling-based)</text>
+  <text x="538" y="573" text-anchor="middle" font-size="8.5" fill="#15803D">GX / Pandera test execution</text>
+  <text x="538" y="586" text-anchor="middle" font-size="8.5" fill="#15803D">DQ scoring + OSI readiness</text>
+  <text x="538" y="599" text-anchor="middle" font-size="8.5" fill="#15803D">Failure analysis + remediation</text>
+  <text x="538" y="650" text-anchor="middle" font-size="8" fill="#64748B">Reads: :Column :Profile</text>
+  <text x="538" y="663" text-anchor="middle" font-size="8" fill="#64748B">Writes: :PropertyShape</text>
+  <text x="538" y="676" text-anchor="middle" font-size="8" fill="#64748B">:TestRun · :TestResult</text>
+  <line x1="456" y1="687" x2="620" y2="687" stroke="#D1FAE5" stroke-width="1"/>
+  <text x="538" y="700" text-anchor="middle" font-size="7.5" fill="#94A3B8">data-quality-rule-generation</text>
+  <text x="538" y="713" text-anchor="middle" font-size="7.5" fill="#94A3B8">data-quality-testing-gx</text>
+  <text x="538" y="726" text-anchor="middle" font-size="7.5" fill="#94A3B8">data-scoring · data-remediation</text>
+  <text x="538" y="760" text-anchor="middle" font-size="7.5" fill="#CBD5E1">DATA QUALITY</text>
+
+  <!-- METADATA ENRICHMENT -->
+  <rect x="646" y="520" width="192" height="248" rx="5" fill="white" stroke="#86EFAC" stroke-width="1.5"/>
+  <rect x="646" y="520" width="192" height="24" rx="5" fill="#BBF7D0"/>
+  <rect x="646" y="532" width="192" height="12" fill="#BBF7D0"/>
+  <text x="742" y="537" text-anchor="middle" font-size="10.5" font-weight="700" fill="#14532D">Metadata Enrichment</text>
+  <text x="742" y="560" text-anchor="middle" font-size="8.5" fill="#15803D">Column name standardization</text>
+  <text x="742" y="573" text-anchor="middle" font-size="8.5" fill="#15803D">LLM-generated descriptions</text>
+  <text x="742" y="586" text-anchor="middle" font-size="8.5" fill="#15803D">Table relationship classification</text>
+  <text x="742" y="599" text-anchor="middle" font-size="8.5" fill="#15803D">Domain rule enhancement</text>
+  <line x1="660" y1="610" x2="824" y2="610" stroke="#D1FAE5" stroke-width="1"/>
+  <rect x="660" y="616" width="108" height="14" rx="7" fill="#DCFCE7" stroke="#86EFAC" stroke-width="1"/>
+  <text x="714" y="627" text-anchor="middle" font-size="7.5" fill="#166534">⊕ Domain Knowledge</text>
+  <text x="742" y="650" text-anchor="middle" font-size="8" fill="#64748B">Reads: :Dataset :Column</text>
+  <text x="742" y="663" text-anchor="middle" font-size="8" fill="#64748B">Writes: :ColumnDescription</text>
+  <text x="742" y="676" text-anchor="middle" font-size="8" fill="#64748B">:TableDescription</text>
+  <line x1="660" y1="687" x2="824" y2="687" stroke="#D1FAE5" stroke-width="1"/>
+  <text x="742" y="700" text-anchor="middle" font-size="7.5" fill="#94A3B8">metadata-enrichment</text>
+  <text x="742" y="713" text-anchor="middle" font-size="7.5" fill="#94A3B8">column-name-standardizer</text>
+  <text x="742" y="726" text-anchor="middle" font-size="7.5" fill="#94A3B8">domain-rule-enhancement</text>
+  <text x="742" y="760" text-anchor="middle" font-size="7.5" fill="#CBD5E1">ENRICHMENT</text>
+
+  <!-- MATERIALIZATION -->
+  <rect x="850" y="520" width="192" height="248" rx="5" fill="white" stroke="#86EFAC" stroke-width="1.5"/>
+  <rect x="850" y="520" width="192" height="24" rx="5" fill="#BBF7D0"/>
+  <rect x="850" y="532" width="192" height="12" fill="#BBF7D0"/>
+  <text x="946" y="537" text-anchor="middle" font-size="10.5" font-weight="700" fill="#14532D">Materialization</text>
+  <text x="946" y="560" text-anchor="middle" font-size="8.5" fill="#15803D">ODCS spec → dprod graph</text>
+  <text x="946" y="573" text-anchor="middle" font-size="8.5" fill="#15803D">AI-assisted column mapping</text>
+  <text x="946" y="586" text-anchor="middle" font-size="8.5" fill="#15803D">Virtual view DDL generation</text>
+  <text x="946" y="599" text-anchor="middle" font-size="8.5" fill="#15803D">FK inference + bridge logic</text>
+  <text x="946" y="650" text-anchor="middle" font-size="8" fill="#64748B">Reads: :DataContract</text>
+  <text x="946" y="663" text-anchor="middle" font-size="8" fill="#64748B">Writes: :DProdDataProduct</text>
+  <text x="946" y="676" text-anchor="middle" font-size="8" fill="#64748B">:ColumnMapping · Views</text>
+  <line x1="864" y1="687" x2="1028" y2="687" stroke="#D1FAE5" stroke-width="1"/>
+  <text x="946" y="700" text-anchor="middle" font-size="7.5" fill="#94A3B8">data-mapping-neo4j</text>
+  <text x="946" y="713" text-anchor="middle" font-size="7.5" fill="#94A3B8">data-serving-virtual-view</text>
+  <text x="946" y="726" text-anchor="middle" font-size="7.5" fill="#94A3B8">odcs-to-graph</text>
+  <text x="946" y="760" text-anchor="middle" font-size="7.5" fill="#CBD5E1">MATERIALIZATION</text>
+
+  <!-- DATA ANALYSIS -->
+  <rect x="1054" y="520" width="192" height="248" rx="5" fill="white" stroke="#86EFAC" stroke-width="1.5"/>
+  <rect x="1054" y="520" width="192" height="24" rx="5" fill="#BBF7D0"/>
+  <rect x="1054" y="532" width="192" height="12" fill="#BBF7D0"/>
+  <text x="1150" y="537" text-anchor="middle" font-size="10.5" font-weight="700" fill="#14532D">Data Analysis</text>
+  <text x="1150" y="560" text-anchor="middle" font-size="8.5" fill="#15803D">Question analysis + QA eval</text>
+  <text x="1150" y="573" text-anchor="middle" font-size="8.5" fill="#15803D">SQL generation + execution</text>
+  <text x="1150" y="586" text-anchor="middle" font-size="8.5" fill="#15803D">OSI readiness scoring</text>
+  <text x="1150" y="599" text-anchor="middle" font-size="8.5" fill="#15803D">Marketplace enrichment</text>
+  <text x="1150" y="650" text-anchor="middle" font-size="8" fill="#64748B">Reads: :DProdColumn views</text>
+  <text x="1150" y="663" text-anchor="middle" font-size="8" fill="#64748B">Writes: :QAEvaluation</text>
+  <text x="1150" y="676" text-anchor="middle" font-size="8" fill="#64748B">:OSIScore</text>
+  <line x1="1068" y1="687" x2="1232" y2="687" stroke="#D1FAE5" stroke-width="1"/>
+  <text x="1150" y="700" text-anchor="middle" font-size="7.5" fill="#94A3B8">data-product-question-analyzer</text>
+  <text x="1150" y="713" text-anchor="middle" font-size="7.5" fill="#94A3B8">data-scoring</text>
+  <text x="1150" y="726" text-anchor="middle" font-size="7.5" fill="#94A3B8">marketplace enrichment</text>
+  <text x="1150" y="760" text-anchor="middle" font-size="7.5" fill="#CBD5E1">DATA ANALYSIS</text>
+
+  <!-- Domain Knowledge Catalog (bottom of skills section) -->
+  <rect x="34" y="755" width="340" height="20" rx="4" fill="#DCFCE7" stroke="#86EFAC" stroke-width="1"/>
+  <text x="204" y="769" text-anchor="middle" font-size="8.5" font-weight="600" fill="#15803D">Domain Knowledge Catalog: Customer ontology · Orders ontology · Growing catalog</text>
+
+  <!-- ===== BIDIRECTIONAL ARROWS: Skills ↔ Data ===== -->
+  <line x1="712" y1="779" x2="712" y2="796" stroke="#7C3AED" stroke-width="2" marker-end="url(#arr-pur)"/>
+  <line x1="728" y1="796" x2="728" y2="779" stroke="#7C3AED" stroke-width="2" marker-end="url(#arr-pur)"/>
+  <text x="750" y="790" font-size="9" fill="#6D28D9">read / write</text>
+
+  <!-- ===================== DATA LAYER ===================== -->
+  <rect x="28" y="798" width="1384" height="178" rx="8" fill="#FAF5FF" stroke="#7C3AED" stroke-width="1.5"/>
+  <rect x="28" y="798" width="1384" height="30" rx="8" fill="#7C3AED"/>
+  <rect x="28" y="814" width="1384" height="14" fill="#7C3AED"/>
+  <text x="200" y="818" text-anchor="middle" font-size="13" font-weight="700" fill="white">Data &amp; Memory Layer</text>
+  <text x="900" y="816" text-anchor="middle" font-size="9" fill="rgba(255,255,255,0.85)">Neo4j is the system of record — captures everything from discovery through to data product publication</text>
+
+  <!-- Neo4j box -->
+  <rect x="48" y="836" width="570" height="128" rx="5" fill="white" stroke="#C4B5FD" stroke-width="1.5"/>
+  <rect x="48" y="836" width="570" height="22" rx="5" fill="#7C3AED"/>
+  <rect x="48" y="846" width="570" height="12" fill="#7C3AED"/>
+  <text x="333" y="852" text-anchor="middle" font-size="11" font-weight="700" fill="white">Neo4j Knowledge Graph  ·  System of Record</text>
+  <text x="333" y="874" text-anchor="middle" font-size="9" fill="#4C1D95">Discovery → Profiling → Enrichment → Products → Concepts</text>
+  <text x="333" y="888" text-anchor="middle" font-size="9" fill="#4C1D95">Light Domain Ontology · Explainability · Traceability · PROV-O provenance</text>
+  <text x="333" y="902" text-anchor="middle" font-size="9" fill="#4C1D95">Context graph: understands all artifacts + interdependencies</text>
+  <text x="333" y="916" text-anchor="middle" font-size="8.5" fill="#6D28D9">Ontologies: SHACL · PROV-O · DCAT-2 · W3C · Custom product graph</text>
+  <text x="333" y="930" text-anchor="middle" font-size="8.5" fill="#6D28D9">Input to Agent Skills (read) · Output from Agent Skills (written)</text>
+  <text x="333" y="952" text-anchor="middle" font-size="7.5" fill="#8B5CF6">Brain of the Workbench — all artifacts and their relationships live here</text>
+
+  <!-- SQLite box -->
+  <rect x="638" y="836" width="360" height="128" rx="5" fill="white" stroke="#C4B5FD" stroke-width="1.5"/>
+  <rect x="638" y="836" width="360" height="22" rx="5" fill="#7C3AED"/>
+  <rect x="638" y="846" width="360" height="12" fill="#7C3AED"/>
+  <text x="818" y="852" text-anchor="middle" font-size="11" font-weight="700" fill="white">SQLite  ·  Structured Memory</text>
+  <text x="818" y="874" text-anchor="middle" font-size="9" fill="#4C1D95">Project data + scoping</text>
+  <text x="818" y="888" text-anchor="middle" font-size="9" fill="#4C1D95">Guide-me function history</text>
+  <text x="818" y="902" text-anchor="middle" font-size="9" fill="#4C1D95">Structured agent context + memory</text>
+  <text x="818" y="916" text-anchor="middle" font-size="9" fill="#4C1D95">Workflow + stage run records</text>
+  <text x="818" y="930" text-anchor="middle" font-size="8.5" fill="#6D28D9">Chat sessions + product requests</text>
+  <text x="818" y="952" text-anchor="middle" font-size="7.5" fill="#8B5CF6">CLI reads from here to scope all commands</text>
+
+  <!-- Harness Memory box -->
+  <rect x="1018" y="836" width="374" height="128" rx="5" fill="white" stroke="#C4B5FD" stroke-width="1.5"/>
+  <rect x="1018" y="836" width="374" height="22" rx="5" fill="#7C3AED"/>
+  <rect x="1018" y="846" width="374" height="12" fill="#7C3AED"/>
+  <text x="1205" y="852" text-anchor="middle" font-size="11" font-weight="700" fill="white">Harness Memory  ·  Unstructured</text>
+  <text x="1205" y="874" text-anchor="middle" font-size="9" fill="#4C1D95">Agent SDK managed</text>
+  <text x="1205" y="888" text-anchor="middle" font-size="9" fill="#4C1D95">Conversational + task state</text>
+  <text x="1205" y="902" text-anchor="middle" font-size="9" fill="#4C1D95">Unstructured context per session</text>
+  <text x="1205" y="916" text-anchor="middle" font-size="9" fill="#4C1D95">Harness-level persistence</text>
+  <text x="1205" y="952" text-anchor="middle" font-size="7.5" fill="#8B5CF6">Distinct from SQLite project/session memory</text>
+
+  <!-- ===== FEEDBACK LOOP (right side, curved) ===== -->
+  <path d="M 1412 920 C 1432 920 1432 640 1412 640" stroke="#16A34A" stroke-width="1.5" fill="none" stroke-dasharray="5,3" marker-end="url(#arr-grn)"/>
+  <text x="1438" y="785" font-size="8" fill="#15803D" text-anchor="middle" transform="rotate(90,1438,785)">Insight Extraction Engine — feedback loop</text>
+
+  <!-- ===================== FOOTER: CROSS-CUTTING ===================== -->
+  <rect x="28" y="990" width="1384" height="95" rx="6" fill="#F1F5F9" stroke="#E2E8F0" stroke-width="1"/>
+  <text x="38" y="1008" font-size="10" font-weight="700" fill="#334155">Cross-Cutting Concerns</text>
+
+  <rect x="38" y="1015" width="195" height="60" rx="4" fill="white" stroke="#E2E8F0" stroke-width="1"/>
+  <text x="135" y="1031" text-anchor="middle" font-size="9" font-weight="700" fill="#0F172A">ODCS</text>
+  <text x="135" y="1046" text-anchor="middle" font-size="8" fill="#475569">Open Data Contract Standard</text>
+  <text x="135" y="1059" text-anchor="middle" font-size="8" fill="#64748B">Data product spec foundation</text>
+  <text x="135" y="1071" text-anchor="middle" font-size="7.5" fill="#94A3B8">Extensible to other spec standards</text>
+
+  <rect x="245" y="1015" width="225" height="60" rx="4" fill="white" stroke="#E2E8F0" stroke-width="1"/>
+  <text x="357" y="1031" text-anchor="middle" font-size="9" font-weight="700" fill="#0F172A">Portability</text>
+  <text x="357" y="1046" text-anchor="middle" font-size="8" fill="#475569">No bespoke agent harness required</text>
+  <text x="357" y="1059" text-anchor="middle" font-size="8" fill="#64748B">Skills + ideas portable to any harness</text>
+  <text x="357" y="1071" text-anchor="middle" font-size="7.5" fill="#94A3B8">that meets basic tool + loop requirements</text>
+
+  <rect x="482" y="1015" width="240" height="60" rx="4" fill="white" stroke="#E2E8F0" stroke-width="1"/>
+  <text x="602" y="1031" text-anchor="middle" font-size="9" font-weight="700" fill="#0F172A">Light Semantic Layer</text>
+  <text x="602" y="1046" text-anchor="middle" font-size="8" fill="#475569">Powered by Neo4j domain graph</text>
+  <text x="602" y="1059" text-anchor="middle" font-size="8" fill="#64748B">Extracts business concepts from all ingested data</text>
+  <text x="602" y="1071" text-anchor="middle" font-size="7.5" fill="#94A3B8">Light — not a full semantic layer implementation</text>
+
+  <rect x="734" y="1015" width="250" height="60" rx="4" fill="white" stroke="#E2E8F0" stroke-width="1"/>
+  <text x="859" y="1031" text-anchor="middle" font-size="9" font-weight="700" fill="#0F172A">Insight Extraction Engine</text>
+  <text x="859" y="1046" text-anchor="middle" font-size="8" fill="#475569">Neo4j artifacts → improved playbooks</text>
+  <text x="859" y="1059" text-anchor="middle" font-size="8" fill="#64748B">Skill self-improvement feedback loop</text>
+  <text x="859" y="1071" text-anchor="middle" font-size="7.5" fill="#94A3B8">Reflector → Curator → Updated skills</text>
+
+  <rect x="996" y="1015" width="195" height="60" rx="4" fill="white" stroke="#E2E8F0" stroke-width="1"/>
+  <text x="1093" y="1031" text-anchor="middle" font-size="9" font-weight="700" fill="#0F172A">W3C PROV-O</text>
+  <text x="1093" y="1046" text-anchor="middle" font-size="8" fill="#475569">Full provenance on all decisions</text>
+  <text x="1093" y="1059" text-anchor="middle" font-size="8" fill="#64748B">Who approved what, when + why</text>
+  <text x="1093" y="1071" text-anchor="middle" font-size="7.5" fill="#94A3B8">Engineer · PO · AI · Steward agents</text>
+
+  <rect x="1203" y="1015" width="199" height="60" rx="4" fill="white" stroke="#E2E8F0" stroke-width="1"/>
+  <text x="1302" y="1031" text-anchor="middle" font-size="9" font-weight="700" fill="#0F172A">Role-Based Access</text>
+  <text x="1302" y="1046" text-anchor="middle" font-size="8" fill="#475569">PO · Engineer · Steward · DQA</text>
+  <text x="1302" y="1059" text-anchor="middle" font-size="8" fill="#64748B">Partial implementation (demo level)</text>
+  <text x="1302" y="1071" text-anchor="middle" font-size="7.5" fill="#94A3B8">Architectural concept is present</text>
+</svg>
