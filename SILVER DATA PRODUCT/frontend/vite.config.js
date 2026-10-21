@@ -10,6 +10,7 @@ export default defineConfig({
       '/upload': 'http://localhost:8080',
       '/files': 'http://localhost:8080',
       '/catalog': 'http://localhost:8080',
+      '/v1': 'http://localhost:8080',
       '/health': 'http://localhost:8080',
     },
   },

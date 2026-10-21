@@ -1168,8 +1168,8 @@ body { height: 100vh; overflow: hidden; background: var(--chat-bg); color: var(-
 .bg-footer strong { color: var(--purple-700); }
 
 /* Wider bubble for glossary card */
-.msg-row.agent:has(.bg-card) .msg-body { max-width: min(680px, 96%); width: auto; }
-.bubble-glossary { padding: 0 !important; background: transparent !important; border: none !important; box-shadow: none !important; }
+.msg-row.agent:has(.bg-card) .msg-body { max-width: min(1060px, 96%) !important; width: 96%; }
+.bubble-glossary { padding: 14px 16px !important; background: #fff !important; border: 1px solid var(--border) !important; box-shadow: 0 1px 3px rgba(0,0,0,.08) !important; }
 
 /* Primary chip style — filled purple for the confirm action */
 .chip.chip-primary { background: var(--purple-700); color: #fff; border-color: var(--purple-700); }

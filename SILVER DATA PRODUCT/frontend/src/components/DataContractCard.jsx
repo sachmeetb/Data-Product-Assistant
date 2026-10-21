@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react'
+import { fetchDomainEntities, fetchSourceModels } from '../api/catalog'
+import { addEntityToStructure, importEntityIntoStructure, saveSessionContract } from '../api/chat'
 
 const FileCodeIcon = () => (
   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -317,11 +319,77 @@ function generateYamlString(data) {
 }
 
 
-export default function DataContractCard({ view, onSave, isModal, onClose }) {
+export default function DataContractCard({ view, sessionId, onSave, onContractChange, isModal, onClose }) {
   const [activeTab, setActiveTab] = useState('schema')
   const [copied, setCopied] = useState(false)
   const [savedBadge, setSavedBadge] = useState(false)
+  const [saving, setSaving] = useState(false)
   const [newStandardInput, setNewStandardInput] = useState('')
+
+  // Structure Extension Modals / Panels: null | 'inspect_domain' | 'add_canonical' | 'create_custom' | 'import_source'
+  const [extensionPanel, setExtensionPanel] = useState(null)
+  const [domainEntities, setDomainEntities] = useState([])
+  const [sourceModels, setSourceModels] = useState([])
+  const [extensionNotice, setExtensionNotice] = useState('')
+  const [extensionBusy, setExtensionBusy] = useState(false)
+
+  // Custom Entity Form state (structured columns array)
+  const [customEntityForm, setCustomEntityForm] = useState({
+    table_name: 'slv_loan_collateral',
+    type: 'dimension',
+    scd_type: 'Type 2',
+    grain: 'one row per pledged collateral asset',
+    description: 'Conformed Collateral Asset & Valuation Dimension',
+    columns: [
+      { name: 'surrogate_key', type: 'STRING', pk: true, pii: false, description: 'Deterministic SHA-256 Surrogate Key' },
+      { name: 'collateral_id', type: 'STRING', pk: false, pii: false, description: 'Collateral Asset Identifier' },
+      { name: 'account_id', type: 'STRING', pk: false, pii: false, fk: 'slv_account.account_id', description: 'Secured Account Reference' },
+      { name: 'collateral_type_cd', type: 'STRING', pk: false, pii: false, description: 'REAL_ESTATE, CASH_DEPOSIT, SECURITIES, EQUIPMENT' },
+      { name: 'appraised_value_amt', type: 'DECIMAL(18,2)', pk: false, pii: false, description: 'Latest Appraised Valuation Amount' },
+      { name: 'valuation_date', type: 'DATE', pk: false, pii: false, description: 'Appraisal Effective Date' },
+    ],
+  })
+
+  // Import Entity from Source / Model state
+  const [importSourceTab, setImportSourceTab] = useState('source_catalog') // 'source_catalog' | 'ddl' | 'odcs'
+  const [selectedSourceModelId, setSelectedSourceModelId] = useState('raw_core.party_kyc_screening')
+  const [importTargetTableName, setImportTargetTableName] = useState('')
+  const [importDdlText, setImportDdlText] = useState(
+`CREATE TABLE raw_core.standing_order_schedule (
+  schedule_id STRING PRIMARY KEY OPTIONS(description='Standing Order Mandate ID'),
+  debtor_account_id STRING NOT NULL OPTIONS(description='Originating Account FK'),
+  beneficiary_iban STRING OPTIONS(description='Creditor IBAN'),
+  recurring_amount NUMERIC NOT NULL OPTIONS(description='Scheduled Transfer Amount'),
+  frequency_cd STRING NOT NULL OPTIONS(description='WEEKLY, MONTHLY, QUARTERLY'),
+  next_execution_date DATE OPTIONS(description='Next Scheduled Run Date')
+);`
+  )
+  const [importOdcsText, setImportOdcsText] = useState(
+`models:
+  slv_merchant_directory:
+    description: Conformed Acquiring & Counterparty Merchant Directory
+    type: dimension
+    grain: one row per merchant entity
+    fields:
+      surrogate_key:
+        type: string
+        primary: true
+        description: Deterministic Merchant Surrogate Key
+      merchant_id:
+        type: string
+        nullable: false
+        description: Card Network Merchant Identifier (MID)
+      merchant_legal_name:
+        type: string
+        pii: false
+        description: Registered Merchant Name
+      mcc_code:
+        type: string
+        description: ISO 18245 4-digit Merchant Category Code
+      country_code:
+        type: string
+        description: ISO 3166-1 Merchant Country`
+  )
 
   // Initialize editable state with full prefilled values
   const [contract, setContract] = useState(() => {
@@ -346,10 +414,22 @@ export default function DataContractCard({ view, onSave, isModal, onClose }) {
     return base
   })
 
+  const activeDomainLabel =
+    contract?.catalog_context?.domain_name ||
+    contract?.info?.domain ||
+    'Core Banking & Accounts'
+
+  useEffect(() => {
+    if (onContractChange) {
+      const yamlString = generateYamlString(contract)
+      onContractChange({ ...contract, yaml_text: yamlString })
+    }
+  }, [contract, onContractChange])
+
   // Whenever view changes externally, update contract if provided
   useEffect(() => {
     if (view && typeof view === 'object' && Object.keys(view).length > 0) {
-      setContract(prev => ({
+      setContract({
         ...DEFAULT_SILVER_CONTRACT,
         ...view,
         info: { ...DEFAULT_SILVER_CONTRACT.info, ...(view.info || {}) },
@@ -357,9 +437,229 @@ export default function DataContractCard({ view, onSave, isModal, onClose }) {
         models: (view.models && Object.keys(view.models).length > 0) ? view.models : DEFAULT_SILVER_CONTRACT.models,
         quality: (view.quality && view.quality.length > 0) ? view.quality : DEFAULT_SILVER_CONTRACT.quality,
         lineage: (view.lineage && typeof view.lineage === 'object') ? view.lineage : DEFAULT_SILVER_CONTRACT.lineage,
-      }))
+      })
+      if (view.catalog_context?.all_domain_entities) {
+        setDomainEntities(view.catalog_context.all_domain_entities)
+      }
+      if (view.catalog_context?.available_source_models) {
+        setSourceModels(view.catalog_context.available_source_models)
+      }
     }
   }, [view])
+
+  // Load canonical domain entities & upstream source models if not already attached
+  useEffect(() => {
+    const domName = contract?.catalog_context?.domain_id || contract?.catalog_context?.domain_name || contract?.info?.domain || 'core_banking'
+    fetchDomainEntities(domName)
+      .then(data => {
+        if (data?.entities?.length) setDomainEntities(data.entities)
+        if (data?.source_models?.length) setSourceModels(data.source_models)
+      })
+      .catch(() => {
+        fetchDomainEntities('core_banking')
+          .then(data => {
+            if (data?.entities?.length) setDomainEntities(data.entities)
+            if (data?.source_models?.length) setSourceModels(data.source_models)
+          })
+          .catch(() => {})
+      })
+    fetchSourceModels()
+      .then(data => {
+        if (data?.source_models?.length) setSourceModels(data.source_models)
+      })
+      .catch(() => {})
+  }, [contract?.info?.domain, contract?.catalog_context?.domain_id])
+
+  const flashStatus = (msg) => {
+    setExtensionNotice(msg)
+    setTimeout(() => setExtensionNotice(''), 4000)
+  }
+
+  const mergeEntityIntoLocalContract = (entObj) => {
+    const tname = entObj.table_name || entObj.name || 'slv_entity'
+    const targetDs = contract.info?.target_dataset || 'banking_silver'
+    const fieldsMap = {}
+    const colLineage = []
+    const srcTable = entObj.source_table || `raw_bronze.${tname.replace('slv_', 'src_')}`
+
+    ;(entObj.columns || []).forEach(c => {
+      const cname = c.name || c.column_name || 'id'
+      const dtype = String(c.data_type || c.type || 'string').toLowerCase()
+      const isPk = !!(c.is_pk || c.is_primary_key || c.primary_key || c.pk)
+      const fkRef = c.fk_ref || c.references || c.fk || ''
+      const isPii = !!(c.pii || c.is_pii)
+      fieldsMap[cname] = {
+        type: dtype,
+        description: c.description || `Conformed attribute ${cname}`,
+        primary: isPk,
+        nullable: !isPk && c.nullable !== false,
+        pii: isPii,
+        ...(fkRef ? { references: fkRef } : {}),
+      }
+      colLineage.push({
+        target_column: cname,
+        source_column: `${srcTable}.${cname}`,
+        transformation: isPk ? 'SHA256_SURROGATE_HASH(natural_key, source_system)' : 'TRIM_CLEANSE(source_val)',
+      })
+    })
+
+    setContract(prev => {
+      const existingLineage = (prev.lineage?.entity_lineage || []).filter(
+        el => el.target_table !== `${targetDs}.${tname}` && el.target_table !== tname
+      )
+      return {
+        ...prev,
+        models: {
+          ...(prev.models || {}),
+          [tname]: {
+            description: entObj.description || `Conformed Silver Entity ${tname}`,
+            type: 'table',
+            entity_type: entObj.type || entObj.entity_type || 'dimension',
+            grain: entObj.grain || 'one row per conformed record',
+            physicalName: `${targetDs}.${tname}`,
+            fields: fieldsMap,
+          },
+        },
+        lineage: {
+          ...(prev.lineage || {}),
+          entity_lineage: [
+            ...existingLineage,
+            {
+              target_table: `${targetDs}.${tname}`,
+              source_tables: [srcTable],
+              join_type: 'PRIMARY_SOURCE',
+              column_lineage: colLineage,
+            },
+          ],
+        },
+      }
+    })
+  }
+
+  const removeEntityFromContract = (modelName) => {
+    const targetDs = contract.info?.target_dataset || 'banking_silver'
+    setContract(prev => {
+      const nextModels = { ...(prev.models || {}) }
+      delete nextModels[modelName]
+      const nextLineage = (prev.lineage?.entity_lineage || []).filter(
+        el => el.target_table !== modelName && el.target_table !== `${targetDs}.${modelName}`
+      )
+      return {
+        ...prev,
+        models: nextModels,
+        lineage: {
+          ...(prev.lineage || {}),
+          entity_lineage: nextLineage,
+        },
+      }
+    })
+    flashStatus(`Removed entity '${modelName}' from structure`)
+  }
+
+  const handleAddCanonicalEntity = async (entObj) => {
+    setExtensionBusy(true)
+    mergeEntityIntoLocalContract(entObj)
+    flashStatus(`Added canonical entity '${entObj.table_name}' to Silver structure`)
+    try {
+      const res = await addEntityToStructure(sessionId, {
+        entity_name: entObj.table_name,
+        from_catalog: true,
+        domain_name: activeDomainLabel,
+      })
+      if (res?.contract) setContract(res.contract)
+    } catch {
+      // Local state already updated
+    } finally {
+      setExtensionBusy(false)
+    }
+  }
+
+  const handleCreateCustomEntitySubmit = async () => {
+    setExtensionBusy(true)
+    let tname = (customEntityForm.table_name || 'slv_custom_entity').trim()
+    if (!tname.startsWith('slv_')) tname = `slv_${tname}`
+    const cols = (customEntityForm.columns || []).map(c => ({
+      name: (c.name || 'id').trim(),
+      column_name: (c.name || 'id').trim(),
+      data_type: (c.type || 'STRING').toUpperCase(),
+      type: (c.type || 'STRING').toUpperCase(),
+      is_pk: Boolean(c.pk),
+      pii: Boolean(c.pii),
+      fk_ref: c.fk || undefined,
+      nullable: !c.pk,
+      description: c.description || `Custom attribute ${c.name}`,
+    }))
+
+    const entObj = {
+      table_name: tname,
+      type: customEntityForm.type || 'dimension',
+      scd_type: customEntityForm.scd_type || 'Type 2',
+      grain: customEntityForm.grain || 'one row per conformed record',
+      description: customEntityForm.description || `Custom Silver entity ${tname}`,
+      columns: cols,
+    }
+    mergeEntityIntoLocalContract(entObj)
+    setExtensionPanel(null)
+    flashStatus(`Created custom Silver entity '${tname}' (${cols.length} columns)`)
+
+    try {
+      const res = await addEntityToStructure(sessionId, {
+        entity_name: tname,
+        from_catalog: false,
+        entity_type: entObj.type,
+        scd_type: entObj.scd_type,
+        grain: entObj.grain,
+        description: entObj.description,
+        columns: cols,
+      })
+      if (res?.contract) setContract(res.contract)
+    } catch {
+      // Local state already updated
+    } finally {
+      setExtensionBusy(false)
+    }
+  }
+
+  const handleImportExternalEntitySubmit = async () => {
+    setExtensionBusy(true)
+    try {
+      const res = await importEntityIntoStructure(sessionId, {
+        source_type: importSourceTab,
+        source_model_id: importSourceTab === 'source_catalog' ? selectedSourceModelId : undefined,
+        payload: importSourceTab === 'ddl' ? importDdlText : importSourceTab === 'odcs' ? importOdcsText : '',
+        entity_name: importTargetTableName.trim() || undefined,
+      })
+      if (res?.imported_entity) {
+        mergeEntityIntoLocalContract(res.imported_entity)
+        flashStatus(`Brought '${res.imported_entity.table_name}' into Silver model from ${importSourceTab.toUpperCase()}`)
+      }
+      if (res?.contract) {
+        setContract(res.contract)
+      }
+      setExtensionPanel(null)
+    } catch {
+      // Fallback client-side import if backend unreachable
+      if (importSourceTab === 'source_catalog') {
+        const found = sourceModels.find(
+          sm => sm.model_id === selectedSourceModelId || sm.source_id === selectedSourceModelId || sm.target_table_name === selectedSourceModelId
+        )
+        if (found) {
+          mergeEntityIntoLocalContract({
+            table_name: importTargetTableName.trim() || found.target_table_name,
+            type: found.entity_type,
+            grain: found.grain,
+            description: found.description,
+            columns: found.columns,
+            source_table: found.source_id,
+          })
+          flashStatus(`Brought '${found.target_table_name}' into Silver model`)
+        }
+      }
+      setExtensionPanel(null)
+    } finally {
+      setExtensionBusy(false)
+    }
+  }
 
 
   // Overview field mutator
@@ -655,12 +955,34 @@ export default function DataContractCard({ view, onSave, isModal, onClose }) {
 
   // Save Contract
 
-  const handleSave = () => {
-    const yamlString = generateYamlString(contract)
-    const finalized = { ...contract, yaml_text: yamlString }
-    if (onSave) onSave(finalized)
-    setSavedBadge(true)
-    setTimeout(() => setSavedBadge(false), 3000)
+  const handleSave = async () => {
+    if (saving) return
+    setSaving(true)
+    const updatedContract = {
+      ...contract,
+      info: {
+        ...(contract.info || {}),
+        status: 'APPROVED',
+      },
+    }
+    setContract(updatedContract)
+    const yamlString = generateYamlString(updatedContract)
+    const finalized = { ...updatedContract, yaml_text: yamlString }
+    try {
+      if (sessionId) {
+        await saveSessionContract(sessionId, finalized).catch(() => {})
+      }
+      if (onSave) {
+        await onSave(finalized)
+      }
+    } finally {
+      setSaving(false)
+      setSavedBadge(true)
+      setTimeout(() => setSavedBadge(false), 3500)
+      if (isModal && onClose && onSave) {
+        onClose()
+      }
+    }
   }
 
   const handleReset = () => {
@@ -772,30 +1094,33 @@ export default function DataContractCard({ view, onSave, isModal, onClose }) {
               gap: 4,
               boxShadow: '0 1px 4px rgba(0,0,0,0.15)',
             }}>
-              <CheckIcon /> Contract Saved!
+              <CheckIcon /> Contract Applied &amp; Saved!
             </span>
           )}
 
           <button
+            type="button"
             onClick={handleSave}
-            title="Save your changes to this Data Contract"
+            disabled={saving}
+            title="Apply and save your changes to this Data Contract and generate Silver DDL & STTM artifacts"
             style={{
-              background: '#10B981',
+              background: saving ? '#059669' : '#10B981',
               color: '#ffffff',
               border: 'none',
               borderRadius: 6,
               padding: '6px 12px',
               fontSize: 11,
               fontWeight: 700,
-              cursor: 'pointer',
+              cursor: saving ? 'wait' : 'pointer',
               display: 'flex',
               alignItems: 'center',
               gap: 5,
               boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
               transition: 'background 0.15s',
+              opacity: saving ? 0.85 : 1,
             }}
           >
-            <SaveIcon /> Save Contract
+            <SaveIcon /> {saving ? 'Saving & Generating...' : 'Save Contract'}
           </button>
 
           <button
@@ -851,7 +1176,7 @@ export default function DataContractCard({ view, onSave, isModal, onClose }) {
         color: '#6B21A8',
       }}>
         <span>
-          💡 <strong>Values are pre-filled below:</strong> Click into any text or attribute to edit or delete the previous value.
+          💡 <strong>Values are pre-filled below:</strong> Click into any text or attribute to edit or delete the previous value, or extend the Silver structure using the toolbar below.
         </span>
         <span style={{ fontSize: 10.5, color: '#7E22CE', fontWeight: 600 }}>
           {Object.keys(contract.models || {}).length} Models · {(contract.lineage?.entity_lineage || []).length} Lineage Mappings · {contract.quality?.length || 0} Quality Rules
@@ -899,51 +1224,674 @@ export default function DataContractCard({ view, onSave, isModal, onClose }) {
       {/* ── Tab Contents ── */}
       <div style={{ padding: 14 }}>
         {/* =================================================================== */}
-        {/* TAB 1: MODELS & COLUMNS (EDITABLE)                                  */}
+        {/* TAB 1: MODELS & COLUMNS (EDITABLE + STRUCTURE EXTENSION)            */}
         {/* =================================================================== */}
         {activeTab === 'schema' && (
           <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-              <div style={{ fontSize: 11.5, color: '#4b5563' }}>
-                Conformed entities and attributes. Edit column names, types, flags, or add/delete attributes:
+            {/* ── Silver Structure Extension Action Bar ── */}
+            <div style={{
+              background: '#f8fafc',
+              border: '1px solid #e2e8f0',
+              borderRadius: 8,
+              padding: '10px 12px',
+              marginBottom: 12,
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              flexWrap: 'wrap',
+              gap: 8,
+            }}>
+              <div>
+                <div style={{ fontSize: 12, fontWeight: 700, color: '#1e1b4b' }}>
+                  Silver Structure Workbench — {activeDomainLabel}
+                </div>
+                <div style={{ fontSize: 11, color: '#64748b' }}>
+                  Inspect associated domain entities, edit active tables, add canonical/custom entities, or import from an external source/model.
+                </div>
               </div>
-              <button
-                type="button"
-                onClick={() => {
-                  const mKey = `slv_new_entity_${Date.now().toString().slice(-4)}`
-                  setContract(prev => ({
-                    ...prev,
-                    models: {
-                      ...prev.models,
-                      [mKey]: {
-                        description: 'New Conformed Entity Table',
-                        type: 'table',
-                        physicalName: `banking_silver.${mKey}`,
-                        fields: {
-                          surrogate_key: { type: 'string', description: 'Surrogate Primary Key', primary: true, nullable: false },
-                          id: { type: 'string', description: 'Business Identifier', primary: false, nullable: false },
-                        },
-                      },
-                    },
-                  }))
-                }}
-                style={{
-                  background: '#E6DCFF',
-                  color: '#460073',
-                  border: '1px solid #C2A3FF',
-                  borderRadius: 6,
-                  padding: '4px 10px',
-                  fontSize: 11,
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 4,
-                }}
-              >
-                <PlusIcon /> Add Entity Table
-              </button>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                <button
+                  type="button"
+                  onClick={() => setExtensionPanel(extensionPanel === 'inspect_domain' ? null : 'inspect_domain')}
+                  style={{
+                    background: extensionPanel === 'inspect_domain' ? '#460073' : '#ffffff',
+                    color: extensionPanel === 'inspect_domain' ? '#ffffff' : '#460073',
+                    border: '1px solid #C2A3FF',
+                    borderRadius: 6,
+                    padding: '5px 10px',
+                    fontSize: 11,
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                  }}
+                >
+                  🔍 Inspect Area Entities ({domainEntities.length})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setExtensionPanel(extensionPanel === 'add_canonical' ? null : 'add_canonical')}
+                  style={{
+                    background: extensionPanel === 'add_canonical' ? '#7500C0' : '#F3E8FF',
+                    color: extensionPanel === 'add_canonical' ? '#ffffff' : '#460073',
+                    border: '1px solid #C2A3FF',
+                    borderRadius: 6,
+                    padding: '5px 10px',
+                    fontSize: 11,
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                  }}
+                >
+                  ➕ Add Canonical Entity
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setExtensionPanel(extensionPanel === 'create_custom' ? null : 'create_custom')}
+                  style={{
+                    background: extensionPanel === 'create_custom' ? '#7500C0' : '#EEF2FF',
+                    color: extensionPanel === 'create_custom' ? '#ffffff' : '#3730a3',
+                    border: '1px solid #c7d2fe',
+                    borderRadius: 6,
+                    padding: '5px 10px',
+                    fontSize: 11,
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                  }}
+                >
+                  ✨ Create Custom Entity
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setExtensionPanel(extensionPanel === 'import_source' ? null : 'import_source')}
+                  style={{
+                    background: extensionPanel === 'import_source' ? '#047857' : '#ECFDF5',
+                    color: extensionPanel === 'import_source' ? '#ffffff' : '#065f46',
+                    border: '1px solid #a7f3d0',
+                    borderRadius: 6,
+                    padding: '5px 10px',
+                    fontSize: 11,
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                  }}
+                >
+                  📥 Bring Entity from Source/Model
+                </button>
+              </div>
             </div>
+
+            {extensionNotice && (
+              <div style={{
+                background: '#ECFDF5',
+                border: '1px solid #6EE7B7',
+                color: '#065F46',
+                borderRadius: 6,
+                padding: '7px 12px',
+                marginBottom: 12,
+                fontSize: 11.5,
+                fontWeight: 600,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+              }}>
+                <span>✓ {extensionNotice}</span>
+                <button
+                  type="button"
+                  onClick={() => setExtensionNotice('')}
+                  style={{ background: 'none', border: 'none', color: '#065F46', cursor: 'pointer', fontWeight: 700 }}
+                >
+                  ✕
+                </button>
+              </div>
+            )}
+
+            {/* ── PANEL A: Inspect Domain Entities ── */}
+            {extensionPanel === 'inspect_domain' && (
+              <div style={{
+                background: '#FAF5FF',
+                border: '1px solid #D8B4FE',
+                borderRadius: 8,
+                padding: 12,
+                marginBottom: 14,
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                  <div>
+                    <strong style={{ fontSize: 12, color: '#460073' }}>
+                      Entities Associated with {activeDomainLabel} ({domainEntities.length} canonical tables)
+                    </strong>
+                    <div style={{ fontSize: 11, color: '#6b21a8' }}>
+                      Inspect which entities are currently active in your Silver structure vs. available in the domain catalog.
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setExtensionPanel(null)}
+                    style={{ background: 'none', border: 'none', color: '#6b21a8', cursor: 'pointer', fontWeight: 700 }}
+                  >
+                    ✕ Close
+                  </button>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 8 }}>
+                  {domainEntities.map(ent => {
+                    const isIncluded = Boolean(contract.models?.[ent.table_name])
+                    return (
+                      <div
+                        key={ent.table_name}
+                        style={{
+                          background: '#ffffff',
+                          border: isIncluded ? '1.5px solid #10B981' : '1px solid #e2e8f0',
+                          borderRadius: 7,
+                          padding: '8px 10px',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          justifyContent: 'space-between',
+                          gap: 6,
+                        }}
+                      >
+                        <div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 6 }}>
+                            <span style={{ fontFamily: 'monospace', fontWeight: 700, fontSize: 11.5, color: '#1e1b4b' }}>
+                              {ent.table_name}
+                            </span>
+                            <span style={{
+                              fontSize: 9.5,
+                              fontWeight: 700,
+                              padding: '1px 6px',
+                              borderRadius: 10,
+                              background: isIncluded ? '#D1FAE5' : '#F1F5F9',
+                              color: isIncluded ? '#065F46' : '#64748B',
+                            }}>
+                              {isIncluded ? '✓ In Structure' : 'Available'}
+                            </span>
+                          </div>
+                          <div style={{ fontSize: 10.5, color: '#475569', marginTop: 3 }}>
+                            {ent.description}
+                          </div>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #f1f5f9', paddingTop: 5 }}>
+                          <span style={{ fontSize: 10, color: '#64748b' }}>
+                            {(ent.columns || []).length} columns · SCD {ent.scd_type || 'Type 2'}
+                          </span>
+                          {!isIncluded ? (
+                            <button
+                              type="button"
+                              disabled={extensionBusy}
+                              onClick={() => handleAddCanonicalEntity(ent)}
+                              style={{
+                                background: '#7500C0',
+                                color: '#ffffff',
+                                border: 'none',
+                                borderRadius: 5,
+                                padding: '3px 8px',
+                                fontSize: 10,
+                                fontWeight: 700,
+                                cursor: 'pointer',
+                              }}
+                            >
+                              + Add to Structure
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => removeEntityFromContract(ent.table_name)}
+                              style={{
+                                background: '#FEE2E2',
+                                color: '#991B1B',
+                                border: 'none',
+                                borderRadius: 5,
+                                padding: '3px 8px',
+                                fontSize: 10,
+                                fontWeight: 600,
+                                cursor: 'pointer',
+                              }}
+                            >
+                              Remove
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* ── PANEL B: Add Another Canonical Entity ── */}
+            {extensionPanel === 'add_canonical' && (
+              <div style={{
+                background: '#F8FAFC',
+                border: '1px solid #CBD5E1',
+                borderRadius: 8,
+                padding: 12,
+                marginBottom: 14,
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                  <strong style={{ fontSize: 12, color: '#1e293b' }}>
+                    Add Another Canonical Entity from {activeDomainLabel}
+                  </strong>
+                  <button
+                    type="button"
+                    onClick={() => setExtensionPanel(null)}
+                    style={{ background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', fontWeight: 700 }}
+                  >
+                    ✕ Close
+                  </button>
+                </div>
+                {domainEntities.filter(ent => !contract.models?.[ent.table_name]).length === 0 ? (
+                  <div style={{ fontSize: 11.5, color: '#065F46', background: '#ECFDF5', padding: '8px 10px', borderRadius: 6 }}>
+                    All canonical entities for <strong>{activeDomainLabel}</strong> are already included in this Silver structure! You can still create a custom entity or import one from an external source/model.
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                    {domainEntities
+                      .filter(ent => !contract.models?.[ent.table_name])
+                      .map(ent => (
+                        <div
+                          key={ent.table_name}
+                          style={{
+                            background: '#ffffff',
+                            border: '1px solid #cbd5e1',
+                            borderRadius: 7,
+                            padding: '8px 12px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 10,
+                          }}
+                        >
+                          <div>
+                            <div style={{ fontFamily: 'monospace', fontWeight: 700, fontSize: 11.5, color: '#460073' }}>
+                              {ent.table_name}
+                            </div>
+                            <div style={{ fontSize: 10.5, color: '#64748b' }}>
+                              {ent.description} ({(ent.columns || []).length} cols)
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            disabled={extensionBusy}
+                            onClick={() => handleAddCanonicalEntity(ent)}
+                            style={{
+                              background: '#7500C0',
+                              color: '#ffffff',
+                              border: 'none',
+                              borderRadius: 5,
+                              padding: '5px 10px',
+                              fontSize: 10.5,
+                              fontWeight: 700,
+                              cursor: 'pointer',
+                              whiteSpace: 'nowrap',
+                            }}
+                          >
+                            + Add Entity
+                          </button>
+                        </div>
+                      ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* ── PANEL C: Create Custom Entity ── */}
+            {extensionPanel === 'create_custom' && (
+              <div style={{
+                background: '#EEF2FF',
+                border: '1px solid #A5B4FC',
+                borderRadius: 8,
+                padding: 12,
+                marginBottom: 14,
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                  <div>
+                    <strong style={{ fontSize: 12, color: '#312E81' }}>
+                      ✨ Create a Custom Silver Entity
+                    </strong>
+                    <div style={{ fontSize: 11, color: '#4338CA' }}>
+                      Define a custom conformed table and its columns to extend this Silver data structure.
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setExtensionPanel(null)}
+                    style={{ background: 'none', border: 'none', color: '#4338CA', cursor: 'pointer', fontWeight: 700 }}
+                  >
+                    ✕ Close
+                  </button>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr 120px', gap: 8, marginBottom: 10 }}>
+                  <div>
+                    <label style={{ fontSize: 10.5, fontWeight: 700, color: '#312E81', display: 'block', marginBottom: 3 }}>
+                      Entity Table Name *
+                    </label>
+                    <input
+                      type="text"
+                      value={customEntityForm.table_name}
+                      onChange={e => setCustomEntityForm(prev => ({ ...prev, table_name: e.target.value }))}
+                      placeholder="slv_account_overdraft_limit"
+                      style={{ ...inputStyle, fontFamily: 'monospace' }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: 10.5, fontWeight: 700, color: '#312E81', display: 'block', marginBottom: 3 }}>
+                      Business Description
+                    </label>
+                    <input
+                      type="text"
+                      value={customEntityForm.description}
+                      onChange={e => setCustomEntityForm(prev => ({ ...prev, description: e.target.value }))}
+                      placeholder="Conformed overdraft facility limits and utilization per account"
+                      style={inputStyle}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: 10.5, fontWeight: 700, color: '#312E81', display: 'block', marginBottom: 3 }}>
+                      SCD Strategy
+                    </label>
+                    <select
+                      value={customEntityForm.scd_type}
+                      onChange={e => setCustomEntityForm(prev => ({ ...prev, scd_type: e.target.value }))}
+                      style={inputStyle}
+                    >
+                      <option value="Type 2">SCD Type 2</option>
+                      <option value="Type 1">SCD Type 1</option>
+                      <option value="Append-Only">Append-Only</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div style={{ marginBottom: 8 }}>
+                  <div style={{ fontSize: 10.5, fontWeight: 700, color: '#312E81', marginBottom: 4 }}>
+                    Columns ({customEntityForm.columns.length})
+                  </div>
+                  {customEntityForm.columns.map((col, idx) => (
+                    <div key={idx} style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr 2fr auto auto', gap: 6, marginBottom: 5, alignItems: 'center' }}>
+                      <input
+                        type="text"
+                        value={col.name}
+                        onChange={e => {
+                          const next = [...customEntityForm.columns]
+                          next[idx] = { ...next[idx], name: e.target.value }
+                          setCustomEntityForm(prev => ({ ...prev, columns: next }))
+                        }}
+                        placeholder="column_name"
+                        style={{ ...inputStyle, fontFamily: 'monospace' }}
+                      />
+                      <select
+                        value={col.type}
+                        onChange={e => {
+                          const next = [...customEntityForm.columns]
+                          next[idx] = { ...next[idx], type: e.target.value }
+                          setCustomEntityForm(prev => ({ ...prev, columns: next }))
+                        }}
+                        style={{ ...inputStyle, fontFamily: 'monospace' }}
+                      >
+                        <option value="STRING">STRING</option>
+                        <option value="DECIMAL(18,2)">DECIMAL(18,2)</option>
+                        <option value="INT">INT</option>
+                        <option value="BIGINT">BIGINT</option>
+                        <option value="BOOLEAN">BOOLEAN</option>
+                        <option value="DATE">DATE</option>
+                        <option value="TIMESTAMP">TIMESTAMP</option>
+                      </select>
+                      <input
+                        type="text"
+                        value={col.description}
+                        onChange={e => {
+                          const next = [...customEntityForm.columns]
+                          next[idx] = { ...next[idx], description: e.target.value }
+                          setCustomEntityForm(prev => ({ ...prev, columns: next }))
+                        }}
+                        placeholder="Column business description..."
+                        style={inputStyle}
+                      />
+                      <label style={{ fontSize: 10.5, display: 'flex', alignItems: 'center', gap: 3, color: '#312E81', whiteSpace: 'nowrap' }}>
+                        <input
+                          type="checkbox"
+                          checked={Boolean(col.pk)}
+                          onChange={e => {
+                            const next = [...customEntityForm.columns]
+                            next[idx] = { ...next[idx], pk: e.target.checked }
+                            setCustomEntityForm(prev => ({ ...prev, columns: next }))
+                          }}
+                        />
+                        PK
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const next = customEntityForm.columns.filter((_, i) => i !== idx)
+                          setCustomEntityForm(prev => ({ ...prev, columns: next }))
+                        }}
+                        style={{ background: '#FEE2E2', color: '#991B1B', border: 'none', borderRadius: 4, padding: '4px 7px', cursor: 'pointer', fontSize: 10.5 }}
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ))}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8 }}>
+                    <button
+                      type="button"
+                      onClick={() => setCustomEntityForm(prev => ({
+                        ...prev,
+                        columns: [...prev.columns, { name: `custom_col_${prev.columns.length + 1}`, type: 'STRING', pk: false, pii: false, description: '' }],
+                      }))}
+                      style={{
+                        background: '#ffffff',
+                        color: '#3730a3',
+                        border: '1px solid #a5b4fc',
+                        borderRadius: 5,
+                        padding: '4px 10px',
+                        fontSize: 11,
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                      }}
+                    >
+                      + Add Column Row
+                    </button>
+                    <button
+                      type="button"
+                      disabled={extensionBusy || !customEntityForm.table_name.trim()}
+                      onClick={handleCreateCustomEntitySubmit}
+                      style={{
+                        background: '#4F46E5',
+                        color: '#ffffff',
+                        border: 'none',
+                        borderRadius: 6,
+                        padding: '6px 14px',
+                        fontSize: 11,
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                      }}
+                    >
+                      ✓ Add Custom Entity to Silver Structure
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* ── PANEL D: Bring Entity from Existing Source / Model ── */}
+            {extensionPanel === 'import_source' && (
+              <div style={{
+                background: '#ECFDF5',
+                border: '1px solid #6EE7B7',
+                borderRadius: 8,
+                padding: 12,
+                marginBottom: 14,
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                  <div>
+                    <strong style={{ fontSize: 12, color: '#065F46' }}>
+                      📥 Bring an Entity into the Model from an Existing Source / Model
+                    </strong>
+                    <div style={{ fontSize: 11, color: '#047857' }}>
+                      Import a table from upstream Bronze / cross-domain catalog, paste a SQL CREATE TABLE DDL snippet, or paste an ODCS YAML/JSON model.
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setExtensionPanel(null)}
+                    style={{ background: 'none', border: 'none', color: '#065F46', cursor: 'pointer', fontWeight: 700 }}
+                  >
+                    ✕ Close
+                  </button>
+                </div>
+
+                {/* Source Type Tabs */}
+                <div style={{ display: 'flex', gap: 6, marginBottom: 10 }}>
+                  {[
+                    { id: 'source_catalog', label: '1. Existing Bronze / Domain Source Catalog' },
+                    { id: 'ddl', label: '2. SQL CREATE TABLE DDL' },
+                    { id: 'odcs', label: '3. ODCS YAML / JSON Snippet' },
+                  ].map(st => (
+                    <button
+                      key={st.id}
+                      type="button"
+                      onClick={() => setImportSourceTab(st.id)}
+                      style={{
+                        background: importSourceTab === st.id ? '#047857' : '#ffffff',
+                        color: importSourceTab === st.id ? '#ffffff' : '#065F46',
+                        border: '1px solid #6EE7B7',
+                        borderRadius: 6,
+                        padding: '5px 10px',
+                        fontSize: 11,
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                      }}
+                    >
+                      {st.label}
+                    </button>
+                  ))}
+                </div>
+
+                {importSourceTab === 'source_catalog' && (
+                  <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr auto', gap: 8, alignItems: 'end' }}>
+                    <div>
+                      <label style={{ fontSize: 10.5, fontWeight: 700, color: '#065F46', display: 'block', marginBottom: 3 }}>
+                        Select Upstream Bronze or Cross-Domain Model ({sourceModels.length} available)
+                      </label>
+                      <select
+                        value={selectedSourceModelId}
+                        onChange={e => setSelectedSourceModelId(e.target.value)}
+                        style={inputStyle}
+                      >
+                        {sourceModels.map(sm => (
+                          <option key={sm.model_id} value={sm.model_id}>
+                            [{sm.source_system}] {sm.source_table} → {sm.target_silver_table} ({sm.domain_label} · {(sm.columns || []).length} cols)
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label style={{ fontSize: 10.5, fontWeight: 700, color: '#065F46', display: 'block', marginBottom: 3 }}>
+                        Target Silver Table Name (Optional Override)
+                      </label>
+                      <input
+                        type="text"
+                        value={importTargetTableName}
+                        onChange={e => setImportTargetTableName(e.target.value)}
+                        placeholder="Auto-conformed slv_* name"
+                        style={{ ...inputStyle, fontFamily: 'monospace' }}
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      disabled={extensionBusy}
+                      onClick={handleImportExternalEntitySubmit}
+                      style={{
+                        background: '#047857',
+                        color: '#ffffff',
+                        border: 'none',
+                        borderRadius: 6,
+                        padding: '6px 14px',
+                        fontSize: 11,
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                      }}
+                    >
+                      📥 Import into Silver Model
+                    </button>
+                  </div>
+                )}
+
+                {importSourceTab === 'ddl' && (
+                  <div>
+                    <label style={{ fontSize: 10.5, fontWeight: 700, color: '#065F46', display: 'block', marginBottom: 4 }}>
+                      Paste SQL DDL (`CREATE TABLE ...`) to reverse-engineer and conform into Silver:
+                    </label>
+                    <textarea
+                      rows={5}
+                      value={importDdlText}
+                      onChange={e => setImportDdlText(e.target.value)}
+                      style={{ ...inputStyle, fontFamily: 'monospace', fontSize: 11, marginBottom: 8 }}
+                    />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <input
+                        type="text"
+                        value={importTargetTableName}
+                        onChange={e => setImportTargetTableName(e.target.value)}
+                        placeholder="Optional override target table name (e.g. slv_standing_order)"
+                        style={{ ...inputStyle, width: 320, fontFamily: 'monospace' }}
+                      />
+                      <button
+                        type="button"
+                        disabled={extensionBusy || !importDdlText.trim()}
+                        onClick={handleImportExternalEntitySubmit}
+                        style={{
+                          background: '#047857',
+                          color: '#ffffff',
+                          border: 'none',
+                          borderRadius: 6,
+                          padding: '6px 14px',
+                          fontSize: 11,
+                          fontWeight: 700,
+                          cursor: 'pointer',
+                        }}
+                      >
+                        📥 Parse DDL & Bring into Silver Model
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {importSourceTab === 'odcs' && (
+                  <div>
+                    <label style={{ fontSize: 10.5, fontWeight: 700, color: '#065F46', display: 'block', marginBottom: 4 }}>
+                      Paste Open Data Contract Standard (ODCS) YAML or JSON model definition:
+                    </label>
+                    <textarea
+                      rows={6}
+                      value={importOdcsText}
+                      onChange={e => setImportOdcsText(e.target.value)}
+                      style={{ ...inputStyle, fontFamily: 'monospace', fontSize: 11, marginBottom: 8 }}
+                    />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <input
+                        type="text"
+                        value={importTargetTableName}
+                        onChange={e => setImportTargetTableName(e.target.value)}
+                        placeholder="Optional override target table name"
+                        style={{ ...inputStyle, width: 320, fontFamily: 'monospace' }}
+                      />
+                      <button
+                        type="button"
+                        disabled={extensionBusy || !importOdcsText.trim()}
+                        onClick={handleImportExternalEntitySubmit}
+                        style={{
+                          background: '#047857',
+                          color: '#ffffff',
+                          border: 'none',
+                          borderRadius: 6,
+                          padding: '6px 14px',
+                          fontSize: 11,
+                          fontWeight: 700,
+                          cursor: 'pointer',
+                        }}
+                      >
+                        📥 Parse ODCS & Bring into Silver Model
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
 
             {Object.entries(contract.models || {}).map(([modelName, modelDef]) => (
               <div key={modelName} style={{ marginBottom: 16, border: '1px solid #e5e7eb', borderRadius: 8, overflow: 'hidden', background: '#fafafa' }}>
@@ -998,6 +1946,26 @@ export default function DataContractCard({ view, onSave, isModal, onClose }) {
                     >
                       <PlusIcon /> Add Column
                     </button>
+                    {Object.keys(contract.models || {}).length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => removeEntityFromContract(modelName)}
+                        style={{
+                          background: '#FEE2E2',
+                          color: '#991B1B',
+                          border: '1px solid #FECACA',
+                          borderRadius: 5,
+                          padding: '4px 8px',
+                          fontSize: 10.5,
+                          fontWeight: 600,
+                          cursor: 'pointer',
+                          whiteSpace: 'nowrap',
+                        }}
+                        title="Remove this entity from the Silver structure"
+                      >
+                        ✕ Remove Entity
+                      </button>
+                    )}
                   </div>
                 </div>
 
@@ -1774,24 +2742,42 @@ export default function DataContractCard({ view, onSave, isModal, onClose }) {
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          {savedBadge && (
+            <span style={{
+              background: '#ECFDF5',
+              color: '#065F46',
+              border: '1px solid #A7F3D0',
+              fontSize: 10.5,
+              fontWeight: 700,
+              padding: '4px 8px',
+              borderRadius: 6,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 4,
+            }}>
+              <CheckIcon /> Contract Applied &amp; Saved!
+            </span>
+          )}
           <button
             type="button"
             onClick={handleSave}
+            disabled={saving}
             style={{
-              background: '#10B981',
+              background: saving ? '#059669' : '#10B981',
               color: '#ffffff',
               border: 'none',
               borderRadius: 6,
               padding: '6px 14px',
               fontSize: 11,
               fontWeight: 700,
-              cursor: 'pointer',
+              cursor: saving ? 'wait' : 'pointer',
               display: 'flex',
               alignItems: 'center',
               gap: 5,
+              opacity: saving ? 0.85 : 1,
             }}
           >
-            <SaveIcon /> Apply &amp; Save Contract
+            <SaveIcon /> {saving ? 'Applying & Generating Artifacts...' : 'Apply & Save Contract'}
           </button>
         </div>
       </div>

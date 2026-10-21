@@ -3,8 +3,8 @@
 
 $PROJECT_ID     = "eogwapq-agbg-internal-data-mig"
 $REGION         = "us-central1"
-$BACKEND_SVC    = "bfsi-silver-backend-v1-1"
-$FRONTEND_SVC   = "preview-bfsi-silver-frontend-v1-1"
+$BACKEND_SVC    = "yk-silver-backend"
+$FRONTEND_SVC   = "yk-silver-frontend"
 $REGISTRY       = "us-central1-docker.pkg.dev/$PROJECT_ID/bfsi-silver"
 $BACKEND_IMG    = "$REGISTRY/backend:v1.1"
 $FRONTEND_IMG   = "$REGISTRY/frontend:v1.1"

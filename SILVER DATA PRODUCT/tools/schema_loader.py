@@ -453,22 +453,424 @@ def get_industry(industry_id: str) -> Optional[dict]:
     return None
 
 
-def get_domains_for_industry(industry_id: str = "banking") -> list[dict]:
+def _normalize_entity_list(entities_raw: dict | list) -> list[dict]:
+    """Convert entities dict or list into a normalized list of entity dicts for UI & API consumers."""
+    result = []
+    if isinstance(entities_raw, dict):
+        items = list(entities_raw.items())
+    elif isinstance(entities_raw, list):
+        items = [(e.get("table_name") or e.get("name", "slv_entity"), e) for e in entities_raw]
+    else:
+        items = []
+
+    for table_name, edef in items:
+        cols_raw = edef.get("columns", [])
+        norm_cols = []
+        for c in cols_raw:
+            col_name = c.get("name") or c.get("column_name", "id")
+            dtype = c.get("data_type") or c.get("type", "STRING")
+            is_pk = bool(c.get("is_pk") or c.get("is_primary_key") or c.get("primary_key"))
+            is_pii = bool(c.get("pii") or c.get("is_pii"))
+            fk_ref = c.get("fk_ref") or c.get("references")
+            norm_cols.append({
+                "name": col_name,
+                "column_name": col_name,
+                "data_type": str(dtype).upper(),
+                "type": str(dtype).upper(),
+                "is_pk": is_pk,
+                "is_primary_key": is_pk,
+                "primary_key": is_pk,
+                "pii": is_pii,
+                "is_pii": is_pii,
+                "nullable": bool(c.get("nullable", not is_pk)),
+                "fk_ref": fk_ref,
+                "references": fk_ref,
+                "description": c.get("description", f"Conformed attribute {col_name}"),
+            })
+        result.append({
+            "table_name": table_name,
+            "name": table_name,
+            "type": edef.get("type", "dimension"),
+            "entity_type": edef.get("type", "dimension"),
+            "grain": edef.get("grain", "one row per entity record"),
+            "description": edef.get("description", f"Conformed Silver entity {table_name}"),
+            "column_count": len(norm_cols),
+            "columns": norm_cols,
+        })
+    return result
+
+
+def _enrich_domain_dict(dom: dict, industry_id: str = "", industry_name: str = "") -> dict:
+    """Return a copy of domain with both dict-style `entities_map` and normalized list `entities_list`."""
+    dom_copy = dict(dom)
+    raw_entities = dom.get("entities", {})
+    norm_list = _normalize_entity_list(raw_entities)
+    dom_id = dom.get("id") or dom.get("name", "")
+    dom_label = dom.get("display_name") or dom.get("name", "")
+    dom_copy["id"] = dom_id
+    dom_copy["domain_id"] = dom_id
+    dom_copy["domain_name"] = dom_label
+    dom_copy["domain_label"] = dom_label
+    dom_copy["entity_count"] = len(norm_list)
+    dom_copy["entities_list"] = norm_list
+    if isinstance(raw_entities, dict):
+        dom_copy["entities_map"] = raw_entities
+    else:
+        dom_copy["entities_map"] = {e["table_name"]: e for e in norm_list}
+    if industry_id:
+        dom_copy["industry_id"] = industry_id
+    if industry_name:
+        dom_copy["industry_name"] = industry_name
+    return dom_copy
+
+
+def get_domains_for_industry(industry_id: str = "banking", normalized: bool = False) -> list[dict]:
     """Return domain list for a specific industry."""
     ind = get_industry(industry_id)
     if not ind:
         return []
-    return ind.get("domains", [])
+    domains = ind.get("domains", [])
+    result = []
+    for dom in domains:
+        enriched = _enrich_domain_dict(dom, ind["id"], ind["name"])
+        if normalized:
+            enriched["entities"] = enriched["entities_list"]
+        result.append(enriched)
+    return result
 
 
 def get_domain_by_name(domain_name: str) -> Optional[dict]:
-    """Search all industries for a domain by name."""
+    """Search all industries for a domain by name or display_name."""
+    if not domain_name:
+        return None
+    q = domain_name.strip().lower()
     data = get_multi_industry_catalog()
     for ind in data.get("industries", []):
         for dom in ind.get("domains", []):
-            if dom["name"].lower() == domain_name.lower():
-                dom_copy = dict(dom)
-                dom_copy["industry_id"] = ind["id"]
-                dom_copy["industry_name"] = ind["name"]
-                return dom_copy
+            if (
+                dom["name"].lower() == q
+                or dom.get("display_name", "").lower() == q
+                or q in dom.get("display_name", "").lower()
+                or dom["name"].lower() in q
+            ):
+                return _enrich_domain_dict(dom, ind["id"], ind["name"])
     return None
+
+
+def get_navigator_tree() -> dict:
+    """Return the complete hierarchical tree (Industries -> Subtypes & Domains -> Entities -> Columns)."""
+    data = get_multi_industry_catalog()
+    industries_out = []
+    for ind in data.get("industries", []):
+        domains_out = get_domains_for_industry(ind["id"], normalized=True)
+        total_entities = sum(len(d.get("entities", [])) for d in domains_out)
+        industries_out.append({
+            "id": ind["id"],
+            "name": ind["name"],
+            "icon": ind.get("icon", "🏢"),
+            "description": ind.get("description", ""),
+            "subtypes": ind.get("subtypes", []),
+            "domain_count": len(domains_out),
+            "entity_count": total_entities,
+            "domains": domains_out,
+        })
+    return {
+        "version": data.get("version", "2.1.0"),
+        "industries": industries_out,
+        "source_models": get_source_models_catalog(),
+    }
+
+
+def get_source_models_catalog() -> list[dict]:
+    """Return available upstream Bronze / External Source models that can be brought into a Silver structure."""
+    raw_models = [
+        {
+            "source_id": "raw_core.party_kyc_screening",
+            "source_system": "Core Banking AML/KYC Engine",
+            "layer": "BRONZE",
+            "industry": "banking",
+            "domain": "Core Banking & Accounts",
+            "domain_name": "core_banking",
+            "target_table_name": "slv_kyc_screening_event",
+            "entity_type": "event",
+            "grain": "one row per party compliance screening check",
+            "description": "AML, Sanctions, PEP, and Adverse Media Screening Results brought from Bronze KYC feed",
+            "columns": [
+                {"name": "surrogate_key", "data_type": "STRING", "is_pk": True, "nullable": False, "description": "Deterministic Screening Surrogate Key"},
+                {"name": "screening_id", "data_type": "STRING", "is_pk": False, "nullable": False, "description": "Source KYC Screening Event ID"},
+                {"name": "customer_id", "data_type": "STRING", "is_pk": False, "fk_ref": "slv_customer.customer_id", "nullable": False, "description": "Screened Customer Party FK"},
+                {"name": "screening_provider", "data_type": "STRING", "is_pk": False, "nullable": False, "description": "WORLD_CHECK, LEXISNEXIS, DOW_JONES"},
+                {"name": "sanctions_hit_flag", "data_type": "BOOL", "is_pk": False, "nullable": False, "description": "OFAC/EU/UN Sanctions Match Indicator"},
+                {"name": "pep_indicator", "data_type": "BOOL", "is_pk": False, "nullable": False, "description": "Politically Exposed Person Flag"},
+                {"name": "risk_score", "data_type": "NUMERIC", "is_pk": False, "nullable": True, "description": "Composite Screening Risk Score (0-100)"},
+                {"name": "screened_ts", "data_type": "TIMESTAMP", "is_pk": False, "nullable": False, "description": "Screening Execution Timestamp"}
+            ],
+        },
+        {
+            "source_id": "raw_core.overdraft_facility_master",
+            "source_system": "Core Credit & Limits Platform",
+            "layer": "BRONZE",
+            "industry": "banking",
+            "domain": "Core Banking & Accounts",
+            "domain_name": "core_banking",
+            "target_table_name": "slv_overdraft_facility",
+            "entity_type": "dimension",
+            "grain": "one row per account overdraft limit agreement",
+            "description": "Conformed Account Overdraft & Sweep Credit Facility Dimension",
+            "columns": [
+                {"name": "surrogate_key", "data_type": "STRING", "is_pk": True, "nullable": False, "description": "Deterministic Facility Key"},
+                {"name": "facility_id", "data_type": "STRING", "is_pk": False, "nullable": False, "description": "Overdraft Line Identifier"},
+                {"name": "account_id", "data_type": "STRING", "is_pk": False, "fk_ref": "slv_account.account_id", "nullable": False, "description": "Linked Deposit Account FK"},
+                {"name": "approved_limit_amount", "data_type": "NUMERIC", "is_pk": False, "nullable": False, "description": "Authorized Overdraft Limit"},
+                {"name": "utilized_amount", "data_type": "NUMERIC", "is_pk": False, "nullable": False, "description": "Currently Drawn Overdraft Balance"},
+                {"name": "apr_rate_pct", "data_type": "NUMERIC", "is_pk": False, "nullable": True, "description": "Contractual Annual Percentage Rate"},
+                {"name": "facility_status_cd", "data_type": "STRING", "is_pk": False, "nullable": False, "description": "ACTIVE, SUSPENDED, EXPIRED"}
+            ],
+        },
+        {
+            "source_id": "raw_core.account_fee_schedule_log",
+            "source_system": "Core Billing & Revenue Engine",
+            "layer": "BRONZE",
+            "industry": "banking",
+            "domain": "Core Banking & Accounts",
+            "domain_name": "core_banking",
+            "target_table_name": "slv_account_fee_assessment",
+            "entity_type": "event",
+            "grain": "one row per assessed or waived account fee",
+            "description": "Conformed Account Fee Assessment, Waiver & Rebate Event Fact",
+            "columns": [
+                {"name": "surrogate_key", "data_type": "STRING", "is_pk": True, "nullable": False, "description": "Deterministic Fee Event Key"},
+                {"name": "fee_event_id", "data_type": "STRING", "is_pk": False, "nullable": False, "description": "Billing Assessment Identifier"},
+                {"name": "account_id", "data_type": "STRING", "is_pk": False, "fk_ref": "slv_account.account_id", "nullable": False, "description": "Assessed Account FK"},
+                {"name": "fee_type_cd", "data_type": "STRING", "is_pk": False, "nullable": False, "description": "MONTHLY_MAINT, NSF_OVERDRAFT, WIRE_FEE, ATM_SURCHARGE"},
+                {"name": "assessed_amount", "data_type": "NUMERIC", "is_pk": False, "nullable": False, "description": "Gross Assessed Fee Amount"},
+                {"name": "waived_amount", "data_type": "NUMERIC", "is_pk": False, "nullable": True, "description": "Relationship Waiver Amount"},
+                {"name": "assessment_date", "data_type": "DATE", "is_pk": False, "nullable": False, "description": "Fee Posting Date"}
+            ],
+        },
+        {
+            "source_id": "raw_payments.iso20022_wire_settlement",
+            "source_system": "SWIFT / FedNow Payment Gateway",
+            "layer": "BRONZE",
+            "industry": "banking",
+            "domain": "Payments & Transfers (ISO 20022)",
+            "domain_name": "payments",
+            "target_table_name": "slv_wire_settlement_instruction",
+            "entity_type": "event",
+            "grain": "one row per wire clearing settlement message",
+            "description": "Conformed ISO 20022 pacs.008 Interbank Settlement Instruction",
+            "columns": [
+                {"name": "surrogate_key", "data_type": "STRING", "is_pk": True, "nullable": False, "description": "Deterministic Settlement Key"},
+                {"name": "uetr", "data_type": "STRING", "is_pk": False, "nullable": False, "description": "SWIFT Unique End-to-End Transaction Reference"},
+                {"name": "debtor_account_id", "data_type": "STRING", "is_pk": False, "fk_ref": "slv_account.account_id", "nullable": False, "description": "Debtor Account FK"},
+                {"name": "settlement_amount", "data_type": "NUMERIC", "is_pk": False, "nullable": False, "description": "Interbank Settlement Amount"},
+                {"name": "currency_code", "data_type": "STRING", "is_pk": False, "nullable": False, "description": "ISO 4217 Settlement Currency"},
+                {"name": "settlement_date", "data_type": "DATE", "is_pk": False, "nullable": False, "description": "Interbank Value Date"}
+            ],
+        },
+        {
+            "source_id": "raw_industrial.cip_wash_cycle_telemetry",
+            "source_system": "Ecolab 3D TRASAR / CIP PLC Historian",
+            "layer": "BRONZE",
+            "industry": "energy_industrial",
+            "domain": "Water Quality & Telemetry",
+            "domain_name": "water_telemetry",
+            "target_table_name": "slv_cip_wash_cycle_event",
+            "entity_type": "event",
+            "grain": "one row per Clean-in-Place sanitation cycle",
+            "description": "Conformed Clean-In-Place (CIP) Conductivity, Thermal & Chemical Dosing Cycle",
+            "columns": [
+                {"name": "surrogate_key", "data_type": "STRING", "is_pk": True, "nullable": False, "description": "Deterministic CIP Cycle Key"},
+                {"name": "cycle_id", "data_type": "STRING", "is_pk": False, "nullable": False, "description": "CIP Wash Cycle Identifier"},
+                {"name": "asset_id", "data_type": "STRING", "is_pk": False, "nullable": False, "description": "Sanitized Equipment Asset ID"},
+                {"name": "caustic_conc_pct", "data_type": "NUMERIC", "is_pk": False, "nullable": True, "description": "Measured Caustic Concentration (%)"},
+                {"name": "water_saved_gallons", "data_type": "NUMERIC", "is_pk": False, "nullable": True, "description": "Net Water Conservation vs Baseline"},
+                {"name": "cycle_end_ts", "data_type": "TIMESTAMP", "is_pk": False, "nullable": False, "description": "Wash Completion Timestamp"}
+            ],
+        },
+    ]
+    out = []
+    for m in raw_models:
+        enriched = dict(m)
+        enriched["model_id"] = m["source_id"]
+        enriched["source_table"] = m["source_id"]
+        enriched["target_silver_table"] = m["target_table_name"]
+        enriched["domain_label"] = m["domain"]
+        out.append(enriched)
+    return out
+
+
+def parse_external_entity_spec(
+    source_type: str,
+    payload: str = "",
+    entity_name: Optional[str] = None,
+    source_model_id: Optional[str] = None,
+    description: Optional[str] = None,
+) -> dict:
+    """
+    Parse an external entity from:
+      - 'source_catalog': look up from `get_source_models_catalog()` or canonical domain entities
+      - 'ddl': parse SQL CREATE TABLE snippet
+      - 'odcs': parse ODCS YAML/JSON model specification
+    Returns a normalized entity dictionary ready to merge into a Silver contract & product plan.
+    """
+    import re
+    import yaml as _yaml
+
+    st = (source_type or "source_catalog").lower().strip()
+
+    if st == "source_catalog" and source_model_id:
+        for sm in get_source_models_catalog():
+            if sm["source_id"] == source_model_id or sm["target_table_name"] == source_model_id:
+                tname = entity_name or sm["target_table_name"]
+                norm = _normalize_entity_list({tname: sm})[0]
+                norm["source_table"] = sm["source_id"]
+                norm["source_system"] = sm["source_system"]
+                return norm
+        # Also check canonical domains across all industries
+        cat = get_multi_industry_catalog()
+        for ind in cat.get("industries", []):
+            for dom in ind.get("domains", []):
+                ents = dom.get("entities", {})
+                if source_model_id in ents:
+                    tname = entity_name or source_model_id
+                    norm = _normalize_entity_list({tname: ents[source_model_id]})[0]
+                    norm["source_table"] = f"raw_bronze.{source_model_id.replace('slv_', 'src_')}"
+                    return norm
+
+    if st == "ddl" and payload.strip():
+        # Extract table name if present
+        tbl_match = re.search(r"TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?[`\"']?([a-zA-Z0-9_.\-]+)[`\"']?", payload, re.IGNORECASE)
+        extracted_name = tbl_match.group(1).split(".")[-1] if tbl_match else "slv_imported_entity"
+        tname = (entity_name or extracted_name).strip()
+        if not tname.startswith("slv_"):
+            tname = f"slv_{tname}"
+
+        # Extract parenthesized column block
+        paren_match = re.search(r"\((.*)\)", payload, re.DOTALL)
+        body = paren_match.group(1) if paren_match else payload
+        cols = []
+        for raw_line in body.splitlines():
+            line = raw_line.strip().rstrip(",")
+            if not line or line.startswith("--") or line.upper().startswith(("PRIMARY KEY", "CONSTRAINT", "FOREIGN KEY", "PARTITION", "CLUSTER")):
+                continue
+            parts = line.split()
+            if len(parts) >= 2:
+                cname = parts[0].strip("`\"'")
+                ctype = re.sub(r"\(.*\)", "", parts[1]).upper()
+                if ctype in ("VARCHAR", "CHAR", "TEXT", "UUID"):
+                    ctype = "STRING"
+                elif ctype in ("DECIMAL", "FLOAT", "DOUBLE", "NUMBER", "NUMERIC"):
+                    ctype = "NUMERIC"
+                elif ctype in ("INT", "INTEGER", "BIGINT", "SMALLINT", "INT64"):
+                    ctype = "INT64"
+                elif ctype in ("BOOLEAN", "BOOL"):
+                    ctype = "BOOL"
+                elif ctype in ("DATETIME", "TIMESTAMP"):
+                    ctype = "TIMESTAMP"
+                elif ctype not in ("STRING", "NUMERIC", "INT64", "BOOL", "DATE", "TIMESTAMP", "JSON"):
+                    ctype = "STRING"
+
+                is_pk = "PRIMARY KEY" in line.upper() or cname == "surrogate_key"
+                nullable = "NOT NULL" not in line.upper() and not is_pk
+                desc_match = re.search(r"description\s*=\s*['\"]([^'\"]+)['\"]", line, re.IGNORECASE)
+                col_desc = desc_match.group(1) if desc_match else f"Imported column {cname}"
+                cols.append({
+                    "name": cname,
+                    "column_name": cname,
+                    "data_type": ctype,
+                    "type": ctype,
+                    "is_pk": is_pk,
+                    "is_primary_key": is_pk,
+                    "primary_key": is_pk,
+                    "pii": any(p in cname.lower() for p in ("name", "ssn", "email", "phone", "iban", "pan")),
+                    "nullable": nullable,
+                    "description": col_desc,
+                })
+        if not any(c["name"] == "surrogate_key" for c in cols):
+            cols.insert(0, {
+                "name": "surrogate_key",
+                "column_name": "surrogate_key",
+                "data_type": "STRING",
+                "type": "STRING",
+                "is_pk": True,
+                "is_primary_key": True,
+                "primary_key": True,
+                "pii": False,
+                "nullable": False,
+                "description": "Deterministic SHA-256 Surrogate Primary Key",
+            })
+        return {
+            "table_name": tname,
+            "name": tname,
+            "type": "dimension",
+            "entity_type": "dimension",
+            "grain": "one row per imported source record",
+            "description": description or f"Conformed Silver entity imported from SQL DDL ({tname})",
+            "column_count": len(cols),
+            "columns": cols,
+            "source_table": f"raw_bronze.{extracted_name}",
+        }
+
+    if st == "odcs" and payload.strip():
+        parsed = _yaml.safe_load(payload)
+        if isinstance(parsed, dict):
+            models_block = parsed.get("models") or parsed.get("tables") or {}
+            if isinstance(models_block, dict) and models_block:
+                first_key, first_model = next(iter(models_block.items()))
+                tname = entity_name or first_key
+                if not tname.startswith("slv_"):
+                    tname = f"slv_{tname}"
+                fields_block = first_model.get("fields") or first_model.get("columns") or {}
+                cols = []
+                if isinstance(fields_block, dict):
+                    for fname, fdef in fields_block.items():
+                        fdef = fdef if isinstance(fdef, dict) else {}
+                        dtype = str(fdef.get("type", "STRING")).upper()
+                        is_pk = bool(fdef.get("primary") or fdef.get("primary_key") or fdef.get("is_pk"))
+                        cols.append({
+                            "name": fname,
+                            "column_name": fname,
+                            "data_type": dtype,
+                            "type": dtype,
+                            "is_pk": is_pk,
+                            "is_primary_key": is_pk,
+                            "primary_key": is_pk,
+                            "pii": bool(fdef.get("pii")),
+                            "nullable": bool(fdef.get("nullable", not is_pk)),
+                            "fk_ref": fdef.get("references") or fdef.get("fk_ref"),
+                            "references": fdef.get("references") or fdef.get("fk_ref"),
+                            "description": fdef.get("description", f"Imported ODCS field {fname}"),
+                        })
+                return {
+                    "table_name": tname,
+                    "name": tname,
+                    "type": first_model.get("type", "dimension"),
+                    "entity_type": first_model.get("type", "dimension"),
+                    "grain": first_model.get("grain", "one row per imported contract record"),
+                    "description": description or first_model.get("description", f"Imported ODCS entity {tname}"),
+                    "column_count": len(cols),
+                    "columns": cols,
+                    "source_table": f"raw_bronze.{first_key}",
+                }
+
+    # Fallback default custom entity
+    tname = (entity_name or "slv_custom_entity").strip()
+    if not tname.startswith("slv_"):
+        tname = f"slv_{tname}"
+    return {
+        "table_name": tname,
+        "name": tname,
+        "type": "dimension",
+        "entity_type": "dimension",
+        "grain": "one row per conformed entity",
+        "description": description or f"Conformed Silver Entity ({tname})",
+        "column_count": 3,
+        "columns": [
+            {"name": "surrogate_key", "column_name": "surrogate_key", "data_type": "STRING", "type": "STRING", "is_pk": True, "is_primary_key": True, "primary_key": True, "pii": False, "nullable": False, "description": "Deterministic Surrogate Primary Key"},
+            {"name": f"{tname.replace('slv_', '')}_id", "column_name": f"{tname.replace('slv_', '')}_id", "data_type": "STRING", "type": "STRING", "is_pk": False, "is_primary_key": False, "primary_key": False, "pii": False, "nullable": False, "description": "Business Natural Key"},
+            {"name": "load_ts", "column_name": "load_ts", "data_type": "TIMESTAMP", "type": "TIMESTAMP", "is_pk": False, "is_primary_key": False, "primary_key": False, "pii": False, "nullable": False, "description": "Silver Commit Timestamp"},
+        ],
+        "source_table": f"raw_bronze.{tname.replace('slv_', 'src_')}",
+    }
+

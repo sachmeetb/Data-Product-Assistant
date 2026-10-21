@@ -9,6 +9,7 @@ import StartingPointCards from './StartingPointCards'
 import MermaidBlock from './MermaidBlock'
 import STTMCard from './STTMCard'
 import DataContractCard from './DataContractCard'
+import EntitySelectorCard from './EntitySelectorCard'
 
 const COLLAPSE_THRESHOLD_PX = 320
 
@@ -338,7 +339,18 @@ function agentAvatarClass(agentName) {
   return 'agent'
 }
 
-export default function MessageRow({ msg, onChipClick }) {
+export default function MessageRow({
+  msg,
+  onChipClick,
+  sessionId,
+  onApplyEntityScope,
+  onOpenExistingStructure,
+  onSaveContract,
+  onContractChange,
+  onGlossaryChange,
+  onSaveGlossary,
+  onConfirmWithGlossary,
+}) {
   const isUser = msg.role === 'user'
   const bubbleRef = useRef(null)
   const [tooLong, setTooLong] = useState(false)
@@ -358,9 +370,9 @@ export default function MessageRow({ msg, onChipClick }) {
     const ro = new ResizeObserver(measure)
     ro.observe(el)
     return () => ro.disconnect()
-  }, [isUser, msg.loading, msg.text, msg.discovery_view, msg.glossary, msg.classification_view, msg.challenger_view, msg.sttm_view, msg.silver_transform_view])
+  }, [isUser, msg.loading, msg.text, msg.discovery_view, msg.glossary, msg.classification_view, msg.challenger_view, msg.sttm_view, msg.silver_transform_view, msg.entity_selector_view])
 
-  const showChevron      = tooLong && !isUser && !msg.loading
+  const showChevron      = tooLong && !isUser && !msg.loading && !msg.entity_selector_view && !msg.data_contract_view && !msg.glossary
   const isGlossary       = !isUser && !!msg.glossary
   const isClassification = !isUser && !!msg.classification_view
   const isChallenger     = !isUser && !!msg.challenger_view
@@ -400,6 +412,19 @@ export default function MessageRow({ msg, onChipClick }) {
               msg.text
             ) : msg.discovery_view ? (
               <DiscoveryResultCard view={msg.discovery_view} />
+            ) : msg.entity_selector_view ? (
+              <>
+                {msg.text && (
+                  <ReactMarkdown remarkPlugins={[remarkGfm]} components={MD_COMPONENTS}>
+                    {wrapInfoSections(cleanAgentText(msg.text))}
+                  </ReactMarkdown>
+                )}
+                <EntitySelectorCard
+                  view={msg.entity_selector_view}
+                  onApplyScope={onApplyEntityScope}
+                  onOpenExistingStructure={onOpenExistingStructure}
+                />
+              </>
             ) : isGlossary ? (
               <>
                 {msg.text && (
@@ -407,7 +432,13 @@ export default function MessageRow({ msg, onChipClick }) {
                     {wrapInfoSections(cleanAgentText(msg.text))}
                   </ReactMarkdown>
                 )}
-                <BusinessGlossaryCard glossary={msg.glossary} />
+                <BusinessGlossaryCard
+                  glossary={msg.glossary}
+                  sessionId={sessionId}
+                  onGlossaryChange={onGlossaryChange}
+                  onSaveGlossary={onSaveGlossary}
+                  onConfirmWithGlossary={onConfirmWithGlossary}
+                />
               </>
             ) : isClassification ? (
               <ClassificationCard view={msg.classification_view} />
@@ -432,7 +463,7 @@ export default function MessageRow({ msg, onChipClick }) {
                     {wrapInfoSections(dedupBulletsAgainstParagraph(splitSilverNarrative(msg.text)))}
                   </ReactMarkdown>
                 )}
-                {msg.data_contract_view && <DataContractCard view={msg.data_contract_view} />}
+                {msg.data_contract_view && <DataContractCard view={msg.data_contract_view} sessionId={sessionId} onSave={onSaveContract} onContractChange={onContractChange} />}
                 <STTMCard view={msg.silver_transform_view} variant="silver" />
               </>
             ) : msg.data_contract_view ? (
@@ -442,7 +473,7 @@ export default function MessageRow({ msg, onChipClick }) {
                     {wrapInfoSections(cleanAgentText(msg.text))}
                   </ReactMarkdown>
                 )}
-                <DataContractCard view={msg.data_contract_view} />
+                <DataContractCard view={msg.data_contract_view} sessionId={sessionId} onSave={onSaveContract} onContractChange={onContractChange} />
               </>
             ) : isChallAgent ? (
               // Challenger Agent message that arrived without a structured view

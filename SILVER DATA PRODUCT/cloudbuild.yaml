@@ -1,13 +1,87 @@
 steps:
+  # 1. Build Backend Image
   - name: 'gcr.io/cloud-builders/docker'
     args:
-      - build
-      - -t
-      - ${_IMAGE}
-      - .
-images:
-  - ${_IMAGE}
+      - 'build'
+      - '-t'
+      - 'us-central1-docker.pkg.dev/${_PROJECT_ID}/bfsi-silver/backend:${SHORT_SHA}'
+      - '-t'
+      - 'us-central1-docker.pkg.dev/${_PROJECT_ID}/bfsi-silver/backend:latest'
+      - '-t'
+      - 'us-central1-docker.pkg.dev/${_PROJECT_ID}/bfsi-silver/backend:v1.1'
+      - '.'
+    dir: 'SILVER DATA PRODUCT'
+
+  # 2. Push Backend Image
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - '--all-tags'
+      - 'us-central1-docker.pkg.dev/${_PROJECT_ID}/bfsi-silver/backend'
+
+  # 3. Deploy Backend to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - '${_BACKEND_SVC}'
+      - '--image=us-central1-docker.pkg.dev/${_PROJECT_ID}/bfsi-silver/backend:${SHORT_SHA}'
+      - '--region=${_REGION}'
+      - '--platform=managed'
+      - '--allow-unauthenticated'
+      - '--memory=2Gi'
+      - '--cpu=2'
+      - '--timeout=300'
+      - '--min-instances=0'
+      - '--max-instances=5'
+      - '--set-env-vars=GCP_PROJECT_ID=${_PROJECT_ID},GOOGLE_CLOUD_PROJECT=${_PROJECT_ID},GOOGLE_CLOUD_LOCATION=${_REGION},GCP_LOCATION=${_REGION},BQ_SILVER_DATASET=banking_silver,BQ_GOLD_DATASET=banking_gold,BQ_LOCATION=US,GEMINI_MODEL=gemini-2.5-flash,GOOGLE_GENAI_USE_VERTEXAI=1,AGENT_APP_NAME=bfsi-silver-agent,AGENT_MAX_CLARIFICATION_TURNS=3,AGENT_MAX_SPEC_ITERATIONS=3,AGENT_LOG_LEVEL=INFO,SESSION_BACKEND=memory,BQ_PUBLISHER_MODE=dry_run'
+
+  # 4. Build Frontend Image (passing live backend URL)
+  - name: 'gcr.io/cloud-builders/docker'
+    entrypoint: bash
+    args:
+      - '-c'
+      - |
+        BACKEND_URL=$$(gcloud run services describe ${_BACKEND_SVC} --region=${_REGION} --format="value(status.url)")
+        echo "Configuring Frontend with Backend URL: $$BACKEND_URL"
+        docker build \
+          --build-arg VITE_API_URL=$$BACKEND_URL \
+          -t us-central1-docker.pkg.dev/${_PROJECT_ID}/bfsi-silver/frontend:${SHORT_SHA} \
+          -t us-central1-docker.pkg.dev/${_PROJECT_ID}/bfsi-silver/frontend:latest \
+          -t us-central1-docker.pkg.dev/${_PROJECT_ID}/bfsi-silver/frontend:v1.1 \
+          .
+    dir: 'SILVER DATA PRODUCT/frontend'
+
+  # 5. Push Frontend Image
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - '--all-tags'
+      - 'us-central1-docker.pkg.dev/${_PROJECT_ID}/bfsi-silver/frontend'
+
+  # 6. Deploy Frontend to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - '${_FRONTEND_SVC}'
+      - '--image=us-central1-docker.pkg.dev/${_PROJECT_ID}/bfsi-silver/frontend:${SHORT_SHA}'
+      - '--region=${_REGION}'
+      - '--platform=managed'
+      - '--allow-unauthenticated'
+      - '--memory=256Mi'
+      - '--cpu=1'
+      - '--min-instances=0'
+      - '--max-instances=3'
+      - '--port=8080'
+
 substitutions:
-  _IMAGE: 'us-central1-docker.pkg.dev/eogwapq-agbg-internal-data-mig/bfsi-silver/backend:v1.1'
+  _PROJECT_ID: 'eogwapq-agbg-internal-data-mig'
+  _REGION: 'us-central1'
+  _BACKEND_SVC: 'yk-silver-backend'
+  _FRONTEND_SVC: 'yk-silver-frontend'
+
 options:
   logging: CLOUD_LOGGING_ONLY
