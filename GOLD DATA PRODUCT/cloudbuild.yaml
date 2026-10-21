@@ -1,0 +1,90 @@
+steps:
+  # 1. Build Backend Image
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '-t'
+      - 'us-central1-docker.pkg.dev/${_PROJECT_ID}/${_REPO_NAME}/yk-gold-backend:${SHORT_SHA}'
+      - '-t'
+      - 'us-central1-docker.pkg.dev/${_PROJECT_ID}/${_REPO_NAME}/yk-gold-backend:latest'
+      - '.'
+    dir: 'GOLD DATA PRODUCT/data_product_assistant (1)/data_product_assistant/backend'
+
+  # 2. Push Backend Image
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - '--all-tags'
+      - 'us-central1-docker.pkg.dev/${_PROJECT_ID}/${_REPO_NAME}/yk-gold-backend'
+
+  # 3. Deploy Backend to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - '${_BACKEND_SVC}'
+      - '--image=us-central1-docker.pkg.dev/${_PROJECT_ID}/${_REPO_NAME}/yk-gold-backend:${SHORT_SHA}'
+      - '--region=${_REGION}'
+      - '--platform=managed'
+      - '--memory=2Gi'
+      - '--cpu=2'
+      - '--concurrency=80'
+      - '--min-instances=1'
+      - '--max-instances=10'
+      - '--set-env-vars=GOOGLE_CLOUD_PROJECT=${_PROJECT_ID},GOOGLE_CLOUD_LOCATION=${_REGION},GOOGLE_GENAI_LOCATION=global,GOOGLE_GENAI_USE_VERTEXAI=1,GCS_TEMPLATES_BUCKET=${_TEMPLATES_BUCKET},GCS_UPLOADS_BUCKET=${_UPLOADS_BUCKET},BQ_PROJECT=${_PROJECT_ID},BQ_LOCATION=${_REGION},BQ_DATASET_GOLD=gold,BQ_DATASET_SILVER=silver,BQ_DATASET_BRONZE=bronze,CORS_ORIGINS=*'
+      - '--service-account=dp-assistant-sa@${_PROJECT_ID}.iam.gserviceaccount.com'
+      - '--allow-unauthenticated'
+
+  # 4. Build Frontend Image (passing relative or direct URL)
+  - name: 'gcr.io/cloud-builders/docker'
+    entrypoint: bash
+    args:
+      - '-c'
+      - |
+        BACKEND_URL=$$(gcloud run services describe ${_BACKEND_SVC} --region=${_REGION} --format="value(status.url)")
+        echo "Building Gold Frontend with Backend: $$BACKEND_URL"
+        docker build \
+          --build-arg VITE_API_URL=$$BACKEND_URL \
+          -t us-central1-docker.pkg.dev/${_PROJECT_ID}/${_REPO_NAME}/yk-gold-frontend:${SHORT_SHA} \
+          -t us-central1-docker.pkg.dev/${_PROJECT_ID}/${_REPO_NAME}/yk-gold-frontend:latest \
+          .
+    dir: 'GOLD DATA PRODUCT/data_product_assistant (1)/data_product_assistant/frontend'
+
+  # 5. Push Frontend Image
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - '--all-tags'
+      - 'us-central1-docker.pkg.dev/${_PROJECT_ID}/${_REPO_NAME}/yk-gold-frontend'
+
+  # 6. Deploy Frontend to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - '${_FRONTEND_SVC}'
+      - '--image=us-central1-docker.pkg.dev/${_PROJECT_ID}/${_REPO_NAME}/yk-gold-frontend:${SHORT_SHA}'
+      - '--region=${_REGION}'
+      - '--platform=managed'
+      - '--memory=256Mi'
+      - '--cpu=1'
+      - '--concurrency=80'
+      - '--min-instances=0'
+      - '--max-instances=5'
+      - '--port=8080'
+      - '--service-account=dp-assistant-sa@${_PROJECT_ID}.iam.gserviceaccount.com'
+      - '--allow-unauthenticated'
+
+substitutions:
+  _PROJECT_ID: 'eogwapq-agbg-internal-data-mig'
+  _REGION: 'us-central1'
+  _REPO_NAME: 'dp-assistant'
+  _BACKEND_SVC: 'yk-gold-backend'
+  _FRONTEND_SVC: 'yk-gold-frontend'
+  _TEMPLATES_BUCKET: 'dp-assistant-templates'
+  _UPLOADS_BUCKET: 'dp-assistant-uploads'
+
+options:
+  logging: CLOUD_LOGGING_ONLY

@@ -1,0 +1,39 @@
+steps:
+  # 1. Build Portal Docker Image
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '-t'
+      - 'us-central1-docker.pkg.dev/${_PROJECT_ID}/dp-assistant/yk-data-products-portal:${SHORT_SHA}'
+      - '-t'
+      - 'us-central1-docker.pkg.dev/${_PROJECT_ID}/dp-assistant/yk-data-products-portal:latest'
+      - '.'
+    dir: 'Data-Products-Portal'
+
+  # 2. Push Portal Image
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - '--all-tags'
+      - 'us-central1-docker.pkg.dev/${_PROJECT_ID}/dp-assistant/yk-data-products-portal'
+
+  # 3. Deploy Portal to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - '${_PORTAL_SVC}'
+      - '--image=us-central1-docker.pkg.dev/${_PROJECT_ID}/dp-assistant/yk-data-products-portal:${SHORT_SHA}'
+      - '--region=${_REGION}'
+      - '--platform=managed'
+      - '--allow-unauthenticated'
+      - '--port=8080'
+
+substitutions:
+  _PROJECT_ID: 'eogwapq-agbg-internal-data-mig'
+  _REGION: 'us-central1'
+  _PORTAL_SVC: 'yk-data-products-portal'
+
+options:
+  logging: CLOUD_LOGGING_ONLY
