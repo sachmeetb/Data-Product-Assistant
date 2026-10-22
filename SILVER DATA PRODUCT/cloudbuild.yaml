@@ -37,11 +37,11 @@ steps:
       - '--max-instances=5'
       - '--set-env-vars=GCP_PROJECT_ID=${_PROJECT_ID},GOOGLE_CLOUD_PROJECT=${_PROJECT_ID},GOOGLE_CLOUD_LOCATION=${_REGION},GCP_LOCATION=${_REGION},BQ_SILVER_DATASET=banking_silver,BQ_GOLD_DATASET=banking_gold,BQ_LOCATION=US,GEMINI_MODEL=gemini-2.5-flash,GOOGLE_GENAI_USE_VERTEXAI=1,AGENT_APP_NAME=bfsi-silver-agent,AGENT_MAX_CLARIFICATION_TURNS=3,AGENT_MAX_SPEC_ITERATIONS=3,AGENT_LOG_LEVEL=INFO,SESSION_BACKEND=memory,BQ_PUBLISHER_MODE=dry_run'
 
-  # 4. Build Frontend Image (passing live backend URL)
+  # 4. Build Frontend Image (using /__api proxy route)
   - name: 'gcr.io/cloud-builders/docker'
     args:
       - 'build'
-      - '--build-arg=VITE_API_URL=${_BACKEND_URL}'
+      - '--build-arg=VITE_API_URL=${_VITE_API_URL}'
       - '-t'
       - 'us-central1-docker.pkg.dev/${_PROJECT_ID}/bfsi-silver/frontend:${SHORT_SHA}'
       - '-t'
@@ -80,7 +80,7 @@ substitutions:
   _REGION: 'us-central1'
   _BACKEND_SVC: 'yk-silver-backend'
   _FRONTEND_SVC: 'yk-silver-frontend'
-  _BACKEND_URL: 'https://yk-silver-backend-a74bkpgdzq-uc.a.run.app'
+  _VITE_API_URL: '/__api'
 
 options:
   logging: CLOUD_LOGGING_ONLY
