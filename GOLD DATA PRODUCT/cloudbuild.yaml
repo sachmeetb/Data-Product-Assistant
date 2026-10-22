@@ -34,7 +34,7 @@ steps:
       - '--max-instances=10'
       - '--set-env-vars=GOOGLE_CLOUD_PROJECT=${_PROJECT_ID},GOOGLE_CLOUD_LOCATION=${_REGION},GOOGLE_GENAI_LOCATION=global,GOOGLE_GENAI_USE_VERTEXAI=1,GCS_TEMPLATES_BUCKET=${_TEMPLATES_BUCKET},GCS_UPLOADS_BUCKET=${_UPLOADS_BUCKET},BQ_PROJECT=${_PROJECT_ID},BQ_LOCATION=${_REGION},BQ_DATASET_GOLD=gold,BQ_DATASET_SILVER=silver,BQ_DATASET_BRONZE=bronze,CORS_ORIGINS=*'
       - '--service-account=dp-assistant-sa@${_PROJECT_ID}.iam.gserviceaccount.com'
-      - '--iap'
+      - '--no-iap'
 
   # 4. Build Frontend Image (passing relative or direct URL)
   - name: 'gcr.io/cloud-builders/docker'
@@ -72,7 +72,7 @@ steps:
       - '--max-instances=5'
       - '--port=8080'
       - '--service-account=dp-assistant-sa@${_PROJECT_ID}.iam.gserviceaccount.com'
-      - '--iap'
+      - '--no-iap'
 
 substitutions:
   _PROJECT_ID: 'eogwapq-agbg-internal-data-mig'
