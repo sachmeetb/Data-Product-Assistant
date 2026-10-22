@@ -38,17 +38,14 @@ steps:
 
   # 4. Build Frontend Image (passing relative or direct URL)
   - name: 'gcr.io/cloud-builders/docker'
-    entrypoint: bash
     args:
-      - '-c'
-      - |
-        BACKEND_URL=$$(gcloud run services describe ${_BACKEND_SVC} --region=${_REGION} --format="value(status.url)")
-        echo "Building Gold Frontend with Backend: $$BACKEND_URL"
-        docker build \
-          --build-arg VITE_API_URL=$$BACKEND_URL \
-          -t us-central1-docker.pkg.dev/${_PROJECT_ID}/${_REPO_NAME}/yk-gold-frontend:${SHORT_SHA} \
-          -t us-central1-docker.pkg.dev/${_PROJECT_ID}/${_REPO_NAME}/yk-gold-frontend:latest \
-          .
+      - 'build'
+      - '--build-arg=VITE_API_URL=${_BACKEND_URL}'
+      - '-t'
+      - 'us-central1-docker.pkg.dev/${_PROJECT_ID}/${_REPO_NAME}/yk-gold-frontend:${SHORT_SHA}'
+      - '-t'
+      - 'us-central1-docker.pkg.dev/${_PROJECT_ID}/${_REPO_NAME}/yk-gold-frontend:latest'
+      - '.'
     dir: 'GOLD DATA PRODUCT/data_product_assistant (1)/data_product_assistant/frontend'
 
   # 5. Push Frontend Image
@@ -83,6 +80,7 @@ substitutions:
   _REPO_NAME: 'dp-assistant'
   _BACKEND_SVC: 'yk-gold-backend'
   _FRONTEND_SVC: 'yk-gold-frontend'
+  _BACKEND_URL: 'https://yk-gold-backend-a74bkpgdzq-uc.a.run.app'
   _TEMPLATES_BUCKET: 'dp-assistant-templates'
   _UPLOADS_BUCKET: 'dp-assistant-uploads'
 
