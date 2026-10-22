@@ -39,18 +39,16 @@ steps:
 
   # 4. Build Frontend Image (passing live backend URL)
   - name: 'gcr.io/cloud-builders/docker'
-    entrypoint: bash
     args:
-      - '-c'
-      - |
-        BACKEND_URL=$$(gcloud run services describe ${_BACKEND_SVC} --region=${_REGION} --format="value(status.url)")
-        echo "Configuring Frontend with Backend URL: $$BACKEND_URL"
-        docker build \
-          --build-arg VITE_API_URL=$$BACKEND_URL \
-          -t us-central1-docker.pkg.dev/${_PROJECT_ID}/bfsi-silver/frontend:${SHORT_SHA} \
-          -t us-central1-docker.pkg.dev/${_PROJECT_ID}/bfsi-silver/frontend:latest \
-          -t us-central1-docker.pkg.dev/${_PROJECT_ID}/bfsi-silver/frontend:v1.1 \
-          .
+      - 'build'
+      - '--build-arg=VITE_API_URL=${_BACKEND_URL}'
+      - '-t'
+      - 'us-central1-docker.pkg.dev/${_PROJECT_ID}/bfsi-silver/frontend:${SHORT_SHA}'
+      - '-t'
+      - 'us-central1-docker.pkg.dev/${_PROJECT_ID}/bfsi-silver/frontend:latest'
+      - '-t'
+      - 'us-central1-docker.pkg.dev/${_PROJECT_ID}/bfsi-silver/frontend:v1.1'
+      - '.'
     dir: 'SILVER DATA PRODUCT/frontend'
 
   # 5. Push Frontend Image
@@ -82,6 +80,7 @@ substitutions:
   _REGION: 'us-central1'
   _BACKEND_SVC: 'yk-silver-backend'
   _FRONTEND_SVC: 'yk-silver-frontend'
+  _BACKEND_URL: 'https://yk-silver-backend-a74bkpgdzq-uc.a.run.app'
 
 options:
   logging: CLOUD_LOGGING_ONLY
