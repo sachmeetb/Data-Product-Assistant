@@ -40,7 +40,7 @@ steps:
   - name: 'gcr.io/cloud-builders/docker'
     args:
       - 'build'
-      - '--build-arg=VITE_API_URL=${_BACKEND_URL}'
+      - '--build-arg=VITE_API_URL=${_VITE_API_URL}'
       - '-t'
       - 'us-central1-docker.pkg.dev/${_PROJECT_ID}/${_REPO_NAME}/yk-gold-frontend:${SHORT_SHA}'
       - '-t'
@@ -80,7 +80,7 @@ substitutions:
   _REPO_NAME: 'dp-assistant'
   _BACKEND_SVC: 'yk-gold-backend'
   _FRONTEND_SVC: 'yk-gold-frontend'
-  _BACKEND_URL: 'https://yk-gold-backend-a74bkpgdzq-uc.a.run.app'
+  _VITE_API_URL: '/__api'
   _TEMPLATES_BUCKET: 'dp-assistant-templates'
   _UPLOADS_BUCKET: 'dp-assistant-uploads'
 
