@@ -510,6 +510,23 @@ async def finalize(
         print("[gold-final] LLM output incomplete — applying Python fallback patch.")
         result = _apply_gold_final_fallback(result, gold_er, silver_sttm)
 
+    # Ensure ER diagram and table consistency across all passes:
+    # tables, relationships, and mermaid from gold_er (which was validated/aligned with discovery)
+    # must not be lost or downgraded by a secondary LLM pass.
+    er_tables = gold_er.get("tables") or []
+    if er_tables:
+        res_tables = result.get("tables") if isinstance(result.get("tables"), list) else []
+        if len(res_tables) < len(er_tables):
+            result["tables"] = er_tables
+            result["relationships"] = gold_er.get("relationships") or result.get("relationships", [])
+            result["mermaid"] = gold_er.get("mermaid") or result.get("mermaid", "")
+            if "pipeline_spec" in result and isinstance(result["pipeline_spec"], dict):
+                result["pipeline_spec"]["gold_schema"] = {"tables": er_tables}
+                result["pipeline_spec"]["target_tables"] = [
+                    {"name": t.get("name", ""), "layer": "gold", "columns": t.get("columns", [])}
+                    for t in er_tables if t.get("name")
+                ]
+
     return result
 
 
