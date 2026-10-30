@@ -453,9 +453,9 @@ export default function DiscoveryResultCard({ view }) {
   const [selectedRequirement, setSelectedRequirement] = useState(null)
   const [collapsedTables, setCollapsedTables] = useState({})
   const [collapsedSections, setCollapsedSections] = useState({
-    summary: true,
-    dataPoints: false,
-    byLayer: false,
+    summary: false,
+    dataPoints: true,
+    byLayer: true,
     visualMap: false,
   })
 
@@ -705,23 +705,38 @@ export default function DiscoveryResultCard({ view }) {
               style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', userSelect: 'none' }}
             >
               <span style={{ fontSize: 10, color: BP.textMuted }}>{collapsedSections.byLayer ? '▶' : '▼'}</span>
-              <SectionLabel>SUMMARY BY LAYER</SectionLabel>
+              <SectionLabel style={{ margin: 0 }}>SUMMARY BY LAYER</SectionLabel>
+              {collapsedSections.byLayer && (
+                <span style={{ fontSize: 11, color: BP.textMuted, fontWeight: 500, marginLeft: 4 }}>
+                  {byLayerKeys.map((l) => `${d.byLayer[l]?.tables?.length || 0} in ${cap(l)}`).join(' · ')}
+                </span>
+              )}
             </div>
-            <div style={{ display: 'flex', gap: 6 }}>
-              <button
-                type="button"
-                onClick={() => setAllTablesCollapsed(false)}
-                style={{ background: '#F3F4F6', border: '1px solid #D1D5DB', borderRadius: 4, padding: '2px 7px', fontSize: 10.5, cursor: 'pointer', fontWeight: 600 }}
+            <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+              <span
+                onClick={() => toggleSection('byLayer')}
+                style={{ fontSize: 11, color: '#7C3AED', fontWeight: 600, cursor: 'pointer', marginRight: 4 }}
               >
-                Expand All
-              </button>
-              <button
-                type="button"
-                onClick={() => setAllTablesCollapsed(true)}
-                style={{ background: '#F3F4F6', border: '1px solid #D1D5DB', borderRadius: 4, padding: '2px 7px', fontSize: 10.5, cursor: 'pointer', fontWeight: 600 }}
-              >
-                Dissolve / Collapse All
-              </button>
+                {collapsedSections.byLayer ? '▶ Expand Section' : '▼ Collapse Section'}
+              </span>
+              {!collapsedSections.byLayer && (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => setAllTablesCollapsed(false)}
+                    style={{ background: '#F3F4F6', border: '1px solid #D1D5DB', borderRadius: 4, padding: '2px 7px', fontSize: 10.5, cursor: 'pointer', fontWeight: 600 }}
+                  >
+                    Expand All
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setAllTablesCollapsed(true)}
+                    style={{ background: '#F3F4F6', border: '1px solid #D1D5DB', borderRadius: 4, padding: '2px 7px', fontSize: 10.5, cursor: 'pointer', fontWeight: 600 }}
+                  >
+                    Dissolve / Collapse All
+                  </button>
+                </>
+              )}
             </div>
           </div>
 

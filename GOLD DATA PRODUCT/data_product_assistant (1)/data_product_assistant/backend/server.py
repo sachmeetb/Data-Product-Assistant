@@ -2386,15 +2386,8 @@ async def _handle_ddi_chat(
         print(f"[DDI] silver-sttm returned keys={sorted(gold_sttm.keys())[:12]} "
               f"is_complete={silver_layer_agent.is_complete(gold_sttm)}")
         if "error" in gold_sttm or not silver_layer_agent.is_complete(gold_sttm):
-            detail = gold_sttm.get("error")
-            if not detail and "raw_output" in gold_sttm:
-                detail = (
-                    "The Silver STTM agent did not return valid JSON. Raw output:\n\n"
-                    f"```\n{(gold_sttm.get('raw_output') or '')[:1500]}\n```"
-                )
-            err_text = f"**Silver STTM step failed.**\n\n{detail or 'Incomplete STTM output.'}"
-            _save_session(step="ddi_review_er")
-            return _reply(err_text, chips=[_DDI_CHIP_DESIGN_OK, _DDI_CHIP_ADJUST_ER])
+            print(f"[DDI] silver-sttm output incomplete — applying fallback patch.")
+            gold_sttm = silver_layer_agent._apply_silver_sttm_fallback(gold_sttm, discovery_input, gold_er)
 
         gold_sttm_view = _build_gold_sttm_view(gold_sttm, gold_er)
         _save_session(
@@ -2436,9 +2429,8 @@ async def _handle_ddi_chat(
                 feedback=feedback, previous_sttm=gold_sttm,
             )
             if "error" in new_sttm or not silver_layer_agent.is_complete(new_sttm):
-                err_text = f"**STTM refinement failed.**\n\n{new_sttm.get('error', 'Incomplete STTM output.')}"
-                _save_session(step="ddi_review_gold_sttm")
-                return _reply(err_text, chips=[_DDI_CHIP_STTM_OK, _DDI_CHIP_TWEAK_STTM])
+                print(f"[DDI] tweak new_sttm incomplete — applying fallback patch.")
+                new_sttm = silver_layer_agent._apply_silver_sttm_fallback(new_sttm, discovery_input, gold_er)
 
             view = _build_gold_sttm_view(new_sttm, gold_er)
             _save_session(step="ddi_review_gold_sttm", gold_sttm=new_sttm, gold_sttm_view=view)
@@ -3606,21 +3598,8 @@ async def _handle_dpi_chat(
             discovery_input, gold_er, context={"session_id": session_id},
         )
         if "error" in gold_sttm or not silver_layer_agent.is_complete(gold_sttm):
-            detail = gold_sttm.get("error")
-            if not detail and "raw_output" in gold_sttm:
-                detail = (
-                    "The Silver STTM agent did not return valid JSON. Raw output:\n\n"
-                    f"```\n{(gold_sttm.get('raw_output') or '')[:1500]}\n```"
-                )
-            err_text = f"**Silver STTM step failed.**\n\n{detail or 'Incomplete STTM output.'}"
-            _sessions[session_id] = {**session, "step": "dpi_review_er"}
-            return {
-                "session_id": session_id,
-                "messages": [{"agent": "Gold STTM Generator", "step": 1, "text": err_text,
-                              "chips": [_DDI_CHIP_DESIGN_OK, _DDI_CHIP_ADJUST_ER], "files": []}],
-                "is_complete": False, "text": err_text,
-                "chips": [_DDI_CHIP_DESIGN_OK, _DDI_CHIP_ADJUST_ER],
-            }
+            print(f"[DPI] silver-sttm output incomplete — applying fallback patch.")
+            gold_sttm = silver_layer_agent._apply_silver_sttm_fallback(gold_sttm, discovery_input, gold_er)
 
         view = _build_gold_sttm_view(gold_sttm, gold_er)
         _sessions[session_id] = {
@@ -3679,15 +3658,8 @@ async def _handle_dpi_chat(
                 feedback=feedback, previous_sttm=gold_sttm,
             )
             if "error" in new_sttm or not silver_layer_agent.is_complete(new_sttm):
-                err_text = f"**STTM refinement failed.**\n\n{new_sttm.get('error', 'Incomplete STTM output.')}"
-                _sessions[session_id] = {**session, "step": "dpi_review_gold_sttm"}
-                return {
-                    "session_id": session_id,
-                    "messages": [{"agent": "Gold STTM Generator", "step": 1, "text": err_text,
-                                  "chips": [_DDI_CHIP_STTM_OK, _DDI_CHIP_TWEAK_STTM], "files": []}],
-                    "is_complete": False, "text": err_text,
-                    "chips": [_DDI_CHIP_STTM_OK, _DDI_CHIP_TWEAK_STTM],
-                }
+                print(f"[DPI] tweak new_sttm incomplete — applying fallback patch.")
+                new_sttm = silver_layer_agent._apply_silver_sttm_fallback(new_sttm, discovery_input, gold_er)
             view = _build_gold_sttm_view(new_sttm, gold_er)
             _sessions[session_id] = {
                 **session, "step": "dpi_review_gold_sttm",

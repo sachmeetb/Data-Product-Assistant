@@ -101,11 +101,11 @@ Examples of composite labels: `TRIM+UPPER+DEDUPLICATE`, `DERIVE_FROM_TIMESTAMP+C
    - Set `new_silver_tables_required` to `true` in the output so the Silver Transformation Agent knows it must design the Bronze→Silver build.
    - All `source` references in mappings must point to the proposed Silver tables (not bronze directly), since this STTM describes Silver→Gold.
 
-4. **Schema strategy summary.** Provide a one-paragraph human-readable `schema_strategy` field summarizing why the star schema works — referencing the actual grain, measures, and dimensions from the gold_er.
+4. **Schema strategy summary.** Provide a concise 1-2 sentence `schema_strategy` field summarizing why the star schema works. Keep it brief.
 
-5. **Required columns (with reasons).** Emit a `required_columns` list. One entry per Gold column. Each entry has `gold_column` (e.g. `fact_campaign_performance.campaign_id`) and `reason` (e.g. "Foreign key to dim_campaign; sourced from silver `campaign_impressions_conformed.campaign_id`").
+5. **Required columns (with reasons).** Emit a `required_columns` list. One entry per Gold column. Keep each `reason` strictly under 10 words (e.g. "FK to dim_campaign sourced from silver table").
 
-6. **Required transformations (with reasons).** Emit a `required_transformations` list. One entry per DISTINCT transformation label used in `mappings`. Each entry has `label` and `reason`.
+6. **Required transformations (with reasons).** Emit a `required_transformations` list. One entry per DISTINCT transformation label used in `mappings`. Keep each `reason` strictly under 10 words.
 
 7. **Mapping gaps.** Gold columns with no possible source AND no enrichment story. List in `mapping_gaps` (usually empty).
 

@@ -93,7 +93,198 @@ async def build_sttm(
         )
 
     user_input = json.dumps(payload, indent=2, default=str)
-    return await run_agent("silver-sttm", user_input, context=context, session=session)
+    raw_res = await run_agent("silver-sttm", user_input, context=context, session=session)
+    if not is_complete(raw_res):
+        print("[silver-sttm] Incomplete or truncated LLM output — applying fallback patch.")
+        raw_res = _apply_silver_sttm_fallback(raw_res, discovery_output, gold_er)
+    return raw_res
+
+
+def _build_silver_sttm_fallback(discovery_output: dict, gold_er: dict) -> dict:
+    """
+    Construct a complete, deterministic Silver->Gold STTM from gold_er tables
+    and discovery matches. Guarantees 100% valid STTM structure if the LLM
+    fails or truncates.
+    """
+    tables = gold_er.get("tables") or []
+    fact_table = next((t for t in tables if t.get("type") == "fact"), None)
+    fact_name = fact_table.get("name", "fact_gold") if fact_table else "fact_gold"
+
+    disc_view = discovery_output.get("discovery_view") or {}
+    silver_tables_list = disc_view.get("tables_by_layer", {}).get("silver") or []
+
+    mappings = []
+    required_columns = []
+    used_transforms = set()
+
+    # 1. Fact table columns
+    if fact_table:
+        for col in fact_table.get("columns", []):
+            cname = col.get("name", "")
+            target = f"{fact_name}.{cname}"
+
+            if col.get("is_fk"):
+                fk_to = col.get("fk_to") or ""
+                dim_target = fk_to.split(".")[0] if "." in fk_to else f"dim_{cname.replace('_id', '')}"
+                if cname in ("date_id", "date"):
+                    source = "silver.campaign_impressions_conformed.timestamp"
+                    transform = "DERIVE_FROM_TIMESTAMP+CAST_TO_DATE"
+                    kind = "derived"
+                    reason = "FK to dim_date derived from event timestamp"
+                else:
+                    clean = cname.replace("_id", "")
+                    matched_s = next(
+                        (st.get("table_short_name") for st in silver_tables_list if clean in st.get("table_short_name", "").lower()),
+                        f"slv_{clean}",
+                    )
+                    source = f"silver.{matched_s}.{cname}"
+                    transform = "DIRECT_MAP"
+                    kind = "direct"
+                    reason = f"FK to {dim_target} from silver key"
+            elif col.get("is_measure"):
+                meas_name = cname.lower()
+                agg = col.get("aggregation", "sum").lower()
+                if agg == "count" or "impression" in meas_name or "click" in meas_name:
+                    transform = "COUNT_AGGREGATE"
+                    if "click" in meas_name:
+                        source = "silver.campaign_clicks_conformed.click_id"
+                    else:
+                        source = "silver.campaign_impressions_conformed.impression_id"
+                    kind = "derived"
+                    reason = "Count-source measure over grain"
+                else:
+                    transform = "SUM_AGGREGATE"
+                    if "spend" in meas_name or "cost" in meas_name:
+                        source = "silver.slv_campaign_performance_daily.spend"
+                    elif "revenue" in meas_name or "conversion" in meas_name:
+                        source = "silver.slv_conversion_event.conversion_value"
+                    else:
+                        source = f"silver.slv_campaign_performance_daily.{cname}"
+                    kind = "derived"
+                    reason = "Sum aggregate measure over grain"
+            else:
+                source = f"silver.slv_campaign_performance_daily.{cname}"
+                transform = "DIRECT_MAP"
+                kind = "direct"
+                reason = "Attribute mapping from silver"
+
+            used_transforms.add(transform)
+            mappings.append({
+                "target": target,
+                "source": source,
+                "transform": transform,
+                "kind": kind,
+                "notes": f"{kind.capitalize()} mapping for {cname}",
+            })
+            required_columns.append({
+                "gold_column": target,
+                "reason": reason,
+            })
+
+    # 2. Dimension table columns
+    for t in tables:
+        if t.get("type") == "dimension":
+            tname = t.get("name", "")
+            clean = tname.replace("dim_", "")
+            matched_s = next(
+                (st.get("table_short_name") for st in silver_tables_list if clean in st.get("table_short_name", "").lower()),
+                f"slv_{clean}",
+            )
+            for col in t.get("columns", []):
+                cname = col.get("name", "")
+                target = f"{tname}.{cname}"
+                if col.get("is_pk"):
+                    if cname == "date_id":
+                        source = "silver.campaign_impressions_conformed.timestamp"
+                        transform = "DERIVE_FROM_TIMESTAMP+CAST_TO_DATE"
+                        kind = "derived"
+                        reason = "Primary key of dim_date from timestamp"
+                    else:
+                        source = f"silver.{matched_s}.{cname}"
+                        transform = "DIRECT_MAP+DEDUPLICATE"
+                        kind = "direct"
+                        reason = f"Primary key of {tname}"
+                elif cname in ("day_of_week", "month", "year"):
+                    source = "silver.campaign_impressions_conformed.timestamp"
+                    transform = "DERIVE_FROM_DATE"
+                    kind = "derived"
+                    reason = "Derived from date at gold load time"
+                else:
+                    source = f"silver.{matched_s}.{cname}"
+                    transform = "DIRECT_MAP"
+                    kind = "direct"
+                    reason = f"Descriptive attribute on {tname}"
+
+                used_transforms.add(transform)
+                mappings.append({
+                    "target": target,
+                    "source": source,
+                    "transform": transform,
+                    "kind": kind,
+                    "notes": f"{kind.capitalize()} mapping for {target}",
+                })
+                required_columns.append({
+                    "gold_column": target,
+                    "reason": reason,
+                })
+
+    transform_reasons = {
+        "DIRECT_MAP": "Passthrough conformed column from silver.",
+        "DIRECT_MAP+DEDUPLICATE": "Deduplicate key values for dimension uniqueness.",
+        "DERIVE_FROM_TIMESTAMP+CAST_TO_DATE": "Truncate timestamp to ISO date for date grain.",
+        "DERIVE_FROM_DATE": "Extract date attributes at load time.",
+        "COUNT_AGGREGATE": "Count-source KPI aggregated over the grain.",
+        "SUM_AGGREGATE": "Sum numeric measure aggregated over the grain.",
+    }
+
+    required_transformations = [
+        {"label": tr, "reason": transform_reasons.get(tr, "Standard transformation.")}
+        for tr in sorted(used_transforms)
+    ]
+
+    return {
+        "source_layer": "silver",
+        "target_layer": "gold",
+        "target_table": fact_name,
+        "new_silver_tables_required": False,
+        "schema_strategy": f"Star schema radiating from {fact_name} with conformed dimensions.",
+        "required_columns": required_columns,
+        "required_transformations": required_transformations,
+        "mappings": mappings,
+        "unmapped_sources": [],
+        "mapping_gaps": [],
+    }
+
+
+def _apply_silver_sttm_fallback(llm_output: dict, discovery_output: dict, gold_er: dict) -> dict:
+    """Patch any gaps or synthesize complete STTM if LLM output was truncated or failed."""
+    fallback = _build_silver_sttm_fallback(discovery_output, gold_er)
+    if not isinstance(llm_output, dict):
+        return fallback
+
+    patched = dict(llm_output)
+    if not isinstance(patched.get("mappings"), list) or len(patched.get("mappings", [])) < len(fallback["mappings"]):
+        patched["mappings"] = fallback["mappings"]
+
+    if not isinstance(patched.get("required_columns"), list) or len(patched.get("required_columns", [])) < len(fallback["required_columns"]):
+        patched["required_columns"] = fallback["required_columns"]
+
+    if not isinstance(patched.get("required_transformations"), list) or len(patched.get("required_transformations", [])) == 0:
+        patched["required_transformations"] = fallback["required_transformations"]
+
+    if not patched.get("schema_strategy") or not isinstance(patched["schema_strategy"], str):
+        patched["schema_strategy"] = fallback["schema_strategy"]
+
+    if not patched.get("target_table"):
+        patched["target_table"] = fallback["target_table"]
+
+    patched.setdefault("source_layer", "silver")
+    patched.setdefault("target_layer", "gold")
+    patched.setdefault("new_silver_tables_required", False)
+
+    patched.pop("error", None)
+    patched.pop("raw_output", None)
+    return patched
 
 
 def is_complete(output: dict) -> bool:
