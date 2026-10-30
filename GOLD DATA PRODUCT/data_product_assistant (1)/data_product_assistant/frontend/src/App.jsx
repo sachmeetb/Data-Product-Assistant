@@ -1,13 +1,15 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef } from 'react'
 import NavRail from './components/NavRail'
 import ChatSidebar from './components/ChatSidebar'
 import ChatPane from './components/ChatPane'
 import FilesPanel from './components/FilesPanel'
 import TweakModal from './components/TweakModal'
 import PhaseStepper from './components/PhaseStepper'
+import HierarchicalSelectorModal from './components/HierarchicalSelectorModal'
 import { BP, phaseForStep, agentMeta } from './theme'
 import { Download, RotateCcw } from './icons'
 import { sendChatMessage, downloadFile, uploadFile } from './api/chat'
+import { DEFAULT_GOLD_CONTRACT } from './components/DataContractCard'
 
 const DDI_CHIP_ADJUST_ER   = 'Adjust the model'
 const DDI_CHIP_TWEAK_STTM  = 'Tweak the mapping'
@@ -48,9 +50,16 @@ function ts() {
 
 function initialMessages() {
   return [{
-    id: 0, role: 'agent', agent: 'Data Product Assistant',
-    text: "Hi — I'm the Data Product Assistant. I help you find, design and build data products. Where would you like to start?",
-    chips: [], loading: false, time: ts(), startingPoint: true,
+    id: 0, role: 'agent', agent: 'Gold Data Product Assistant',
+    text: "Welcome to **Gold Data Product Assistant**! I help you design star schema consumption models, aggregate fact tables, and generate Open Data Contract Standard (ODCS v3.0.1) contracts.\n\nPick a starting workflow below, select an **Industry** to explore domain models, or click **Domain Navigator** in the top bar to drill down into entities and attributes.",
+    chips: [
+      "Industrial & Water (Ecolab)",
+      "Banking & Financial Services",
+      "Retail & Commerce",
+      "Automotive & Fleet",
+      "Life Sciences",
+    ],
+    loading: false, time: ts(), startingPoint: true,
   }]
 }
 
@@ -75,6 +84,9 @@ function Workspace({ user }) {
   const [editFormOpen, setEditFormOpen]       = useState(false)
   const [tweakMode, setTweakMode]             = useState(null) // 'er' | 'sttm' | null
   const [downloading, setDownloading]         = useState(false)
+  const [navigatorOpen, setNavigatorOpen]     = useState(false)
+  const latestContractRef                     = useRef(null)
+  const latestGlossaryRef                     = useRef(null)
 
   const allowUpload = startingPointPicked && UPLOAD_ALLOWED_STEPS.has(currentStep) && !pendingFile
 
@@ -125,6 +137,9 @@ function Workspace({ user }) {
     setGlossaryData(null)
     setEditFormOpen(false)
     setTweakMode(null)
+    setNavigatorOpen(false)
+    latestContractRef.current = null
+    latestGlossaryRef.current = null
   }, [])
 
   const applyResponse = useCallback((data, thinkId) => {
@@ -134,7 +149,10 @@ function Workspace({ user }) {
       const reqData = data.messages.map(m => m.requirement_data).filter(Boolean).at(-1)
       if (reqData) setRequirementData(reqData)
       const gloss = data.messages.map(m => m.glossary).filter(Boolean).at(-1)
-      if (gloss) setGlossaryData(gloss)
+      if (gloss) {
+        setGlossaryData(gloss)
+        latestGlossaryRef.current = gloss
+      }
 
       setMessages(prev => {
         const withoutLoading = prev
@@ -143,13 +161,15 @@ function Workspace({ user }) {
         const newMsgs = data.messages.map((msg, idx) => ({
           id: thinkId + idx,
           role: 'agent',
-          agent: msg.agent || 'Data Product Assistant',
+          agent: msg.agent || 'Gold Data Product Assistant',
           text: msg.text || '',
           chips: msg.chips?.length
             ? msg.chips
             : idx === data.messages.length - 1 ? (data.chips || []) : [],
           discovery_view: msg.discovery_view
             ?? (idx === data.messages.length - 1 ? data.discovery_view : undefined),
+          entity_selector_view: msg.entity_selector_view
+            ?? (idx === data.messages.length - 1 ? data.entity_selector_view : undefined),
           glossary: msg.glossary ?? undefined,
           classification_view: msg.classification_view ?? undefined,
           challenger_view: msg.challenger_view ?? undefined,
@@ -183,6 +203,7 @@ function Workspace({ user }) {
         m.id === thinkId
           ? { ...m, loading: false, text: data.text || '', chips: data.chips || [],
               discovery_view: data.discovery_view,
+              entity_selector_view: data.entity_selector_view,
               classification_view: data.classification_view }
           : m
       ))
@@ -204,13 +225,17 @@ function Workspace({ user }) {
     setMessages(prev => [
       ...prev,
       { id: thinkId - 1, role: 'user', text: displayText, time: ts() },
-      { id: thinkId, role: 'agent', agent: 'Data Product Assistant', loading: true, time: ts() },
+      { id: thinkId, role: 'agent', agent: 'Gold Data Product Assistant', loading: true, time: ts() },
     ])
 
     try {
       const data = await sendChatMessage(sessionId, text, {
         action: opts.action,
         fileRefId: opts.fileRefId,
+        contract: opts.contract,
+        glossary: opts.glossary,
+        selectedEntities: opts.selectedEntities,
+        selectedAttributes: opts.selectedAttributes,
       })
       setSessionId(data.session_id)
       applyResponse(data, thinkId)
@@ -223,15 +248,82 @@ function Workspace({ user }) {
     setSending(false)
   }, [sessionId, sending, applyResponse])
 
+  const handleContractChange = useCallback((updatedContract) => {
+    latestContractRef.current = updatedContract
+  }, [])
+
+  const handleSaveContract = useCallback((finalizedContract) => {
+    const contractToSave = finalizedContract || latestContractRef.current || DEFAULT_GOLD_CONTRACT
+    latestContractRef.current = contractToSave
+    sendMessage('Apply & Save Contract', {
+      action: 'save_contract',
+      contract: contractToSave,
+    })
+  }, [sendMessage])
+
+  const handleGlossaryChange = useCallback((updatedGlossary) => {
+    latestGlossaryRef.current = updatedGlossary
+  }, [])
+
+  const handleSaveGlossary = useCallback((finalizedGlossary) => {
+    const glossToSave = finalizedGlossary || latestGlossaryRef.current
+    if (glossToSave) {
+      latestGlossaryRef.current = glossToSave
+      setGlossaryData(glossToSave)
+    }
+  }, [])
+
+  const handleConfirmWithGlossary = useCallback((finalizedGlossary) => {
+    const glossToSave = finalizedGlossary || latestGlossaryRef.current
+    if (glossToSave) {
+      latestGlossaryRef.current = glossToSave
+      setGlossaryData(glossToSave)
+    }
+    sendMessage('Confirm Requirement', {
+      action: 'confirm_req',
+      glossary: glossToSave,
+    })
+  }, [sendMessage])
+
+  const handleApplyEntityScope = useCallback(({ selectedEntities, mode, domainLabel }) => {
+    if (!selectedEntities || selectedEntities.length === 0) return
+    const prompt = mode === 'all'
+      ? `Select All Entities (${selectedEntities.length})`
+      : mode === 'single'
+        ? `Select Only ${selectedEntities[0]}`
+        : `Proceed with selected entities for ${domainLabel || 'domain'}: ${selectedEntities.join(', ')}`
+    sendMessage(prompt, { action: 'select_entities', selectedEntities })
+  }, [sendMessage])
+
+  const handleOpenExistingStructure = useCallback(({ selectedEntities, domainName, domainLabel } = {}) => {
+    const entityNote = selectedEntities?.length
+      ? ` with entities: ${selectedEntities.join(', ')}`
+      : ''
+    const prompt = `Open and edit existing Gold structure for ${domainLabel || domainName || 'Marketing & Analytics'}${entityNote}`
+    sendMessage(prompt, { action: 'open_existing_structure', glossary: latestGlossaryRef.current, selectedEntities })
+  }, [sendMessage])
+
   const handleChipClick = useCallback((label) => {
     if ((label === 'Edit' || label === 'Let me tweak this' || label === 'Let me tweak one') && requirementData) {
       setEditFormOpen(true)
       return
     }
+    if (label === 'Apply & Save Contract' || label === 'Save Contract') {
+      handleSaveContract(latestContractRef.current)
+      return
+    }
+    if (label === 'Confirm Requirement' || label === 'Design Gold Schema' || label === 'Design Gold Star Schema') {
+      sendMessage(label, { glossary: latestGlossaryRef.current })
+      return
+    }
+    if (label === 'Open & Edit Existing Gold Structure') {
+      sendMessage(label, { action: 'open_existing_structure', glossary: latestGlossaryRef.current })
+      return
+    }
     if (label === DDI_CHIP_ADJUST_ER) { setTweakMode('er'); return }
     if (label === DDI_CHIP_TWEAK_STTM) { setTweakMode('sttm'); return }
     sendMessage(label)
-  }, [requirementData, sendMessage])
+  }, [requirementData, sendMessage, handleSaveContract])
 
   const handleTweakSubmit = useCallback((text) => {
     const mode = tweakMode
@@ -242,8 +334,12 @@ function Workspace({ user }) {
 
   const handleTweakClose = useCallback(() => setTweakMode(null), [])
 
-  const handleEditSubmit = useCallback((updates) => {
+  const handleEditSubmit = useCallback((updates, updatedGlossary) => {
     setEditFormOpen(false)
+    if (updatedGlossary) {
+      latestGlossaryRef.current = updatedGlossary
+      setGlossaryData(updatedGlossary)
+    }
     const lines = Object.entries(updates)
       .filter(([, v]) => v !== null && v !== undefined && String(v).trim() !== '')
       .map(([k, v]) => {
@@ -253,7 +349,7 @@ function Workspace({ user }) {
         return `- ${k}: ${v}`
       })
     const msg = `Please update my requirement with the following changes:\n${lines.join('\n')}`
-    sendMessage(msg, { action: 'edit' })
+    sendMessage(msg, { action: 'edit', glossary: updatedGlossary || latestGlossaryRef.current })
   }, [sendMessage])
 
   const handleEditClose = useCallback(() => setEditFormOpen(false), [])
@@ -323,7 +419,7 @@ function Workspace({ user }) {
       {/* Main row */}
       <div className="flex" style={{ flex: 1, minHeight: 0 }}>
         <NavRail activePhase={activePhase} />
-        <ChatSidebar activePhase={activePhase} />
+        <ChatSidebar activePhase={activePhase} useCaseSubtitle={requirementData?.use_case_name || requirementData?.name || 'Gold Star Schema'} />
         <ChatPane
           messages={messages}
           onSend={sendMessage}
@@ -343,6 +439,15 @@ function Workspace({ user }) {
           onEditClose={handleEditClose}
           activeAgent={activeAgent}
           currentActivity={currentActivity}
+          onOpenNavigator={() => setNavigatorOpen(true)}
+          sessionId={sessionId}
+          onApplyEntityScope={handleApplyEntityScope}
+          onOpenExistingStructure={handleOpenExistingStructure}
+          onSaveContract={handleSaveContract}
+          onContractChange={handleContractChange}
+          onGlossaryChange={handleGlossaryChange}
+          onSaveGlossary={handleSaveGlossary}
+          onConfirmWithGlossary={handleConfirmWithGlossary}
         />
         <FilesPanel generatedFiles={generatedFiles} onDownload={handleDownload} />
       </div>
@@ -350,6 +455,19 @@ function Workspace({ user }) {
       {tweakMode && (
         <TweakModal mode={tweakMode} onSubmit={handleTweakSubmit} onClose={handleTweakClose} />
       )}
+
+      <HierarchicalSelectorModal
+        isOpen={navigatorOpen}
+        onClose={() => setNavigatorOpen(false)}
+        sessionId={sessionId}
+        onApply={(text) => sendMessage(text)}
+        onOpenExistingStructure={(payload) => {
+          handleOpenExistingStructure({
+            selectedEntities: payload?.selected_entities,
+            domainName: payload?.domain_name,
+          })
+        }}
+      />
     </div>
   )
 }
