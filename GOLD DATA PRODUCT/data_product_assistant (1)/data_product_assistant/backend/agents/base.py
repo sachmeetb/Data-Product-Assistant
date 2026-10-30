@@ -95,7 +95,7 @@ _SKILL_MAX_TOKENS: dict[str, int] = {
     "publisher":                 8000,
     "requirement-understanding": 8000,
     "gold-er":                   12000,
-    "silver-sttm":               10000,
+    "silver-sttm":               20000,   # high headroom to prevent truncated mappings
     "silver-transformation":     16000,
     "gold-final":                20000,
 }
@@ -126,21 +126,19 @@ if os.getenv("GEMINI_MODEL_TIER") == "flash":
 # ── Thinking budget ───────────────────────────────────────────────────────────
 # The flash model has "thinking" ON by default, and thinking tokens are drawn
 # from the SAME max_output_tokens budget as the answer. For agents that must emit
-# a large structured JSON (Test Agent, Challenger, …), unbounded thinking can
-# consume the budget and truncate the JSON mid-object → the response fails to
-# parse → run_agent returns {"raw_output": ...}. A PASSING test then looks like a
-# failure ("Pipeline build failed"), and the Challenger review PDF comes out
-# empty. Capping the thinking budget guarantees room for the actual answer.
-# Applied only to flash agents; pro models manage their own budget. Tunable via
-# the FLASH_THINKING_BUDGET env var (set to 0 to disable thinking entirely).
-_FLASH_THINKING_BUDGET = int(os.getenv("FLASH_THINKING_BUDGET", "2048"))
+# a large structured JSON (Silver STTM, Test Agent, Challenger, …), unbounded thinking
+# can consume the budget and truncate the JSON mid-object → the response fails to
+# parse → run_agent returns {"raw_output": ...}. Capping the thinking budget guarantees
+# room for the actual answer. Applied to any flash models.
+_FLASH_THINKING_BUDGET = int(os.getenv("FLASH_THINKING_BUDGET", "1024"))
 
 
 def _thinking_config_for(skill_name: str):
     """Return a ThinkingConfig for flash agents (bounded budget), else None."""
     if ThinkingConfig is None:
         return None
-    if _SKILL_MODEL.get(skill_name) != _FLASH_MODEL:
+    model_name = _SKILL_MODEL.get(skill_name, _DEFAULT_MODEL)
+    if "flash" not in model_name.lower():
         return None
     try:
         return ThinkingConfig(thinking_budget=_FLASH_THINKING_BUDGET)
@@ -305,7 +303,75 @@ def parse_agent_output(raw_text: str) -> dict:
                 "_truncated":     True,
             }
 
+    # Attempt truncated JSON balancing to recover objects ending mid-stream
+    repaired_obj = _repair_truncated_json(text)
+    if repaired_obj is not None:
+        return repaired_obj
+
     return {"raw_output": text}
+
+
+def _repair_truncated_json(text: str) -> dict | None:
+    """Attempt to balance unclosed quotes, brackets, and braces in a truncated JSON string."""
+    first = text.find("{")
+    if first < 0:
+        return None
+    s = text[first:].strip()
+
+    in_string = False
+    escape_next = False
+    stack: list[str] = []
+    clean_chars: list[str] = []
+
+    for ch in s:
+        if escape_next:
+            escape_next = False
+            clean_chars.append(ch)
+            continue
+        if ch == "\\":
+            escape_next = True
+            clean_chars.append(ch)
+            continue
+        if ch == '"':
+            in_string = not in_string
+            clean_chars.append(ch)
+            continue
+        if in_string:
+            clean_chars.append(ch)
+            continue
+        if ch in ("{", "["):
+            stack.append(ch)
+            clean_chars.append(ch)
+        elif ch in ("}", "]"):
+            if stack:
+                top = stack[-1]
+                if (ch == "}" and top == "{") or (ch == "]" and top == "["):
+                    stack.pop()
+                    clean_chars.append(ch)
+            continue
+        else:
+            clean_chars.append(ch)
+
+    repaired = "".join(clean_chars)
+    if in_string:
+        repaired += '"'
+    import re as _re
+    repaired = _re.sub(r'[,:\s]+$', '', repaired)
+    for open_ch in reversed(stack):
+        if open_ch == "{":
+            repaired += "}"
+        elif open_ch == "[":
+            repaired += "]"
+
+    for attempt in (repaired, _escape_newlines_in_strings(repaired)):
+        try:
+            res = json.loads(attempt)
+            if isinstance(res, dict) and len(res) > 0:
+                res["_truncated"] = True
+                return res
+        except Exception:
+            pass
+    return None
 
 
 def _extract_generated_code(text: str) -> str:
