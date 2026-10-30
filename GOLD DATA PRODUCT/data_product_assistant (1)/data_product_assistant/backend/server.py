@@ -995,6 +995,14 @@ def _bigquery_console_url() -> str:
     return f"https://console.cloud.google.com/bigquery?project={project}"
 
 
+def _knowledge_catalog_console_url() -> str:
+    """Build Google Cloud Knowledge Catalog (Dataplex) Console URL from env vars."""
+    project = os.environ.get("BQ_PROJECT") or os.environ.get("GOOGLE_CLOUD_PROJECT", "")
+    if not project:
+        return ""
+    return f"https://console.cloud.google.com/dataplex/catalog?project={project}"
+
+
 # ── SQL parsing helpers ───────────────────────────────────────────────────────
 
 def _parse_tables_from_sql(sql_code: str) -> dict[str, list]:
@@ -1388,8 +1396,19 @@ def _format_publish_result(publish_report: dict) -> str:
             ]
 
     bq_url = _bigquery_console_url()
+    kc_url = _knowledge_catalog_console_url()
+
+    quick_links = []
     if bq_url:
-        lines += ["---", f"Tables are now live. [Open BigQuery Console ->]({bq_url})"]
+        quick_links.append(f"[Open BigQuery Console ->]({bq_url})")
+    if kc_url:
+        quick_links.append(f"[Open Knowledge Catalog ->]({kc_url})")
+
+    if quick_links:
+        lines += [
+            "---",
+            f"Tables are now live and cataloged. {' · '.join(quick_links)}",
+        ]
     else:
         lines += ["---", "Tables are now live in **BigQuery**."]
     return "\n".join(lines)

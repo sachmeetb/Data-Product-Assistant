@@ -89,97 +89,85 @@ function typeFromTransform(transform) {
 }
 
 /**
- * Build a column-level ER diagram from the STTM mappings. Each unique source
- * table (Bronze) becomes one ER entity with its source columns; each unique
- * target table (Silver) becomes one ER entity with its target columns; gold
- * targets (when supplied) become trailing entities. Arrows go Bronze → Silver
- * → Gold so the user can read the data flow left-to-right.
+ * Build a pipeline lineage flowchart (Bronze → Silver → Gold) from STTM mappings.
+ * Uses Mermaid flowchart LR so users see the true stage progression with distinct
+ * layer subgraphs instead of a broken pseudo-ER diagram.
  */
 function buildLineageMermaid({ silver_tables = [], gold_targets = [], mappings = [] }) {
   if (!mappings || mappings.length === 0) {
     return ''
   }
 
-  // Group columns per table from the mapping rows
-  const bronzeByTable = new Map()  // table → Map<colName, type>
-  const silverByTable = new Map()  // table → Map<colName, {type, isFromBronze}>
+  const bronzeTables = new Set()
+  const silverTables = new Set()
+  const bronzeToSilver = new Set()
 
-  for (const m of mappings) {
-    const srcTable = tableOfColumn(m.source_column)
-    const srcCol   = columnOf(m.source_column)
-    const tgtTable = m.target_table || tableOfColumn(m.target_column)
-    const tgtCol   = columnOf(m.target_column)
-    const type     = typeFromTransform(m.transform)
-
-    if (srcTable && srcCol) {
-      if (!bronzeByTable.has(srcTable)) bronzeByTable.set(srcTable, new Map())
-      // Bronze columns are typed as strings from the raw source; we don't infer Bronze types here.
-      bronzeByTable.get(srcTable).set(srcCol, 'string')
-    }
-    if (tgtTable && tgtCol) {
-      if (!silverByTable.has(tgtTable)) silverByTable.set(tgtTable, new Map())
-      silverByTable.get(tgtTable).set(tgtCol, type)
-    }
-  }
-
-  // Make sure silver_tables passed from the view are represented even if mappings
-  // are empty for them (rare but defensive).
-  for (const st of (silver_tables || [])) {
-    const key = shortName(st)
-    if (!silverByTable.has(key)) silverByTable.set(key, new Map())
-  }
-
-  const goldTables = (gold_targets || []).filter(Boolean)
-
-  const lines = ['erDiagram']
-
-  // Bronze entities
-  for (const [table, cols] of bronzeByTable.entries()) {
-    const id = sanitiseId(shortName(table))
-    lines.push(`    ${id} {`)
-    for (const [colName, colType] of cols.entries()) {
-      lines.push(`        ${colType} ${sanitiseId(colName)}`)
-    }
-    lines.push('    }')
-  }
-
-  // Silver entities
-  for (const [table, cols] of silverByTable.entries()) {
-    const id = sanitiseId(shortName(table))
-    lines.push(`    ${id} {`)
-    for (const [colName, colType] of cols.entries()) {
-      lines.push(`        ${colType} ${sanitiseId(colName)}`)
-    }
-    lines.push('    }')
-  }
-
-  // Gold entities (no column-level info available — emit a placeholder column)
-  for (const gt of goldTables) {
-    const id = sanitiseId(shortName(gt))
-    lines.push(`    ${id} {`)
-    lines.push(`        string id`)
-    lines.push('    }')
-  }
-
-  // Relationships — Bronze → Silver for every (bronze, silver) pair seen in the mappings
-  const bronzeToSilverPairs = new Set()
   for (const m of mappings) {
     const srcTable = shortName(tableOfColumn(m.source_column))
     const tgtTable = shortName(m.target_table || tableOfColumn(m.target_column))
+
+    if (srcTable) bronzeTables.add(srcTable)
+    if (tgtTable) silverTables.add(tgtTable)
     if (srcTable && tgtTable) {
-      bronzeToSilverPairs.add(`${srcTable}::${tgtTable}`)
+      bronzeToSilver.add(`${srcTable}::${tgtTable}`)
     }
-  }
-  for (const pair of bronzeToSilverPairs) {
-    const [b, s] = pair.split('::')
-    lines.push(`    ${sanitiseId(b)} ||--o{ ${sanitiseId(s)} : "conforms to"`)
   }
 
-  // Silver → Gold for every silver/gold pair (no per-row info; assume each silver feeds every gold).
-  for (const [silverTable] of silverByTable.entries()) {
-    for (const gt of goldTables) {
-      lines.push(`    ${sanitiseId(shortName(silverTable))} ||--o{ ${sanitiseId(shortName(gt))} : "feeds"`)
+  for (const st of (silver_tables || [])) {
+    const key = shortName(st)
+    if (key) silverTables.add(key)
+  }
+
+  const goldTables = (gold_targets || []).map(gt => shortName(gt)).filter(Boolean)
+
+  const lines = ['flowchart LR']
+
+  if (bronzeTables.size > 0) {
+    lines.push('    subgraph BRONZE ["🥉 Bronze Sources"]')
+    for (const b of bronzeTables) {
+      lines.push(`        ${sanitiseId(b)}["${b}"]`)
     }
+    lines.push('    end')
+  }
+
+  if (silverTables.size > 0) {
+    lines.push('    subgraph SILVER ["🥈 Silver Conformed"]')
+    for (const s of silverTables) {
+      lines.push(`        ${sanitiseId(s)}["${s}"]`)
+    }
+    lines.push('    end')
+  }
+
+  if (goldTables.length > 0) {
+    lines.push('    subgraph GOLD ["🥇 Gold Data Product"]')
+    for (const g of goldTables) {
+      lines.push(`        ${sanitiseId(g)}["${g}"]`)
+    }
+    lines.push('    end')
+  }
+
+  for (const pair of bronzeToSilver) {
+    const [b, s] = pair.split('::')
+    lines.push(`    ${sanitiseId(b)} -->|"conforms"| ${sanitiseId(s)}`)
+  }
+
+  for (const s of silverTables) {
+    for (const g of goldTables) {
+      lines.push(`    ${sanitiseId(s)} -->|"feeds"| ${sanitiseId(g)}`)
+    }
+  }
+
+  lines.push('    classDef bronzeStyle fill:#FBEFE3,stroke:#8A4A1C,stroke-width:1.5px,color:#8A4A1C,font-weight:bold;')
+  lines.push('    classDef silverStyle fill:#F1F3F5,stroke:#4C5660,stroke-width:1.5px,color:#1F2937,font-weight:bold;')
+  lines.push('    classDef goldStyle fill:#FFF6E2,stroke:#D97706,stroke-width:2px,color:#92400E,font-weight:bold;')
+  if (bronzeTables.size > 0) {
+    lines.push(`    class ${Array.from(bronzeTables).map(sanitiseId).join(',')} bronzeStyle;`)
+  }
+  if (silverTables.size > 0) {
+    lines.push(`    class ${Array.from(silverTables).map(sanitiseId).join(',')} silverStyle;`)
+  }
+  if (goldTables.length > 0) {
+    lines.push(`    class ${goldTables.map(sanitiseId).join(',')} goldStyle;`)
   }
 
   return lines.join('\n')

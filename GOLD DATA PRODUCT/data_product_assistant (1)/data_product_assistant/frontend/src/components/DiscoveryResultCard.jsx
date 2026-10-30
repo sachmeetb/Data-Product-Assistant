@@ -453,6 +453,7 @@ export default function DiscoveryResultCard({ view }) {
   const [selectedRequirement, setSelectedRequirement] = useState(null)
   const [collapsedTables, setCollapsedTables] = useState({})
   const [collapsedSections, setCollapsedSections] = useState({
+    summary: true,
     dataPoints: false,
     byLayer: false,
     visualMap: false,
@@ -536,12 +537,46 @@ export default function DiscoveryResultCard({ view }) {
 
       {/* SUMMARY */}
       <div style={{ marginTop: 14 }}>
-        <SectionLabel style={{ marginBottom: 8 }}>SUMMARY</SectionLabel>
-        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-          {LAYERS.map((layer) => (
-            <SummaryCard key={layer} layer={layer} block={d.layers[layer]} />
-          ))}
+        <div
+          onClick={() => toggleSection('summary')}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            cursor: 'pointer',
+            marginBottom: collapsedSections.summary ? 0 : 8,
+            userSelect: 'none',
+            padding: '8px 12px',
+            background: '#F9FAFB',
+            borderRadius: 6,
+            border: `1px solid ${BP.border}`,
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+            <span style={{ fontSize: 10, color: BP.textMuted }}>{collapsedSections.summary ? '▶' : '▼'}</span>
+            <SectionLabel style={{ margin: 0 }}>SUMMARY</SectionLabel>
+            {collapsedSections.summary && (
+              <span style={{ fontSize: 11, color: BP.textMuted, fontWeight: 500, marginLeft: 4 }}>
+                {LAYERS.map((layer) => {
+                  const b = d.layers[layer]
+                  if (!b) return null
+                  const countStr = b.tableCount > 0 ? ` (${b.tableCount} table${b.tableCount === 1 ? '' : 's'})` : ''
+                  return `${cap(layer)}: ${pal(b.status).lbl}${countStr}`
+                }).join(' · ')}
+              </span>
+            )}
+          </div>
+          <span style={{ fontSize: 11, color: '#7C3AED', fontWeight: 600 }}>
+            {collapsedSections.summary ? '▶ Expand Summary' : '▼ Collapse Summary'}
+          </span>
         </div>
+        {!collapsedSections.summary && (
+          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginTop: 10 }}>
+            {LAYERS.map((layer) => (
+              <SummaryCard key={layer} layer={layer} block={d.layers[layer]} />
+            ))}
+          </div>
+        )}
       </div>
 
       {/* SUMMARY BY DATA POINTS */}
