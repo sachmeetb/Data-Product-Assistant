@@ -23,9 +23,9 @@ from dotenv import load_dotenv
 ROOT_DIR = Path(__file__).parent.parent
 load_dotenv(ROOT_DIR / ".env")
 
-_BQ_PROJECT  = os.environ.get("BQ_PROJECT") or os.environ.get("GOOGLE_CLOUD_PROJECT", "")
+_BQ_PROJECT  = os.environ.get("BQ_PROJECT") or os.environ.get("GOOGLE_CLOUD_PROJECT") or "eogwapq-agbg-internal-data-mig"
 _BQ_LOCATION = os.environ.get("BQ_LOCATION", "us-central1")
-DEFAULT_PUBLISHER_MODE = os.environ.get("BQ_PUBLISHER_MODE", "auto").strip().lower()
+DEFAULT_PUBLISHER_MODE = os.environ.get("BQ_PUBLISHER_MODE", "live").strip().lower()
 
 
 # ── SQL parsing helpers ───────────────────────────────────────────────────────
@@ -137,12 +137,12 @@ class BigQueryPublisher:
         location: str | None = None,
         mode: str | None = None,
     ):
-        self.project  = (project  or _BQ_PROJECT  or "").strip()
+        self.project  = (project  or _BQ_PROJECT  or "eogwapq-agbg-internal-data-mig").strip()
         self.location = (location or _BQ_LOCATION or "us-central1").strip()
 
         _mode = (mode or DEFAULT_PUBLISHER_MODE).strip().lower()
         if _mode not in {"live", "dry_run", "auto"}:
-            _mode = "auto"
+            _mode = "live"
         if _mode == "auto":
             _mode = "live" if self.project else "dry_run"
         self.mode = _mode

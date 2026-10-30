@@ -17,7 +17,7 @@ from tools.bigquery_tool import BigQueryPublisher, query_table
 
 load_dotenv(_PROJECT_ROOT / ".env")
 
-_BQ_PROJECT = os.environ.get("BQ_PROJECT") or os.environ.get("GOOGLE_CLOUD_PROJECT", "")
+_BQ_PROJECT = os.environ.get("BQ_PROJECT") or os.environ.get("GOOGLE_CLOUD_PROJECT") or "eogwapq-agbg-internal-data-mig"
 
 # Design-time catalog placeholders baked into DDI artifacts and utility_catalog.json.
 # At execute-time these are rewritten to the actual BQ project + layer dataset.
@@ -103,7 +103,7 @@ def execute(validated_code: str, spec: dict | None = None, test_report: dict | N
     # Rewrite design-time Databricks-style FQNs to BigQuery FQNs
     validated_code = _rewrite_sql_to_bq(validated_code)
 
-    publisher = BigQueryPublisher()
+    publisher = BigQueryPublisher(mode="live")
     publish_results = publisher.publish(pipeline_code=validated_code)
 
     # Query actual table data for silver/gold tables after publishing

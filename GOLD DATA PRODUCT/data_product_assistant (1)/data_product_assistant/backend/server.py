@@ -1374,9 +1374,22 @@ def _format_publish_result(publish_report: dict) -> str:
                 lines.append("| " + " | ".join(str(v) if v is not None else "" for v in row) + " |")
             lines.append("")
 
+    kc_info = publish_report.get("knowledge_catalog", {})
+    if kc_info:
+        kc_status = kc_info.get("status", {})
+        if kc_status.get("connected"):
+            lines += [
+                "---",
+                "### Google Cloud Knowledge Catalog (Dataplex)",
+                f"**Status:** Connected to Dataplex Catalog (`{', '.join(kc_status.get('entry_groups', []))}`)",
+                f"**Project:** `{kc_status.get('project_id')}` | **Region:** `{kc_status.get('location')}`",
+                "Published Gold tables are synchronized and cataloged in Google Cloud Dataplex & Knowledge Catalog.",
+                "",
+            ]
+
     bq_url = _bigquery_console_url()
     if bq_url:
-        lines += ["---", f"Tables are now live. [Open BigQuery Console →]({bq_url})"]
+        lines += ["---", f"Tables are now live. [Open BigQuery Console ->]({bq_url})"]
     else:
         lines += ["---", "Tables are now live in **BigQuery**."]
     return "\n".join(lines)
@@ -4545,6 +4558,17 @@ async def chat_endpoint(req: ChatRequest):
                 spec,
                 pipeline_result.get("test_report", {}),
             )
+            from tools.knowledge_catalog import knowledge_catalog_client
+            from tools.gold_artifact_generator import generate_gold_dataplex_manifest_json
+
+            kc_status = knowledge_catalog_client.get_status()
+            published_tables = publish_report.get("published_tables", [])
+            kc_entries = {tbl: knowledge_catalog_client.verify_table_entry(tbl) for tbl in published_tables}
+            publish_report["knowledge_catalog"] = {
+                "status": kc_status,
+                "verified_entries": kc_entries,
+            }
+
             _save_output_json(f"dpb_output_{session_id[:8]}.json", publish_report)
             publish_text_raw = _format_publish_result(publish_report)
             # Route through the orchestrator agent so the user-facing reply
@@ -4562,12 +4586,25 @@ async def chat_endpoint(req: ChatRequest):
                 "application/json",
             )
 
+            manifest_json = generate_gold_dataplex_manifest_json(
+                contract_dict=session.get("data_contract") or session.get("contract_dict") or spec or {},
+                published_tables=published_tables,
+            )
+            manifest_file_id = _save_file(
+                f"gold_dataplex_catalog_manifest_{session_id[:8]}.json",
+                manifest_json,
+                "application/json",
+            )
+
             messages = [{
                 "agent": "Publisher Agent",
                 "step": 1,
                 "text": publish_text,
                 "chips": [],
-                "files": [{"id": report_file_id, "name": f"publish-report-{session_id[:8]}.json", "label": "Publish Report"}],
+                "files": [
+                    {"id": report_file_id, "name": f"publish-report-{session_id[:8]}.json", "label": "Publish Report"},
+                    {"id": manifest_file_id, "name": f"gold_dataplex_catalog_manifest_{session_id[:8]}.json", "label": "Dataplex & Knowledge Catalog Manifest (.json)"},
+                ],
             }]
 
             history.append({"role": "assistant", "content": publish_text})
@@ -5553,4 +5590,19 @@ async def api_navigator_select(req: NavigatorSelectRequest):
         "sttm_view": artifacts["gold_view"],
         "files": artifacts["all_files"],
     }
+
+
+@app.get("/catalog/knowledge-catalog/status")
+async def api_get_knowledge_catalog_status():
+    """Check live connectivity to Google Cloud Dataplex Universal / Knowledge Catalog."""
+    from tools.knowledge_catalog import knowledge_catalog_client
+    return knowledge_catalog_client.get_status()
+
+
+@app.get("/catalog/knowledge-catalog/search")
+async def api_search_knowledge_catalog(query: str = ""):
+    """Search live catalog entries from Google Cloud Dataplex Knowledge Catalog."""
+    from tools.knowledge_catalog import knowledge_catalog_client
+    return {"entries": knowledge_catalog_client.search_entries(query=query)}
+
 

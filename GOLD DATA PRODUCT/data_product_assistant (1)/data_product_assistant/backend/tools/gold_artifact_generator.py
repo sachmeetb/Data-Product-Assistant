@@ -289,3 +289,31 @@ def generate_gold_contract_yaml(contract_dict: dict) -> str:
         return yaml.dump(contract_dict, sort_keys=False, default_flow_style=False, allow_unicode=True)
     except Exception:
         return json.dumps(contract_dict, indent=2, default=str)
+
+
+def generate_gold_dataplex_manifest_json(contract_dict: dict, published_tables: Optional[List[str]] = None) -> str:
+    """Generate Dataplex & Knowledge Catalog Manifest JSON for Gold Data Products."""
+    from tools.knowledge_catalog import knowledge_catalog_client
+    domain_name = contract_dict.get("domain", "gold_domain")
+    models = contract_dict.get("models", {})
+    entities = []
+    for mname, mdef in models.items():
+        if isinstance(mdef, dict):
+            attrs = []
+            for fname, fdef in (mdef.get("fields") or {}).items():
+                if isinstance(fdef, dict):
+                    attrs.append({
+                        "name": fname,
+                        "sql_type": fdef.get("type", "STRING"),
+                        "role": "PII" if fdef.get("pii") else ("PK" if fdef.get("primary") else "ATTRIBUTE"),
+                        "is_nullable": fdef.get("nullable", True),
+                        "business_definition": fdef.get("description", ""),
+                    })
+            entities.append({
+                "name": mname,
+                "entity_type": "FACT" if "fact" in mname.lower() else "DIMENSION",
+                "attributes": attrs,
+            })
+    manifest = knowledge_catalog_client.generate_dataplex_manifest(domain_name, entities, published_tables)
+    return json.dumps(manifest, indent=2)
+
