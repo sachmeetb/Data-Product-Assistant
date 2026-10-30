@@ -456,7 +456,7 @@ export default function DiscoveryResultCard({ view }) {
     summary: false,
     dataPoints: true,
     byLayer: true,
-    visualMap: false,
+    visualMap: true,
   })
 
   if (!view) return null
