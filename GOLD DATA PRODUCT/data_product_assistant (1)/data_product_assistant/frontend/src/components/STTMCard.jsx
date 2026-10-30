@@ -196,10 +196,8 @@ export default function STTMCard({ view, variant = 'gold' }) {
 
   const isSilver = variant === 'silver'
   const narrativeText = summary || narrative
-  const narrativeBullets = isSilver ? splitNarrativeIntoBullets(narrativeText) : []
-  const lineageChart = isSilver
-    ? buildLineageMermaid({ silver_tables, gold_targets, mappings })
-    : ''
+  const narrativeBullets = splitNarrativeIntoBullets(narrativeText)
+  const lineageChart = buildLineageMermaid({ silver_tables, gold_targets, mappings })
 
   // Domain framework — use backend-injected value when present; otherwise detect from mappings/tables
   const CAMPAIGN_FRAMEWORK = {
@@ -306,11 +304,11 @@ export default function STTMCard({ view, variant = 'gold' }) {
   }
 
   function detectFramework() {
-    if (!isSilver) return null
     if (view.domain_framework) return view.domain_framework
     const hasCampaign = (
       (mappings || []).some(m => /campaign/i.test(m.target_table || '') || /campaign/i.test(m.target_column || '')) ||
       (silver_tables || []).some(t => /campaign/i.test(String(t))) ||
+      (gold_targets || []).some(t => /campaign/i.test(String(t))) ||
       /campaign/i.test(narrative || '') ||
       /campaign/i.test(summary || '')
     )
@@ -430,10 +428,12 @@ export default function STTMCard({ view, variant = 'gold' }) {
             )}
           </div>
 
-          {/* ── Physical Silver Schema ── */}
+          {/* ── Physical Schema (Silver or Gold Star Schema) ── */}
           {domainFramework.entities?.length > 0 && (
             <div style={{ padding: '8px 14px 12px', background: 'white' }}>
-              <div style={{ fontSize: 9.5, fontWeight: 700, color: '#9ca3af', letterSpacing: '0.08em', marginBottom: 7 }}>PHYSICAL SILVER SCHEMA</div>
+              <div style={{ fontSize: 9.5, fontWeight: 700, color: '#9ca3af', letterSpacing: '0.08em', marginBottom: 7 }}>
+                {isSilver ? 'PHYSICAL SILVER SCHEMA' : 'PHYSICAL GOLD SCHEMA (STAR SCHEMA / CONSUMPTION)'}
+              </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 7, maxHeight: 340, overflowY: 'auto' }}>
                 {domainFramework.entities.map(entity => {
                   const typeColor = entity.type === 'dimension' ? dfColor
@@ -496,7 +496,7 @@ export default function STTMCard({ view, variant = 'gold' }) {
       )}
 
       {narrativeText && (
-        isSilver && narrativeBullets.length > 1 ? (
+        narrativeBullets.length > 1 ? (
           <ul className="sttm-card-bullets sttm-card-narrative-bullets">
             {narrativeBullets.map((b, i) => <li key={i}>{b}</li>)}
           </ul>
@@ -526,7 +526,7 @@ export default function STTMCard({ view, variant = 'gold' }) {
         </ul>
       )}
 
-      {variant === 'silver' && lineage_summary?.length > 0 && (
+      {lineage_summary?.length > 0 && (
         <ul className="sttm-card-bullets">
           {lineage_summary.map((s, i) => <li key={i}>{s}</li>)}
         </ul>
@@ -569,7 +569,7 @@ export default function STTMCard({ view, variant = 'gold' }) {
         </div>
       </div>
 
-      {isSilver && lineageChart && (
+      {lineageChart && (
         <div className="sttm-lineage-wrap">
           <div className="sttm-lineage-header">
             <span className="sttm-lineage-title">Lineage</span>

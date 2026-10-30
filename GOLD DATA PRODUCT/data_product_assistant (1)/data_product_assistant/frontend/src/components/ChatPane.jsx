@@ -7,38 +7,38 @@ import DataContractCard, { DEFAULT_GOLD_CONTRACT } from './DataContractCard'
 import { BP } from '../theme'
 import { Video, Phone, MoreHorizontal } from '../icons'
 
-function ChatTopBar({ activeAgent, hasContract, onOpenContract }) {
+function ChatTopBar({ activeAgent, hasContract, onOpenContract, onOpenNavigator, onOpenExistingStructure }) {
   return (
     <div className="flex items-center justify-between px-5 shrink-0 border-b"
       style={{ height: 56, background: BP.greenDeep, borderColor: BP.greenDeeper }}>
       <div className="flex items-center gap-3">
         <div className="flex items-center justify-center font-semibold text-white shrink-0"
-          style={{ width: 32, height: 32, borderRadius: '50%', background: BP.green, fontSize: 12 }}>DA</div>
+          style={{ width: 32, height: 32, borderRadius: '50%', background: BP.green, fontSize: 12 }}>GA</div>
         <div>
           <div className="text-white font-semibold t-14 leading-tight flex items-center gap-2">
-            Data Product Assistant
+            Gold Data Product Assistant
             <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#5DD896' }} />
           </div>
           <div className="t-11" style={{ color: 'rgba(255,255,255,0.65)' }}>
-            Powered by Accenture Agentic Platform
-            {activeAgent && activeAgent !== 'Data Product Assistant' && (
+            Powered by Accenture Agentic Platform · Dimensional Models &amp; ODCS Data Contracts
+            {activeAgent && activeAgent !== 'Data Product Assistant' && activeAgent !== 'Gold Data Product Assistant' && (
               <span style={{ color: BP.yellow, marginLeft: 8 }}>· {activeAgent}</span>
             )}
           </div>
         </div>
       </div>
-      <div className="flex items-center gap-3" style={{ color: 'rgba(255,255,255,0.7)' }}>
-        {hasContract && (
+      <div className="flex items-center gap-2.5" style={{ color: 'rgba(255,255,255,0.85)' }}>
+        {onOpenNavigator && (
           <button
-            onClick={onOpenContract}
-            title="Open & Edit Gold Data Contract"
+            onClick={onOpenNavigator}
+            title="Open Hierarchical Domain & Gold Schema Navigator"
             style={{
-              background: '#E6DCFF',
-              color: '#460073',
-              border: '1px solid #C2A3FF',
+              background: '#FAF5FF',
+              color: '#7500C0',
+              border: '1px solid #D8B4FE',
               borderRadius: 6,
-              padding: '5px 10px',
-              fontSize: 11,
+              padding: '5px 11px',
+              fontSize: 11.5,
               fontWeight: 700,
               cursor: 'pointer',
               display: 'flex',
@@ -46,16 +46,43 @@ function ChatTopBar({ activeAgent, hasContract, onOpenContract }) {
               gap: 5,
             }}
           >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-              <polyline points="14 2 14 8 20 8" />
-              <path d="m10 13-2 2 2 2" />
-              <path d="m14 13 2 2-2 2" />
-            </svg>
-            Gold Data Contract
+            <span style={{ fontSize: 13 }}>🌲</span>
+            Domain Navigator
           </button>
         )}
-        <Video size={17} /><Phone size={17} /><MoreHorizontal size={17} />
+        <button
+          onClick={() => {
+            if (hasContract) {
+              onOpenContract()
+            } else if (onOpenExistingStructure) {
+              onOpenExistingStructure({})
+            } else {
+              onOpenContract()
+            }
+          }}
+          title="Open, Inspect & Extend Existing Gold Star Schema / Contract"
+          style={{
+            background: '#E6DCFF',
+            color: '#460073',
+            border: '1px solid #C2A3FF',
+            borderRadius: 6,
+            padding: '5px 11px',
+            fontSize: 11.5,
+            fontWeight: 700,
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 5,
+          }}
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+            <polyline points="14 2 14 8 20 8" />
+            <path d="m10 13-2 2 2 2" />
+            <path d="m14 13 2 2-2 2" />
+          </svg>
+          Gold Data Contract
+        </button>
       </div>
     </div>
   )
@@ -67,6 +94,15 @@ export default function ChatPane({
   pendingFile, onUseFile, onDismissFile,
   editFormOpen, requirementData, glossaryData, onEditSubmit, onEditClose,
   activeAgent, currentActivity,
+  onOpenNavigator,
+  sessionId,
+  onApplyEntityScope,
+  onOpenExistingStructure,
+  onSaveContract,
+  onContractChange,
+  onGlossaryChange,
+  onSaveGlossary,
+  onConfirmWithGlossary,
 }) {
   const bottomRef = useRef(null)
   const [contractModalOpen, setContractModalOpen] = useState(false)
@@ -84,7 +120,7 @@ export default function ChatPane({
     ? 'Pick a starting point above to begin…'
     : hasChips
       ? 'Tap a chip above to respond…'
-      : 'Message Data Product Assistant…'
+      : 'Message Gold Data Product Assistant…'
 
   const hasContract = messages.some(m => m.data_contract_view)
 
@@ -94,13 +130,27 @@ export default function ChatPane({
         activeAgent={activeAgent}
         hasContract={hasContract}
         onOpenContract={() => setContractModalOpen(true)}
+        onOpenNavigator={onOpenNavigator}
+        onOpenExistingStructure={onOpenExistingStructure}
       />
 
       <div id="chat-messages"
         className="messages overflow-y-auto px-6 py-5 space-y-5"
         style={{ flex: 1, background: BP.panel }}>
         {messages.map(msg => (
-          <MessageRow key={msg.id} msg={msg} onChipClick={handleChipClick} />
+          <MessageRow
+            key={msg.id}
+            msg={msg}
+            onChipClick={handleChipClick}
+            sessionId={sessionId}
+            onApplyEntityScope={onApplyEntityScope}
+            onOpenExistingStructure={onOpenExistingStructure}
+            onSaveContract={onSaveContract}
+            onContractChange={onContractChange}
+            onGlossaryChange={onGlossaryChange}
+            onSaveGlossary={onSaveGlossary}
+            onConfirmWithGlossary={onConfirmWithGlossary}
+          />
         ))}
         <div ref={bottomRef} />
       </div>
@@ -180,6 +230,12 @@ export default function ChatPane({
               view={messages.slice().reverse().find(m => m.data_contract_view)?.data_contract_view || DEFAULT_GOLD_CONTRACT}
               isModal={true}
               onClose={() => setContractModalOpen(false)}
+              sessionId={sessionId}
+              onSave={(finalized) => {
+                if (onSaveContract) onSaveContract(finalized)
+                setContractModalOpen(false)
+              }}
+              onContractChange={onContractChange}
             />
           </div>
         </div>

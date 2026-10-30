@@ -32,7 +32,7 @@ You do not write SQL, DDL, or transformation code. The source-to-target mapping 
 
 4. **Naming**
    - Fact: `fact_<use_case_short_name>` (derive from `use_case` in `discovery_view.use_case` — lowercased, snake_case, prefix removed). Example: "Daily Campaign Impressions and Clicks" → `fact_campaign_performance`.
-   - Dimensions: `dim_campaign` keyed on `campaign_id`; `dim_date` keyed on `date_id`.
+   - Dimensions: promote EVERY distinct entity found across the discovery matches to its own `dim_<entity>` table (e.g. `dim_campaign` keyed on `campaign_id`, `dim_channel` keyed on `channel_id`, `dim_creative` keyed on `creative_id`, `dim_audience` keyed on `audience_id`, `dim_placement` keyed on `placement_id`, `dim_date` keyed on `date_id`). Do NOT artificially restrict to 2 tables when discovery identifies multiple dimensional entities. Every discovered dimension radiates outward from the central fact table in the star schema.
 
 5. **Conventional enrichment attributes** (sensible defaults, not invented business logic):
    - `dim_date` always adds `day_of_week` (string), `month` (integer), `year` (integer).
