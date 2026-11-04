@@ -207,22 +207,22 @@ function SilverPublishReportCard({ view }) {
           Published Silver Entities — BigQuery & Knowledge Catalog Deep Links
         </div>
         <div style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12.5px' }}>
+          <table style={{ width: '100%', minWidth: '580px', tableLayout: 'auto', borderCollapse: 'collapse', fontSize: '12.5px' }}>
             <thead>
               <tr style={{ background: '#f8fafc', borderBottom: '2px solid #e2e8f0', textAlign: 'left' }}>
-                <th style={{ padding: '8px 10px', color: '#475569' }}>Silver Entity</th>
-                <th style={{ padding: '8px 10px', color: '#475569' }}>dbt Data Quality</th>
-                <th style={{ padding: '8px 10px', color: '#475569' }}>BigQuery Console</th>
-                <th style={{ padding: '8px 10px', color: '#475569' }}>GCP Knowledge Catalog</th>
+                <th style={{ padding: '8px 12px', color: '#475569', whiteSpace: 'nowrap' }}>Silver Entity</th>
+                <th style={{ padding: '8px 12px', color: '#475569', whiteSpace: 'nowrap' }}>dbt Data Quality</th>
+                <th style={{ padding: '8px 12px', color: '#475569', whiteSpace: 'nowrap' }}>BigQuery Console</th>
+                <th style={{ padding: '8px 12px', color: '#475569', whiteSpace: 'nowrap' }}>GCP Knowledge Catalog</th>
               </tr>
             </thead>
             <tbody>
               {tables.map((t, idx) => (
                 <tr key={t.fqn || idx} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                  <td style={{ padding: '9px 10px', fontWeight: 600, color: '#1e293b', fontFamily: 'monospace' }}>
+                  <td style={{ padding: '9px 12px', fontWeight: 600, color: '#1e293b', fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace', whiteSpace: 'nowrap' }}>
                     {t.table_name}
                   </td>
-                  <td style={{ padding: '9px 10px' }}>
+                  <td style={{ padding: '9px 12px', whiteSpace: 'nowrap' }}>
                     <span
                       style={{
                         background: '#ecfdf5',
@@ -237,7 +237,7 @@ function SilverPublishReportCard({ view }) {
                       ✓ VERIFIED ({t.dbt_tests_count || 0} dbt tests)
                     </span>
                   </td>
-                  <td style={{ padding: '9px 10px' }}>
+                  <td style={{ padding: '9px 12px', whiteSpace: 'nowrap' }}>
                     <a
                       href={t.bigquery_url}
                       target="_blank"
@@ -256,7 +256,7 @@ function SilverPublishReportCard({ view }) {
                       View in BigQuery ↗
                     </a>
                   </td>
-                  <td style={{ padding: '9px 10px' }}>
+                  <td style={{ padding: '9px 12px', whiteSpace: 'nowrap' }}>
                     <a
                       href={t.knowledge_catalog_url}
                       target="_blank"
@@ -337,12 +337,36 @@ function SilverPublishReportCard({ view }) {
                 })}
               </div>
             </div>
-            <div style={{ overflowX: 'auto', border: '1px solid #e2e8f0', borderRadius: '8px' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11.5px' }}>
+            <div style={{ overflowX: 'auto', border: '1px solid #e2e8f0', borderRadius: '8px', background: '#ffffff' }}>
+              <table
+                style={{
+                  width: 'max-content',
+                  minWidth: '100%',
+                  tableLayout: 'auto',
+                  borderCollapse: 'collapse',
+                  fontSize: '12px',
+                  lineHeight: 1.45,
+                  letterSpacing: 'normal',
+                  margin: 0,
+                }}
+              >
                 <thead>
                   <tr style={{ background: '#f1f5f9', borderBottom: '1px solid #cbd5e1' }}>
                     {previewTable.columns.map(col => (
-                      <th key={col} style={{ padding: '6px 8px', textAlign: 'left', fontFamily: 'monospace', color: '#334155', whiteSpace: 'nowrap' }}>
+                      <th
+                        key={col}
+                        style={{
+                          padding: '8px 14px',
+                          textAlign: 'left',
+                          fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+                          fontSize: '11.5px',
+                          fontWeight: 700,
+                          color: '#334155',
+                          whiteSpace: 'nowrap',
+                          borderRight: '1px solid #e2e8f0',
+                          letterSpacing: 'normal',
+                        }}
+                      >
                         {col}
                       </th>
                     ))}
@@ -350,9 +374,20 @@ function SilverPublishReportCard({ view }) {
                 </thead>
                 <tbody>
                   {(previewTable.rows || []).slice(0, 3).map((row, rIdx) => (
-                    <tr key={rIdx} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                    <tr key={rIdx} style={{ borderBottom: '1px solid #f1f5f9', background: rIdx % 2 === 1 ? '#f8fafc' : '#ffffff' }}>
                       {row.map((val, cIdx) => (
-                        <td key={cIdx} style={{ padding: '6px 8px', color: '#475569', whiteSpace: 'nowrap', fontFamily: 'monospace' }}>
+                        <td
+                          key={cIdx}
+                          style={{
+                            padding: '8px 14px',
+                            color: '#334155',
+                            whiteSpace: 'nowrap',
+                            fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+                            fontSize: '11.5px',
+                            borderRight: '1px solid #f1f5f9',
+                            letterSpacing: 'normal',
+                          }}
+                        >
                           {val}
                         </td>
                       ))}
@@ -714,6 +749,7 @@ export default function MessageRow({
               `bubble ${msg.role}` +
               (msg.loading ? ' thinking' : '') +
               (msg.discovery_view ? ' bubble-discovery' : '') +
+              (isPublishView ? ' bubble-wide' : '') +
               (isGlossary ? ' bubble-glossary' : '') +
               (isClassification ? ' bubble-classification' : '') +
               (isChallenger ? ' bubble-challenger' : '') +
