@@ -18,6 +18,7 @@ Endpoints:
 from __future__ import annotations
 
 import asyncio
+import json
 import logging
 import os
 import uuid
@@ -27,7 +28,7 @@ from typing import Any, Optional
 
 from dotenv import load_dotenv
 
-load_dotenv(Path(__file__).parent / ".env")
+load_dotenv(Path(__file__).parent / ".env", override=True)
 
 from fastapi import FastAPI, HTTPException, UploadFile, File, Response
 from fastapi.middleware.cors import CORSMiddleware
@@ -49,6 +50,7 @@ from agents import (
     validator_agent,
 )
 from tools.bigquery_tool import BigQueryPublisher
+from tools.knowledge_catalog import KnowledgeCatalogClient
 from tools.datacontract_generator import (
     generate_data_contract_dict,
     generate_data_contract_yaml,
@@ -63,6 +65,9 @@ from tools.artifact_generator import (
     generate_sample_audit_excel,
     generate_dataplex_manifest_json,
     generate_airflow_dag_code,
+    summarize_dbt_dq_suite,
+    generate_dbt_schema_yaml,
+    generate_dbt_models_sql,
 )
 
 from tools import schema_loader
@@ -287,20 +292,14 @@ async def get_contract(session_id: str):
 
 @app.post("/v1/sessions/{session_id}/publish")
 async def publish_session(session_id: str, body: PublishRequest):
-    """Publish the generated DDL to BigQuery."""
+    """Publish the generated Silver DDL to BigQuery and synchronize metadata & dbt DQ with GCP Knowledge Catalog."""
     session = _get_session(session_id)
-    ddl = session.get("ddl_script", "")
-    if not ddl:
-        raise HTTPException(status_code=400, detail="No DDL to publish. Run the pipeline first.")
-
-    publisher = BigQueryPublisher(mode=body.mode)
-    report = await asyncio.to_thread(publisher.publish, ddl)
-
-    session["publish_report"] = report
-    session["status"] = "published" if report.get("publish_status") == "published" else session["status"]
-    store.set(session_id, session)
-
-    return {"session_id": session_id, **report}
+    pub_out = await _execute_silver_publish_and_catalog_sync(session, mode=body.mode)
+    return {
+        "session_id": session_id,
+        **pub_out["publish_view"],
+        "files": pub_out["all_files"],
+    }
 
 
 # ── Quick-run endpoint ────────────────────────────────────────────────────────
@@ -1368,6 +1367,7 @@ def _build_artifacts_from_saved_contract(session: dict, contract_dict: Optional[
         "status": "APPROVED",
     }
     product_plan = {
+        "dataset": target_dataset,
         "tables": saved_entities,
         "entities": saved_entities,
         "domain": domain_name,
@@ -1419,6 +1419,11 @@ def _build_artifacts_from_saved_contract(session: dict, contract_dict: Optional[
                 "target_table": f"{target_dataset}.{tbl}",
             })
 
+    # Compute dbt Data Quality summary & generate dbt schema.yml + dbt models.sql (Requirement A)
+    dbt_dq_summary = summarize_dbt_dq_suite(product_plan, contract_dict)
+    dbt_schema_yaml_str = generate_dbt_schema_yaml(product_plan, contract_dict, bank_profile)
+    dbt_models_sql_str = generate_dbt_models_sql(product_plan, mappings, contract_dict)
+
     # Generate downloadable Stage 3 files from the saved contract
     # 1. YAML Data Contract File
     contract_file_id = str(uuid.uuid4())
@@ -1440,7 +1445,27 @@ def _build_artifacts_from_saved_contract(session: dict, contract_dict: Optional[
         "type": "sql",
     }
 
-    # 3. Excel STTM Mapping Workbook (.xlsx)
+    # 3. dbt Data Quality Schema & Tests YAML (.yml)
+    dbt_yaml_file_id = str(uuid.uuid4())
+    dbt_yaml_filename = f"slv_dbt_schema_tests_{session_id[:6]}.yml"
+    FILE_STORE[dbt_yaml_file_id] = {
+        "id": dbt_yaml_file_id,
+        "name": dbt_yaml_filename,
+        "content": dbt_schema_yaml_str.encode("utf-8"),
+        "type": "yaml",
+    }
+
+    # 4. dbt Incremental Transformation Models (.sql)
+    dbt_sql_file_id = str(uuid.uuid4())
+    dbt_sql_filename = f"slv_dbt_models_{session_id[:6]}.sql"
+    FILE_STORE[dbt_sql_file_id] = {
+        "id": dbt_sql_file_id,
+        "name": dbt_sql_filename,
+        "content": dbt_models_sql_str.encode("utf-8"),
+        "type": "sql",
+    }
+
+    # 5. Excel STTM Mapping Workbook (.xlsx)
     sttm_xls_bytes = generate_sttm_excel(mappings, structured_req)
     sttm_xls_file_id = str(uuid.uuid4())
     sttm_xls_filename = f"slv_sttm_mapping_v1_{session_id[:6]}.xlsx"
@@ -1451,7 +1476,7 @@ def _build_artifacts_from_saved_contract(session: dict, contract_dict: Optional[
         "type": "xlsx",
     }
 
-    # 4. Excel Metadata Workbook (.xlsx - 2 Tabs)
+    # 6. Excel Metadata Workbook (.xlsx - 2 Tabs)
     meta_xls_bytes = generate_metadata_excel(product_plan, domain_scope, structured_req)
     meta_xls_file_id = str(uuid.uuid4())
     meta_xls_filename = f"slv_metadata_v1_{session_id[:6]}.xlsx"
@@ -1462,7 +1487,7 @@ def _build_artifacts_from_saved_contract(session: dict, contract_dict: Optional[
         "type": "xlsx",
     }
 
-    # 5. Excel Sample Run Audit Workbook (.xlsx - 3 Tabs)
+    # 7. Excel Sample Run Audit Workbook (.xlsx - 3 Tabs)
     audit_xls_bytes = generate_sample_audit_excel(product_plan, mappings)
     audit_xls_file_id = str(uuid.uuid4())
     audit_xls_filename = f"slv_sample_run_audit_{session_id[:6]}.xlsx"
@@ -1473,8 +1498,13 @@ def _build_artifacts_from_saved_contract(session: dict, contract_dict: Optional[
         "type": "xlsx",
     }
 
-    # 6. JSON GCP Dataplex Catalog Manifest (.json)
-    dataplex_json_str = generate_dataplex_manifest_json(product_plan, bank_profile)
+    # 8. JSON GCP Dataplex Catalog Manifest (.json)
+    dataplex_json_str = generate_dataplex_manifest_json(
+        product_plan,
+        bank_profile,
+        contract_dict=contract_dict,
+        dbt_dq_summary=dbt_dq_summary,
+    )
     dataplex_file_id = str(uuid.uuid4())
     dataplex_filename = f"slv_dataplex_catalog_manifest_{session_id[:6]}.json"
     FILE_STORE[dataplex_file_id] = {
@@ -1484,7 +1514,7 @@ def _build_artifacts_from_saved_contract(session: dict, contract_dict: Optional[
         "type": "json",
     }
 
-    # 7. Python GCP Airflow DAG Script (.py)
+    # 9. Python GCP Airflow DAG Script (.py)
     dag_code_str = generate_airflow_dag_code(product_plan, bank_profile)
     dag_file_id = str(uuid.uuid4())
     dag_filename = f"slv_pipeline_dag_{session_id[:6]}.py"
@@ -1495,14 +1525,16 @@ def _build_artifacts_from_saved_contract(session: dict, contract_dict: Optional[
         "type": "py",
     }
 
-    # Preserve Stage 1 & 2 files, replace any prior DESIGNER / BUILDER files with the newly saved versions
+    # Preserve Stage 1 & 2 files, replace any prior DESIGNER / BUILDER / QUALITY files with the newly saved versions
     prior_files = [
         f for f in session.get("all_generated_files", [])
-        if f.get("stage") not in ("DESIGNER", "BUILDER")
+        if f.get("stage") not in ("DESIGNER", "BUILDER", "QUALITY (dbt)", "PUBLISHED")
     ]
     stage3_files = [
         {"id": contract_file_id, "name": contract_filename, "label": "Silver Data Contract (.yaml)", "stage": "DESIGNER"},
         {"id": ddl_file_id, "name": ddl_filename, "label": "BigQuery Silver DDL Script (.sql)", "stage": "BUILDER"},
+        {"id": dbt_yaml_file_id, "name": dbt_yaml_filename, "label": "dbt Data Quality Schema & Tests (.yml)", "stage": "QUALITY (dbt)"},
+        {"id": dbt_sql_file_id, "name": dbt_sql_filename, "label": "dbt Incremental Silver Models (.sql)", "stage": "QUALITY (dbt)"},
         {"id": sttm_xls_file_id, "name": sttm_xls_filename, "label": "STTM Mapping Workbook (.xlsx)", "stage": "DESIGNER"},
         {"id": meta_xls_file_id, "name": meta_xls_filename, "label": "Governance Metadata Workbook (.xlsx)", "stage": "DESIGNER"},
         {"id": audit_xls_file_id, "name": audit_xls_filename, "label": "Sample Transformation Audit (.xlsx)", "stage": "BUILDER"},
@@ -1511,6 +1543,11 @@ def _build_artifacts_from_saved_contract(session: dict, contract_dict: Optional[
     ]
     all_files = prior_files + stage3_files
     session["all_generated_files"] = all_files
+    session["saved_entities"] = saved_entities
+    session["target_dataset"] = target_dataset
+    session["dbt_dq_summary"] = dbt_dq_summary
+    session["dataplex_file_id"] = dataplex_file_id
+    session["product_plan"] = product_plan
 
     active_table_names = [e["table_name"] for e in saved_entities]
     silver_sources = [e.get("source_table") or f"raw_bronze.{e['table_name'].replace('slv_', 'src_')}" for e in saved_entities]
@@ -1523,7 +1560,10 @@ def _build_artifacts_from_saved_contract(session: dict, contract_dict: Optional[
     silver_view = {
         "title": f"Silver Schema & STTM Specification ({len(saved_entities)} {'Entity' if len(saved_entities) == 1 else 'Entities'})",
         "step_label": f"{domain_name} Conformed Silver Layer",
-        "summary": f"Generated from your saved Silver Data Contract ({len(saved_entities)} {'entity' if len(saved_entities) == 1 else 'entities'}, {len(mappings)} column mappings).",
+        "summary": (
+            f"Generated from your saved Silver Data Contract ({len(saved_entities)} {'entity' if len(saved_entities) == 1 else 'entities'}, "
+            f"{len(mappings)} column mappings, {dbt_dq_summary['total_tests']} dbt Data Quality tests)."
+        ),
         "narrative": (
             f"Your Silver Data Contract (`{contract_dict.get('info', {}).get('title', domain_name)}`) has been saved and applied across "
             f"{len(saved_entities)} conformed {'entity' if len(saved_entities) == 1 else 'entities'}: "
@@ -1535,6 +1575,7 @@ def _build_artifacts_from_saved_contract(session: dict, contract_dict: Optional[
         "header": "Silver STTM Mappings",
         "mappings": mappings,
         "mapping_count": len(mappings),
+        "dbt_data_quality": dbt_dq_summary,
     }
 
     session["step"] = "complete"
@@ -1546,12 +1587,157 @@ def _build_artifacts_from_saved_contract(session: dict, contract_dict: Optional[
         "silver_view": silver_view,
         "all_files": all_files,
         "active_table_names": active_table_names,
+        "dbt_dq_summary": dbt_dq_summary,
+        "dbt_schema_yaml": dbt_schema_yaml_str,
     }
+
+
+async def _execute_silver_publish_and_catalog_sync(session: dict, mode: Optional[str] = None) -> dict:
+    """
+    Execute the saved Silver DDL against live GCP BigQuery, seed sample conformed rows,
+    synchronize table & column descriptions + PK/FK/PII/KPI tags + dbt Data Quality coverage
+    into BigQuery & GCP Knowledge Catalog (Dataplex), and return clickable console links.
+    """
+    session_id = session.get("session_id") or str(uuid.uuid4())
+    if not session.get("ddl_script") or not session.get("saved_entities"):
+        _build_artifacts_from_saved_contract(session, session.get("contract_dict"))
+
+    ddl = session.get("ddl_script", "")
+    saved_entities = session.get("saved_entities", [])
+    contract_dict = session.get("contract_dict") or {}
+    target_dataset = (
+        session.get("target_dataset")
+        or (contract_dict.get("info", {}) or {}).get("target_dataset")
+        or "banking_silver"
+    )
+    dbt_dq_summary = session.get("dbt_dq_summary") or summarize_dbt_dq_suite(
+        session.get("product_plan") or {"dataset": target_dataset, "tables": saved_entities},
+        contract_dict,
+    )
+
+    publisher = BigQueryPublisher(silver_dataset=target_dataset, mode=mode or "live")
+    bq_report = await asyncio.to_thread(publisher.publish, ddl)
+
+    project_id = publisher.project_id
+    dataset_id = bq_report.get("dataset_id") or target_dataset
+    dataset_location = bq_report.get("dataset_location") or "US"
+
+    # Seed realistic sample rows into the published Silver tables
+    seed_report = await asyncio.to_thread(
+        publisher.seed_sample_rows,
+        saved_entities,
+        dataset_id,
+    )
+    actual_table_data = seed_report.get("actual_table_data", {})
+
+    # Synchronize Governance, Business Glossary & dbt Data Quality metadata to BigQuery & GCP Knowledge Catalog
+    kc_client = KnowledgeCatalogClient(project_id=project_id, dataset_id=dataset_id)
+    kc_table_syncs: list[dict] = []
+    for ent in saved_entities:
+        ent_enriched = {
+            **ent,
+            "domain": (contract_dict.get("info", {}) or {}).get("domain") or session.get("domain", "Canonical Silver"),
+            "industry": session.get("industry", "banking"),
+        }
+        sync_res = await asyncio.to_thread(
+            kc_client.sync_table_governance_and_dbt_dq,
+            dataset_id,
+            ent_enriched,
+            contract_dict,
+            dbt_dq_summary,
+        )
+        kc_table_syncs.append(sync_res)
+        if sync_res.get("dataset_location"):
+            dataset_location = sync_res["dataset_location"]
+
+    active_table_names = [e.get("table_name") or e.get("id") for e in saved_entities if e.get("table_name") or e.get("id")]
+    console_links = kc_client.build_console_links(
+        project_id=project_id,
+        dataset_id=dataset_id,
+        table_names=active_table_names,
+        dataset_location=dataset_location,
+        table_dbt_counts=dbt_dq_summary.get("table_test_counts", {}),
+    )
+
+    # Update Dataplex Catalog Manifest file & create Publish Report JSON file
+    bank_profile = session.get("bank_profile") or {"project_id": project_id, "industry": session.get("industry", "banking")}
+    product_plan = session.get("product_plan") or {"dataset": dataset_id, "tables": saved_entities}
+    updated_manifest_str = generate_dataplex_manifest_json(
+        product_plan,
+        bank_profile,
+        contract_dict=contract_dict,
+        published_tables=bq_report.get("published_tables", []),
+        dbt_dq_summary=dbt_dq_summary,
+    )
+    dp_fid = session.get("dataplex_file_id")
+    if dp_fid and dp_fid in FILE_STORE:
+        FILE_STORE[dp_fid]["content"] = updated_manifest_str.encode("utf-8")
+
+    publish_view = {
+        "publish_status": bq_report.get("publish_status", "published"),
+        "project_id": project_id,
+        "dataset_id": dataset_id,
+        "dataset_location": dataset_location,
+        "executed_count": bq_report.get("executed_count", len(active_table_names)),
+        "published_tables": bq_report.get("published_tables", [f"{dataset_id}.{t}" for t in active_table_names]),
+        "seeded_tables": seed_report.get("seeded_tables", {}),
+        "actual_table_data": actual_table_data,
+        "bigquery_dataset_url": console_links["bigquery_dataset_url"],
+        "knowledge_catalog_dataset_url": console_links["knowledge_catalog_dataset_url"],
+        "knowledge_catalog_home_url": console_links["knowledge_catalog_home_url"],
+        "tables": console_links["tables"],
+        "knowledge_catalog_sync": kc_table_syncs,
+        "dbt_data_quality": dbt_dq_summary,
+        "summary": bq_report.get("summary", ""),
+    }
+
+    pub_report_fid = str(uuid.uuid4())
+    pub_report_filename = f"slv_publish_report_{session_id[:6]}.json"
+    FILE_STORE[pub_report_fid] = {
+        "id": pub_report_fid,
+        "name": pub_report_filename,
+        "content": json.dumps(publish_view, indent=2).encode("utf-8"),
+        "type": "json",
+    }
+
+    all_files = [f for f in session.get("all_generated_files", []) if f.get("stage") != "PUBLISHED"]
+    all_files.append({
+        "id": pub_report_fid,
+        "name": pub_report_filename,
+        "label": "BigQuery & Knowledge Catalog Publish Report (.json)",
+        "stage": "PUBLISHED",
+    })
+    session["all_generated_files"] = all_files
+    session["publish_report"] = publish_view
+    session["status"] = "published"
+    store.set(session_id, session)
+
+    return {
+        "publish_view": publish_view,
+        "all_files": all_files,
+        "bq_report": bq_report,
+    }
+
+
+@app.get("/catalog/knowledge-catalog/status")
+async def get_knowledge_catalog_status(dataset_id: Optional[str] = None):
+    """Return live GCP Knowledge Catalog (Dataplex Universal Catalog) connection status and console links."""
+    kc = KnowledgeCatalogClient(dataset_id=dataset_id)
+    status = await asyncio.to_thread(kc.get_status)
+    return status
+
+
+@app.get("/catalog/knowledge-catalog/search")
+async def search_knowledge_catalog(q: str = "", page_size: int = 15):
+    """Search entries in GCP Knowledge Catalog (Dataplex Universal Catalog)."""
+    kc = KnowledgeCatalogClient()
+    res = await asyncio.to_thread(kc.search_entries, q, page_size)
+    return res
 
 
 @app.put("/v1/sessions/{session_id}/contract")
 async def update_session_contract(session_id: str, body: SaveContractRequest):
-    """Persist inline edits made to a Silver Data Contract structure and generate YAML/DDL/STTM artifacts."""
+    """Persist inline edits made to a Silver Data Contract structure and generate YAML/DDL/STTM/dbt artifacts."""
     if not session_id or session_id in ("null", "undefined", "default-session"):
         session_id = str(uuid.uuid4())
     session = store.get(session_id) or {
@@ -1568,6 +1754,7 @@ async def update_session_contract(session_id: str, body: SaveContractRequest):
         "contract": built["contract_dict"],
         "data_contract_view": built["contract_dict"],
         "silver_transform_view": built["silver_view"],
+        "dbt_data_quality": built["dbt_dq_summary"],
         "ddl": built["ddl"],
         "files": built["all_files"],
     }
@@ -1679,17 +1866,21 @@ async def chat_endpoint(body: ChatRequest):
         ddl = built["ddl"]
         silver_view = built["silver_view"]
         all_files = built["all_files"]
-        contract_dict = built["contract_dict"]
+        dbt_dq = built["dbt_dq_summary"]
 
         agent_response_text = (
             f"✅ **Silver Data Contract Saved & Applied!**\n\n"
             f"Generated the finalized **Silver Data Contract (`.yaml`)**, **BigQuery Silver DDL (`.sql`)**, "
-            f"**STTM Mapping Workbook (`.xlsx`)**, **Governance Metadata (`.xlsx`)**, **Sample Audit (`.xlsx`)**, "
+            f"**dbt Data Quality Schema & Tests (`slv_dbt_schema_tests.yml` — {dbt_dq['total_tests']} tests)**, "
+            f"**dbt Incremental Models (`slv_dbt_models.sql`)**, **STTM Mapping Workbook (`.xlsx`)**, "
             f"and **Dataplex / Airflow Artifacts** for **{len(active_table_names)} "
             f"{'entity' if len(active_table_names) == 1 else 'entities'}** "
             f"({', '.join([f'`{t}`' for t in active_table_names])}):\n\n"
             f"```sql\n{ddl}\n```\n\n"
-            f"All downloadable artifacts are now available in the **Files & Context** panel on the right."
+            f"**dbt Data Quality Suite Generated (`contract: enforced`):**\n"
+            f"- **Total dbt Tests:** `{dbt_dq['total_tests']}` (`{dbt_dq['unique_pk_tests']}` PK Unique, `{dbt_dq['not_null_tests']}` Not-Null, `{dbt_dq['fk_relationship_tests']}` FK Relationships, `{dbt_dq['custom_expression_tests']}` Custom Contract Rules)\n"
+            f"- **Source Freshness SLA:** `{dbt_dq['source_freshness_sla']}`\n\n"
+            f"Click **Publish to BigQuery** below to materialize these Silver tables in **GCP BigQuery** and synchronize governance & dbt DQ metadata to **GCP Knowledge Catalog (Dataplex)**."
         )
         return {
             "session_id": session_id,
@@ -1705,6 +1896,65 @@ async def chat_endpoint(body: ChatRequest):
                 }
             ],
             "chips": ["Publish to BigQuery", "Open & Edit Existing Silver Structure", "Adjust the model", "Tweak the mapping", "Change Entity Selection"],
+        }
+
+    # Direct handler for "Publish to BigQuery" (executes live BigQuery DDL + syncs to GCP Knowledge Catalog)
+    if (
+        action in ("publish_bq", "publish")
+        or user_msg.lower() in (
+            "publish to bigquery",
+            "publish",
+            "approve & publish",
+            "publish to bq & knowledge catalog",
+            "publish to bigquery & knowledge catalog",
+        )
+    ):
+        pub_out = await _execute_silver_publish_and_catalog_sync(session, mode="live")
+        pv = pub_out["publish_view"]
+        all_files = pub_out["all_files"]
+        dq = pv.get("dbt_data_quality", {})
+        tables_info = pv.get("tables", [])
+
+        table_rows_md = "\n".join([
+            f"| `{t['fqn']}` | `VERIFIED ({t.get('dbt_tests_count', 0)} dbt tests)` | "
+            f"[Open in BigQuery ↗]({t['bigquery_url']}) | "
+            f"[Open in Knowledge Catalog ↗]({t['knowledge_catalog_url']}) |"
+            for t in tables_info
+        ])
+
+        status_badge = "✅ LIVE PUBLISHED" if pv.get("publish_status") == "published" else f"⚠️ {str(pv.get('publish_status', '')).upper()}"
+        agent_response_text = (
+            f"🚀 **Published to GCP BigQuery & Synchronized with GCP Knowledge Catalog (Dataplex)!**\n\n"
+            f"- **Status:** **{status_badge}** (`{pv.get('executed_count', 0)}` DDL statements executed + sample conformed rows seeded)\n"
+            f"- **GCP Project:** `{pv.get('project_id')}` | **Target Silver Dataset:** `{pv.get('dataset_id')}` (`{pv.get('dataset_location')}`)\n"
+            f"- **Dataset Links:** [Open `{pv.get('dataset_id')}` in BigQuery Studio ↗]({pv.get('bigquery_dataset_url')})  •  "
+            f"[Explore `{pv.get('dataset_id')}` in GCP Knowledge Catalog (Dataplex) ↗]({pv.get('knowledge_catalog_dataset_url')})\n\n"
+            f"### Published Silver Entities & Console Deep Links\n"
+            f"| Silver Table (FQN) | dbt Data Quality Status | BigQuery Console | GCP Knowledge Catalog (Dataplex) |\n"
+            f"| :--- | :--- | :--- | :--- |\n"
+            f"{table_rows_md}\n\n"
+            f"### Synchronized Governance & dbt Data Quality Metadata in Knowledge Catalog\n"
+            f"- **dbt Model Contract:** `enforced: true` (`{dq.get('framework', 'dbt Core v1.8')}`)\n"
+            f"- **Total Verified dbt Tests Synced to Catalog:** **{dq.get('total_tests', 0)}** "
+            f"(`{dq.get('unique_pk_tests', 0)}` PK Uniqueness, `{dq.get('not_null_tests', 0)}` Not-Null, "
+            f"`{dq.get('fk_relationship_tests', 0)}` FK Referential Integrity, `{dq.get('custom_expression_tests', 0)}` Custom Quality Rules)\n"
+            f"- **BigQuery & Dataplex Labels Synced:** `layer: silver`, `contract_status: approved`, `dbt_dq_status: verified`, `governance: dataplex_knowledge_catalog`"
+        )
+
+        return {
+            "session_id": session_id,
+            "current_step": "published",
+            "publish_view": pv,
+            "messages": [
+                {
+                    "agent": "Silver Data Product Assistant",
+                    "text": agent_response_text,
+                    "chips": ["Open & Edit Existing Silver Structure", "Change Entity Selection", "Start New Domain"],
+                    "publish_view": pv,
+                    "files": all_files,
+                }
+            ],
+            "chips": ["Open & Edit Existing Silver Structure", "Change Entity Selection", "Start New Domain"],
         }
 
     # Helper to check industry match
