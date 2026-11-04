@@ -35,7 +35,8 @@ steps:
       - '--timeout=300'
       - '--min-instances=0'
       - '--max-instances=5'
-      - '--set-env-vars=GCP_PROJECT_ID=${_PROJECT_ID},GOOGLE_CLOUD_PROJECT=${_PROJECT_ID},GOOGLE_CLOUD_LOCATION=${_REGION},GCP_LOCATION=${_REGION},BQ_SILVER_DATASET=banking_silver,BQ_GOLD_DATASET=banking_gold,BQ_LOCATION=US,GEMINI_MODEL=gemini-2.5-flash,GOOGLE_GENAI_USE_VERTEXAI=1,AGENT_APP_NAME=bfsi-silver-agent,AGENT_MAX_CLARIFICATION_TURNS=3,AGENT_MAX_SPEC_ITERATIONS=3,AGENT_LOG_LEVEL=INFO,SESSION_BACKEND=memory,BQ_PUBLISHER_MODE=dry_run'
+      - '--set-env-vars=GCP_PROJECT_ID=${_PROJECT_ID},GOOGLE_CLOUD_PROJECT=${_PROJECT_ID},GOOGLE_CLOUD_LOCATION=${_REGION},GCP_LOCATION=${_REGION},BQ_SILVER_DATASET=banking_silver,BQ_GOLD_DATASET=banking_gold,BQ_LOCATION=US,GEMINI_MODEL=gemini-2.5-flash,GOOGLE_GENAI_USE_VERTEXAI=1,AGENT_APP_NAME=bfsi-silver-agent,AGENT_MAX_CLARIFICATION_TURNS=3,AGENT_MAX_SPEC_ITERATIONS=3,AGENT_LOG_LEVEL=INFO,SESSION_BACKEND=memory,BQ_PUBLISHER_MODE=live'
+      - '--service-account=dp-assistant-sa@${_PROJECT_ID}.iam.gserviceaccount.com'
 
   # 4. Build Frontend Image (using /__api proxy route)
   - name: 'gcr.io/cloud-builders/docker'
@@ -74,6 +75,7 @@ steps:
       - '--min-instances=0'
       - '--max-instances=3'
       - '--port=8080'
+      - '--service-account=dp-assistant-sa@${_PROJECT_ID}.iam.gserviceaccount.com'
 
 substitutions:
   _PROJECT_ID: 'eogwapq-agbg-internal-data-mig'
