@@ -33,7 +33,8 @@ gcloud run deploy $BACKEND_SVC `
     --min-instances=0 `
     --max-instances=5 `
     --timeout=300 `
-    --set-env-vars="GCP_PROJECT_ID=$PROJECT_ID,GOOGLE_CLOUD_PROJECT=$PROJECT_ID,GOOGLE_CLOUD_LOCATION=$REGION,GCP_LOCATION=$REGION,BQ_SILVER_DATASET=banking_silver,BQ_GOLD_DATASET=banking_gold,BQ_LOCATION=US,GEMINI_MODEL=gemini-2.5-flash,GOOGLE_GENAI_USE_VERTEXAI=1,AGENT_APP_NAME=bfsi-silver-agent,AGENT_MAX_CLARIFICATION_TURNS=3,AGENT_MAX_SPEC_ITERATIONS=3,AGENT_LOG_LEVEL=INFO,SESSION_BACKEND=memory,BQ_PUBLISHER_MODE=dry_run"
+    --service-account="dp-assistant-sa@$PROJECT_ID.iam.gserviceaccount.com" `
+    --set-env-vars="GCP_PROJECT_ID=$PROJECT_ID,GOOGLE_CLOUD_PROJECT=$PROJECT_ID,GOOGLE_CLOUD_LOCATION=$REGION,GCP_LOCATION=$REGION,BQ_SILVER_DATASET=banking_silver,BQ_GOLD_DATASET=banking_gold,BQ_LOCATION=US,GEMINI_MODEL=gemini-2.5-flash,GOOGLE_GENAI_USE_VERTEXAI=1,AGENT_APP_NAME=bfsi-silver-agent,AGENT_MAX_CLARIFICATION_TURNS=3,AGENT_MAX_SPEC_ITERATIONS=3,AGENT_LOG_LEVEL=INFO,SESSION_BACKEND=memory,BQ_PUBLISHER_MODE=live"
 if (-not $?) { Write-Error "Backend deploy failed"; exit 1 }
 
 $BACKEND_URL = (gcloud run services describe $BACKEND_SVC --region=$REGION --format="value(status.url)")
