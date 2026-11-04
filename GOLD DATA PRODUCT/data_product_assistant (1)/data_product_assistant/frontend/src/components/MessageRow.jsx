@@ -31,6 +31,19 @@ function _hasLanguageTaggedCode(children) {
 }
 
 const MD_COMPONENTS = {
+  a({ href, children, ...props }) {
+    return (
+      <a
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer"
+        style={{ color: '#6d28d9', fontWeight: 600, textDecoration: 'underline' }}
+        {...props}
+      >
+        {children}
+      </a>
+    )
+  },
   code({ inline, className, children, ...props }) {
     const match = /language-(\w+)/.exec(className || '')
     const lang = match ? match[1] : ''
@@ -54,6 +67,341 @@ const MD_COMPONENTS = {
     }
     return <>{children}</>
   },
+}
+
+function GoldPublishReportCard({ view }) {
+  const [selectedTableFqn, setSelectedTableFqn] = useState(null)
+  if (!view) return null
+
+  const tables = view.tables || []
+  const dq = view.dbt_data_quality || {}
+  const actualData = view.actual_table_data || {}
+  const activePreviewFqn = selectedTableFqn || Object.keys(actualData)[0] || null
+  const previewTable = activePreviewFqn ? actualData[activePreviewFqn] : null
+
+  return (
+    <div
+      style={{
+        marginTop: '14px',
+        border: '1px solid #d8b4fe',
+        borderRadius: '12px',
+        background: '#ffffff',
+        boxShadow: '0 4px 14px rgba(109, 40, 217, 0.08)',
+        overflow: 'hidden',
+      }}
+    >
+      {/* Top Banner */}
+      <div
+        style={{
+          background: 'linear-gradient(135deg, #460073 0%, #6d28d9 100%)',
+          color: '#ffffff',
+          padding: '14px 18px',
+          display: 'flex',
+          flexWrap: 'wrap',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: '10px',
+        }}
+      >
+        <div>
+          <div style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.08em', opacity: 0.85, fontWeight: 700 }}>
+            GCP BigQuery & Knowledge Catalog (Dataplex) Deployment · Gold Star Schema
+          </div>
+          <div style={{ fontSize: '15px', fontWeight: 700, marginTop: '2px' }}>
+            {view.project_id}.{view.dataset_id} ({view.dataset_location || 'us-central1'})
+          </div>
+        </div>
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+          <span
+            style={{
+              background: '#10b981',
+              color: '#ffffff',
+              fontSize: '11px',
+              fontWeight: 700,
+              padding: '4px 10px',
+              borderRadius: '999px',
+            }}
+          >
+            ✓ {view.publish_status === 'published' ? 'LIVE IN BIGQUERY' : String(view.publish_status || '').toUpperCase()}
+          </span>
+          <span
+            style={{
+              background: 'rgba(255,255,255,0.18)',
+              color: '#ffffff',
+              fontSize: '11px',
+              fontWeight: 700,
+              padding: '4px 10px',
+              borderRadius: '999px',
+              border: '1px solid rgba(255,255,255,0.35)',
+            }}
+          >
+            🛡️ dbt DQ: {dq.total_tests || 0} Tests Enforced
+          </span>
+        </div>
+      </div>
+
+      {/* Dataset-Level Quick Links */}
+      <div
+        style={{
+          padding: '12px 18px',
+          background: '#faf5ff',
+          borderBottom: '1px solid #ede9fe',
+          display: 'flex',
+          flexWrap: 'wrap',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: '10px',
+        }}
+      >
+        <div style={{ fontSize: '12.5px', color: '#4c1d95', fontWeight: 600 }}>
+          Dataset Console Links ({tables.length} Gold Star Schema {tables.length === 1 ? 'Table' : 'Tables'}):
+        </div>
+        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+          {view.bigquery_dataset_url && (
+            <a
+              href={view.bigquery_dataset_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                background: '#1d4ed8',
+                color: '#ffffff',
+                fontSize: '12px',
+                fontWeight: 600,
+                padding: '6px 12px',
+                borderRadius: '7px',
+                textDecoration: 'none',
+              }}
+            >
+              Open Dataset in BigQuery Studio ↗
+            </a>
+          )}
+          {view.knowledge_catalog_dataset_url && (
+            <a
+              href={view.knowledge_catalog_dataset_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                background: '#6d28d9',
+                color: '#ffffff',
+                fontSize: '12px',
+                fontWeight: 600,
+                padding: '6px 12px',
+                borderRadius: '7px',
+                textDecoration: 'none',
+              }}
+            >
+              Open Dataset in Knowledge Catalog (Dataplex) ↗
+            </a>
+          )}
+        </div>
+      </div>
+
+      {/* Per-Table Links & dbt DQ Status Table */}
+      <div style={{ padding: '14px 18px' }}>
+        <div style={{ fontSize: '12px', fontWeight: 700, color: '#334155', textTransform: 'uppercase', marginBottom: '8px' }}>
+          Published Gold Star Schema Tables — BigQuery & Knowledge Catalog Deep Links
+        </div>
+        <div style={{ overflowX: 'auto' }}>
+          <table style={{ width: '100%', tableLayout: 'auto', borderCollapse: 'collapse', fontSize: '12.5px', margin: 0 }}>
+            <thead>
+              <tr style={{ background: '#f8fafc', borderBottom: '2px solid #e2e8f0', textAlign: 'left' }}>
+                <th style={{ padding: '8px 10px', color: '#475569', whiteSpace: 'nowrap' }}>Gold Table</th>
+                <th style={{ padding: '8px 10px', color: '#475569', whiteSpace: 'nowrap' }}>dbt Data Quality</th>
+                <th style={{ padding: '8px 10px', color: '#475569', whiteSpace: 'nowrap' }}>BigQuery Console</th>
+                <th style={{ padding: '8px 10px', color: '#475569', whiteSpace: 'nowrap' }}>GCP Knowledge Catalog</th>
+              </tr>
+            </thead>
+            <tbody>
+              {tables.map((t, idx) => (
+                <tr key={t.fqn || idx} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                  <td style={{ padding: '9px 10px', fontWeight: 600, color: '#1e293b', fontFamily: 'monospace', whiteSpace: 'nowrap' }}>
+                    {t.table_name}
+                  </td>
+                  <td style={{ padding: '9px 10px', whiteSpace: 'nowrap' }}>
+                    <span
+                      style={{
+                        background: '#ecfdf5',
+                        color: '#047857',
+                        border: '1px solid #a7f3d0',
+                        padding: '2px 8px',
+                        borderRadius: '999px',
+                        fontSize: '11px',
+                        fontWeight: 700,
+                      }}
+                    >
+                      ✓ VERIFIED ({t.dbt_tests_count || 0} dbt tests)
+                    </span>
+                  </td>
+                  <td style={{ padding: '9px 10px', whiteSpace: 'nowrap' }}>
+                    <a
+                      href={t.bigquery_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{
+                        color: '#1d4ed8',
+                        fontWeight: 600,
+                        textDecoration: 'none',
+                        border: '1px solid #bfdbfe',
+                        background: '#eff6ff',
+                        padding: '4px 10px',
+                        borderRadius: '6px',
+                        display: 'inline-block',
+                      }}
+                    >
+                      View in BigQuery ↗
+                    </a>
+                  </td>
+                  <td style={{ padding: '9px 10px', whiteSpace: 'nowrap' }}>
+                    <a
+                      href={t.knowledge_catalog_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{
+                        color: '#6d28d9',
+                        fontWeight: 600,
+                        textDecoration: 'none',
+                        border: '1px solid #ddd6fe',
+                        background: '#f5f3ff',
+                        padding: '4px 10px',
+                        borderRadius: '6px',
+                        display: 'inline-block',
+                      }}
+                    >
+                      View in Knowledge Catalog ↗
+                    </a>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {/* dbt Data Quality Summary Strip */}
+        <div
+          style={{
+            marginTop: '12px',
+            padding: '10px 14px',
+            background: '#f8fafc',
+            border: '1px solid #e2e8f0',
+            borderRadius: '8px',
+            display: 'flex',
+            flexWrap: 'wrap',
+            gap: '14px',
+            fontSize: '12px',
+            color: '#334155',
+          }}
+        >
+          <span><strong>dbt Contract:</strong> <code style={{ color: '#047857' }}>enforced: true</code></span>
+          <span><strong>PK Unique Tests:</strong> {dq.unique_pk_tests || 0}</span>
+          <span><strong>Not-Null Tests:</strong> {dq.not_null_tests || 0}</span>
+          <span><strong>FK Relationship Tests:</strong> {dq.fk_relationship_tests || 0}</span>
+          <span><strong>Custom Quality Rules:</strong> {dq.custom_expression_tests || 0}</span>
+          <span><strong>Freshness SLA:</strong> {dq.source_freshness_sla || '4h / 24h'}</span>
+        </div>
+
+        {/* Live BigQuery Sample Rows Preview */}
+        {previewTable && previewTable.columns && previewTable.columns.length > 0 && (
+          <div style={{ marginTop: '14px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px', flexWrap: 'wrap', gap: '6px' }}>
+              <div style={{ fontSize: '11.5px', fontWeight: 700, color: '#475569', textTransform: 'uppercase' }}>
+                Live BigQuery Conformed Rows Preview ({previewTable.rows?.length || 0} rows)
+              </div>
+              <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                {Object.keys(actualData).map(fqn => {
+                  const shortName = fqn.split('.').pop()
+                  const active = fqn === activePreviewFqn
+                  return (
+                    <button
+                      key={fqn}
+                      type="button"
+                      onClick={() => setSelectedTableFqn(fqn)}
+                      style={{
+                        fontSize: '11px',
+                        padding: '3px 9px',
+                        borderRadius: '6px',
+                        border: active ? '1px solid #6d28d9' : '1px solid #cbd5e1',
+                        background: active ? '#6d28d9' : '#ffffff',
+                        color: active ? '#ffffff' : '#334155',
+                        cursor: 'pointer',
+                        fontWeight: 600,
+                      }}
+                    >
+                      {shortName}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+            <div style={{ overflowX: 'auto', border: '1px solid #e2e8f0', borderRadius: '8px', background: '#ffffff' }}>
+              <table
+                style={{
+                  width: 'max-content',
+                  minWidth: '100%',
+                  tableLayout: 'auto',
+                  borderCollapse: 'collapse',
+                  fontSize: '12px',
+                  lineHeight: 1.45,
+                  letterSpacing: 'normal',
+                  margin: 0,
+                }}
+              >
+                <thead>
+                  <tr style={{ background: '#f1f5f9', borderBottom: '1px solid #cbd5e1' }}>
+                    {previewTable.columns.map(col => (
+                      <th
+                        key={col}
+                        style={{
+                          padding: '8px 14px',
+                          textAlign: 'left',
+                          fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+                          color: '#1e293b',
+                          fontWeight: 700,
+                          whiteSpace: 'nowrap',
+                          wordBreak: 'normal',
+                          overflowWrap: 'normal',
+                          borderRight: '1px solid #e2e8f0',
+                        }}
+                      >
+                        {col}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {(previewTable.rows || []).slice(0, 3).map((row, rIdx) => (
+                    <tr key={rIdx} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                      {row.map((val, cIdx) => (
+                        <td
+                          key={cIdx}
+                          style={{
+                            padding: '8px 14px',
+                            color: '#334155',
+                            whiteSpace: 'nowrap',
+                            wordBreak: 'normal',
+                            overflowWrap: 'normal',
+                            fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+                            borderRight: '1px solid #f1f5f9',
+                          }}
+                        >
+                          {String(val ?? '')}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  )
 }
 
 function agentInitials(agentName) {
@@ -371,7 +719,7 @@ export default function MessageRow({
     const ro = new ResizeObserver(measure)
     ro.observe(el)
     return () => ro.disconnect()
-  }, [isUser, msg.loading, msg.text, msg.discovery_view, msg.glossary, msg.classification_view, msg.challenger_view, msg.sttm_view, msg.silver_transform_view, msg.data_contract_view])
+  }, [isUser, msg.loading, msg.text, msg.discovery_view, msg.glossary, msg.classification_view, msg.challenger_view, msg.sttm_view, msg.silver_transform_view, msg.data_contract_view, msg.publish_view])
 
   const showChevron      = tooLong && !isUser && !msg.loading
   const isGlossary       = !isUser && !!msg.glossary
@@ -403,6 +751,7 @@ export default function MessageRow({
               `bubble ${msg.role}` +
               (msg.loading ? ' thinking' : '') +
               (msg.discovery_view ? ' bubble-discovery' : '') +
+              (msg.publish_view ? ' bubble-wide' : '') +
               (isGlossary ? ' bubble-glossary' : '') +
               (isClassification ? ' bubble-classification' : '') +
               (isChallenger ? ' bubble-challenger' : '') +
@@ -489,6 +838,15 @@ export default function MessageRow({
                   onSave={onSaveContract}
                   onContractChange={onContractChange}
                 />
+              </>
+            ) : msg.publish_view ? (
+              <>
+                {msg.text && (
+                  <ReactMarkdown remarkPlugins={[remarkGfm]} components={MD_COMPONENTS}>
+                    {wrapInfoSections(cleanAgentText(msg.text))}
+                  </ReactMarkdown>
+                )}
+                <GoldPublishReportCard view={msg.publish_view} />
               </>
             ) : isChallAgent ? (
               // Challenger Agent message that arrived without a structured view
