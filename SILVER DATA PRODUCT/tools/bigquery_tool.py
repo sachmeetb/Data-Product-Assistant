@@ -80,12 +80,13 @@ def _extract_table_refs(statements: list[str]) -> list[str]:
 
 class BigQueryPublisher:
     """
-    Executes a BigQuery Standard SQL DDL script produced by the Spec Generator.
+    Executes a BigQuery Standard SQL DDL script produced by the Spec Generator
+    or Data Contract Workspace.
 
     Supports:
-      - Dataset creation (idempotent — exists_ok=True)
-      - CREATE TABLE IF NOT EXISTS
-      - DML: INSERT, MERGE for sample data seeding
+      - Dataset creation across any industry Silver dataset (idempotent — exists_ok=True)
+      - CREATE OR REPLACE TABLE / CREATE TABLE IF NOT EXISTS
+      - Realistic sample row seeding & live verification queries
       - Dry-run mode (plan only, no execution)
     """
 
@@ -98,15 +99,22 @@ class BigQueryPublisher:
         location: Optional[str] = None,
         mode: Optional[str] = None,
     ):
-        self.project_id = project_id or os.environ.get("GCP_PROJECT_ID", "")
+        load_dotenv(override=True)
+        self.project_id = (
+            project_id
+            or os.environ.get("BQ_PROJECT")
+            or os.environ.get("GCP_PROJECT_ID")
+            or "eogwapq-agbg-internal-data-mig"
+        )
         self.silver_dataset = silver_dataset or os.environ.get("BQ_SILVER_DATASET", "banking_silver")
         self.gold_dataset = gold_dataset or os.environ.get("BQ_GOLD_DATASET", "banking_gold")
         self.location = location or os.environ.get("BQ_LOCATION", "US")
         self.credentials_path = credentials_path or os.environ.get("GCP_CREDENTIALS_PATH", "")
 
-        _mode = (mode or _DEFAULT_MODE).strip().lower()
+        env_mode = os.environ.get("BQ_PUBLISHER_MODE", "live").strip().lower()
+        _mode = (mode or env_mode or "live").strip().lower()
         if _mode not in {"live", "dry_run", "auto"}:
-            _mode = "auto"
+            _mode = "live"
         if _mode == "auto":
             _mode = "live" if self.project_id else "dry_run"
         self.mode = _mode
@@ -131,16 +139,30 @@ class BigQueryPublisher:
             )
         return self._client
 
-    def _ensure_dataset(self, dataset_id: str) -> None:
-        """Create BigQuery dataset if it does not exist. Idempotent."""
+    def _ensure_dataset(self, dataset_id: str) -> str:
+        """Create BigQuery dataset if it does not exist. Returns actual dataset location."""
         from google.cloud import bigquery
         client = self._get_client()
         ds_ref = f"{self.project_id}.{dataset_id}"
-        ds = bigquery.Dataset(ds_ref)
-        ds.location = self.location
-        ds.description = f"BFSI Silver-layer — {dataset_id} (managed by BFSI-Silver-Agent)"
-        client.create_dataset(ds, exists_ok=True)
-        log.info("Dataset ready: %s", ds_ref)
+        try:
+            existing = client.get_dataset(ds_ref)
+            return existing.location or self.location
+        except Exception:
+            ds = bigquery.Dataset(ds_ref)
+            ds.location = self.location
+            ds.description = f"Canonical Silver Layer Dataset — {dataset_id} (Managed by Silver Data Product Assistant)"
+            created = client.create_dataset(ds, exists_ok=True)
+            log.info("Dataset ready: %s (location=%s)", ds_ref, created.location)
+            return created.location or self.location
+
+    def get_dataset_location(self, dataset_id: str) -> str:
+        """Return the GCP location (e.g. 'US' or 'us-central1') of a BigQuery dataset."""
+        try:
+            client = self._get_client()
+            ds = client.get_dataset(f"{self.project_id}.{dataset_id}")
+            return ds.location or self.location
+        except Exception:
+            return self.location
 
     def _run_statement(self, sql: str) -> dict:
         """
@@ -171,6 +193,8 @@ class BigQueryPublisher:
               summary:           human-readable result string
               project_id:        GCP project used
               silver_dataset:    fully-qualified silver dataset
+              dataset_id:        short dataset name
+              dataset_location:  dataset location (e.g. "US")
             }
         """
         if not pipeline_code or not pipeline_code.strip():
@@ -188,6 +212,19 @@ class BigQueryPublisher:
                 "summary": "No executable SQL statements found in provided code.",
             }
 
+        planned_tables = _extract_table_refs(statements)
+        detected_datasets = set()
+        for tref in planned_tables:
+            parts = tref.split(".")
+            if len(parts) == 3:
+                detected_datasets.add(parts[1])
+            elif len(parts) == 2:
+                detected_datasets.add(parts[0])
+        if not detected_datasets:
+            detected_datasets.add(self.silver_dataset)
+
+        primary_dataset = sorted(detected_datasets)[0]
+
         report: dict = {
             "publish_status": "in_progress",
             "published_tables": [],
@@ -196,13 +233,15 @@ class BigQueryPublisher:
             "total_statements": len(statements),
             "summary": "",
             "project_id": self.project_id,
-            "silver_dataset": self.silver_dataset_ref,
+            "dataset_id": primary_dataset,
+            "silver_dataset": f"{self.project_id}.{primary_dataset}",
+            "dataset_location": self.location,
         }
 
         # ── Dry-run ──────────────────────────────────────────────────────────
         if self.mode == "dry_run":
             report["publish_status"] = "dry_run"
-            report["published_tables"] = _extract_table_refs(statements)
+            report["published_tables"] = planned_tables
             report["executed_count"] = 0
             report["summary"] = (
                 f"Dry run: {len(statements)} statement(s) planned, "
@@ -211,9 +250,11 @@ class BigQueryPublisher:
             return report
 
         # ── Live ─────────────────────────────────────────────────────────────
+        dataset_location = self.location
         try:
-            self._ensure_dataset(self.silver_dataset)
-            self._ensure_dataset(self.gold_dataset)
+            for ds_name in detected_datasets:
+                dataset_location = self._ensure_dataset(ds_name)
+            report["dataset_location"] = dataset_location
         except Exception as exc:
             report["publish_status"] = "failed"
             report["summary"] = f"Dataset creation failed: {exc}"
@@ -239,8 +280,8 @@ class BigQueryPublisher:
         if n_fail == 0:
             report["publish_status"] = "published"
             report["summary"] = (
-                f"All {n_ok} statement(s) executed. "
-                f"Tables: {', '.join(tables) or 'none'}."
+                f"All {n_ok} statement(s) executed in BigQuery ({self.project_id}). "
+                f"Published tables: {', '.join(tables) or 'none'}."
             )
         elif n_ok > 0:
             report["publish_status"] = "partial"
@@ -252,6 +293,84 @@ class BigQueryPublisher:
             report["summary"] = f"All {n_fail} statement(s) failed. Errors: {errors}"
 
         return report
+
+    def seed_sample_rows(
+        self,
+        saved_entities: list[dict],
+        target_dataset: Optional[str] = None,
+    ) -> dict:
+        """
+        Seed 3 realistic, conformed sample rows into each published Silver table
+        so that BigQuery Studio preview, Knowledge Catalog data profile, and the UI
+        Audit table immediately show live rows.
+        """
+        if self.mode == "dry_run":
+            return {"seeded_tables": {}, "actual_table_data": {}}
+
+        ds_id = target_dataset or self.silver_dataset
+        seeded_counts: dict = {}
+        actual_table_data: dict = {}
+
+        for ent in saved_entities or []:
+            tname = (ent.get("id") or ent.get("table_name") or "").split(".")[-1]
+            if not tname:
+                continue
+            fqn = f"{self.project_id}.{ds_id}.{tname}"
+            cols = ent.get("columns", [])
+            if not cols:
+                continue
+
+            col_names = [c.get("name") for c in cols if c.get("name")]
+            row_tuples = []
+            for row_idx in range(1, 4):
+                vals = []
+                for c in cols:
+                    cname = (c.get("name") or "").lower()
+                    ctype = (c.get("type") or "STRING").upper()
+                    if cname == "surrogate_key":
+                        vals.append(f"'slv_{tname[-6:]}_{row_idx:04d}_sha256'")
+                    elif cname == "load_ts" or "timestamp" in ctype or cname.endswith("_ts"):
+                        vals.append(f"TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL {row_idx} HOUR)")
+                    elif "date" in ctype or cname.endswith("_date") or cname.endswith("_dt"):
+                        vals.append(f"DATE_SUB(CURRENT_DATE(), INTERVAL {row_idx} DAY)")
+                    elif cname == "dq_status":
+                        vals.append("'VALID'")
+                    elif "currency" in cname or cname.endswith("_ccy"):
+                        vals.append("'USD'" if row_idx % 2 == 1 else "'EUR'")
+                    elif "status" in cname or "state" in cname:
+                        vals.append("'VERIFIED'" if row_idx < 3 else "'ACTIVE'")
+                    elif ctype in ("NUMERIC", "BIGNUMERIC", "FLOAT64", "DECIMAL"):
+                        vals.append(f"{round(1250.50 * row_idx, 2)}")
+                    elif ctype in ("INT64", "INTEGER", "SMALLINT", "BIGINT"):
+                        vals.append(f"{100 + row_idx}")
+                    elif ctype in ("BOOL", "BOOLEAN"):
+                        vals.append("TRUE" if row_idx % 2 == 1 else "FALSE")
+                    elif c.get("is_pk") or c.get("primary_key") or cname.endswith("_id"):
+                        prefix = cname.replace("_id", "").upper()[:6] or "ENT"
+                        vals.append(f"'{prefix}_{1000 + row_idx}'")
+                    else:
+                        clean_label = cname.replace("_", " ").title()
+                        vals.append(f"'{clean_label} #{row_idx}'")
+                row_tuples.append(f"({', '.join(vals)})")
+
+            insert_sql = (
+                f"INSERT INTO `{fqn}` ({', '.join(col_names)}) "
+                f"VALUES {', '.join(row_tuples)}"
+            )
+            res = self._run_statement(insert_sql)
+            if res.get("ok"):
+                seeded_counts[fqn] = 3
+            else:
+                log.warning("Sample row seed warning on %s: %s", fqn, res.get("error"))
+
+            q_res = self.query_table(fqn, limit=10)
+            if q_res.get("rows"):
+                actual_table_data[fqn] = q_res
+
+        return {
+            "seeded_tables": seeded_counts,
+            "actual_table_data": actual_table_data,
+        }
 
     def query_table(self, table_ref: str, limit: int = 100) -> dict:
         """
@@ -280,3 +399,4 @@ def query_table(project_id: str, credentials_path: str, table_ref: str, limit: i
     """Module-level convenience wrapper for querying a table."""
     pub = BigQueryPublisher(project_id=project_id, credentials_path=credentials_path)
     return pub.query_table(table_ref, limit)
+
