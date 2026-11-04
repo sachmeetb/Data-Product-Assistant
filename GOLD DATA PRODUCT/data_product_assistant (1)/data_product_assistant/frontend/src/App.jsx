@@ -176,6 +176,7 @@ function Workspace({ user }) {
           sttm_view: msg.sttm_view ?? undefined,
           silver_transform_view: msg.silver_transform_view ?? undefined,
           data_contract_view: msg.data_contract_view ?? (idx === data.messages.length - 1 ? data.data_contract_view : undefined),
+          publish_view: msg.publish_view ?? (idx === data.messages.length - 1 ? data.publish_view : undefined),
           loading: false,
           time: ts(),
         }))
@@ -204,7 +205,8 @@ function Workspace({ user }) {
           ? { ...m, loading: false, text: data.text || '', chips: data.chips || [],
               discovery_view: data.discovery_view,
               entity_selector_view: data.entity_selector_view,
-              classification_view: data.classification_view }
+              classification_view: data.classification_view,
+              publish_view: data.publish_view }
           : m
       ))
     }
@@ -318,6 +320,14 @@ function Workspace({ user }) {
     }
     if (label === 'Open & Edit Existing Gold Structure') {
       sendMessage(label, { action: 'open_existing_structure', glossary: latestGlossaryRef.current })
+      return
+    }
+    if (
+      label === 'Publish to BigQuery' ||
+      label === 'Publish to BigQuery & Knowledge Catalog' ||
+      label === 'Publish to BQ & Knowledge Catalog'
+    ) {
+      sendMessage(label, { action: 'publish_bq' })
       return
     }
     if (label === DDI_CHIP_ADJUST_ER) { setTweakMode('er'); return }
