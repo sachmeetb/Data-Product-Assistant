@@ -450,6 +450,15 @@ function DomainFrameworkBanner({ framework }) {
 // ── Main ─────────────────────────────────────────────────────────────────────
 export default function DiscoveryResultCard({ view }) {
   const [openTableId, setOpenTableId] = useState(null)
+  const [selectedRequirement, setSelectedRequirement] = useState(null)
+  const [collapsedTables, setCollapsedTables] = useState({})
+  const [collapsedSections, setCollapsedSections] = useState({
+    summary: false,
+    dataPoints: true,
+    byLayer: true,
+    visualMap: true,
+  })
+
   if (!view) return null
 
   const d = adaptView(view)
@@ -466,9 +475,54 @@ export default function DiscoveryResultCard({ view }) {
   const hasByDataPoint = d.byDataPoint.length > 0
   const byLayerKeys = LAYERS.filter((l) => d.byLayer[l])
 
+  const toggleTable = (tableId) => {
+    setCollapsedTables((prev) => ({
+      ...prev,
+      [tableId]: !prev[tableId],
+    }))
+  }
+
+  const toggleSection = (sectionKey) => {
+    setCollapsedSections((prev) => ({
+      ...prev,
+      [sectionKey]: !prev[sectionKey],
+    }))
+  }
+
+  const setAllTablesCollapsed = (collapsed) => {
+    const next = {}
+    byLayerKeys.forEach((layer) => {
+      d.byLayer[layer].tables.forEach((t) => {
+        next[t.tableId || t.tableName] = collapsed
+      })
+    })
+    setCollapsedTables(next)
+  }
+
+  // Count total matching tables for selected requirement
+  const matchingTablesCount = selectedRequirement
+    ? byLayerKeys.reduce((acc, l) => {
+        return (
+          acc +
+          d.byLayer[l].tables.filter((t) =>
+            t.rows.some(
+              (r) => r.dataPoint.toLowerCase() === selectedRequirement.toLowerCase()
+            )
+          ).length
+        )
+      }, 0)
+    : 0
+
   return (
     <div style={{ background: 'white', border: `1px solid ${BP.border}`, borderRadius: 10, padding: 18, maxWidth: 760, color: BP.text }}>
-      <div style={{ fontSize: 13, fontWeight: 700, color: BP.text }}>Data Discovery Results</div>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
+        <div style={{ fontSize: 14, fontWeight: 800, color: '#460073' }}>Data Discovery Results</div>
+        {selectedRequirement && (
+          <span style={{ fontSize: 11, background: '#F3E8FF', color: '#6B21A8', padding: '2px 8px', borderRadius: 999, fontWeight: 700 }}>
+            Filtered: {selectedRequirement}
+          </span>
+        )}
+      </div>
 
       {/* USE CASE */}
       <div style={{ marginTop: 14 }}>
@@ -483,99 +537,378 @@ export default function DiscoveryResultCard({ view }) {
 
       {/* SUMMARY */}
       <div style={{ marginTop: 14 }}>
-        <SectionLabel style={{ marginBottom: 8 }}>SUMMARY</SectionLabel>
-        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-          {LAYERS.map((layer) => (
-            <SummaryCard key={layer} layer={layer} block={d.layers[layer]} />
-          ))}
+        <div
+          onClick={() => toggleSection('summary')}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            cursor: 'pointer',
+            marginBottom: collapsedSections.summary ? 0 : 8,
+            userSelect: 'none',
+            padding: '8px 12px',
+            background: '#F9FAFB',
+            borderRadius: 6,
+            border: `1px solid ${BP.border}`,
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+            <span style={{ fontSize: 10, color: BP.textMuted }}>{collapsedSections.summary ? '▶' : '▼'}</span>
+            <SectionLabel style={{ margin: 0 }}>SUMMARY</SectionLabel>
+            {collapsedSections.summary && (
+              <span style={{ fontSize: 11, color: BP.textMuted, fontWeight: 500, marginLeft: 4 }}>
+                {LAYERS.map((layer) => {
+                  const b = d.layers[layer]
+                  if (!b) return null
+                  const countStr = b.tableCount > 0 ? ` (${b.tableCount} table${b.tableCount === 1 ? '' : 's'})` : ''
+                  return `${cap(layer)}: ${pal(b.status).lbl}${countStr}`
+                }).join(' · ')}
+              </span>
+            )}
+          </div>
+          <span style={{ fontSize: 11, color: '#7C3AED', fontWeight: 600 }}>
+            {collapsedSections.summary ? '▶ Expand Summary' : '▼ Collapse Summary'}
+          </span>
         </div>
+        {!collapsedSections.summary && (
+          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginTop: 10 }}>
+            {LAYERS.map((layer) => (
+              <SummaryCard key={layer} layer={layer} block={d.layers[layer]} />
+            ))}
+          </div>
+        )}
       </div>
 
       {/* SUMMARY BY DATA POINTS */}
       {hasByDataPoint && (
         <div style={{ marginTop: 18 }}>
-          <SectionLabel style={{ marginBottom: 8 }}>SUMMARY BY DATA POINTS</SectionLabel>
-          <div style={{ border: `1px solid ${BP.border}`, borderRadius: 8, overflow: 'hidden' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1.2fr 2fr 2fr', background: BP.greenLight, padding: '8px 10px', borderBottom: `1px solid ${BP.greenLine}` }}>
-              {['DATA POINT', 'RESULT', 'TABLE', 'MATCHED COLUMN / LOGIC'].map((h) => (
-                <div key={h} style={{ fontSize: 10.5, fontWeight: 700, color: BP.greenDark }}>{h}</div>
-              ))}
+          <div
+            onClick={() => toggleSection('dataPoints')}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              cursor: 'pointer',
+              marginBottom: 8,
+              userSelect: 'none',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <span style={{ fontSize: 10, color: BP.textMuted }}>{collapsedSections.dataPoints ? '▶' : '▼'}</span>
+              <SectionLabel>SUMMARY BY DATA POINTS ({d.byDataPoint.length})</SectionLabel>
             </div>
-            {d.byDataPoint.map((r, i) => (
-              <div key={i} style={{ display: 'grid', gridTemplateColumns: '1.2fr 1.2fr 2fr 2fr', padding: '8px 10px', borderBottom: i < d.byDataPoint.length - 1 ? `1px solid ${BP.border}` : 'none', fontSize: 11.5, alignItems: 'start' }}>
-                <div style={{ color: BP.text, fontFamily: MONO }}>{r.dataPoint}</div>
-                <div style={{ color: BP.greenDark }}>{r.result}</div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                  {r.tables.length
-                    ? r.tables.map((t) => (
-                        <TableChip key={t} name={t} clickable={!!resolveTable(t)} onClick={() => setOpenTableId(t)} />
-                      ))
-                    : <span style={{ color: BP.textSubtle }}>—</span>}
-                </div>
-                <div style={{ color: BP.text }}>{r.logic}</div>
-              </div>
-            ))}
+            <span style={{ fontSize: 11, color: '#7C3AED', fontWeight: 600 }}>
+              {collapsedSections.dataPoints ? 'Expand Section' : 'Click data point to isolate / dissolve'}
+            </span>
           </div>
+
+          {!collapsedSections.dataPoints && (
+            <>
+              {/* Requirement Quick Filter Bar */}
+              <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap', marginBottom: 10, alignItems: 'center' }}>
+                <span style={{ fontSize: 10.5, fontWeight: 700, color: BP.textMuted, marginRight: 2 }}>SELECT REQUIREMENT:</span>
+                <button
+                  type="button"
+                  onClick={() => setSelectedRequirement(null)}
+                  style={{
+                    padding: '2px 8px',
+                    borderRadius: 999,
+                    fontSize: 10.5,
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    border: selectedRequirement === null ? '1px solid #7C3AED' : '1px solid #E5E7EB',
+                    background: selectedRequirement === null ? '#7C3AED' : '#F9FAFB',
+                    color: selectedRequirement === null ? '#FFFFFF' : '#374151',
+                  }}
+                >
+                  All ({d.byDataPoint.length})
+                </button>
+                {d.byDataPoint.map((dp) => {
+                  const isSelected = selectedRequirement?.toLowerCase() === dp.dataPoint.toLowerCase()
+                  return (
+                    <button
+                      key={dp.dataPoint}
+                      type="button"
+                      onClick={() => setSelectedRequirement(isSelected ? null : dp.dataPoint)}
+                      style={{
+                        padding: '2px 8px',
+                        borderRadius: 999,
+                        fontSize: 10.5,
+                        fontWeight: isSelected ? 800 : 600,
+                        cursor: 'pointer',
+                        border: isSelected ? '1px solid #7C3AED' : '1px solid #D1D5DB',
+                        background: isSelected ? '#F3E8FF' : '#FFFFFF',
+                        color: isSelected ? '#6B21A8' : '#374151',
+                        boxShadow: isSelected ? '0 1px 2px rgba(124,58,237,0.15)' : 'none',
+                      }}
+                      title={`Filter tables for ${dp.dataPoint}`}
+                    >
+                      {dp.dataPoint} {dp.tables.length > 0 ? `(${dp.tables.length})` : ''}
+                    </button>
+                  )
+                })}
+              </div>
+
+              <div style={{ border: `1px solid ${BP.border}`, borderRadius: 8, overflow: 'hidden' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1.2fr 2fr 2fr', background: BP.greenLight, padding: '8px 10px', borderBottom: `1px solid ${BP.greenLine}` }}>
+                  {['DATA POINT', 'RESULT', 'TABLE', 'MATCHED COLUMN / LOGIC'].map((h) => (
+                    <div key={h} style={{ fontSize: 10.5, fontWeight: 700, color: BP.greenDark }}>{h}</div>
+                  ))}
+                </div>
+                {d.byDataPoint.map((r, i) => {
+                  const isSelected = selectedRequirement?.toLowerCase() === r.dataPoint.toLowerCase()
+                  return (
+                    <div
+                      key={i}
+                      onClick={() => setSelectedRequirement(isSelected ? null : r.dataPoint)}
+                      style={{
+                        display: 'grid',
+                        gridTemplateColumns: '1.2fr 1.2fr 2fr 2fr',
+                        padding: '8px 10px',
+                        borderBottom: i < d.byDataPoint.length - 1 ? `1px solid ${BP.border}` : 'none',
+                        fontSize: 11.5,
+                        alignItems: 'start',
+                        cursor: 'pointer',
+                        background: isSelected ? '#F5EDFF' : 'transparent',
+                        borderLeft: isSelected ? '3px solid #7C3AED' : '3px solid transparent',
+                        transition: 'background 0.15s',
+                      }}
+                      title="Click to isolate tables matching this requirement"
+                    >
+                      <div style={{ color: isSelected ? '#6B21A8' : BP.text, fontFamily: MONO, fontWeight: isSelected ? 800 : 500 }}>
+                        {r.dataPoint} {isSelected ? '✓' : ''}
+                      </div>
+                      <div style={{ color: BP.greenDark }}>{r.result}</div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                        {r.tables.length
+                          ? r.tables.map((t) => (
+                              <TableChip key={t} name={t} clickable={!!resolveTable(t)} onClick={(e) => { e.stopPropagation(); setOpenTableId(t); }} />
+                            ))
+                          : <span style={{ color: BP.textSubtle }}>—</span>}
+                      </div>
+                      <div style={{ color: BP.text }}>{r.logic}</div>
+                    </div>
+                  )
+                })}
+              </div>
+            </>
+          )}
         </div>
       )}
 
       {/* SUMMARY BY LAYER */}
       {byLayerKeys.length > 0 && (
-        <div style={{ marginTop: 18 }}>
-          <SectionLabel style={{ marginBottom: 8 }}>SUMMARY BY LAYER</SectionLabel>
-          {byLayerKeys.map((layer) => {
-            const lb = d.byLayer[layer]
-            return (
-              <div key={layer} style={{ marginBottom: 12 }}>
-                <div style={{ fontSize: 12.5, fontWeight: 700, color: BP.text, marginBottom: 8 }}>{lb.heading}</div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  {lb.tables.map((t, ti) => (
-                    <div key={ti} style={{ border: `1px solid ${BP.border}`, borderRadius: 8, overflow: 'hidden' }}>
-                      <div style={{ background: LAYER_BG_TINT[layer], padding: '8px 10px', borderBottom: `1px solid ${BP.border}`, fontSize: 11.5, color: BP.text }}>
-                        <span style={{ color: BP.textMuted }}>Table: </span>
-                        <TableChip
-                          name={t.tableName}
-                          clickable={!!resolveTable(t.tableId)}
-                          onClick={() => setOpenTableId(t.tableId)}
-                        />
-                      </div>
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.5fr 1.4fr 1.8fr', background: BP.greenLight, padding: '6px 10px', borderBottom: `1px solid ${BP.greenLine}`, fontSize: 10.5 }}>
-                        {['DATA POINT', 'SAMPLE FOR DATA POINT', 'MATCHED COLUMN / LOGIC', 'SAMPLE DATA FROM MATCHED COLUMN/LOGIC'].map((h) => (
-                          <div key={h} style={{ fontWeight: 700, color: BP.greenDark }}>{h}</div>
-                        ))}
-                      </div>
-                      {t.rows.map((r, ri) => (
-                        <div key={ri} style={{ display: 'grid', gridTemplateColumns: '1fr 1.5fr 1.4fr 1.8fr', padding: '7px 10px', borderBottom: ri < t.rows.length - 1 ? `1px solid ${BP.border}` : 'none', fontSize: 11, alignItems: 'start' }}>
-                          <div style={{ color: BP.text, fontFamily: MONO }}>{r.dataPoint}</div>
-                          <div style={{ color: BP.text }}>{r.sample}</div>
-                          <div style={{ color: BP.text, fontFamily: MONO }}>{r.logic}</div>
-                          <div style={{ color: BP.textMuted, fontFamily: MONO }}>{r.matchedSample}</div>
-                        </div>
-                      ))}
-                    </div>
-                  ))}
-                </div>
+        <div style={{ marginTop: 20 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8, flexWrap: 'wrap', gap: 8 }}>
+            <div
+              onClick={() => toggleSection('byLayer')}
+              style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', userSelect: 'none' }}
+            >
+              <span style={{ fontSize: 10, color: BP.textMuted }}>{collapsedSections.byLayer ? '▶' : '▼'}</span>
+              <SectionLabel style={{ margin: 0 }}>SUMMARY BY LAYER</SectionLabel>
+              {collapsedSections.byLayer && (
+                <span style={{ fontSize: 11, color: BP.textMuted, fontWeight: 500, marginLeft: 4 }}>
+                  {byLayerKeys.map((l) => `${d.byLayer[l]?.tables?.length || 0} in ${cap(l)}`).join(' · ')}
+                </span>
+              )}
+            </div>
+            <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+              <span
+                onClick={() => toggleSection('byLayer')}
+                style={{ fontSize: 11, color: '#7C3AED', fontWeight: 600, cursor: 'pointer', marginRight: 4 }}
+              >
+                {collapsedSections.byLayer ? '▶ Expand Section' : '▼ Collapse Section'}
+              </span>
+              {!collapsedSections.byLayer && (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => setAllTablesCollapsed(false)}
+                    style={{ background: '#F3F4F6', border: '1px solid #D1D5DB', borderRadius: 4, padding: '2px 7px', fontSize: 10.5, cursor: 'pointer', fontWeight: 600 }}
+                  >
+                    Expand All
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setAllTablesCollapsed(true)}
+                    style={{ background: '#F3F4F6', border: '1px solid #D1D5DB', borderRadius: 4, padding: '2px 7px', fontSize: 10.5, cursor: 'pointer', fontWeight: 600 }}
+                  >
+                    Dissolve / Collapse All
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+
+          {selectedRequirement && (
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '7px 12px',
+                background: '#F5EDFF',
+                border: '1px solid #D8B4FE',
+                borderRadius: 6,
+                marginBottom: 12,
+                fontSize: 11.5,
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <span>🎯 Filtered by Requirement:</span>
+                <span style={{ fontWeight: 800, color: '#460073', background: '#EDE9FE', padding: '1px 7px', borderRadius: 4 }}>
+                  {selectedRequirement}
+                </span>
+                <span style={{ color: '#6B7280' }}>
+                  ({matchingTablesCount} table{matchingTablesCount === 1 ? '' : 's'} matched)
+                </span>
               </div>
-            )
-          })}
+              <button
+                type="button"
+                onClick={() => setSelectedRequirement(null)}
+                style={{ background: 'transparent', border: 'none', color: '#7C3AED', fontWeight: 700, cursor: 'pointer', fontSize: 11, textDecoration: 'underline' }}
+              >
+                Show All Tables (Reset)
+              </button>
+            </div>
+          )}
+
+          {!collapsedSections.byLayer &&
+            byLayerKeys.map((layer) => {
+              const lb = d.byLayer[layer]
+              const visibleTables = selectedRequirement
+                ? lb.tables.filter((t) =>
+                    t.rows.some((r) => r.dataPoint.toLowerCase() === selectedRequirement.toLowerCase())
+                  )
+                : lb.tables
+
+              if (visibleTables.length === 0) return null
+
+              return (
+                <div key={layer} style={{ marginBottom: 14 }}>
+                  <div style={{ fontSize: 12.5, fontWeight: 700, color: BP.text, marginBottom: 8, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <span>
+                      {lb.heading} {selectedRequirement ? `(${visibleTables.length} of ${lb.tables.length} shown)` : ''}
+                    </span>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    {visibleTables.map((t, ti) => {
+                      const tableKey = t.tableId || t.tableName
+                      const isCollapsed = Boolean(collapsedTables[tableKey])
+                      const matchingRows = selectedRequirement
+                        ? t.rows.filter((r) => r.dataPoint.toLowerCase() === selectedRequirement.toLowerCase())
+                        : t.rows
+
+                      return (
+                        <div key={ti} style={{ border: `1px solid ${BP.border}`, borderRadius: 8, overflow: 'hidden' }}>
+                          <div
+                            onClick={() => toggleTable(tableKey)}
+                            style={{
+                              background: LAYER_BG_TINT[layer],
+                              padding: '7px 10px',
+                              borderBottom: isCollapsed ? 'none' : `1px solid ${BP.border}`,
+                              fontSize: 11.5,
+                              color: BP.text,
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'space-between',
+                              cursor: 'pointer',
+                              userSelect: 'none',
+                            }}
+                          >
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                              <span style={{ fontSize: 10, color: BP.textMuted }}>{isCollapsed ? '▶' : '▼'}</span>
+                              <span style={{ color: BP.textMuted }}>Table: </span>
+                              <TableChip
+                                name={t.tableName}
+                                clickable={!!resolveTable(t.tableId)}
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  setOpenTableId(t.tableId)
+                                }}
+                              />
+                              <span style={{ fontSize: 10, color: BP.textMuted, background: 'rgba(0,0,0,0.05)', padding: '1px 6px', borderRadius: 4 }}>
+                                {t.rows.length} {t.rows.length === 1 ? 'row' : 'rows'}
+                              </span>
+                            </div>
+                            <span style={{ fontSize: 10.5, color: '#7C3AED', fontWeight: 600 }}>
+                              {isCollapsed ? 'Expand ▾' : 'Collapse ▴'}
+                            </span>
+                          </div>
+
+                          {!isCollapsed && (
+                            <>
+                              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.5fr 1.4fr 1.8fr', background: BP.greenLight, padding: '6px 10px', borderBottom: `1px solid ${BP.greenLine}`, fontSize: 10.5 }}>
+                                {['DATA POINT', 'SAMPLE FOR DATA POINT', 'MATCHED COLUMN / LOGIC', 'SAMPLE DATA FROM MATCHED COLUMN/LOGIC'].map((h) => (
+                                  <div key={h} style={{ fontWeight: 700, color: BP.greenDark }}>{h}</div>
+                                ))}
+                              </div>
+                              {t.rows.map((r, ri) => {
+                                const isMatch = selectedRequirement && r.dataPoint.toLowerCase() === selectedRequirement.toLowerCase()
+                                return (
+                                  <div
+                                    key={ri}
+                                    style={{
+                                      display: 'grid',
+                                      gridTemplateColumns: '1fr 1.5fr 1.4fr 1.8fr',
+                                      padding: '7px 10px',
+                                      borderBottom: ri < t.rows.length - 1 ? `1px solid ${BP.border}` : 'none',
+                                      fontSize: 11,
+                                      alignItems: 'start',
+                                      background: isMatch ? '#F5EDFF' : 'transparent',
+                                      borderLeft: isMatch ? '3px solid #7C3AED' : '3px solid transparent',
+                                    }}
+                                  >
+                                    <div style={{ color: isMatch ? '#6B21A8' : BP.text, fontFamily: MONO, fontWeight: isMatch ? 700 : 400 }}>
+                                      {r.dataPoint} {isMatch ? '★' : ''}
+                                    </div>
+                                    <div style={{ color: BP.text }}>{r.sample}</div>
+                                    <div style={{ color: BP.text, fontFamily: MONO }}>{r.logic}</div>
+                                    <div style={{ color: BP.textMuted, fontFamily: MONO }}>{r.matchedSample}</div>
+                                  </div>
+                                )
+                              })}
+                            </>
+                          )}
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              )
+            })}
         </div>
       )}
 
       {/* VISUAL DISCOVERY MAP */}
-      <div style={{ marginTop: 18 }}>
-        <SectionLabel style={{ marginBottom: 8 }}>VISUAL DISCOVERY MAP</SectionLabel>
-        <div style={{ border: `1px solid ${BP.border}`, borderRadius: 8, padding: 14, background: '#FAFBFC' }}>
-          <div style={{ background: 'white', border: `1px solid ${BP.border}`, borderRadius: 6, padding: '8px 10px' }}>
-            <SectionLabel>USE CASE</SectionLabel>
-            <div style={{ fontSize: 11.5, color: BP.text, marginTop: 2 }}>{d.useCase || '—'}</div>
+      <div style={{ marginTop: 20 }}>
+        <div
+          onClick={() => toggleSection('visualMap')}
+          style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', marginBottom: 8, userSelect: 'none' }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span style={{ fontSize: 10, color: BP.textMuted }}>{collapsedSections.visualMap ? '▶' : '▼'}</span>
+            <SectionLabel>VISUAL DISCOVERY MAP</SectionLabel>
           </div>
-          <Arrow />
-          <VisualLayerBand layer="gold" block={d.visualMap.gold} />
-          <Arrow />
-          <VisualLayerBand layer="silver" block={d.visualMap.silver} />
-          <Arrow />
-          <VisualLayerBand layer="bronze" block={d.visualMap.bronze} />
+          <span style={{ fontSize: 10.5, color: '#7C3AED', fontWeight: 600 }}>
+            {collapsedSections.visualMap ? 'Expand Map ▾' : 'Collapse Map ▴'}
+          </span>
         </div>
+
+        {!collapsedSections.visualMap && (
+          <div style={{ border: `1px solid ${BP.border}`, borderRadius: 8, padding: 14, background: '#FAFBFC' }}>
+            <div style={{ background: 'white', border: `1px solid ${BP.border}`, borderRadius: 6, padding: '8px 10px' }}>
+              <SectionLabel>USE CASE</SectionLabel>
+              <div style={{ fontSize: 11.5, color: BP.text, marginTop: 2 }}>{d.useCase || '—'}</div>
+            </div>
+            <Arrow />
+            <VisualLayerBand layer="gold" block={d.visualMap.gold} />
+            <Arrow />
+            <VisualLayerBand layer="silver" block={d.visualMap.silver} />
+            <Arrow />
+            <VisualLayerBand layer="bronze" block={d.visualMap.bronze} />
+          </div>
+        )}
       </div>
 
       {/* RESULT */}

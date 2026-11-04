@@ -85,6 +85,7 @@ export default function App() {
           sttm_view: msg.sttm_view ?? undefined,
           silver_transform_view: msg.silver_transform_view ?? undefined,
           data_contract_view: msg.data_contract_view ?? (idx === data.messages.length - 1 ? data.data_contract_view : undefined),
+          publish_view: msg.publish_view ?? (idx === data.messages.length - 1 ? data.publish_view : undefined),
           loading: false,
           time: ts(),
         }))
@@ -114,7 +115,8 @@ export default function App() {
           ? { ...m, loading: false, text: data.text || '', chips: data.chips || [],
               discovery_view: data.discovery_view,
               entity_selector_view: data.entity_selector_view,
-              classification_view: data.classification_view }
+              classification_view: data.classification_view,
+              publish_view: data.publish_view }
           : m
       ))
     }
@@ -201,6 +203,10 @@ export default function App() {
     }
     if (label === 'Apply & Save Contract' || label === 'Save Contract') {
       handleSaveContract(latestContractRef.current)
+      return
+    }
+    if (label === 'Publish to BigQuery' || label === 'Publish') {
+      sendMessage('Publish to BigQuery', { action: 'publish_bq' })
       return
     }
     if (label === 'Confirm Requirement' || label === 'Design Silver Schema') {

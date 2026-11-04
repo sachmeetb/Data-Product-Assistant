@@ -241,6 +241,156 @@ def _trim_discovery_for_er(discovery: dict) -> dict:
     return trimmed
 
 
+def _align_er_with_discovery_tables(er_output: dict, discovery_output: dict) -> dict:
+    """Ensure the Gold Star-Schema ER dynamically reflects all tables, entities,
+    and measures identified in the discovery output."""
+    if not isinstance(er_output, dict) or not isinstance(discovery_output, dict):
+        return er_output
+
+    tables = er_output.get("tables") or []
+    fact_table = next((t for t in tables if t.get("type") == "fact"), None)
+    if not fact_table:
+        return er_output
+
+    existing_dim_names = {t.get("name", "").lower() for t in tables if t.get("type") == "dimension"}
+    existing_fact_cols = {c.get("name", "").lower() for c in fact_table.get("columns", [])}
+
+    disc_view = discovery_output.get("discovery_view") or {}
+    silver_tables = disc_view.get("tables_by_layer", {}).get("silver", [])
+    data_points = disc_view.get("summary_by_data_points", [])
+
+    candidate_entities = {}
+    for st in silver_tables:
+        sname = st.get("table_short_name") or ""
+        clean = sname.lower()
+        if clean.startswith("slv_"):
+            clean = clean[4:]
+        if clean.endswith("_conformed"):
+            clean = clean[:-10]
+
+        if any(term in clean for term in ("impression", "click", "conversion", "event", "performance", "metric", "fact", "summary")):
+            continue
+
+        dim_table_name = f"dim_{clean}"
+        if dim_table_name not in existing_dim_names:
+            candidate_entities[clean] = {
+                "source_table": sname,
+                "dim_name": dim_table_name,
+                "pk_name": f"{clean}_id",
+                "rows": st.get("rows", []),
+            }
+
+    for dp in data_points:
+        dp_name = dp.get("data_point", "").lower()
+        if "channel" in dp_name and "dim_channel" not in existing_dim_names:
+            candidate_entities.setdefault("channel", {"source_table": "slv_channel", "dim_name": "dim_channel", "pk_name": "channel_id", "rows": []})
+        if "device" in dp_name and "dim_device" not in existing_dim_names:
+            candidate_entities.setdefault("device", {"source_table": "slv_device", "dim_name": "dim_device", "pk_name": "device_id", "rows": []})
+        if "creative" in dp_name and "dim_creative" not in existing_dim_names:
+            candidate_entities.setdefault("creative", {"source_table": "slv_creative", "dim_name": "dim_creative", "pk_name": "creative_id", "rows": []})
+        if "audience" in dp_name and "dim_audience" not in existing_dim_names:
+            candidate_entities.setdefault("audience", {"source_table": "slv_audience", "dim_name": "dim_audience", "pk_name": "audience_id", "rows": []})
+
+    if "dim_date" not in existing_dim_names:
+        candidate_entities.setdefault("date", {"source_table": "slv_date", "dim_name": "dim_date", "pk_name": "date_id", "rows": []})
+
+    new_dims_added = False
+    relationships = list(er_output.get("relationships") or [])
+
+    for entity_key, cand in candidate_entities.items():
+        dim_name = cand["dim_name"]
+        pk_name = cand["pk_name"]
+
+        if entity_key == "date":
+            cols = [
+                {"name": "date_id", "type": "date", "is_pk": True},
+                {"name": "date", "type": "date"},
+                {"name": "day_of_week", "type": "string"},
+                {"name": "month", "type": "int"},
+                {"name": "year", "type": "int"},
+            ]
+        else:
+            cols = [{"name": pk_name, "type": "string", "is_pk": True}]
+            cols.append({"name": f"{entity_key}_name" if entity_key != "placement" else "site_domain", "type": "string"})
+            if entity_key == "channel":
+                cols.append({"name": "channel_type", "type": "string"})
+            elif entity_key == "creative":
+                cols.append({"name": "creative_type", "type": "string"})
+            elif entity_key == "audience":
+                cols.append({"name": "audience_type", "type": "string"})
+
+        tables.append({
+            "name": dim_name,
+            "type": "dimension",
+            "columns": cols,
+            "description": f"Conformed {entity_key} dimension radiating from star fact.",
+        })
+        existing_dim_names.add(dim_name)
+
+        if pk_name not in existing_fact_cols:
+            fk_insert_idx = len([c for c in fact_table["columns"] if c.get("is_fk")])
+            fact_table["columns"].insert(
+                fk_insert_idx,
+                {
+                    "name": pk_name,
+                    "type": "string",
+                    "is_pk": False,
+                    "is_fk": True,
+                    "fk_to": f"{dim_name}.{pk_name}",
+                }
+            )
+            existing_fact_cols.add(pk_name)
+
+        relationships.append({
+            "from": f"{fact_table['name']}.{pk_name}",
+            "to": f"{dim_name}.{pk_name}",
+            "cardinality": "many-to-one",
+        })
+        new_dims_added = True
+
+    known_kpis = ["conversions", "spend", "revenue"]
+    for kpi in known_kpis:
+        has_kpi = any(kpi in dp.get("data_point", "").lower() for dp in data_points) or \
+                  any(kpi in str(st).lower() for st in silver_tables)
+        if has_kpi and kpi not in existing_fact_cols:
+            fact_table["columns"].append({
+                "name": kpi,
+                "type": "numeric" if kpi in ("spend", "revenue") else "integer",
+                "is_measure": True,
+                "aggregation": "sum",
+                "source_logic": f"SUM({kpi})",
+            })
+            existing_fact_cols.add(kpi)
+            new_dims_added = True
+
+    if new_dims_added:
+        dim_keys = [t.get("name", "").replace("dim_", "") for t in tables if t.get("type") == "dimension"]
+        fact_table["grain"] = f"one row per {' per '.join(dim_keys)}"
+
+        fact_upper = fact_table["name"].upper()
+        mermaid_lines = ["erDiagram"]
+        for t in tables:
+            if t.get("type") == "dimension":
+                dim_upper = t.get("name", "").upper()
+                mermaid_lines.append(f"    {dim_upper} ||--o{{ {fact_upper} : has")
+
+        for t in tables:
+            t_upper = t.get("name", "").upper()
+            mermaid_lines.append(f"    {t_upper} {{")
+            for col in t.get("columns", []):
+                ctype = col.get("type", "string").lower()
+                cname = col.get("name", "")
+                tag = "PK" if col.get("is_pk") else ("FK" if col.get("is_fk") else "")
+                mermaid_lines.append(f"        {ctype} {cname} {tag}".rstrip())
+            mermaid_lines.append("    }")
+
+        er_output["tables"] = tables
+        er_output["relationships"] = relationships
+        er_output["mermaid"] = "\n".join(mermaid_lines)
+
+    return er_output
+
+
 async def build_er(
     discovery_output: dict,
     context: dict | None = None,
@@ -250,23 +400,6 @@ async def build_er(
 ) -> dict:
     """
     Pass 1. Build the Gold star-schema ER from a Discovery Agent output.
-
-    Args:
-        discovery_output: The dict produced by `agents.discovery.run` — must
-                          contain at least one of `gold_matches`,
-                          `silver_matches`, or `bronze_matches`.
-        context:          Optional session metadata.
-        session:          Optional MAF AgentSession.
-        feedback:         Optional free-text user feedback ("Adjust the model").
-                          When provided, the previous ER is passed alongside so
-                          the agent can refine rather than rebuild from scratch.
-        previous_er:      The ER produced on the prior pass — only used when
-                          `feedback` is supplied.
-
-    Returns:
-        Dict with keys: layer, style, use_case, target_table, domain,
-        source_tables, tables, relationships, mermaid; or
-        `{"error": "..."}` on failure.
     """
     if not isinstance(discovery_output, dict) or not _has_any_discovery_matches(discovery_output):
         return {
@@ -276,7 +409,6 @@ async def build_er(
             )
         }
 
-    # Trim before building payloads — keeps the LLM focused and prevents truncation.
     trimmed_discovery = _trim_discovery_for_er(discovery_output)
     bronze_fixture = _load_bronze_fixture()
 
@@ -306,7 +438,10 @@ async def build_er(
           f"silver={len(trimmed_discovery.get('silver_matches',[]))}, "
           f"bronze={len(trimmed_discovery.get('bronze_matches',[]))} matches)")
 
-    return await run_agent("gold-er", user_input, context=context, session=session)
+    raw_res = await run_agent("gold-er", user_input, context=context, session=session)
+    if isinstance(raw_res, dict) and not raw_res.get("error"):
+        return _align_er_with_discovery_tables(raw_res, discovery_output)
+    return raw_res
 
 
 def is_er_complete(output: dict) -> bool:
@@ -374,6 +509,23 @@ async def finalize(
     if not is_final_complete(result):
         print("[gold-final] LLM output incomplete — applying Python fallback patch.")
         result = _apply_gold_final_fallback(result, gold_er, silver_sttm)
+
+    # Ensure ER diagram and table consistency across all passes:
+    # tables, relationships, and mermaid from gold_er (which was validated/aligned with discovery)
+    # must not be lost or downgraded by a secondary LLM pass.
+    er_tables = gold_er.get("tables") or []
+    if er_tables:
+        res_tables = result.get("tables") if isinstance(result.get("tables"), list) else []
+        if len(res_tables) < len(er_tables):
+            result["tables"] = er_tables
+            result["relationships"] = gold_er.get("relationships") or result.get("relationships", [])
+            result["mermaid"] = gold_er.get("mermaid") or result.get("mermaid", "")
+            if "pipeline_spec" in result and isinstance(result["pipeline_spec"], dict):
+                result["pipeline_spec"]["gold_schema"] = {"tables": er_tables}
+                result["pipeline_spec"]["target_tables"] = [
+                    {"name": t.get("name", ""), "layer": "gold", "columns": t.get("columns", [])}
+                    for t in er_tables if t.get("name")
+                ]
 
     return result
 
