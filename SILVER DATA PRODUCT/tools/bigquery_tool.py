@@ -251,9 +251,30 @@ class BigQueryPublisher:
 
         # ── Live ─────────────────────────────────────────────────────────────
         dataset_location = self.location
+        fallback_ds = None
         try:
-            for ds_name in detected_datasets:
-                dataset_location = self._ensure_dataset(ds_name)
+            for ds_name in list(detected_datasets):
+                try:
+                    dataset_location = self._ensure_dataset(ds_name)
+                except Exception as ds_exc:
+                    log.warning("Dataset %s unavailable (%s); falling back to pre-provisioned dataset.", ds_name, ds_exc)
+                    for candidate in (self.silver_dataset, "banking_silver", "silver"):
+                        try:
+                            dataset_location = self._ensure_dataset(candidate)
+                            fallback_ds = candidate
+                            break
+                        except Exception:
+                            continue
+                    if not fallback_ds:
+                        raise ds_exc
+                    # Rewrite statements to use the pre-provisioned dataset
+                    statements = [
+                        re.sub(rf"\b{re.escape(ds_name)}\.", f"{fallback_ds}.", s)
+                        for s in statements
+                    ]
+                    primary_dataset = fallback_ds
+                    report["dataset_id"] = primary_dataset
+                    report["silver_dataset"] = f"{self.project_id}.{primary_dataset}"
             report["dataset_location"] = dataset_location
         except Exception as exc:
             report["publish_status"] = "failed"
