@@ -438,3 +438,191 @@ class KnowledgeCatalogClient:
                 "error": str(exc),
                 "entries": [],
             }
+
+    # ── 6. Register Dataplex Data Product & Business Glossary ─────────────────
+
+    @staticmethod
+    def _sanitize_id(val: Any, default: str = "silver-data-product") -> str:
+        if val is None:
+            return default
+        cleaned = re.sub(r"[^a-z0-9]+", "-", str(val).strip().lower()).strip("-")
+        return (cleaned or default)[:63].rstrip("-") or default
+
+    @staticmethod
+    def _valid_owner_email(owner: Any, project_id: str) -> str:
+        candidate = str(owner or "").strip()
+        if "@" in candidate and "." in candidate.split("@")[-1] and " " not in candidate:
+            return candidate
+        return os.environ.get(
+            "RUNTIME_SA_EMAIL",
+            f"dp-assistant-sa@{project_id}.iam.gserviceaccount.com",
+        )
+
+    def _resolve_dataset_location(self, dataset_id: str, fallback: Optional[str] = None) -> str:
+        """Resolve the actual BigQuery dataset location (e.g. 'us' or 'us-central1') for Dataplex."""
+        try:
+            from tools.gcp_auth import get_bigquery_client
+            client = get_bigquery_client(project_id=self.project_id)
+            ds = client.get_dataset(f"{self.project_id}.{dataset_id}")
+            if ds.location:
+                return ds.location.strip().lower()
+        except Exception:
+            pass
+        loc = (fallback or os.environ.get("BQ_LOCATION") or "us").strip().lower()
+        return loc if loc in ("us-central1", "us", "eu", "asia-south1") else "us"
+
+    def register_data_product(
+        self,
+        dataset_id: str,
+        product_id: str,
+        display_name: str,
+        description: str,
+        table_names: List[str],
+        owner_email: Optional[str] = None,
+        location: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """Create/reuse a Dataplex Data Product and register Silver BigQuery tables as Data Assets."""
+        loc = self._resolve_dataset_location(dataset_id, fallback=location)
+        kc_id = self._sanitize_id(product_id, default=f"silver-{dataset_id}")
+        email = self._valid_owner_email(owner_email, self.project_id)
+        kc_url = (
+            f"https://console.cloud.google.com/dataplex/products"
+            f"/projects/{self.project_id}/locations/{loc}"
+            f"/dataProducts/{kc_id}?project={self.project_id}"
+        )
+        try:
+            headers = self._get_headers()
+            create_url = (
+                f"{DATAPLEX_API}/projects/{self.project_id}/locations/{loc}"
+                f"/dataProducts?data_product_id={kc_id}"
+            )
+            resp = requests.post(
+                create_url,
+                json={
+                    "display_name": (display_name or f"Silver Data Product ({dataset_id})")[:255],
+                    "description": (description or f"Conformed Silver Data Product for {dataset_id}")[:1024],
+                    "owner_emails": [email],
+                },
+                headers=headers,
+                timeout=25,
+            )
+            if resp.status_code not in (200, 201, 409):
+                return {
+                    "ok": False,
+                    "status": "FAILED",
+                    "http_status": resp.status_code,
+                    "error": resp.text[:300],
+                    "data_product_id": kc_id,
+                    "knowledge_catalog_url": kc_url,
+                }
+            registered_assets: List[str] = []
+            for raw_tname in table_names[:50]:
+                tbl = raw_tname.strip("`").split(".")[-1]
+                if not tbl:
+                    continue
+                asset_id = self._sanitize_id(tbl, default="table")
+                asset_url = (
+                    f"{DATAPLEX_API}/projects/{self.project_id}/locations/{loc}"
+                    f"/dataProducts/{kc_id}/dataAssets?data_asset_id={asset_id}"
+                )
+                resource = (
+                    f"//bigquery.googleapis.com/projects/{self.project_id}"
+                    f"/datasets/{dataset_id}/tables/{tbl}"
+                )
+                ar = requests.post(asset_url, json={"resource": resource}, headers=headers, timeout=20)
+                if ar.status_code in (200, 201, 409):
+                    registered_assets.append(asset_id)
+            return {
+                "ok": True,
+                "status": "REGISTERED_IN_KNOWLEDGE_CATALOG",
+                "data_product_id": kc_id,
+                "location": loc,
+                "assets_registered": len(registered_assets),
+                "registered_assets": registered_assets,
+                "knowledge_catalog_url": kc_url,
+            }
+        except Exception as exc:
+            log.warning("Silver register_data_product error: %s", exc)
+            return {
+                "ok": False,
+                "status": "ERROR",
+                "error": str(exc),
+                "data_product_id": kc_id,
+                "knowledge_catalog_url": kc_url,
+            }
+
+    def sync_business_glossary(
+        self,
+        glossary_id: str,
+        display_name: str,
+        description: str,
+        terms: List[Dict[str, str]],
+    ) -> Dict[str, Any]:
+        """Create/reuse a Dataplex Business Glossary in global location and populate terms."""
+        gid = self._sanitize_id(glossary_id, default="silver-banking-glossary")
+        glossary_url = (
+            f"https://console.cloud.google.com/dataplex/glossaries"
+            f"/projects/{self.project_id}/locations/global/glossaries/{gid}?project={self.project_id}"
+        )
+        try:
+            headers = self._get_headers()
+            create_url = (
+                f"{DATAPLEX_API}/projects/{self.project_id}/locations/global"
+                f"/glossaries?glossary_id={gid}"
+            )
+            resp = requests.post(
+                create_url,
+                json={
+                    "displayName": (display_name or "Silver Data Product Glossary")[:255],
+                    "description": (description or "Conformed Silver Business Glossary")[:1024],
+                },
+                headers=headers,
+                timeout=20,
+            )
+            if resp.status_code not in (200, 201, 409):
+                return {
+                    "ok": False,
+                    "status": "FAILED",
+                    "http_status": resp.status_code,
+                    "error": resp.text[:250],
+                    "glossary_id": gid,
+                    "glossary_url": glossary_url,
+                }
+            terms_synced = 0
+            for t in (terms or [])[:25]:
+                t_name = t.get("name") or t.get("displayName") or ""
+                if not t_name:
+                    continue
+                tid = self._sanitize_id(t_name, default="term")
+                term_url = (
+                    f"{DATAPLEX_API}/projects/{self.project_id}/locations/global"
+                    f"/glossaries/{gid}/terms?term_id={tid}"
+                )
+                tr = requests.post(
+                    term_url,
+                    json={
+                        "displayName": t_name[:255],
+                        "description": (t.get("description") or t_name)[:1024],
+                        "parent": f"projects/{self.project_id}/locations/global/glossaries/{gid}",
+                    },
+                    headers=headers,
+                    timeout=15,
+                )
+                if tr.status_code in (200, 201, 409):
+                    terms_synced += 1
+            return {
+                "ok": True,
+                "status": "GLOSSARY_SYNCED",
+                "glossary_id": gid,
+                "terms_synced": terms_synced,
+                "glossary_url": glossary_url,
+            }
+        except Exception as exc:
+            log.warning("Silver sync_business_glossary error: %s", exc)
+            return {
+                "ok": False,
+                "status": "ERROR",
+                "error": str(exc),
+                "glossary_id": gid,
+                "glossary_url": glossary_url,
+            }

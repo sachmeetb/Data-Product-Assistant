@@ -19,22 +19,24 @@ steps:
 
   # 3. Deploy Backend to Cloud Run
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
-    entrypoint: gcloud
+    entrypoint: bash
     args:
-      - 'run'
-      - 'deploy'
-      - '${_BACKEND_SVC}'
-      - '--image=us-central1-docker.pkg.dev/${_PROJECT_ID}/${_REPO_NAME}/yk-gold-backend:${SHORT_SHA}'
-      - '--region=${_REGION}'
-      - '--platform=managed'
-      - '--memory=2Gi'
-      - '--cpu=2'
-      - '--concurrency=80'
-      - '--min-instances=1'
-      - '--max-instances=10'
-      - '--set-env-vars=GOOGLE_CLOUD_PROJECT=${_PROJECT_ID},GOOGLE_CLOUD_LOCATION=${_REGION},GOOGLE_GENAI_LOCATION=global,GOOGLE_GENAI_USE_VERTEXAI=1,GCS_TEMPLATES_BUCKET=${_TEMPLATES_BUCKET},GCS_UPLOADS_BUCKET=${_UPLOADS_BUCKET},BQ_PROJECT=${_PROJECT_ID},BQ_LOCATION=${_REGION},BQ_PUBLISHER_MODE=live,BQ_DATASET_GOLD=gold,BQ_DATASET_SILVER=silver,BQ_DATASET_BRONZE=bronze,CORS_ORIGINS=*'
-      - '--service-account=dp-assistant-sa@${_PROJECT_ID}.iam.gserviceaccount.com'
-      - '--no-iap'
+      - '-c'
+      - |
+        AUTH_FLAG="--no-iap"
+        if [ "${_ENV}" = "test" ]; then AUTH_FLAG="--allow-unauthenticated"; fi
+        gcloud run deploy "${_BACKEND_SVC}" \
+          --image="us-central1-docker.pkg.dev/${_PROJECT_ID}/${_REPO_NAME}/yk-gold-backend:${SHORT_SHA}" \
+          --region="${_REGION}" \
+          --platform=managed \
+          --memory=2Gi \
+          --cpu=2 \
+          --concurrency=80 \
+          --min-instances=1 \
+          --max-instances=10 \
+          --set-env-vars="GOOGLE_CLOUD_PROJECT=${_PROJECT_ID},GOOGLE_CLOUD_LOCATION=${_REGION},GOOGLE_GENAI_LOCATION=global,GOOGLE_GENAI_USE_VERTEXAI=1,GCS_TEMPLATES_BUCKET=${_TEMPLATES_BUCKET},GCS_UPLOADS_BUCKET=${_UPLOADS_BUCKET},BQ_PROJECT=${_PROJECT_ID},BQ_LOCATION=${_REGION},BQ_PUBLISHER_MODE=live,BQ_DATASET_GOLD=gold,BQ_DATASET_SILVER=silver,BQ_DATASET_BRONZE=bronze,CORS_ORIGINS=*" \
+          --service-account="dp-assistant-sa@${_PROJECT_ID}.iam.gserviceaccount.com" \
+          $$AUTH_FLAG
 
   # 4. Build Frontend Image (passing relative or direct URL)
   - name: 'gcr.io/cloud-builders/docker'
@@ -57,24 +59,34 @@ steps:
 
   # 6. Deploy Frontend to Cloud Run
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
-    entrypoint: gcloud
+    entrypoint: bash
     args:
-      - 'run'
-      - 'deploy'
-      - '${_FRONTEND_SVC}'
-      - '--image=us-central1-docker.pkg.dev/${_PROJECT_ID}/${_REPO_NAME}/yk-gold-frontend:${SHORT_SHA}'
-      - '--region=${_REGION}'
-      - '--platform=managed'
-      - '--memory=256Mi'
-      - '--cpu=1'
-      - '--concurrency=80'
-      - '--min-instances=0'
-      - '--max-instances=5'
-      - '--port=8080'
-      - '--service-account=dp-assistant-sa@${_PROJECT_ID}.iam.gserviceaccount.com'
-      - '--no-iap'
+      - '-c'
+      - |
+        AUTH_FLAG="--no-iap"
+        ENV_ARGS=""
+        if [ "${_ENV}" = "test" ]; then
+          AUTH_FLAG="--allow-unauthenticated"
+          B_URL=$$(gcloud run services describe "${_BACKEND_SVC}" --region="${_REGION}" --format='value(status.url)')
+          B_HOST=$${B_URL#https://}
+          ENV_ARGS="--set-env-vars=BACKEND_PROXY_URL=$${B_URL}/,BACKEND_PROXY_HOST=$${B_HOST}"
+        fi
+        gcloud run deploy "${_FRONTEND_SVC}" \
+          --image="us-central1-docker.pkg.dev/${_PROJECT_ID}/${_REPO_NAME}/yk-gold-frontend:${SHORT_SHA}" \
+          --region="${_REGION}" \
+          --platform=managed \
+          --memory=256Mi \
+          --cpu=1 \
+          --concurrency=80 \
+          --min-instances=0 \
+          --max-instances=5 \
+          --port=8080 \
+          --service-account="dp-assistant-sa@${_PROJECT_ID}.iam.gserviceaccount.com" \
+          $$AUTH_FLAG \
+          $$ENV_ARGS
 
 substitutions:
+  _ENV: 'main'
   _PROJECT_ID: 'eogwapq-agbg-internal-data-mig'
   _REGION: 'us-central1'
   _REPO_NAME: 'dp-assistant'
