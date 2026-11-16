@@ -2800,8 +2800,18 @@ CREATE OR REPLACE TABLE `{publisher.project_id}.{dataset_id}.slv_customer_arrang
                 {"name": "slv_customer_arrangement", "description": "Linked Deposit, Card, and Loan Arrangements"},
             ],
         )
+        console_links = kc.build_console_links(
+            project_id=publisher.project_id,
+            dataset_id=dataset_id,
+            table_names=["slv_customer_360", "slv_customer_source_xref", "slv_customer_arrangement"],
+            dataset_location="US",
+        )
         res["publish_report"] = {
             **bq_report,
+            "bigquery_dataset_url": console_links["bigquery_dataset_url"],
+            "knowledge_catalog_data_product_url": dp_res.get("knowledge_catalog_url"),
+            "knowledge_catalog_glossary_url": gl_res.get("glossary_url"),
+            "tables": console_links["tables"],
             "knowledge_catalog_data_product": dp_res,
             "knowledge_catalog_glossary": gl_res,
         }

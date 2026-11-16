@@ -428,6 +428,8 @@ function Conformance360Card({ view }) {
   if (!view) return null
   const customers = view.golden_customers || []
   const sc = view.source_counts || {}
+  const pub = view.publish_report || null
+  const pubTables = pub?.tables || []
   return (
     <div style={{ marginTop: '12px', border: '1px solid #cbd5e1', borderRadius: '12px', background: '#ffffff', overflow: 'hidden' }}>
       <div style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%)', color: '#ffffff', padding: '12px 16px', display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}>
@@ -441,6 +443,41 @@ function Conformance360Card({ view }) {
           {view.total_arrangements || 0} Arrangements Linked
         </span>
       </div>
+
+      {pub && (
+        <div style={{ padding: '12px 16px', background: '#faf5ff', borderBottom: '1px solid #ede9fe' }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center', marginBottom: pubTables.length ? '10px' : 0 }}>
+            <span style={{ fontSize: '12px', fontWeight: 700, color: '#4c1d95', marginRight: '4px' }}>GCP Console Links:</span>
+            {pub.bigquery_dataset_url && (
+              <a href={pub.bigquery_dataset_url} target="_blank" rel="noopener noreferrer" style={{ background: '#1d4ed8', color: '#fff', fontSize: '11.5px', fontWeight: 600, padding: '5px 10px', borderRadius: '6px', textDecoration: 'none' }}>
+                Open Dataset in BigQuery ↗
+              </a>
+            )}
+            {pub.knowledge_catalog_data_product_url && (
+              <a href={pub.knowledge_catalog_data_product_url} target="_blank" rel="noopener noreferrer" style={{ background: '#6d28d9', color: '#fff', fontSize: '11.5px', fontWeight: 600, padding: '5px 10px', borderRadius: '6px', textDecoration: 'none' }}>
+                Open Data Product in Knowledge Catalog ↗
+              </a>
+            )}
+            {pub.knowledge_catalog_glossary_url && (
+              <a href={pub.knowledge_catalog_glossary_url} target="_blank" rel="noopener noreferrer" style={{ background: '#0f766e', color: '#fff', fontSize: '11.5px', fontWeight: 600, padding: '5px 10px', borderRadius: '6px', textDecoration: 'none' }}>
+                Open Business Glossary ↗
+              </a>
+            )}
+          </div>
+          {pubTables.length > 0 && (
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+              {pubTables.map((t, i) => (
+                <div key={t.table_name || i} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: '#ffffff', border: '1px solid #ddd6fe', borderRadius: '6px', padding: '4px 8px', fontSize: '11.5px' }}>
+                  <code style={{ fontWeight: 700, color: '#1e293b' }}>{t.table_name}</code>
+                  <a href={t.bigquery_url} target="_blank" rel="noopener noreferrer" style={{ color: '#1d4ed8', fontWeight: 600, textDecoration: 'none' }}>BigQuery ↗</a>
+                  <span style={{ color: '#cbd5e1' }}>|</span>
+                  <a href={t.knowledge_catalog_url} target="_blank" rel="noopener noreferrer" style={{ color: '#6d28d9', fontWeight: 600, textDecoration: 'none' }}>Knowledge Catalog ↗</a>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       <div style={{ padding: '12px 16px', overflowX: 'auto' }}>
         <table style={{ width: 'max-content', minWidth: '100%', tableLayout: 'auto', borderCollapse: 'collapse', fontSize: '12px', margin: 0 }}>
