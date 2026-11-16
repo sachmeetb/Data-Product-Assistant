@@ -26,7 +26,6 @@ steps:
         AUTH_FLAG="--iap"
         ENV_ARGS=""
         if [ "${_ENV}" = "test" ]; then
-          AUTH_FLAG="--allow-unauthenticated"
           BR_URL=$$(gcloud run services describe yk-test-bronze-frontend --region="${_REGION}" --format='value(status.url)' 2>/dev/null || true)
           SL_URL=$$(gcloud run services describe yk-test-silver-frontend --region="${_REGION}" --format='value(status.url)' 2>/dev/null || true)
           GL_URL=$$(gcloud run services describe yk-test-gold-frontend --region="${_REGION}" --format='value(status.url)' 2>/dev/null || true)

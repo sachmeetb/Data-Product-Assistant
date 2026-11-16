@@ -24,7 +24,6 @@ steps:
       - '-c'
       - |
         AUTH_FLAG="--no-iap"
-        if [ "${_ENV}" = "test" ]; then AUTH_FLAG="--allow-unauthenticated"; fi
         gcloud run deploy "${_BACKEND_SVC}" \
           --image="us-central1-docker.pkg.dev/${_PROJECT_ID}/${_REPO_NAME}/yk-gold-backend:${SHORT_SHA}" \
           --region="${_REGION}" \
@@ -66,7 +65,6 @@ steps:
         AUTH_FLAG="--no-iap"
         ENV_ARGS=""
         if [ "${_ENV}" = "test" ]; then
-          AUTH_FLAG="--allow-unauthenticated"
           B_URL=$$(gcloud run services describe "${_BACKEND_SVC}" --region="${_REGION}" --format='value(status.url)')
           B_HOST=$${B_URL#https://}
           ENV_ARGS="--set-env-vars=BACKEND_PROXY_URL=$${B_URL}/,BACKEND_PROXY_HOST=$${B_HOST}"
