@@ -119,6 +119,21 @@ def _build_arrangements(
     return arrangements
 
 
+def _read_bq_or_csv(table_name: str, csv_path: Path, dataset_id: str = "banking_bronze") -> tuple[List[Dict[str, Any]], str]:
+    """Try reading live Bronze rows from BigQuery first; fall back to local CSV."""
+    try:
+        import os
+        from tools.gcp_auth import get_bigquery_client
+        project_id = os.environ.get("BQ_PROJECT") or os.environ.get("GCP_PROJECT_ID") or "eogwapq-agbg-internal-data-mig"
+        client = get_bigquery_client(project_id=project_id, location="US")
+        rows = [dict(r.items()) for r in client.query(f"SELECT * FROM `{project_id}.{dataset_id}.{table_name}`").result()]
+        if rows:
+            return rows, "bigquery"
+    except Exception:
+        pass
+    return read_csv(csv_path), "local_csv"
+
+
 def run_conformance_pipeline() -> Dict[str, Any]:
     base_dir = Path(__file__).parent.parent
     bronze_dir = base_dir.parent / "BRONZE DATA PRODUCT" / "samples" / "banking_4_sources"
@@ -131,11 +146,12 @@ def run_conformance_pipeline() -> Dict[str, Any]:
     print("Framework: Tony Giordano 'Conforming Logic' (Hogan + AFS + TSYS + ACLS -> Silver)")
     print("================================================================================\n")
 
-    # ── 1. INGEST BRONZE SOURCES ──────────────────────────────────────────────
-    hogan_rows = read_csv(bronze_dir / "brz_hogan_ci_customer.csv")
-    afs_rows = read_csv(bronze_dir / "brz_afs_borrower.csv")
-    tsys_rows = read_csv(bronze_dir / "brz_tsys_cardholder.csv")
-    acls_rows = read_csv(bronze_dir / "brz_acls_applicant.csv")
+    # ── 1. INGEST BRONZE SOURCES (Live BigQuery banking_bronze -> Local CSV fallback) ──
+    hogan_rows, m1 = _read_bq_or_csv("brz_hogan_ci_customer", bronze_dir / "brz_hogan_ci_customer.csv")
+    afs_rows, m2 = _read_bq_or_csv("brz_afs_borrower", bronze_dir / "brz_afs_borrower.csv")
+    tsys_rows, m3 = _read_bq_or_csv("brz_tsys_cardholder", bronze_dir / "brz_tsys_cardholder.csv")
+    acls_rows, m4 = _read_bq_or_csv("brz_acls_applicant", bronze_dir / "brz_acls_applicant.csv")
+    source_mode = "bigquery" if all(m == "bigquery" for m in (m1, m2, m3, m4)) else "local_csv"
 
     total_bronze_records = len(hogan_rows) + len(afs_rows) + len(tsys_rows) + len(acls_rows)
     print(f"[*] Ingested {len(hogan_rows)} records from Hogan Core Deposits (CIS)")
@@ -230,6 +246,7 @@ def run_conformance_pipeline() -> Dict[str, Any]:
     print(f"Deduplication / Compression     : {dedup_ratio:.1f}%\n")
 
     return {
+        "source_mode": source_mode,
         "source_counts": {
             "HOGAN": len(hogan_rows),
             "AFS": len(afs_rows),

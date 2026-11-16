@@ -1924,10 +1924,38 @@ async def chat_endpoint(body: ChatRequest):
             "chips": ["Publish to BigQuery", "Open & Edit Existing Silver Structure", "Adjust the model", "Tweak the mapping", "Change Entity Selection"],
         }
 
+    # Direct handler for Multi-Source Bronze -> Silver STTM (Hogan + AFS + TSYS + ACLS)
+    if action == "multi_source_sttm" or any(
+        kw in user_msg.lower()
+        for kw in ("map bronze", "4-to-1 sttm", "multi-source sttm", "bronze → silver")
+    ):
+        from engine.sttm_builder import build_multi_source_sttm_view
+        sttm_view = await asyncio.to_thread(build_multi_source_sttm_view)
+        return {
+            "session_id": session_id,
+            "current_step": "sttm_ready",
+            "silver_transform_view": sttm_view,
+            "messages": [
+                {
+                    "agent": "Silver STTM & Conformance Architect",
+                    "text": (
+                        f"Discovered **4 heterogeneous Bronze tables** (`{sttm_view['bronze_source_mode']}`) and generated the "
+                        f"**4-to-1 Multi-Source STTM** mapping **TSYS (Card)**, **HOGAN (Deposit)**, **AFS (Commercial Loan)**, "
+                        f"and **ACLS (Retail Loan)** into **Unified Silver Customer (`slv_customer_360`)**, **XREF (`slv_customer_source_xref`)**, "
+                        f"and **Banking Arrangements (`slv_customer_arrangement`)**.\n\n"
+                        f"Review the column mappings and 4-to-1 lineage below, then click **Execute STTM & Conform**."
+                    ),
+                    "silver_transform_view": sttm_view,
+                    "chips": ["Execute STTM & Conform", "Publish Customer 360 to BigQuery", "Start New Silver Product"],
+                }
+            ],
+            "chips": ["Execute STTM & Conform", "Publish Customer 360 to BigQuery", "Start New Silver Product"],
+        }
+
     # Direct handler for 4-Source Customer 360 & Arrangements Conformance (Hogan + AFS + TSYS + ACLS -> Silver)
     if action == "run_conformance" or any(
         kw in user_msg.lower()
-        for kw in ("run 4-source customer 360", "4-source customer 360", "run conformance", "conformance pipeline")
+        for kw in ("execute sttm", "run 4-source customer 360", "4-source customer 360", "run conformance", "conformance pipeline")
     ):
         conf_res = await _run_and_format_conformance(publish=False)
         return {
@@ -1938,7 +1966,7 @@ async def chat_endpoint(body: ChatRequest):
                 {
                     "agent": "Silver Conformance Engine",
                     "text": (
-                        f"Executed **4-Source Bronze → Silver Customer 360 Conformance** across **Hogan, AFS, TSYS, and ACLS**:\n\n"
+                        f"Executed **4-Source Bronze → Silver Customer 360 Conformance** (source: `{conf_res.get('source_mode', 'bigquery')}`) across **Hogan, AFS, TSYS, and ACLS**:\n\n"
                         f"- **Bronze Records Ingested**: `{conf_res['total_bronze_records']}` "
                         f"(Hogan: {conf_res['source_counts']['HOGAN']}, AFS: {conf_res['source_counts']['AFS']}, "
                         f"TSYS: {conf_res['source_counts']['TSYS']}, ACLS: {conf_res['source_counts']['ACLS']})\n"
@@ -2656,6 +2684,69 @@ CREATE OR REPLACE TABLE `{publisher.project_id}.{dataset_id}.slv_customer_arrang
 ) OPTIONS(description='Many-to-One Banking Arrangements Linked to Unified Silver Customer');
 """
         bq_report = await asyncio.to_thread(publisher.publish, ddl)
+        # Materialize conformed Golden Customers, XREF, and Arrangements rows in BigQuery
+        try:
+            from google.cloud import bigquery as _bq
+            bq_client = publisher._get_client()
+            cust_rows = [
+                {
+                    "customer_key": gc["customer_key"],
+                    "customer_type": gc.get("customer_type", "IND"),
+                    "legal_name": gc.get("legal_name", ""),
+                    "date_of_birth": str(gc.get("date_of_birth") or ""),
+                    "tax_id_masked": gc.get("tax_id_masked", ""),
+                    "primary_phone_e164": gc.get("primary_phone_e164", ""),
+                    "primary_email": gc.get("primary_email", ""),
+                    "primary_postal_code": gc.get("primary_postal_code", ""),
+                    "relationship_status": gc.get("relationship_status", "ACTIVE"),
+                    "survivorship_source": gc.get("survivorship_source", ""),
+                    "contributing_sources": "|".join(gc.get("contributing_sources", [])),
+                    "source_record_count": int(gc.get("source_record_count", 1)),
+                    "arrangement_count": int(gc.get("arrangement_count", 0)),
+                    "arrangement_types": "|".join(gc.get("arrangement_types", [])),
+                }
+                for gc in enriched_customers
+            ]
+            xref_rows = [
+                {
+                    "xref_key": x["xref_key"],
+                    "customer_key": x["customer_key"],
+                    "source_system": x["source_system"],
+                    "source_entity": x.get("source_entity", ""),
+                    "source_customer_id": x["source_customer_id"],
+                    "match_method": x.get("match_method", ""),
+                    "match_score": float(x.get("match_score", 1.0)),
+                }
+                for x in res.get("xrefs", [])
+            ]
+            arr_rows = [
+                {
+                    "arrangement_key": a["arrangement_key"],
+                    "customer_key": a["customer_key"],
+                    "source_system": a["source_system"],
+                    "source_account_id": a["source_account_id"],
+                    "arrangement_type": a["arrangement_type"],
+                    "product_subtype": a.get("product_subtype", ""),
+                    "status": a.get("status", "ACTIVE"),
+                    "limit_or_amount": float(a.get("limit_or_amount") or 0.0),
+                    "branch_or_channel": a.get("branch_or_channel", ""),
+                }
+                for a in res.get("arrangements", [])
+            ]
+            w_cfg = _bq.LoadJobConfig(write_disposition=_bq.WriteDisposition.WRITE_TRUNCATE)
+            for tname, rows_payload in [
+                ("slv_customer_360", cust_rows),
+                ("slv_customer_source_xref", xref_rows),
+                ("slv_customer_arrangement", arr_rows),
+            ]:
+                if rows_payload:
+                    await asyncio.to_thread(
+                        lambda tn=tname, rp=rows_payload: bq_client.load_table_from_json(
+                            rp, f"{publisher.project_id}.{dataset_id}.{tn}", job_config=w_cfg
+                        ).result()
+                    )
+        except Exception as load_exc:
+            log.warning("Conformed BigQuery row load warning: %s", load_exc)
         kc = KnowledgeCatalogClient(project_id=publisher.project_id, dataset_id=dataset_id)
         dp_res = await asyncio.to_thread(
             kc.register_data_product,
@@ -2682,6 +2773,13 @@ CREATE OR REPLACE TABLE `{publisher.project_id}.{dataset_id}.slv_customer_arrang
             "knowledge_catalog_glossary": gl_res,
         }
     return res
+
+
+@app.post("/v1/sttm/multi-source")
+async def get_multi_source_sttm_endpoint(bronze_dataset: str = "banking_bronze", target_dataset: str = "banking_silver"):
+    """Discover the 4 Bronze tables and generate the 4-to-1 Multi-Source STTM specification."""
+    from engine.sttm_builder import build_multi_source_sttm_view
+    return await asyncio.to_thread(build_multi_source_sttm_view, bronze_dataset, target_dataset)
 
 
 @app.post("/v1/conformance/run")

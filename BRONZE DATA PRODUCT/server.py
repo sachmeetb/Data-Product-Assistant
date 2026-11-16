@@ -687,6 +687,35 @@ async def _handle_chat(body: ChatRequest, session_id: str):
         current_step = "requirement"
         session["step"] = "requirement"
 
+    if action == "land_4_sources" or "land 4-source" in user_msg.lower():
+        landed = await asyncio.to_thread(_land_4_sources_to_bronze)
+        session["landed_4_sources"] = landed
+        store.set(session_id, session)
+        rows_md = "\n".join(
+            f"| `{t['source_system']}` | `{t['fqn']}` | {t['row_count']} | {len(t['columns'])} cols | [BigQuery ↗]({t['bigquery_url']}) |"
+            for t in landed["tables"]
+        )
+        dp = landed.get("knowledge_catalog_data_product") or {}
+        gl = landed.get("knowledge_catalog_glossary") or {}
+        msg = (
+            f"✅ **Landed 4 Heterogeneous Banking Sources into `{landed['project_id']}.{landed['dataset_id']}`**\n\n"
+            f"| Source System | BigQuery Bronze Table | Rows | Schema | Console |\n"
+            f"| :--- | :--- | ---: | ---: | :--- |\n"
+            f"{rows_md}\n\n"
+            f"- **Total Bronze Records Landed**: `{landed['total_rows']}`\n"
+        )
+        if dp.get("ok"):
+            msg += f"- **Knowledge Catalog Data Product**: `{dp.get('data_product_id')}` ({dp.get('assets_registered', 0)} assets) — [Open Data Products ↗]({dp.get('knowledge_catalog_url')})\n"
+        if gl.get("ok"):
+            msg += f"- **Knowledge Catalog Glossary**: `{gl.get('glossary_id')}` ({gl.get('terms_synced', 0)} terms) — [Open Glossaries ↗]({gl.get('glossary_url')})\n"
+        msg += "\n**Next Step**: Open **Silver Data Product Assistant** and click **Map Bronze → Silver Customer (4-to-1 STTM)** to discover these Bronze tables and build the multi-source STTM."
+        return {
+            "session_id": session_id,
+            "current_step": "bronze_landed",
+            "messages": [{"agent": "Bronze Agent", "text": msg, "chips": ["Land 4-Source Banking Data"], "files": []}],
+            "chips": ["Land 4-Source Banking Data"],
+        }
+
     if action == "publish" or user_msg.lower() == "publish to bigquery":
         ddl = session.get("ddl_script", "")
         if not ddl:
@@ -1331,3 +1360,136 @@ async def _handle_chat(body: ChatRequest, session_id: str):
         ],
         "chips": chips,
     }
+
+
+# ── 4-Source Banking Landing (Card, Deposit, Commercial Loan, Retail Loan) ────
+
+_FOUR_SOURCE_SPECS = [
+    {
+        "source_system": "TSYS (Card)",
+        "table_name": "brz_tsys_cardholder",
+        "csv_file": "brz_tsys_cardholder.csv",
+        "description": "TSYS / FDR Revolving Credit Card cardholder raw landing table.",
+    },
+    {
+        "source_system": "HOGAN (Deposit)",
+        "table_name": "brz_hogan_ci_customer",
+        "csv_file": "brz_hogan_ci_customer.csv",
+        "description": "Hogan Core Deposits CIS customer raw landing table.",
+    },
+    {
+        "source_system": "AFS (Commercial Loan)",
+        "table_name": "brz_afs_borrower",
+        "csv_file": "brz_afs_borrower.csv",
+        "description": "AFS Commercial Lending borrower & credit facility raw landing table.",
+    },
+    {
+        "source_system": "ACLS (Retail Loan)",
+        "table_name": "brz_acls_applicant",
+        "csv_file": "brz_acls_applicant.csv",
+        "description": "ACLS Consumer Retail Loan applicant raw landing table.",
+    },
+]
+
+
+def _land_4_sources_to_bronze(dataset_id: Optional[str] = None) -> dict:
+    import csv
+    from google.cloud import bigquery
+    from tools.gcp_auth import get_bigquery_client
+
+    project_id = os.environ.get("BQ_PROJECT") or os.environ.get("GCP_PROJECT_ID") or "eogwapq-agbg-internal-data-mig"
+    ds_id = dataset_id or os.environ.get("BQ_BRONZE_DATASET") or "banking_bronze"
+    samples_dir = Path(__file__).parent / "samples" / "banking_4_sources"
+
+    client = get_bigquery_client(project_id=project_id, location="US")
+    ds_ref = bigquery.Dataset(f"{project_id}.{ds_id}")
+    ds_ref.location = "US"
+    client.create_dataset(ds_ref, exists_ok=True)
+
+    landed_tables = []
+    total_rows = 0
+    for spec in _FOUR_SOURCE_SPECS:
+        csv_path = samples_dir / spec["csv_file"]
+        with open(csv_path, "r", encoding="utf-8-sig") as f:
+            rows = list(csv.DictReader(f))
+        if not rows:
+            continue
+        cols = list(rows[0].keys())
+        schema = [bigquery.SchemaField(c, "STRING", mode="NULLABLE", description=f"Raw field {c} from {spec['source_system']}") for c in cols]
+        fqn = f"{project_id}.{ds_id}.{spec['table_name']}"
+        job_cfg = bigquery.LoadJobConfig(
+            schema=schema,
+            write_disposition=bigquery.WriteDisposition.WRITE_TRUNCATE,
+        )
+        job = client.load_table_from_json(rows, fqn, job_config=job_cfg)
+        job.result()
+
+        # Enrich table description & labels
+        tbl_obj = client.get_table(fqn)
+        tbl_obj.description = spec["description"]
+        tbl_obj.labels = {"layer": "bronze", "source_system": re.sub(r"[^a-z0-9_-]", "_", spec["source_system"].lower())[:63]}
+        client.update_table(tbl_obj, ["description", "labels"])
+
+        total_rows += len(rows)
+        landed_tables.append({
+            "source_system": spec["source_system"],
+            "table_name": spec["table_name"],
+            "fqn": fqn,
+            "row_count": len(rows),
+            "columns": cols,
+            "bigquery_url": f"https://console.cloud.google.com/bigquery?project={project_id}&ws=!1m5!1m4!4m3!1s{project_id}!2s{ds_id}!3s{spec['table_name']}",
+        })
+
+    kc = KnowledgeCatalogClient(project_id=project_id, dataset_id=ds_id)
+    dp_res = kc.register_data_product(
+        ds_id,
+        "bronze-banking-4-sources",
+        "Bronze 4-Source Banking Raw Landing (TSYS, Hogan, AFS, ACLS)",
+        "Heterogeneous Card, Deposit, Commercial Loan, and Retail Loan Bronze tables.",
+        [t["table_name"] for t in landed_tables],
+    )
+    gl_res = kc.sync_business_glossary(
+        "bronze-banking-4-sources-glossary",
+        "Bronze 4-Source Banking Glossary",
+        "Raw Source Schemas for Card, Deposit, Commercial Loan, and Retail Loan",
+        [{"name": t["table_name"], "description": f"{t['source_system']} raw table ({len(t['columns'])} cols)"} for t in landed_tables],
+    )
+    return {
+        "status": "landed",
+        "project_id": project_id,
+        "dataset_id": ds_id,
+        "total_rows": total_rows,
+        "tables": landed_tables,
+        "knowledge_catalog_data_product": dp_res,
+        "knowledge_catalog_glossary": gl_res,
+    }
+
+
+@app.post("/v1/bronze/land-4-sources")
+async def land_4_sources_endpoint(dataset_id: Optional[str] = None):
+    """Land all 4 heterogeneous banking source CSVs into BigQuery banking_bronze + Knowledge Catalog."""
+    return await asyncio.to_thread(_land_4_sources_to_bronze, dataset_id)
+
+
+@app.get("/v1/bronze/catalog")
+async def get_bronze_catalog(dataset_id: Optional[str] = None):
+    """Return live BigQuery Bronze table schemas and row counts for downstream Silver STTM discovery."""
+    from tools.gcp_auth import get_bigquery_client
+    project_id = os.environ.get("BQ_PROJECT") or os.environ.get("GCP_PROJECT_ID") or "eogwapq-agbg-internal-data-mig"
+    ds_id = dataset_id or os.environ.get("BQ_BRONZE_DATASET") or "banking_bronze"
+    client = get_bigquery_client(project_id=project_id, location="US")
+    tables_out = []
+    for spec in _FOUR_SOURCE_SPECS:
+        fqn = f"{project_id}.{ds_id}.{spec['table_name']}"
+        try:
+            tbl = client.get_table(fqn)
+            tables_out.append({
+                "source_system": spec["source_system"],
+                "table_name": spec["table_name"],
+                "fqn": fqn,
+                "row_count": tbl.num_rows,
+                "columns": [{"name": f.name, "type": f.field_type, "description": f.description} for f in tbl.schema],
+            })
+        except Exception:
+            continue
+    return {"project_id": project_id, "dataset_id": ds_id, "tables": tables_out}

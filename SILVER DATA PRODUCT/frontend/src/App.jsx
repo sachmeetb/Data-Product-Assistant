@@ -22,7 +22,7 @@ export default function App() {
     text: "Welcome to **Silver Data Product Assistant**! To get started, please select your target **Industry** to explore available canonical domain models, or click **Domain Navigator** to drill down into entities and attributes.",
     chips: [
       "Banking & Financial Services",
-      "Run 4-Source Customer 360",
+      "Map Bronze → Silver Customer (4-to-1 STTM)",
       "Industrial & Water (Ecolab)",
       "Retail & Commerce",
       "Automotive & Fleet",
