@@ -1,0 +1,15 @@
+source_system,source_code,cdm_code,cdm_description
+HOGAN,01,ACTIVE,Active Account Holder
+HOGAN,05,DORMANT,Dormant Account Holder
+HOGAN,09,CLOSED,Closed Account Holder
+AFS,A,ACTIVE,Active Commercial Borrower
+AFS,L,LIQUIDATED,Fully Repaid and Liquidated
+AFS,D,DELINQUENT,Delinquent Commercial Obligation
+TSYS,OPEN,ACTIVE,Card Account Open and in Good Standing
+TSYS,RESTRICTED,SUSPENDED,Card Privileges Restricted or Suspended
+TSYS,CHARGEOFF,CHARGED_OFF,Card Account Charged Off
+TSYS,CLOSED,CLOSED,Card Account Voluntarily Closed
+ACLS,A,ACTIVE,Performing Active Loan
+ACLS,D,DELINQUENT,Delinquent Installment Loan
+ACLS,P,PAID_IN_FULL,Loan Paid in Full
+ACLS,W,WITHDRAWN,Application Withdrawn

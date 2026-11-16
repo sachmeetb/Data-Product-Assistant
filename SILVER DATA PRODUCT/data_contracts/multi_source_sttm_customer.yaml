@@ -1,0 +1,190 @@
+# ==============================================================================
+# MULTI-SOURCE SOURCE-TO-TARGET MAPPING (STTM) SPECIFICATION
+# Target Domain: BFSI Retail Customer (Silver Layer)
+# Framework Alignment: Tony Giordano "Conforming Logic" Methodology (Steps 3, 4, 5)
+# Standards Alignment: BIAN Party Reference Data v12 / ISO 20022
+# ==============================================================================
+
+specification_version: "2.0.0"
+target_data_product:
+  product_id: "DP-BFSI-SILVER-CUST-001"
+  name: "Conformed Retail Customer 360"
+  layer: "SILVER"
+  domain: "Party / Customer Management"
+  bian_service_domain: "Party Reference Data Directory"
+  target_storage:
+    catalog: "banking_silver"
+    table: "silver_customer"
+    cross_reference_table: "silver_customer_source_xref"
+
+upstream_bronze_sources:
+  - source_id: "SRC_HOGAN"
+    system_name: "Hogan Core Banking"
+    system_type: "Demand Deposit & CIS Mainframe"
+    dataset_name: "brz_hogan_ci_customer"
+    primary_key: "CI_CUST_NUM"
+    is_system_of_record_for: ["legal_name", "date_of_birth", "tax_identifier"]
+  
+  - source_id: "SRC_AFS"
+    system_name: "AFS Commercial Lending"
+    system_type: "Commercial Loan Core"
+    dataset_name: "brz_afs_borrower"
+    primary_key: "BORROWER_ID"
+    is_system_of_record_for: ["organization_name", "commercial_status"]
+
+  - source_id: "SRC_TSYS"
+    system_name: "TSYS / FDR Card Servicing"
+    system_type: "Revolving Credit Card Platform"
+    dataset_name: "brz_tsys_cardholder"
+    primary_key: "cardholder_id"
+    is_system_of_record_for: ["mobile_phone", "recent_activity"]
+
+  - source_id: "SRC_ACLS"
+    system_name: "ACLS Consumer Loans"
+    system_type: "Retail Installment Lending"
+    dataset_name: "brz_acls_applicant"
+    primary_key: "APPLICANT_ID"
+    is_system_of_record_for: ["verified_email", "residence_address"]
+
+# ── STEP 4: STANDARDIZATION & REFERENCE CROSSWALKS ───────────────────────────
+standardization_rules:
+  reference_crosswalks:
+    - attribute: "customer_type"
+      crosswalk_table: "reference/ref_crosswalk_customer_type.csv"
+      match_keys: ["source_system", "source_code"]
+      target_field: "cdm_code"
+      default_fallback: "UNKNOWN"
+
+    - attribute: "relationship_status"
+      crosswalk_table: "reference/ref_crosswalk_status.csv"
+      match_keys: ["source_system", "source_code"]
+      target_field: "cdm_code"
+      default_fallback: "UNKNOWN"
+
+  data_type_normalizations:
+    phone_e164:
+      rule: "REGEXP_REPLACE to extract digits; prefix '+1' for US 10-digit numbers; format as E.164"
+    date_iso8601:
+      rule: "Parse varying formats (YYYYMMDD, MM/DD/YYYY, YYYY/MM/DD) into canonical DATE (YYYY-MM-DD)"
+    tax_id_clean:
+      rule: "Strip punctuation, validate 9-digit numeric length"
+
+# ── STEP 5: RESOLVE — IDENTITY RESOLUTION ─────────────────────────────────────
+identity_resolution:
+  blocking:
+    primary_blocking_key: "SUBSTR(COALESCE(postal_code, '00000'), 1, 3)"
+    secondary_blocking_key: "SOUNDEX(last_name)"
+
+  matching_rules:
+    - rule_id: "R1_EXACT_TAX_ID"
+      tier: 1
+      description: "Deterministic exact match on normalized 9-digit Tax ID / SSN"
+      condition: "src_a.clean_tax_id IS NOT NULL AND src_a.clean_tax_id = src_b.clean_tax_id"
+      confidence_score: 1.00
+      auto_link: true
+
+    - rule_id: "R2_COMPOSITE_DOB_PHONE"
+      tier: 2
+      description: "Composite deterministic match on exact Date of Birth + normalized Phone Number"
+      condition: "src_a.clean_dob IS NOT NULL AND src_a.clean_dob = src_b.clean_dob AND src_a.clean_phone = src_b.clean_phone"
+      confidence_score: 0.95
+      auto_link: true
+
+    - rule_id: "R3_FUZZY_NAME_ADDRESS"
+      tier: 3
+      description: "Probabilistic match on normalized clean last name and postal code"
+      condition: "SIMILARITY(src_a.clean_last_name, src_b.clean_last_name) >= 0.85 AND src_a.clean_postal_code = src_b.clean_postal_code"
+      confidence_score: 0.80
+      auto_link: false
+      route_to: "STEWARD_REVIEW_QUEUE"
+
+# ── STEP 5: RESOLVE — MERGE SURVIVORSHIP POLICIES ─────────────────────────────
+survivorship_policies:
+  legal_name:
+    policy: "SYSTEM_OF_RECORD"
+    priority_order: ["SRC_HOGAN", "SRC_AFS", "SRC_ACLS", "SRC_TSYS"]
+    rationale: "Hogan core banking holds verified KYC legal identity."
+
+  date_of_birth:
+    policy: "SYSTEM_OF_RECORD"
+    priority_order: ["SRC_HOGAN", "SRC_ACLS", "SRC_TSYS"]
+    rationale: "KYC system of record verified birth date."
+
+  tax_identifier:
+    policy: "FIRST_NON_NULL_VALID"
+    priority_order: ["SRC_HOGAN", "SRC_ACLS", "SRC_TSYS", "SRC_AFS"]
+    rationale: "First validated 9-digit tax identifier."
+
+  primary_phone:
+    policy: "MOST_RECENT_ACTIVITY"
+    priority_order: ["SRC_TSYS", "SRC_ACLS", "SRC_HOGAN", "SRC_AFS"]
+    rationale: "Card servicing platform reflects the most recently active customer phone."
+
+  primary_email:
+    policy: "MOST_COMPLETE_VALID"
+    priority_order: ["SRC_ACLS", "SRC_AFS", "SRC_TSYS", "SRC_HOGAN"]
+    rationale: "Loan origination system captures and verifies consumer email."
+
+  primary_postal_code:
+    policy: "SYSTEM_OF_RECORD_RECENCY"
+    priority_order: ["SRC_HOGAN", "SRC_TSYS", "SRC_ACLS", "SRC_AFS"]
+    rationale: "Bank statement legal residence postal code."
+
+# ── COLUMN-LEVEL MAPPINGS ─────────────────────────────────────────────────────
+target_columns:
+  - name: "customer_key"
+    canonical_type: "STRING"
+    is_pk: true
+    derivation: "SURROGATE_HASH(resolved_cluster_id)"
+
+  - name: "customer_type"
+    canonical_type: "STRING"
+    derivation: "CROSSWALK_LOOKUP(ref_crosswalk_customer_type)"
+
+  - name: "legal_name"
+    canonical_type: "STRING"
+    derivation: "SURVIVORSHIP(legal_name)"
+
+  - name: "first_name"
+    canonical_type: "STRING"
+    derivation: "SURVIVORSHIP(first_name)"
+
+  - name: "last_name"
+    canonical_type: "STRING"
+    derivation: "SURVIVORSHIP(last_name)"
+
+  - name: "date_of_birth"
+    canonical_type: "DATE"
+    derivation: "SURVIVORSHIP(date_of_birth)"
+
+  - name: "tax_id_normalized"
+    canonical_type: "STRING"
+    derivation: "SURVIVORSHIP(tax_identifier)"
+
+  - name: "primary_phone_e164"
+    canonical_type: "STRING"
+    derivation: "SURVIVORSHIP(primary_phone)"
+
+  - name: "primary_email"
+    canonical_type: "STRING"
+    derivation: "SURVIVORSHIP(primary_email)"
+
+  - name: "primary_postal_code"
+    canonical_type: "STRING"
+    derivation: "SURVIVORSHIP(primary_postal_code)"
+
+  - name: "relationship_status"
+    canonical_type: "STRING"
+    derivation: "CROSSWALK_LOOKUP(ref_crosswalk_status)"
+
+  - name: "contributing_sources"
+    canonical_type: "ARRAY<STRING>"
+    derivation: "ARRAY_AGG_DISTINCT(source_system)"
+
+  - name: "effective_from_ts"
+    canonical_type: "TIMESTAMP"
+    derivation: "CURRENT_TIMESTAMP()"
+
+  - name: "is_current"
+    canonical_type: "BOOLEAN"
+    derivation: "TRUE"

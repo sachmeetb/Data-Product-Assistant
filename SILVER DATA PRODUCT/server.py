@@ -1924,6 +1924,56 @@ async def chat_endpoint(body: ChatRequest):
             "chips": ["Publish to BigQuery", "Open & Edit Existing Silver Structure", "Adjust the model", "Tweak the mapping", "Change Entity Selection"],
         }
 
+    # Direct handler for 4-Source Customer 360 & Arrangements Conformance (Hogan + AFS + TSYS + ACLS -> Silver)
+    if action == "run_conformance" or any(
+        kw in user_msg.lower()
+        for kw in ("run 4-source customer 360", "4-source customer 360", "run conformance", "conformance pipeline")
+    ):
+        conf_res = await _run_and_format_conformance(publish=False)
+        return {
+            "session_id": session_id,
+            "current_step": "conformance_ready",
+            "conformance_view": conf_res,
+            "messages": [
+                {
+                    "agent": "Silver Conformance Engine",
+                    "text": (
+                        f"Executed **4-Source Bronze → Silver Customer 360 Conformance** across **Hogan, AFS, TSYS, and ACLS**:\n\n"
+                        f"- **Bronze Records Ingested**: `{conf_res['total_bronze_records']}` "
+                        f"(Hogan: {conf_res['source_counts']['HOGAN']}, AFS: {conf_res['source_counts']['AFS']}, "
+                        f"TSYS: {conf_res['source_counts']['TSYS']}, ACLS: {conf_res['source_counts']['ACLS']})\n"
+                        f"- **Unified Silver Golden Customers**: `{conf_res['unified_customers']}` "
+                        f"({conf_res['deduplicated_count']} duplicates merged — **{conf_res['dedup_ratio_pct']}%** compression)\n"
+                        f"- **Linked Banking Arrangements**: `{conf_res['total_arrangements']}` "
+                        f"(Deposit, Credit Card, Retail Loan & Commercial Loan)"
+                    ),
+                    "conformance_view": conf_res,
+                    "chips": ["Publish Customer 360 to BigQuery", "Start New Silver Product"],
+                }
+            ],
+            "chips": ["Publish Customer 360 to BigQuery", "Start New Silver Product"],
+        }
+
+    if user_msg.lower() == "publish customer 360 to bigquery":
+        conf_res = await _run_and_format_conformance(publish=True)
+        return {
+            "session_id": session_id,
+            "current_step": "conformance_published",
+            "conformance_view": conf_res,
+            "messages": [
+                {
+                    "agent": "Silver Conformance Engine",
+                    "text": (
+                        f"✅ Materialized **Customer 360 (`slv_customer_360`, `slv_customer_source_xref`, `slv_customer_arrangement`)** "
+                        f"in BigQuery & synced to **GCP Knowledge Catalog**!"
+                    ),
+                    "conformance_view": conf_res,
+                    "chips": ["Start New Silver Product"],
+                }
+            ],
+            "chips": ["Start New Silver Product"],
+        }
+
     # Direct handler for "Publish to BigQuery" (executes live BigQuery DDL + syncs to GCP Knowledge Catalog)
     if (
         action in ("publish_bq", "publish")
@@ -2538,5 +2588,106 @@ async def chat_endpoint(body: ChatRequest):
         ],
         "chips": ["Apply & Save Contract", "Change Entity Selection"],
     }
+
+
+# ── 4-Source Customer 360 & Banking Arrangements Conformance Endpoint ─────────
+
+class ConformanceRunRequest(BaseModel):
+    publish: bool = Field(False, description="When true, materialize Customer 360, XREF, and Arrangements in BigQuery & Knowledge Catalog")
+    dataset_id: str = Field("banking_silver", description="Target Silver BigQuery dataset")
+
+
+async def _run_and_format_conformance(publish: bool = False, dataset_id: str = "banking_silver") -> dict:
+    from engine.pipeline_runner import run_conformance_pipeline
+
+    res = await asyncio.to_thread(run_conformance_pipeline)
+    arr_by_cust: dict[str, list[dict]] = {}
+    for arr in res.get("arrangements", []):
+        arr_by_cust.setdefault(arr["customer_key"], []).append(arr)
+
+    enriched_customers = []
+    for gc in res.get("golden_customers", []):
+        enriched_customers.append({
+            **gc,
+            "arrangements": arr_by_cust.get(gc["customer_key"], []),
+        })
+    res["golden_customers"] = enriched_customers
+
+    if publish:
+        publisher = BigQueryPublisher(silver_dataset=dataset_id, mode="live")
+        ddl = f"""
+CREATE OR REPLACE TABLE `{publisher.project_id}.{dataset_id}.slv_customer_360` (
+  customer_key STRING NOT NULL OPTIONS(description='[PK] Unified Silver Customer Surrogate Key'),
+  customer_type STRING OPTIONS(description='Standardized Customer Type (IND/ORG)'),
+  legal_name STRING OPTIONS(description='[PII: RESTRICTED] Survived Golden Legal Name'),
+  date_of_birth STRING OPTIONS(description='[PII: RESTRICTED] ISO-8601 Date of Birth'),
+  tax_id_masked STRING OPTIONS(description='[PII: RESTRICTED] Masked Tax Identifier'),
+  primary_phone_e164 STRING OPTIONS(description='[PII: RESTRICTED] E.164 Primary Phone'),
+  primary_email STRING OPTIONS(description='[PII: RESTRICTED] Verified Primary Email'),
+  primary_postal_code STRING OPTIONS(description='Primary Postal Code'),
+  relationship_status STRING OPTIONS(description='Standardized Relationship Status'),
+  survivorship_source STRING OPTIONS(description='Winning System of Record'),
+  contributing_sources STRING OPTIONS(description='Pipe-delimited Contributing Bronze Systems'),
+  source_record_count INT64 OPTIONS(description='Count of Merged Bronze Records'),
+  arrangement_count INT64 OPTIONS(description='Count of Linked Banking Arrangements'),
+  arrangement_types STRING OPTIONS(description='Pipe-delimited Linked Arrangement Types')
+) OPTIONS(description='Conformed Silver Customer 360 Golden Record (Hogan + AFS + TSYS + ACLS)');
+
+CREATE OR REPLACE TABLE `{publisher.project_id}.{dataset_id}.slv_customer_source_xref` (
+  xref_key STRING NOT NULL OPTIONS(description='[PK] Cross-Reference Surrogate Key'),
+  customer_key STRING NOT NULL OPTIONS(description='[FK->slv_customer_360.customer_key] Unified Customer Key'),
+  source_system STRING NOT NULL OPTIONS(description='Originating Bronze Source System'),
+  source_entity STRING OPTIONS(description='Originating Bronze Table'),
+  source_customer_id STRING NOT NULL OPTIONS(description='Source System Natural Key'),
+  match_method STRING OPTIONS(description='Identity Resolution Match Rule'),
+  match_score FLOAT64 OPTIONS(description='Entity Resolution Confidence Score')
+) OPTIONS(description='Auditable Multi-Source Customer Cross-Reference (XREF)');
+
+CREATE OR REPLACE TABLE `{publisher.project_id}.{dataset_id}.slv_customer_arrangement` (
+  arrangement_key STRING NOT NULL OPTIONS(description='[PK] Silver Arrangement Surrogate Key'),
+  customer_key STRING NOT NULL OPTIONS(description='[FK->slv_customer_360.customer_key] Unified Customer Key'),
+  source_system STRING NOT NULL OPTIONS(description='Originating System (HOGAN/TSYS/ACLS/AFS)'),
+  source_account_id STRING NOT NULL OPTIONS(description='Source Account or Loan ID'),
+  arrangement_type STRING NOT NULL OPTIONS(description='DEPOSIT | CREDIT_CARD | RETAIL_LOAN | COMMERCIAL_LOAN'),
+  product_subtype STRING OPTIONS(description='Product Subtype Description'),
+  status STRING OPTIONS(description='Normalized Arrangement Status'),
+  limit_or_amount FLOAT64 OPTIONS(description='Credit Line or Loan Amount'),
+  branch_or_channel STRING OPTIONS(description='Branch or Servicing Channel')
+) OPTIONS(description='Many-to-One Banking Arrangements Linked to Unified Silver Customer');
+"""
+        bq_report = await asyncio.to_thread(publisher.publish, ddl)
+        kc = KnowledgeCatalogClient(project_id=publisher.project_id, dataset_id=dataset_id)
+        dp_res = await asyncio.to_thread(
+            kc.register_data_product,
+            dataset_id,
+            "silver-customer-360-multi-source",
+            "Silver Customer 360 (Hogan + AFS + TSYS + ACLS)",
+            "Unified Silver Customer Golden Records, XREF, and Deposit/Card/Loan Arrangements",
+            ["slv_customer_360", "slv_customer_source_xref", "slv_customer_arrangement"],
+        )
+        gl_res = await asyncio.to_thread(
+            kc.sync_business_glossary,
+            "silver-customer-360-glossary",
+            "Silver Customer 360 Business Glossary",
+            "Multi-Source Customer Conformance & Arrangement Definitions",
+            [
+                {"name": "slv_customer_360", "description": "Unified Silver Customer Golden Record"},
+                {"name": "slv_customer_source_xref", "description": "Multi-Source Identity Resolution Cross-Reference"},
+                {"name": "slv_customer_arrangement", "description": "Linked Deposit, Card, and Loan Arrangements"},
+            ],
+        )
+        res["publish_report"] = {
+            **bq_report,
+            "knowledge_catalog_data_product": dp_res,
+            "knowledge_catalog_glossary": gl_res,
+        }
+    return res
+
+
+@app.post("/v1/conformance/run")
+async def run_multi_source_conformance_endpoint(body: Optional[ConformanceRunRequest] = None):
+    """Execute the 4-Source (Hogan + AFS + TSYS + ACLS) Customer 360 & Arrangements Conformance Engine."""
+    req = body or ConformanceRunRequest()
+    return await _run_and_format_conformance(publish=req.publish, dataset_id=req.dataset_id)
 
 

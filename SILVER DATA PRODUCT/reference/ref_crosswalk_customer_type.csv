@@ -1,0 +1,9 @@
+source_system,source_code,cdm_code,cdm_description
+HOGAN,IND,INDIVIDUAL,Natural Person
+HOGAN,COR,ORGANIZATION,Corporate Entity
+AFS,COM,ORGANIZATION,Commercial Corporate Entity
+AFS,SME,ORGANIZATION,Small and Medium Enterprise
+TSYS,RETAIL,INDIVIDUAL,Consumer Cardholder
+TSYS,BIZ,ORGANIZATION,Small Business Cardholder
+ACLS,IND,INDIVIDUAL,Individual Consumer Applicant
+ACLS,JNT,INDIVIDUAL,Joint Consumer Applicant

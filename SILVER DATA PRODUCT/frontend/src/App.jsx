@@ -21,8 +21,9 @@ export default function App() {
     id: 0, role: 'agent', agent: 'Silver Data Product Assistant',
     text: "Welcome to **Silver Data Product Assistant**! To get started, please select your target **Industry** to explore available canonical domain models, or click **Domain Navigator** to drill down into entities and attributes.",
     chips: [
-      "Industrial & Water (Ecolab)",
       "Banking & Financial Services",
+      "Run 4-Source Customer 360",
+      "Industrial & Water (Ecolab)",
       "Retail & Commerce",
       "Automotive & Fleet",
       "Life Sciences",
@@ -116,7 +117,8 @@ export default function App() {
               discovery_view: data.discovery_view,
               entity_selector_view: data.entity_selector_view,
               classification_view: data.classification_view,
-              publish_view: data.publish_view }
+              publish_view: data.publish_view,
+              conformance_view: data.conformance_view }
           : m
       ))
     }

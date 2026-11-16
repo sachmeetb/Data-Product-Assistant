@@ -424,6 +424,60 @@ function SilverPublishReportCard({ view }) {
   )
 }
 
+function Conformance360Card({ view }) {
+  if (!view) return null
+  const customers = view.golden_customers || []
+  const sc = view.source_counts || {}
+  return (
+    <div style={{ marginTop: '12px', border: '1px solid #cbd5e1', borderRadius: '12px', background: '#ffffff', overflow: 'hidden' }}>
+      <div style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%)', color: '#ffffff', padding: '12px 16px', display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}>
+        <div>
+          <div style={{ fontSize: '14px', fontWeight: 700 }}>4-Source Bronze → Unified Silver Customer 360</div>
+          <div style={{ fontSize: '11.5px', opacity: 0.9 }}>
+            Hogan ({sc.HOGAN || 0}) + AFS ({sc.AFS || 0}) + TSYS ({sc.TSYS || 0}) + ACLS ({sc.ACLS || 0}) = {view.total_bronze_records || 0} Bronze Records → {view.unified_customers || 0} Unified Customers ({view.dedup_ratio_pct || 0}% dedup)
+          </div>
+        </div>
+        <span style={{ background: '#10b981', color: '#fff', fontSize: '11px', fontWeight: 700, padding: '4px 10px', borderRadius: '999px' }}>
+          {view.total_arrangements || 0} Arrangements Linked
+        </span>
+      </div>
+
+      <div style={{ padding: '12px 16px', overflowX: 'auto' }}>
+        <table style={{ width: 'max-content', minWidth: '100%', tableLayout: 'auto', borderCollapse: 'collapse', fontSize: '12px', margin: 0 }}>
+          <thead>
+            <tr style={{ background: '#f8fafc', borderBottom: '2px solid #e2e8f0', textAlign: 'left' }}>
+              <th style={{ padding: '8px 12px', whiteSpace: 'nowrap' }}>Customer Key</th>
+              <th style={{ padding: '8px 12px', whiteSpace: 'nowrap' }}>Golden Legal Name</th>
+              <th style={{ padding: '8px 12px', whiteSpace: 'nowrap' }}>Contributing Sources</th>
+              <th style={{ padding: '8px 12px', whiteSpace: 'nowrap' }}>Linked Banking Arrangements (Deposit / Card / Loans)</th>
+            </tr>
+          </thead>
+          <tbody>
+            {customers.map(c => (
+              <tr key={c.customer_key} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                <td style={{ padding: '8px 12px', fontFamily: 'monospace', fontWeight: 600, whiteSpace: 'nowrap' }}>{c.customer_key}</td>
+                <td style={{ padding: '8px 12px', fontWeight: 600, whiteSpace: 'nowrap' }}>{c.legal_name}</td>
+                <td style={{ padding: '8px 12px', whiteSpace: 'nowrap' }}>
+                  {(c.contributing_sources || []).map(s => (
+                    <span key={s} style={{ display: 'inline-block', background: '#eff6ff', color: '#1d4ed8', border: '1px solid #bfdbfe', borderRadius: '4px', padding: '1px 6px', marginRight: '4px', fontSize: '11px', fontWeight: 600 }}>{s}</span>
+                  ))}
+                </td>
+                <td style={{ padding: '8px 12px', whiteSpace: 'nowrap' }}>
+                  {(c.arrangements || []).map(a => (
+                    <span key={a.arrangement_key} style={{ display: 'inline-block', background: '#ecfdf5', color: '#047857', border: '1px solid #a7f3d0', borderRadius: '4px', padding: '1px 6px', marginRight: '4px', fontSize: '11px', fontWeight: 600 }}>
+                      {a.arrangement_type} ({a.source_account_id})
+                    </span>
+                  ))}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  )
+}
+
 function agentInitials(agentName) {
   if (!agentName) return 'DA'
   const words = agentName.trim().split(/\s+/)
@@ -741,13 +795,14 @@ export default function MessageRow({
     return () => ro.disconnect()
   }, [isUser, msg.loading, msg.text, msg.discovery_view, msg.glossary, msg.classification_view, msg.challenger_view, msg.sttm_view, msg.silver_transform_view, msg.entity_selector_view, msg.publish_view])
 
-  const showChevron      = tooLong && !isUser && !msg.loading && !msg.entity_selector_view && !msg.data_contract_view && !msg.glossary && !msg.publish_view
+  const showChevron      = tooLong && !isUser && !msg.loading && !msg.entity_selector_view && !msg.data_contract_view && !msg.glossary && !msg.publish_view && !msg.conformance_view
   const isGlossary       = !isUser && !!msg.glossary
   const isClassification = !isUser && !!msg.classification_view
   const isChallenger     = !isUser && !!msg.challenger_view
   const isSttm           = !isUser && !!msg.sttm_view
   const isSilverXform    = !isUser && !!msg.silver_transform_view
   const isPublishView    = !isUser && !!msg.publish_view
+  const isConformance    = !isUser && !!msg.conformance_view
 
   const avatarInitials = isUser ? 'SM' : agentInitials(msg.agent)
   const avatarClass    = isUser ? 'user' : agentAvatarClass(msg.agent)
@@ -770,7 +825,7 @@ export default function MessageRow({
               `bubble ${msg.role}` +
               (msg.loading ? ' thinking' : '') +
               (msg.discovery_view ? ' bubble-discovery' : '') +
-              (isPublishView ? ' bubble-wide' : '') +
+              (isPublishView || isConformance ? ' bubble-wide' : '') +
               (isGlossary ? ' bubble-glossary' : '') +
               (isClassification ? ' bubble-classification' : '') +
               (isChallenger ? ' bubble-challenger' : '') +
@@ -783,6 +838,15 @@ export default function MessageRow({
               msg.text
             ) : msg.discovery_view ? (
               <DiscoveryResultCard view={msg.discovery_view} />
+            ) : isConformance ? (
+              <>
+                {msg.text && (
+                  <ReactMarkdown remarkPlugins={[remarkGfm]} components={MD_COMPONENTS}>
+                    {wrapInfoSections(cleanAgentText(msg.text))}
+                  </ReactMarkdown>
+                )}
+                <Conformance360Card view={msg.conformance_view} />
+              </>
             ) : isPublishView ? (
               <>
                 {msg.text && (

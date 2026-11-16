@@ -110,6 +110,7 @@ async def run(
             "7. NEVER use FLOAT64 for monetary amounts — always NUMERIC.",
             "8. All technical-metadata columns (surrogate_key through is_enriched) are REQUIRED or NULLABLE as specified by the block — do not change their modes.",
             "9. Every column description should cite the common block it came from (e.g. 'From money block. ISO 20022: ActiveCurrencyAndAmount.').",
+            "10. When conforming across multiple heterogeneous Bronze sources (e.g. Hogan, AFS, TSYS, ACLS), include contributing_sources ARRAY<STRING>, survivorship_source STRING, and ensure all originating source keys are linked to an auditable cross-reference entity.",
         ],
     }
 
