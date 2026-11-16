@@ -704,9 +704,64 @@ async def _handle_chat(body: ChatRequest, session_id: str):
         current_step = "requirement"
         session["step"] = "requirement"
 
-    if action == "land_4_sources" or "land 4-source" in user_msg.lower():
-        landed = await asyncio.to_thread(_land_4_sources_to_bronze)
+    if "design bronze data product" in user_msg.lower() or "switch to standard bronze flow" in user_msg.lower():
+        session["step"] = "bank_profile"
+        store.set(session_id, session)
+        return {
+            "session_id": session_id,
+            "current_step": "initial",
+            "messages": [{
+                "agent": "Bronze Agent",
+                "text": (
+                    "Switched to the **Standard Bronze Data Product Design Flow**. "
+                    "Please describe your institution & incoming data sources (e.g., Hogan Mainframe, SWIFT, SAP ERP, Kafka streams), "
+                    "or attach an Excel/JSON/Word requirements file."
+                ),
+                "chips": ["Hogan Core Banking (Mainframe)", "SWIFT & Faster Payments", "Land 4-Source Banking Data"],
+                "files": [],
+            }],
+            "chips": ["Hogan Core Banking (Mainframe)", "SWIFT & Faster Payments", "Land 4-Source Banking Data"],
+        }
+
+    # Step 1 of 4-Source Landing: prompt user to upload their CSV/Excel files (or use sample files)
+    if (action == "land_4_sources" or "land 4-source" in user_msg.lower()) and not ref_ids:
+        session["step"] = "awaiting_4_source_upload"
+        store.set(session_id, session)
+        return {
+            "session_id": session_id,
+            "current_step": "awaiting_4_source_upload",
+            "messages": [{
+                "agent": "Bronze Agent",
+                "text": (
+                    "📤 **Upload Your 4-Source Banking Files (CSV or Excel `.xlsx`/`.xls`)**\n\n"
+                    "Please use the **📎 attachment button** below to select and upload one or multiple CSV / Excel files for:\n"
+                    "1. **Card** (e.g. `brz_tsys_cardholder.csv` — `cardholder_id`, `embossed_name`, `tax_ssn`, `mobile_phone`, `card_type`, `credit_line`)\n"
+                    "2. **Deposit** (e.g. `brz_hogan_ci_customer.csv` — `CI_CUST_NUM`, `CI_LEGAL_NAME`, `CI_TAX_ID`, `CI_BIRTH_DT`, `CI_PHONE`, `CI_POST_CODE`)\n"
+                    "3. **Commercial Loan** (e.g. `brz_afs_borrower.csv` — `BORROWER_ID`, `LEGAL_ENTITY_NAME`, `TAX_EIN`, `PRIMARY_CONTACT_NAME`, `CONTACT_PHONE`, `FACILITY_LIMIT`)\n"
+                    "4. **Retail Loan** (e.g. `brz_acls_applicant.csv` — `APPLICANT_ID`, `FIRST_NAME`, `LAST_NAME`, `DOB`, `NATIONAL_ID`, `CELL_PHONE`, `EMAIL`, `LOAN_PURPOSE`)\n\n"
+                    "Once uploaded, click **Extract & Use** to land them into `banking_bronze` and sync with **GCP Knowledge Catalog**, "
+                    "or click **Use Sample 4-Source Files** below to load the built-in sample datasets."
+                ),
+                "chips": ["Use Sample 4-Source Files", "Switch to Standard Bronze Flow"],
+                "files": [],
+            }],
+            "chips": ["Use Sample 4-Source Files", "Switch to Standard Bronze Flow"],
+        }
+
+    # Step 2 of 4-Source Landing: execute landing from uploaded files OR sample files
+    if (
+        (session.get("step") == "awaiting_4_source_upload" and ref_ids)
+        or "use sample 4-source" in user_msg.lower()
+    ):
+        uploaded_file_objs = [
+            _get_file_info(rid, filename_hint=session.get("uploaded_file_name", ""))
+            for rid in ref_ids
+        ] if ref_ids else None
+        if uploaded_file_objs:
+            uploaded_file_objs = [f for f in uploaded_file_objs if f]
+        landed = await asyncio.to_thread(_land_4_sources_to_bronze, None, uploaded_file_objs or None)
         session["landed_4_sources"] = landed
+        session["step"] = "bronze_landed"
         store.set(session_id, session)
         rows_md = "\n".join(
             f"| `{t['source_system']}` | `{t['fqn']}` | {t['row_count']} | {len(t['columns'])} cols | [BigQuery ↗]({t['bigquery_url']}) |"
@@ -714,8 +769,9 @@ async def _handle_chat(body: ChatRequest, session_id: str):
         )
         dp = landed.get("knowledge_catalog_data_product") or {}
         gl = landed.get("knowledge_catalog_glossary") or {}
+        source_label = "Uploaded Files" if uploaded_file_objs else "Built-in Sample Datasets"
         msg = (
-            f"✅ **Landed 4 Heterogeneous Banking Sources into `{landed['project_id']}.{landed['dataset_id']}`**\n\n"
+            f"✅ **Landed {len(landed['tables'])} Banking Source Table(s) into `{landed['project_id']}.{landed['dataset_id']}`** *(from {source_label})*\n\n"
             f"| Source System | BigQuery Bronze Table | Rows | Schema | Console |\n"
             f"| :--- | :--- | ---: | ---: | :--- |\n"
             f"{rows_md}\n\n"
@@ -729,8 +785,8 @@ async def _handle_chat(body: ChatRequest, session_id: str):
         return {
             "session_id": session_id,
             "current_step": "bronze_landed",
-            "messages": [{"agent": "Bronze Agent", "text": msg, "chips": ["Land 4-Source Banking Data"], "files": []}],
-            "chips": ["Land 4-Source Banking Data"],
+            "messages": [{"agent": "Bronze Agent", "text": msg, "chips": ["Land 4-Source Banking Data", "Design Bronze Data Product (Standard Flow)"], "files": []}],
+            "chips": ["Land 4-Source Banking Data", "Design Bronze Data Product (Standard Flow)"],
         }
 
     if action == "publish" or user_msg.lower() == "publish to bigquery":
@@ -1409,7 +1465,47 @@ _FOUR_SOURCE_SPECS = [
 ]
 
 
-def _land_4_sources_to_bronze(dataset_id: Optional[str] = None) -> dict:
+def _parse_uploaded_tabular_rows(file_info: dict) -> tuple[str, str, list[dict]]:
+    """Parse an uploaded CSV or Excel (.xlsx/.xls) file into (source_system, table_name, rows)."""
+    import csv, io
+    fname = file_info.get("name") or "uploaded_source.csv"
+    stem = Path(fname).stem.lower()
+    clean_tbl = re.sub(r"[^a-z0-9_]+", "_", stem).strip("_") or "uploaded_source"
+    if not clean_tbl.startswith("brz_"):
+        clean_tbl = f"brz_{clean_tbl}"
+
+    if "tsys" in stem or "card" in stem:
+        src_sys = "TSYS (Card)"
+    elif "hogan" in stem or "deposit" in stem:
+        src_sys = "HOGAN (Deposit)"
+    elif "afs" in stem or "comm" in stem:
+        src_sys = "AFS (Commercial Loan)"
+    elif "acls" in stem or "retail" in stem or "loan" in stem:
+        src_sys = "ACLS (Retail Loan)"
+    else:
+        src_sys = stem.replace("_", " ").title()
+
+    content = file_info.get("content") or b""
+    ext = Path(fname).suffix.lower().lstrip(".")
+    rows: list[dict] = []
+
+    if ext == "csv":
+        text = content.decode("utf-8-sig", errors="ignore")
+        rows = [dict(r) for r in csv.DictReader(io.StringIO(text))]
+    elif ext in ("xlsx", "xls"):
+        import openpyxl
+        wb = openpyxl.load_workbook(io.BytesIO(content), data_only=True)
+        ws = wb.active
+        all_rows = list(ws.iter_rows(values_only=True))
+        if len(all_rows) >= 2:
+            headers = [re.sub(r"[^a-zA-Z0-9_]+", "_", str(h or f"col_{i}")).strip("_") for i, h in enumerate(all_rows[0])]
+            for r in all_rows[1:]:
+                if any(v is not None for v in r):
+                    rows.append({headers[i]: ("" if r[i] is None else str(r[i])) for i in range(len(headers))})
+    return src_sys, clean_tbl, rows
+
+
+def _land_4_sources_to_bronze(dataset_id: Optional[str] = None, uploaded_files: Optional[list[dict]] = None) -> dict:
     import csv
     from google.cloud import bigquery
     from tools.gcp_auth import get_bigquery_client
@@ -1423,17 +1519,26 @@ def _land_4_sources_to_bronze(dataset_id: Optional[str] = None) -> dict:
     ds_ref.location = "US"
     client.create_dataset(ds_ref, exists_ok=True)
 
+    sources_to_load: list[tuple[str, str, str, list[dict]]] = []
+    if uploaded_files:
+        for fi in uploaded_files:
+            src_sys, tbl_name, rows = _parse_uploaded_tabular_rows(fi)
+            if rows:
+                sources_to_load.append((src_sys, tbl_name, f"Uploaded Bronze raw table {tbl_name} from {fi.get('name')}", rows))
+    else:
+        for spec in _FOUR_SOURCE_SPECS:
+            csv_path = samples_dir / spec["csv_file"]
+            with open(csv_path, "r", encoding="utf-8-sig") as f:
+                rows = list(csv.DictReader(f))
+            if rows:
+                sources_to_load.append((spec["source_system"], spec["table_name"], spec["description"], rows))
+
     landed_tables = []
     total_rows = 0
-    for spec in _FOUR_SOURCE_SPECS:
-        csv_path = samples_dir / spec["csv_file"]
-        with open(csv_path, "r", encoding="utf-8-sig") as f:
-            rows = list(csv.DictReader(f))
-        if not rows:
-            continue
+    for src_sys, tbl_name, tbl_desc, rows in sources_to_load:
         cols = list(rows[0].keys())
-        schema = [bigquery.SchemaField(c, "STRING", mode="NULLABLE", description=f"Raw field {c} from {spec['source_system']}") for c in cols]
-        fqn = f"{project_id}.{ds_id}.{spec['table_name']}"
+        schema = [bigquery.SchemaField(c, "STRING", mode="NULLABLE", description=f"Raw field {c} from {src_sys}") for c in cols]
+        fqn = f"{project_id}.{ds_id}.{tbl_name}"
         job_cfg = bigquery.LoadJobConfig(
             schema=schema,
             write_disposition=bigquery.WriteDisposition.WRITE_TRUNCATE,
@@ -1443,18 +1548,18 @@ def _land_4_sources_to_bronze(dataset_id: Optional[str] = None) -> dict:
 
         # Enrich table description & labels
         tbl_obj = client.get_table(fqn)
-        tbl_obj.description = spec["description"]
-        tbl_obj.labels = {"layer": "bronze", "source_system": re.sub(r"[^a-z0-9_-]", "_", spec["source_system"].lower())[:63]}
+        tbl_obj.description = tbl_desc
+        tbl_obj.labels = {"layer": "bronze", "source_system": re.sub(r"[^a-z0-9_-]", "_", src_sys.lower())[:63]}
         client.update_table(tbl_obj, ["description", "labels"])
 
         total_rows += len(rows)
         landed_tables.append({
-            "source_system": spec["source_system"],
-            "table_name": spec["table_name"],
+            "source_system": src_sys,
+            "table_name": tbl_name,
             "fqn": fqn,
             "row_count": len(rows),
             "columns": cols,
-            "bigquery_url": f"https://console.cloud.google.com/bigquery?project={project_id}&ws=!1m5!1m4!4m3!1s{project_id}!2s{ds_id}!3s{spec['table_name']}",
+            "bigquery_url": f"https://console.cloud.google.com/bigquery?project={project_id}&ws=!1m5!1m4!4m3!1s{project_id}!2s{ds_id}!3s{tbl_name}",
         })
 
     kc = KnowledgeCatalogClient(project_id=project_id, dataset_id=ds_id)

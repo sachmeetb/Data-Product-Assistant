@@ -9,7 +9,7 @@ import { DEFAULT_BRONZE_CONTRACT } from './components/DataContractCard'
 const DDI_CHIP_ADJUST_ER   = 'Adjust the model'
 const DDI_CHIP_TWEAK_STTM  = 'Tweak the mapping'
 
-const UPLOAD_ALLOWED_STEPS = new Set([null, 'initial', 'dpi_clarifying', 'dpi_phase_b'])
+const UPLOAD_ALLOWED_STEPS = new Set([null, 'initial', 'dpi_clarifying', 'dpi_phase_b', 'awaiting_4_source_upload'])
 
 function ts() {
   return new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
@@ -18,8 +18,8 @@ function ts() {
 export default function App() {
   const [messages, setMessages]           = useState([{
     id: 0, role: 'agent', agent: 'Bronze Agent',
-    text: "Welcome to **Bronze Agent**! Please describe your **incoming data sources** (e.g., Core Banking feeds, Mainframe COBOL copybooks, Real-time Kafka streams, KYC Document stores, SAP ERP), upload a source specification file, or click **Land 4-Source Banking Data** to land Card, Deposit, Commercial Loan & Retail Loan datasets into `banking_bronze`.",
-    chips: ["Land 4-Source Banking Data"], loading: false, time: ts(), startingPoint: false,
+    text: "Welcome to **Bronze Agent**! Please describe your **incoming data sources** (e.g., Core Banking feeds, Mainframe COBOL copybooks, Real-time Kafka streams, KYC Document stores, SAP ERP), upload a source specification file, or click **Land 4-Source Banking Data** to upload & land Card, Deposit, Commercial Loan & Retail Loan datasets into `banking_bronze`.",
+    chips: ["Land 4-Source Banking Data", "Design Bronze Data Product (Standard Flow)"], loading: false, time: ts(), startingPoint: false,
   }])
   const [sessionId, setSessionId]             = useState(null)
   const [generatedFiles, setGeneratedFiles]   = useState([])
