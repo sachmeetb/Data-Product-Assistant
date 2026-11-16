@@ -52,6 +52,7 @@ from agents import (
     validator_agent,
 )
 from tools.bigquery_tool import BigQueryPublisher
+from tools.knowledge_catalog import KnowledgeCatalogClient
 from tools.datacontract_generator import (
     generate_data_contract_dict,
     generate_data_contract_yaml,
@@ -334,107 +335,63 @@ async def commit_data_contract(body: ContractCommitRequest):
     if body.session_id:
         session = store.get(body.session_id)
         if session and session.get("ddl_script"):
-            publisher = BigQueryPublisher(mode="auto")
+            publisher = BigQueryPublisher(mode="live")
             bq_report = await asyncio.to_thread(publisher.publish, session["ddl_script"])
             result["bq_result"] = bq_report
+            if bq_report.get("dataset_id"):
+                bq_dataset = bq_report["dataset_id"]
 
-    if project_id:
-        result["bq_url"] = (
-            f"https://console.cloud.google.com/bigquery"
-            f"?project={project_id}&p={project_id}&d={bq_dataset}&page=dataset"
-        )
+    effective_project = project_id or os.environ.get("BQ_PROJECT") or "eogwapq-agbg-internal-data-mig"
+    result["bq_url"] = (
+        f"https://console.cloud.google.com/bigquery"
+        f"?project={effective_project}&p={effective_project}&d={bq_dataset}&page=dataset"
+    )
 
-    # 2. Register in Dataplex Knowledge Catalog
-    if not project_id:
-        result["kc_result"] = {"status": "skipped", "reason": "GCP_PROJECT_ID not set"}
-        return result
-
+    # 2. Register Data Product + Data Assets + Business Glossary in Dataplex Knowledge Catalog
     try:
-        import google.auth
-        import google.auth.transport.requests
-        import requests as _http
-
-        credentials, _ = google.auth.default(
-            scopes=["https://www.googleapis.com/auth/cloud-platform"]
-        )
-        credentials.refresh(google.auth.transport.requests.Request())
-        headers = {
-            "Authorization": f"Bearer {credentials.token}",
-            "Content-Type": "application/json",
-        }
-
-        api_root = "https://dataplex.googleapis.com/v1"
-
-        # Build asset list from contract models (max 50 per KC limit)
+        kc = KnowledgeCatalogClient(project_id=effective_project, location=location, dataset_id=bq_dataset)
         models = contract.get("models", {})
-        assets = []
+        table_names = []
+        glossary_terms = []
         for table_name, model_def in list(models.items())[:50]:
             physical = model_def.get("physicalName", f"{bq_dataset}.{table_name}")
-            parts = physical.split(".")
-            dataset_name = parts[0] if len(parts) >= 2 else bq_dataset
-            tbl = parts[-1]
-            asset_id = re.sub(r"[^a-z0-9]+", "-", tbl.lower()).strip("-")
-            assets.append({
-                "asset_id": asset_id,
-                "resource": (
-                    f"//bigquery.googleapis.com/projects/{project_id}"
-                    f"/datasets/{dataset_name}/tables/{tbl}"
-                ),
+            tbl = physical.split(".")[-1]
+            table_names.append(tbl)
+            glossary_terms.append({
+                "name": tbl,
+                "description": model_def.get("description") or f"Bronze raw table {tbl}",
             })
-
-        # Create the data product (409 = already exists, treat as success)
-        create_url = (
-            f"{api_root}/projects/{project_id}/locations/{location}"
-            f"/dataProducts?data_product_id={kc_id}"
-        )
-        # owner_emails is required by the Dataplex API — use contract owner, fall back to runtime SA
-        runtime_sa = os.environ.get("RUNTIME_SA_EMAIL", f"dp-assistant-sa@{project_id}.iam.gserviceaccount.com")
-        owner_email = info.get("owner_email") or info.get("owner") or runtime_sa
-        # Accept plain email strings; SA emails are valid owner_emails in Dataplex
-        owner_emails = [owner_email] if isinstance(owner_email, str) else list(owner_email)
-        product_body = {
-            "display_name": info.get("title", "Bronze Data Contract"),
-            "description": info.get("description", ""),
-            "owner_emails": owner_emails,
-        }
-        create_resp = await asyncio.to_thread(
-            lambda: _http.post(create_url, json=product_body, headers=headers, timeout=30)
-        )
-
-        if create_resp.status_code not in (200, 201, 409):
-            result["kc_result"] = {
-                "status": "failed",
-                "http_status": create_resp.status_code,
-                "error": create_resp.text[:300],
-            }
-            return result
-
-        # Register each BigQuery table as a data asset
-        registered = []
-        for asset in assets:
-            asset_url = (
-                f"{api_root}/projects/{project_id}/locations/{location}"
-                f"/dataProducts/{kc_id}/dataAssets?data_asset_id={asset['asset_id']}"
+            await asyncio.to_thread(
+                kc.enrich_bigquery_table,
+                bq_dataset,
+                tbl,
+                model_def.get("description") or f"Bronze raw table {tbl}",
+                info.get("domain") or "bronze_banking",
             )
-            ar = await asyncio.to_thread(
-                lambda u=asset_url, a=asset: _http.post(
-                    u, json={"resource": a["resource"]}, headers=headers, timeout=30
-                )
-            )
-            if ar.status_code in (200, 201, 409):
-                registered.append(asset["asset_id"])
 
+        dp_res = await asyncio.to_thread(
+            kc.register_data_product,
+            bq_dataset,
+            kc_id,
+            info.get("title", "Bronze Data Contract"),
+            info.get("description", ""),
+            table_names,
+            info.get("owner_email") or info.get("owner"),
+            location,
+        )
+        gl_res = await asyncio.to_thread(
+            kc.sync_business_glossary,
+            f"bronze-{bq_dataset}-glossary",
+            f"Bronze Glossary ({bq_dataset})",
+            f"Business & Technical Glossary for {info.get('title', bq_dataset)}",
+            glossary_terms,
+        )
         result["kc_result"] = {
-            "status": "registered",
-            "data_product_id": kc_id,
-            "assets_registered": len(registered),
+            **dp_res,
+            "glossary": gl_res,
         }
-        result["kc_url"] = (
-            f"https://console.cloud.google.com/dataplex/products"
-            f"/projects/{project_id}/locations/{location}"
-            f"/dataProducts/{kc_id}?project={project_id}"
-        )
-
+        result["kc_url"] = dp_res.get("knowledge_catalog_url")
+        result["kc_glossary_url"] = gl_res.get("glossary_url")
     except Exception as exc:
         log.warning("Knowledge Catalog registration failed: %s", exc)
         result["kc_result"] = {"status": "error", "error": str(exc)}
@@ -739,19 +696,57 @@ async def _handle_chat(body: ChatRequest, session_id: str):
                 "messages": [{"agent": "Bronze Agent", "text": "No DDL available to publish. Please design the Bronze schema first."}],
                 "chips": ["Design Bronze Schema"],
             }
-        publisher = BigQueryPublisher(mode="auto")
+        publisher = BigQueryPublisher(mode="live")
         report = await asyncio.to_thread(publisher.publish, ddl)
         session["publish_report"] = report
+
+        # Register Data Product, Data Assets & Business Glossary in GCP Knowledge Catalog (Dataplex)
+        contract_dict = session.get("contract_dict") or {}
+        c_info = contract_dict.get("info", {}) or {}
+        ds_id = report.get("dataset_id") or os.environ.get("BQ_BRONZE_DATASET", "banking_bronze")
+        pub_tables = report.get("published_tables") or []
+        short_tables = [t.split(".")[-1] for t in pub_tables]
+        kc = KnowledgeCatalogClient(project_id=publisher.project_id, dataset_id=ds_id)
+        for tbl in short_tables:
+            await asyncio.to_thread(
+                kc.enrich_bigquery_table,
+                ds_id,
+                tbl,
+                f"Bronze raw landing table {tbl}",
+                session.get("domain") or "bronze_banking",
+            )
+        dp_res = await asyncio.to_thread(
+            kc.register_data_product,
+            ds_id,
+            f"bronze-{ds_id}-{session_id[:6]}",
+            c_info.get("title") or f"Bronze Data Product ({ds_id})",
+            c_info.get("description") or "Raw Bronze Lakehouse tables published via Data Product Assistant.",
+            short_tables,
+            c_info.get("owner_email") or c_info.get("owner"),
+        )
+        gl_terms = [{"name": t, "description": f"Bronze raw table {t}"} for t in short_tables]
+        gl_res = await asyncio.to_thread(
+            kc.sync_business_glossary,
+            f"bronze-{ds_id}-glossary",
+            f"Bronze Glossary ({ds_id})",
+            f"Business & Technical Glossary for {ds_id}",
+            gl_terms,
+        )
+        session["kc_result"] = {**dp_res, "glossary": gl_res}
         store.set(session_id, session)
 
         status_icon = "✅" if report.get("publish_status") == "published" else "ℹ️"
-        msg = f"{status_icon} **BigQuery Publication Report**\n\n"
-        msg += f"- **Mode**: `{report.get('mode', 'auto')}`\n"
-        msg += f"- **Status**: `{report.get('publish_status', 'dry_run')}`\n"
-        if report.get("published_tables"):
-            msg += f"- **Published Tables**: {', '.join([f'`{t}`' for t in report.get('published_tables', [])])}\n"
-        if report.get("dry_run_tables"):
-            msg += f"- **Validated Tables**: {', '.join([f'`{t}`' for t in report.get('dry_run_tables', [])])}\n"
+        msg = f"{status_icon} **BigQuery & Knowledge Catalog Publication Report**\n\n"
+        msg += f"- **Status**: `{report.get('publish_status', 'published')}`\n"
+        msg += f"- **Project / Dataset**: `{publisher.project_id}.{ds_id}`\n"
+        if pub_tables:
+            msg += f"- **Published Tables**: {', '.join([f'`{t}`' for t in pub_tables])}\n"
+        if dp_res.get("ok"):
+            msg += f"- **Knowledge Catalog Data Product**: `{dp_res.get('data_product_id')}` ({dp_res.get('assets_registered', 0)} assets) — [Open Data Product in Knowledge Catalog ↗]({dp_res.get('knowledge_catalog_url')})\n"
+        else:
+            msg += f"- **Knowledge Catalog Data Product**: ⚠️ `{dp_res.get('error') or dp_res.get('status')}`\n"
+        if gl_res.get("ok"):
+            msg += f"- **Knowledge Catalog Glossary**: `{gl_res.get('glossary_id')}` ({gl_res.get('terms_synced', 0)} terms) — [Open Business Glossary ↗]({gl_res.get('glossary_url')})\n"
         if report.get("error"):
             msg += f"\n> ⚠️ {report.get('error')}\n"
 

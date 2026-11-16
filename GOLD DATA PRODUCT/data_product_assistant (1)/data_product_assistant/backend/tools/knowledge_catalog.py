@@ -111,10 +111,8 @@ class KnowledgeCatalogClient:
                 f"&ws=!1m5!1m4!4m3!1s{project_id}!2s{dataset_id}!3s{tname}"
             )
             kc_entry_url = (
-                f"https://console.cloud.google.com/dataplex/dp-entries/"
-                f"projects/{project_id}/locations/{loc_lower}/entryGroups/@bigquery/entries/"
-                f"bigquery.googleapis.com/projects/{project_id}/datasets/{dataset_id}/tables/{tname}"
-                f"?project={project_id}"
+                f"https://console.cloud.google.com/dataplex/search?project={project_id}"
+                f"&q={dataset_id}.{tname}"
             )
             kc_search_url = (
                 f"https://console.cloud.google.com/dataplex/search?project={project_id}"
@@ -536,6 +534,190 @@ class KnowledgeCatalogClient:
             "published_tables": published_tables,
             "entities": catalog_entities,
         }
+
+    # ── 7. Register Dataplex Data Product & Business Glossary ─────────────────
+
+    @staticmethod
+    def _sanitize_id(val: Any, default: str = "gold-data-product") -> str:
+        if val is None:
+            return default
+        cleaned = re.sub(r"[^a-z0-9]+", "-", str(val).strip().lower()).strip("-")
+        return (cleaned or default)[:63].rstrip("-") or default
+
+    @staticmethod
+    def _valid_owner_email(owner: Any, project_id: str) -> str:
+        candidate = str(owner or "").strip()
+        if "@" in candidate and "." in candidate.split("@")[-1] and " " not in candidate:
+            return candidate
+        return os.environ.get(
+            "RUNTIME_SA_EMAIL",
+            f"dp-assistant-sa@{project_id}.iam.gserviceaccount.com",
+        )
+
+    def _resolve_dataset_location(self, dataset_id: str, fallback: Optional[str] = None) -> str:
+        """Resolve the actual BigQuery dataset location (e.g. 'us' or 'us-central1') for Dataplex."""
+        try:
+            from google.cloud import bigquery
+            client = bigquery.Client(project=self.project_id)
+            ds = client.get_dataset(f"{self.project_id}.{dataset_id}")
+            if ds.location:
+                return ds.location.strip().lower()
+        except Exception:
+            pass
+        loc = (fallback or os.environ.get("BQ_LOCATION") or "us-central1").strip().lower()
+        return loc if loc in ("us-central1", "us", "eu", "asia-south1") else "us-central1"
+
+    def register_data_product(
+        self,
+        dataset_id: str,
+        product_id: str,
+        display_name: str,
+        description: str,
+        table_names: List[str],
+        owner_email: Optional[str] = None,
+        location: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """Create/reuse a Dataplex Data Product and register Gold BigQuery tables as Data Assets."""
+        loc = self._resolve_dataset_location(dataset_id, fallback=location)
+        kc_id = self._sanitize_id(product_id, default=f"gold-{dataset_id}")
+        email = self._valid_owner_email(owner_email, self.project_id)
+        kc_url = (
+            f"https://console.cloud.google.com/dataplex/data-products"
+            f"?project={self.project_id}"
+        )
+        try:
+            session = self._get_session()
+            create_url = (
+                f"https://dataplex.googleapis.com/v1/projects/{self.project_id}/locations/{loc}"
+                f"/dataProducts?data_product_id={kc_id}"
+            )
+            resp = session.post(
+                create_url,
+                json={
+                    "display_name": (display_name or f"Gold Data Product ({dataset_id})")[:255],
+                    "description": (description or f"Gold Star Schema Data Product for {dataset_id}")[:1024],
+                    "owner_emails": [email],
+                },
+                timeout=25,
+            )
+            if resp.status_code not in (200, 201, 409):
+                return {
+                    "ok": False,
+                    "status": "FAILED",
+                    "http_status": resp.status_code,
+                    "error": resp.text[:300],
+                    "data_product_id": kc_id,
+                    "knowledge_catalog_url": kc_url,
+                }
+            registered_assets: List[str] = []
+            for raw_tname in table_names[:50]:
+                tbl = raw_tname.strip("`").split(".")[-1]
+                if not tbl:
+                    continue
+                asset_id = self._sanitize_id(tbl, default="table")
+                asset_url = (
+                    f"https://dataplex.googleapis.com/v1/projects/{self.project_id}/locations/{loc}"
+                    f"/dataProducts/{kc_id}/dataAssets?data_asset_id={asset_id}"
+                )
+                resource = (
+                    f"//bigquery.googleapis.com/projects/{self.project_id}"
+                    f"/datasets/{dataset_id}/tables/{tbl}"
+                )
+                ar = session.post(asset_url, json={"resource": resource}, timeout=20)
+                if ar.status_code in (200, 201, 409):
+                    registered_assets.append(asset_id)
+            return {
+                "ok": True,
+                "status": "REGISTERED_IN_KNOWLEDGE_CATALOG",
+                "data_product_id": kc_id,
+                "location": loc,
+                "assets_registered": len(registered_assets),
+                "registered_assets": registered_assets,
+                "knowledge_catalog_url": kc_url,
+            }
+        except Exception as exc:
+            log.warning("Gold register_data_product error: %s", exc)
+            return {
+                "ok": False,
+                "status": "ERROR",
+                "error": str(exc),
+                "data_product_id": kc_id,
+                "knowledge_catalog_url": kc_url,
+            }
+
+    def sync_business_glossary(
+        self,
+        glossary_id: str,
+        display_name: str,
+        description: str,
+        terms: List[Dict[str, str]],
+    ) -> Dict[str, Any]:
+        """Create/reuse a Dataplex Business Glossary in global location and populate terms."""
+        gid = self._sanitize_id(glossary_id, default="gold-banking-glossary")
+        glossary_url = (
+            f"https://console.cloud.google.com/dataplex/glossaries"
+            f"?project={self.project_id}"
+        )
+        try:
+            session = self._get_session()
+            create_url = (
+                f"https://dataplex.googleapis.com/v1/projects/{self.project_id}/locations/global"
+                f"/glossaries?glossary_id={gid}"
+            )
+            resp = session.post(
+                create_url,
+                json={
+                    "displayName": (display_name or "Gold Data Product Glossary")[:255],
+                    "description": (description or "Gold Star Schema Business & KPI Glossary")[:1024],
+                },
+                timeout=20,
+            )
+            if resp.status_code not in (200, 201, 409):
+                return {
+                    "ok": False,
+                    "status": "FAILED",
+                    "http_status": resp.status_code,
+                    "error": resp.text[:250],
+                    "glossary_id": gid,
+                    "glossary_url": glossary_url,
+                }
+            terms_synced = 0
+            for t in (terms or [])[:25]:
+                t_name = t.get("name") or t.get("displayName") or ""
+                if not t_name:
+                    continue
+                tid = self._sanitize_id(t_name, default="term")
+                term_url = (
+                    f"https://dataplex.googleapis.com/v1/projects/{self.project_id}/locations/global"
+                    f"/glossaries/{gid}/terms?term_id={tid}"
+                )
+                tr = session.post(
+                    term_url,
+                    json={
+                        "displayName": t_name[:255],
+                        "description": (t.get("description") or t_name)[:1024],
+                        "parent": f"projects/{self.project_id}/locations/global/glossaries/{gid}",
+                    },
+                    timeout=15,
+                )
+                if tr.status_code in (200, 201, 409):
+                    terms_synced += 1
+            return {
+                "ok": True,
+                "status": "GLOSSARY_SYNCED",
+                "glossary_id": gid,
+                "terms_synced": terms_synced,
+                "glossary_url": glossary_url,
+            }
+        except Exception as exc:
+            log.warning("Gold sync_business_glossary error: %s", exc)
+            return {
+                "ok": False,
+                "status": "ERROR",
+                "error": str(exc),
+                "glossary_id": gid,
+                "glossary_url": glossary_url,
+            }
 
 
 # Singleton instance

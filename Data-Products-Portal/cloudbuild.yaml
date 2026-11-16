@@ -19,18 +19,28 @@ steps:
 
   # 3. Deploy Portal to Cloud Run
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
-    entrypoint: gcloud
+    entrypoint: bash
     args:
-      - 'run'
-      - 'deploy'
-      - '${_PORTAL_SVC}'
-      - '--image=us-central1-docker.pkg.dev/${_PROJECT_ID}/dp-assistant/yk-data-products-portal:${SHORT_SHA}'
-      - '--region=${_REGION}'
-      - '--platform=managed'
-      - '--iap'
-      - '--port=8080'
+      - '-c'
+      - |
+        AUTH_FLAG="--iap"
+        ENV_ARGS=""
+        if [ "${_ENV}" = "test" ]; then
+          BR_URL=$$(gcloud run services describe yk-test-bronze --region="${_REGION}" --format='value(status.url)' 2>/dev/null || true)
+          SL_URL=$$(gcloud run services describe yk-test-silver --region="${_REGION}" --format='value(status.url)' 2>/dev/null || true)
+          GL_URL=$$(gcloud run services describe yk-test-gold --region="${_REGION}" --format='value(status.url)' 2>/dev/null || true)
+          ENV_ARGS="--set-env-vars=BRONZE_URL=$${BR_URL},SILVER_URL=$${SL_URL},GOLD_URL=$${GL_URL}"
+        fi
+        gcloud run deploy "${_PORTAL_SVC}" \
+          --image="us-central1-docker.pkg.dev/${_PROJECT_ID}/dp-assistant/yk-data-products-portal:${SHORT_SHA}" \
+          --region="${_REGION}" \
+          --platform=managed \
+          $$AUTH_FLAG \
+          --port=8080 \
+          $$ENV_ARGS
 
 substitutions:
+  _ENV: 'main'
   _PROJECT_ID: 'eogwapq-agbg-internal-data-mig'
   _REGION: 'us-central1'
   _PORTAL_SVC: 'yk-data-products-portal'

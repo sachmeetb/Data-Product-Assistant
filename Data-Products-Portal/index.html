@@ -9,6 +9,7 @@
   <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js"></script>
   <script src="https://unpkg.com/@babel/standalone@7.23.10/babel.min.js"></script>
   <script src="https://unpkg.com/lucide@0.474.0/dist/umd/lucide.js"></script>
+  <script src="/env-config.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -122,25 +123,26 @@
     };
 
     // ─── Product Definitions ─────────────────────────────────────────────────
+    const CFG = window.__PORTAL_CONFIG__ || {};
     const PRODUCTS = [
       {
         id: "bronze",
         title: "Bronze Product Assistant",
-        url: "https://yk-bronze-a74bkpgdzq-uc.a.run.app",
+        url: CFG.bronzeUrl || "https://yk-bronze-a74bkpgdzq-uc.a.run.app",
         gradient: "linear-gradient(135deg, #7C2D12 0%, #9A3412 50%, #C2410C 100%)",
         icon: Database
       },
       {
         id: "silver",
         title: "Silver Product Assistant (Multi-Industry)",
-        url: "https://yk-silver-a74bkpgdzq-uc.a.run.app",
+        url: CFG.silverUrl || "https://yk-silver-a74bkpgdzq-uc.a.run.app",
         gradient: "linear-gradient(135deg, #1E293B 0%, #334155 100%)",
         icon: Layers
       },
       {
         id: "gold",
         title: "Gold Product Assistant",
-        url: "https://yk-gold-a74bkpgdzq-uc.a.run.app",
+        url: CFG.goldUrl || "https://yk-gold-a74bkpgdzq-uc.a.run.app",
         gradient: "linear-gradient(135deg, #451A03 0%, #78350F 50%, #B45309 100%)",
         icon: Sparkles
       }
