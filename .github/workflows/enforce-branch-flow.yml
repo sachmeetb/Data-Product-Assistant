@@ -1,0 +1,30 @@
+name: Enforce Strict Branch Flow (dev -> test -> main)
+
+on:
+  pull_request:
+    branches:
+      - test
+      - main
+
+jobs:
+  enforce-branch-flow:
+    name: enforce-branch-flow
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate source branch for test / main
+        run: |
+          BASE="${{ github.base_ref }}"
+          HEAD="${{ github.head_ref }}"
+          echo "Pull Request: $HEAD -> $BASE"
+
+          if [ "$BASE" = "test" ] && [ "$HEAD" != "dev" ]; then
+            echo "::error::Only 'dev' may be merged into 'test'. Found source branch '$HEAD'."
+            exit 1
+          fi
+
+          if [ "$BASE" = "main" ] && [ "$HEAD" != "test" ]; then
+            echo "::error::Only 'test' may be merged into 'main'. Direct merges from '$HEAD' (including 'dev') to 'main' are strictly blocked."
+            exit 1
+          fi
+
+          echo "✅ Valid branch promotion flow: $HEAD -> $BASE"

@@ -195,7 +195,28 @@ function SilverPublishReportCard({ view }) {
                 textDecoration: 'none',
               }}
             >
-              Open Dataset in Knowledge Catalog (Dataplex) ↗
+              {view.knowledge_catalog_data_product_url ? 'Open Data Product in Knowledge Catalog ↗' : 'Open Dataset in Knowledge Catalog (Dataplex) ↗'}
+            </a>
+          )}
+          {view.knowledge_catalog_glossary_url && (
+            <a
+              href={view.knowledge_catalog_glossary_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                background: '#0f766e',
+                color: '#ffffff',
+                fontSize: '12px',
+                fontWeight: 600,
+                padding: '6px 12px',
+                borderRadius: '7px',
+                textDecoration: 'none',
+              }}
+            >
+              Open Business Glossary ↗
             </a>
           )}
         </div>

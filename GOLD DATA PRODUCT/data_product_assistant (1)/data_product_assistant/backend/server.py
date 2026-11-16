@@ -2330,6 +2330,27 @@ async def _execute_gold_publish_and_catalog_sync(
         for e in saved_entities
         if e.get("table_name") or e.get("name")
     ]
+    dp_res = await asyncio.to_thread(
+        kc_client.register_data_product,
+        dataset_id,
+        f"gold-{dataset_id}-{session_id[:6] if session_id else 'mart'}",
+        info.get("title") or f"Gold Data Product ({dataset_id})",
+        info.get("description") or f"Gold Star Schema Data Product ({session.get('domain', 'Enterprise')})",
+        active_table_names,
+        info.get("owner_email") or info.get("owner"),
+        dataset_location,
+    )
+    gl_terms = [
+        {"name": e.get("table_name") or e.get("name"), "description": e.get("description") or "Gold Star Schema table"}
+        for e in saved_entities if e.get("table_name") or e.get("name")
+    ]
+    gl_res = await asyncio.to_thread(
+        kc_client.sync_business_glossary,
+        f"gold-{dataset_id}-glossary",
+        f"Gold Business Glossary ({dataset_id})",
+        f"Gold Star Schema Business & KPI Glossary for {session.get('domain', dataset_id)}",
+        gl_terms,
+    )
     console_links = kc_client.build_console_links(
         project_id=project_id,
         dataset_id=dataset_id,
@@ -2359,7 +2380,11 @@ async def _execute_gold_publish_and_catalog_sync(
         "seeded_tables": seed_report.get("seeded_tables", {}),
         "actual_table_data": actual_table_data,
         "bigquery_dataset_url": console_links["bigquery_dataset_url"],
-        "knowledge_catalog_dataset_url": console_links["knowledge_catalog_dataset_url"],
+        "knowledge_catalog_dataset_url": dp_res.get("knowledge_catalog_url") or console_links["knowledge_catalog_dataset_url"],
+        "knowledge_catalog_data_product_url": dp_res.get("knowledge_catalog_url"),
+        "knowledge_catalog_glossary_url": gl_res.get("glossary_url"),
+        "knowledge_catalog_data_product": dp_res,
+        "knowledge_catalog_glossary": gl_res,
         "knowledge_catalog_home_url": console_links["knowledge_catalog_home_url"],
         "tables": console_links["tables"],
         "knowledge_catalog_sync": kc_table_syncs,

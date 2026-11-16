@@ -8,4 +8,4 @@ COPY nginx.conf /etc/nginx/conf.d/default.conf
 COPY index.html /usr/share/nginx/html/index.html
 
 EXPOSE 8080
-CMD ["nginx", "-g", "daemon off;"]
+CMD ["/bin/sh", "-c", "printf 'window.__PORTAL_CONFIG__ = { bronzeUrl: \"%s\", silverUrl: \"%s\", goldUrl: \"%s\" };\n' \"${BRONZE_URL:-}\" \"${SILVER_URL:-}\" \"${GOLD_URL:-}\" > /usr/share/nginx/html/env-config.js && exec nginx -g 'daemon off;'"]
