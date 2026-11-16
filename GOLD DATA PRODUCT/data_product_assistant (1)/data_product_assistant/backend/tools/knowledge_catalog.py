@@ -111,10 +111,8 @@ class KnowledgeCatalogClient:
                 f"&ws=!1m5!1m4!4m3!1s{project_id}!2s{dataset_id}!3s{tname}"
             )
             kc_entry_url = (
-                f"https://console.cloud.google.com/dataplex/dp-entries/"
-                f"projects/{project_id}/locations/{loc_lower}/entryGroups/@bigquery/entries/"
-                f"bigquery.googleapis.com/projects/{project_id}/datasets/{dataset_id}/tables/{tname}"
-                f"?project={project_id}"
+                f"https://console.cloud.google.com/dataplex/search?project={project_id}"
+                f"&q={dataset_id}.{tname}"
             )
             kc_search_url = (
                 f"https://console.cloud.google.com/dataplex/search?project={project_id}"
@@ -584,7 +582,7 @@ class KnowledgeCatalogClient:
         kc_id = self._sanitize_id(product_id, default=f"gold-{dataset_id}")
         email = self._valid_owner_email(owner_email, self.project_id)
         kc_url = (
-            f"https://console.cloud.google.com/dataplex/govern/data-products"
+            f"https://console.cloud.google.com/dataplex/data-products"
             f"?project={self.project_id}"
         )
         try:
