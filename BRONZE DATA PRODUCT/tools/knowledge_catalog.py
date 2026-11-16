@@ -123,9 +123,8 @@ class KnowledgeCatalogClient:
         email = _valid_owner_email(owner_email, self.project_id)
 
         kc_url = (
-            f"https://console.cloud.google.com/dataplex/products"
-            f"/projects/{self.project_id}/locations/{loc}"
-            f"/dataProducts/{kc_id}?project={self.project_id}"
+            f"https://console.cloud.google.com/dataplex/govern/data-products"
+            f"?project={self.project_id}"
         )
 
         try:
@@ -203,7 +202,7 @@ class KnowledgeCatalogClient:
         gid = _sanitize_id(glossary_id, default="bronze-banking-glossary")
         glossary_url = (
             f"https://console.cloud.google.com/dataplex/glossaries"
-            f"/projects/{self.project_id}/locations/global/glossaries/{gid}?project={self.project_id}"
+            f"?project={self.project_id}"
         )
         try:
             headers = self._get_headers()
