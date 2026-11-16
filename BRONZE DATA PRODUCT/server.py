@@ -485,6 +485,7 @@ class ChatRequest(BaseModel):
     message: str = Field("", description="User message text")
     action: Optional[str] = Field(None, description="Action override")
     file_ref_id: Optional[str] = Field(None, description="Uploaded file reference ID")
+    file_ref_ids: Optional[list[str]] = Field(None, description="Multiple uploaded file reference IDs")
 
 
 @app.post("/upload")
@@ -659,27 +660,43 @@ async def _handle_chat(body: ChatRequest, session_id: str):
     action = body.action
     session["turns"] = session.get("turns", 0) + 1
 
-    # Ingest uploaded file if referenced or mentioned
-    file_info = None
-    if body.file_ref_id:
-        file_info = _get_file_info(body.file_ref_id, filename_hint=session.get("uploaded_file_name", ""))
+    # Ingest one or multiple uploaded files if referenced or mentioned
+    ref_ids: list[str] = []
+    if body.file_ref_ids:
+        ref_ids.extend([r for r in body.file_ref_ids if r])
+    if body.file_ref_id and body.file_ref_id not in ref_ids:
+        ref_ids.append(body.file_ref_id)
 
-    # If not found by ID, inspect user_msg for any sample filename
-    if not file_info and user_msg:
+    extracted_parts: list[str] = []
+    uploaded_names: list[str] = []
+    for rid in ref_ids:
+        fi = _get_file_info(rid, filename_hint=session.get("uploaded_file_name", ""))
+        if fi:
+            txt = _extract_text_from_file_info(fi)
+            fname = fi.get("name", "uploaded_file")
+            uploaded_names.append(fname)
+            extracted_parts.append(f"=== Source File: {fname} ===\n{txt}")
+
+    # Fallback: inspect user_msg for any sample filename
+    if not extracted_parts and user_msg:
         for s_file in (_ROOT / "samples").glob("*.*"):
             if s_file.name.lower() in user_msg.lower():
-                file_info = _get_file_info(s_file.name, s_file.name)
+                fi = _get_file_info(s_file.name, s_file.name)
+                if fi:
+                    uploaded_names.append(fi.get("name", s_file.name))
+                    extracted_parts.append(f"=== Source File: {fi.get('name', s_file.name)} ===\n{_extract_text_from_file_info(fi)}")
                 break
 
-    if file_info:
-        extracted_text = _extract_text_from_file_info(file_info)
-        session["uploaded_file_id"] = file_info.get("id") or body.file_ref_id
-        session["uploaded_file_name"] = file_info.get("name", "uploaded_file")
-        session["uploaded_file_text"] = extracted_text
-        if not user_msg or body.action == "use_file" or "use this file" in user_msg.lower():
-            user_msg = f"User uploaded requirements file '{file_info.get('name')}':\n\n{extracted_text}"
+    if extracted_parts:
+        combined_text = "\n\n".join(extracted_parts)
+        session["uploaded_file_id"] = ref_ids[0] if ref_ids else None
+        session["uploaded_file_ids"] = ref_ids
+        session["uploaded_file_name"] = ", ".join(uploaded_names)
+        session["uploaded_file_text"] = combined_text
+        if not user_msg or body.action == "use_file" or "use this file" in user_msg.lower() or "use uploaded file" in user_msg.lower():
+            user_msg = f"User uploaded {len(uploaded_names)} file(s) ({', '.join(uploaded_names)}):\n\n{combined_text}"
         else:
-            user_msg = f"{user_msg}\n\nDocument '{file_info.get('name')}':\n\n{extracted_text}"
+            user_msg = f"{user_msg}\n\nUploaded Documents ({', '.join(uploaded_names)}):\n\n{combined_text}"
 
     current_step = session.get("step", "bank_profile")
 

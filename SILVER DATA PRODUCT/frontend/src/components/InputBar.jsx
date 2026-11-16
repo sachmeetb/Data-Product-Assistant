@@ -44,8 +44,8 @@ export default function InputBar({
   }
 
   const handleFileChange = (e) => {
-    const file = e.target.files?.[0]
-    if (file && onUpload) onUpload(file)
+    const files = Array.from(e.target.files || [])
+    if (files.length > 0 && onUpload) onUpload(files)
   }
 
   return (
@@ -55,13 +55,13 @@ export default function InputBar({
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
           </svg>
-          You can attach an Excel, JSON, or Word file to extract requirements automatically
+          You can attach one or multiple Excel (.xlsx/.xls), CSV (.csv), JSON, or Word files to extract requirements automatically
         </div>
       )}
       <div className="input-bar">
         <button
           className={`attach-btn ${allowUpload ? 'attach-btn-active' : ''}`}
-          title={allowUpload ? 'Upload a file (Excel, JSON, Word)' : 'File upload only available at the start'}
+          title={allowUpload ? 'Upload one or multiple files (Excel, CSV, JSON, Word)' : 'File upload only available at the start'}
           onClick={handleAttachClick}
           disabled={!allowUpload || uploading || disabled}
           type="button"
@@ -79,7 +79,8 @@ export default function InputBar({
         <input
           ref={fileInputRef}
           type="file"
-          accept=".xlsx,.xls,.json,.docx"
+          multiple
+          accept=".xlsx,.xls,.csv,.json,.docx"
           style={{ display: 'none' }}
           onChange={handleFileChange}
         />

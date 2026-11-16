@@ -125,7 +125,7 @@ export default function App() {
   }, [])
 
   const sendMessage = useCallback(async (text, opts = {}) => {
-    if ((!text.trim() && !opts.fileRefId) || sending) return
+    if ((!text.trim() && !opts.fileRefId && !(opts.fileRefIds && opts.fileRefIds.length)) || sending) return
     setSending(true)
     setPendingFile(null)
 
@@ -135,7 +135,7 @@ export default function App() {
     setStartingPointPicked(true)
 
     const thinkId = Date.now()
-    const displayText = opts.fileRefId ? `📎 ${opts.fileName || 'Uploaded file'} — use this file` : text
+    const displayText = (opts.fileRefId || opts.fileRefIds?.length) ? `📎 ${opts.fileName || 'Uploaded file(s)'} — extract & use` : text
     setMessages(prev => [
       ...prev,
       { id: thinkId - 1, role: 'user', text: displayText, time: ts() },
@@ -146,6 +146,7 @@ export default function App() {
       const data = await sendChatMessage(sessionId, text, {
         action: opts.action,
         fileRefId: opts.fileRefId,
+        fileRefIds: opts.fileRefIds,
         contract: opts.contract,
         glossary: opts.glossary,
       })
@@ -277,15 +278,26 @@ export default function App() {
 
   const handleEditClose = useCallback(() => setEditFormOpen(false), [])
 
-  const handleUpload = useCallback(async (file) => {
+  const handleUpload = useCallback(async (fileOrFiles) => {
+    const files = Array.isArray(fileOrFiles) ? fileOrFiles : [fileOrFiles]
+    if (!files.length) return
     setUploading(true)
     try {
-      const data = await uploadFile(file)
-      setPendingFile({ refId: data.ref_id, fileName: data.file_name, fileType: data.file_type, preview: data.preview })
+      const results = await Promise.all(files.map(f => uploadFile(f)))
+      const refIds = results.map(r => r.ref_id)
+      const names = results.map(r => r.file_name)
+      const combinedPreview = results.map(r => `=== ${r.file_name} ===\n${r.preview || ''}`).join('\n\n')
+      setPendingFile({
+        refId: refIds[0],
+        refIds,
+        fileName: names.join(', '),
+        fileType: results.length > 1 ? `${results.length} files` : results[0].file_type,
+        preview: combinedPreview.slice(0, 3000),
+      })
     } catch (err) {
       setMessages(prev => [...prev, {
         id: Date.now(), role: 'agent', agent: 'DATA DOMAIN SILVER AGENT',
-        text: `Could not read the file: ${err.message}`, chips: [], loading: false, time: ts(),
+        text: `Could not read the file(s): ${err.message}`, chips: [], loading: false, time: ts(),
       }])
     }
     setUploading(false)
@@ -294,7 +306,12 @@ export default function App() {
   const handleUseFile = useCallback((refId) => {
     const pf = pendingFile
     if (!pf) return
-    sendMessage('', { action: 'use_file', fileRefId: refId, fileName: pf.fileName })
+    sendMessage('', {
+      action: 'use_file',
+      fileRefId: refId,
+      fileRefIds: pf.refIds || [refId],
+      fileName: pf.fileName,
+    })
   }, [pendingFile, sendMessage])
 
   const handleDismissFile = useCallback(() => setPendingFile(null), [])

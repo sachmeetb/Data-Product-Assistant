@@ -335,6 +335,7 @@ class ChatRequest(BaseModel):
     message: str = Field("", description="User message text")
     action: Optional[str] = Field(None, description="Action override")
     file_ref_id: Optional[str] = Field(None, description="Uploaded file reference ID")
+    file_ref_ids: Optional[list[str]] = Field(None, description="Multiple uploaded file reference IDs")
     selected_entities: Optional[list[str]] = Field(None, description="Explicit list of selected entity table names")
     selected_attributes: Optional[dict[str, list[str]]] = Field(None, description="Map of table -> selected column names")
     domain_name: Optional[str] = Field(None, description="Selected domain name override")
@@ -1829,10 +1830,42 @@ async def chat_endpoint(body: ChatRequest):
     action = body.action
     session["turns"] = session.get("turns", 0) + 1
 
-    if body.file_ref_id and body.file_ref_id in FILE_STORE:
-        file_info = FILE_STORE[body.file_ref_id]
-        if file_info.get("preview"):
-            user_msg = f"Extracted from file '{file_info['name']}':\n{file_info['preview']}\n{user_msg}"
+    ref_ids: list[str] = []
+    if body.file_ref_ids:
+        ref_ids.extend([r for r in body.file_ref_ids if r])
+    if body.file_ref_id and body.file_ref_id not in ref_ids:
+        ref_ids.append(body.file_ref_id)
+
+    extracted_parts: list[str] = []
+    for rid in ref_ids:
+        file_info = FILE_STORE.get(rid)
+        if not file_info:
+            continue
+        fname = file_info.get("name", "uploaded_file")
+        ext = file_info.get("type", "")
+        content = file_info.get("content", b"")
+        txt = file_info.get("preview") or ""
+        if ext in ("xlsx", "xls") and content:
+            try:
+                import io, openpyxl
+                wb = openpyxl.load_workbook(io.BytesIO(content), data_only=True)
+                sheet_lines = []
+                for sname in wb.sheetnames:
+                    ws = wb[sname]
+                    sheet_lines.append(f"[Sheet: {sname}]")
+                    for row in ws.iter_rows(values_only=True):
+                        if any(v is not None for v in row):
+                            sheet_lines.append(" | ".join(str(v) if v is not None else "" for v in row))
+                txt = "\n".join(sheet_lines)
+            except Exception:
+                pass
+        elif ext == "csv" and content:
+            txt = content.decode("utf-8", errors="ignore")
+        if txt:
+            extracted_parts.append(f"Extracted from file '{fname}':\n{txt}")
+
+    if extracted_parts:
+        user_msg = "\n\n".join(extracted_parts) + (f"\n\n{user_msg}" if user_msg else "")
 
     current_step = session.get("step", "industry_selection")
 

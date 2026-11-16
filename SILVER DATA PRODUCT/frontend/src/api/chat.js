@@ -29,7 +29,7 @@ function logResponseHeaders(label, res) {
 export async function sendChatMessage(
   sessionId,
   message,
-  { action, fileRefId, selectedEntities, selectedAttributes, domainName, industryId, contract, glossary } = {}
+  { action, fileRefId, fileRefIds, selectedEntities, selectedAttributes, domainName, industryId, contract, glossary } = {}
 ) {
   console.info('[api/chat] POST /chat', { sessionId, len: message?.length, action, selectedEntities });
   const res = await fetch(`${API_BASE}/chat`, {
@@ -40,6 +40,7 @@ export async function sendChatMessage(
       message,
       ...(action             ? { action }                                  : {}),
       ...(fileRefId          ? { file_ref_id: fileRefId }                  : {}),
+      ...(fileRefIds         ? { file_ref_ids: fileRefIds }                : {}),
       ...(selectedEntities   ? { selected_entities: selectedEntities }     : {}),
       ...(selectedAttributes ? { selected_attributes: selectedAttributes } : {}),
       ...(domainName         ? { domain_name: domainName }                 : {}),
