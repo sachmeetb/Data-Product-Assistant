@@ -87,6 +87,7 @@ export default function App() {
           silver_transform_view: msg.silver_transform_view ?? undefined,
           data_contract_view: msg.data_contract_view ?? (idx === data.messages.length - 1 ? data.data_contract_view : undefined),
           publish_view: msg.publish_view ?? (idx === data.messages.length - 1 ? data.publish_view : undefined),
+          conformance_view: msg.conformance_view ?? (idx === data.messages.length - 1 ? data.conformance_view : undefined),
           loading: false,
           time: ts(),
         }))
