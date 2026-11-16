@@ -123,7 +123,7 @@ class KnowledgeCatalogClient:
         email = _valid_owner_email(owner_email, self.project_id)
 
         kc_url = (
-            f"https://console.cloud.google.com/dataplex/govern/data-products"
+            f"https://console.cloud.google.com/dataplex/data-products"
             f"?project={self.project_id}"
         )
 
