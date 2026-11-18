@@ -1,0 +1,16 @@
+bundle:
+  name: bronze-data-product-assistant
+
+targets:
+  dev:
+    mode: development
+    default: true
+  prod:
+    mode: production
+
+resources:
+  apps:
+    bronze_data_product:
+      name: bronze-data-product
+      description: "BFSI Bronze Data Product Assistant on Azure Databricks"
+      source_code_path: .

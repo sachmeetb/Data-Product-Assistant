@@ -24,29 +24,30 @@ _BRONZE_4_SOURCES = [
 
 
 def discover_bronze_tables(dataset_id: str = "banking_bronze") -> Dict[str, Any]:
-    """Inspect live BigQuery banking_bronze tables; fall back to local CSVs if unavailable."""
-    project_id = (
-        os.environ.get("BQ_PROJECT")
-        or os.environ.get("GCP_PROJECT_ID")
-        or "eogwapq-agbg-internal-data-mig"
-    )
+    """Inspect live Unity Catalog banking_bronze tables; fall back to local CSVs if unavailable."""
+    catalog = os.environ.get("DATABRICKS_CATALOG") or "main"
+    schema_name = os.environ.get("DATABRICKS_BRONZE_SCHEMA") or dataset_id
     discovered: List[Dict[str, Any]] = []
-    source_mode = "bigquery"
+    source_mode = "databricks"
 
     try:
-        from tools.gcp_auth import get_bigquery_client
-        client = get_bigquery_client(project_id=project_id, location="US")
-        for sys_code, tbl_name, label in _BRONZE_4_SOURCES:
-            fqn = f"{project_id}.{dataset_id}.{tbl_name}"
-            tbl = client.get_table(fqn)
-            discovered.append({
-                "source_system": sys_code,
-                "label": label,
-                "table_name": tbl_name,
-                "fqn": fqn,
-                "row_count": tbl.num_rows,
-                "columns": [f.name for f in tbl.schema],
-            })
+        from tools.databricks_auth import get_sql_connection
+        with get_sql_connection(catalog=catalog, schema=schema_name) as conn, conn.cursor() as cur:
+            for sys_code, tbl_name, label in _BRONZE_4_SOURCES:
+                fqn = f"{catalog}.{schema_name}.{tbl_name}"
+                quoted = f"`{catalog}`.`{schema_name}`.`{tbl_name}`"
+                cur.execute(f"SELECT COUNT(*) FROM {quoted}")
+                row_count = cur.fetchone()[0]
+                cur.execute(f"DESCRIBE TABLE {quoted}")
+                cols = [r[0] for r in cur.fetchall() if r[0] and not str(r[0]).startswith("#")]
+                discovered.append({
+                    "source_system": sys_code,
+                    "label": label,
+                    "table_name": tbl_name,
+                    "fqn": fqn,
+                    "row_count": row_count,
+                    "columns": cols,
+                })
     except Exception:
         source_mode = "local_samples"
         discovered = []

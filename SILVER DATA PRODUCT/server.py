@@ -49,7 +49,7 @@ from agents import (
     spec_generator_agent,
     validator_agent,
 )
-from tools.bigquery_tool import BigQueryPublisher
+from tools.databricks_tool import DatabricksPublisher
 from tools.knowledge_catalog import KnowledgeCatalogClient
 from tools.datacontract_generator import (
     generate_data_contract_dict,
@@ -155,8 +155,9 @@ async def health_check():
         "status": "ok",
         "service": "Silver-Data-Product-Assistant",
         "timestamp": datetime.utcnow().isoformat() + "Z",
-        "gcp_project": os.environ.get("GCP_PROJECT_ID", "(not set)"),
-        "gemini_model": os.environ.get("GEMINI_MODEL", "(not set)"),
+        "databricks_host": os.environ.get("DATABRICKS_HOST", "(not set)"),
+        "unity_catalog": f"{os.environ.get('DATABRICKS_CATALOG', 'main')}.{os.environ.get('DATABRICKS_SILVER_SCHEMA', 'banking_silver')}",
+        "llm_model": os.environ.get("DATABRICKS_LLM_MODEL") or os.environ.get("AZURE_OPENAI_DEPLOYMENT") or "(default)",
     }
 
 
@@ -1616,7 +1617,7 @@ async def _execute_silver_publish_and_catalog_sync(session: dict, mode: Optional
         contract_dict,
     )
 
-    publisher = BigQueryPublisher(silver_dataset=target_dataset, mode=mode or "live")
+    publisher = DatabricksPublisher(silver_schema=target_dataset, mode=mode or "live")
     bq_report = await asyncio.to_thread(publisher.publish, ddl)
 
     project_id = publisher.project_id
@@ -2675,7 +2676,7 @@ async def _run_and_format_conformance(publish: bool = False, dataset_id: str = "
     res["golden_customers"] = enriched_customers
 
     if publish:
-        publisher = BigQueryPublisher(silver_dataset=dataset_id, mode="live")
+        publisher = DatabricksPublisher(silver_schema=dataset_id, mode="live")
         ddl = f"""
 CREATE OR REPLACE TABLE `{publisher.project_id}.{dataset_id}.slv_customer_360` (
   customer_key STRING NOT NULL OPTIONS(description='[PK] Unified Silver Customer Surrogate Key'),
@@ -2717,10 +2718,10 @@ CREATE OR REPLACE TABLE `{publisher.project_id}.{dataset_id}.slv_customer_arrang
 ) OPTIONS(description='Many-to-One Banking Arrangements Linked to Unified Silver Customer');
 """
         bq_report = await asyncio.to_thread(publisher.publish, ddl)
-        # Materialize conformed Golden Customers, XREF, and Arrangements rows in BigQuery
+        # Materialize conformed Golden Customers, XREF, and Arrangements rows in Databricks Unity Catalog
         try:
-            from google.cloud import bigquery as _bq
-            bq_client = publisher._get_client()
+            from tools.databricks_auth import get_sql_connection
+            catalog = publisher.catalog
             cust_rows = [
                 {
                     "customer_key": gc["customer_key"],
@@ -2766,20 +2767,25 @@ CREATE OR REPLACE TABLE `{publisher.project_id}.{dataset_id}.slv_customer_arrang
                 }
                 for a in res.get("arrangements", [])
             ]
-            w_cfg = _bq.LoadJobConfig(write_disposition=_bq.WriteDisposition.WRITE_TRUNCATE)
-            for tname, rows_payload in [
-                ("slv_customer_360", cust_rows),
-                ("slv_customer_source_xref", xref_rows),
-                ("slv_customer_arrangement", arr_rows),
-            ]:
-                if rows_payload:
-                    await asyncio.to_thread(
-                        lambda tn=tname, rp=rows_payload: bq_client.load_table_from_json(
-                            rp, f"{publisher.project_id}.{dataset_id}.{tn}", job_config=w_cfg
-                        ).result()
-                    )
+            def _load_conformed_rows():
+                with get_sql_connection(catalog=catalog, schema=dataset_id) as conn, conn.cursor() as cur:
+                    for tname, rows_payload in [
+                        ("slv_customer_360", cust_rows),
+                        ("slv_customer_source_xref", xref_rows),
+                        ("slv_customer_arrangement", arr_rows),
+                    ]:
+                        if not rows_payload:
+                            continue
+                        quoted = f"`{catalog}`.`{dataset_id}`.`{tname}`"
+                        cur.execute(f"TRUNCATE TABLE {quoted}")
+                        cols = list(rows_payload[0].keys())
+                        placeholders = ", ".join(["?"] * len(cols))
+                        col_list = ", ".join(f"`{c}`" for c in cols)
+                        values = [tuple(r[c] for c in cols) for r in rows_payload]
+                        cur.executemany(f"INSERT INTO {quoted} ({col_list}) VALUES ({placeholders})", values)
+            await asyncio.to_thread(_load_conformed_rows)
         except Exception as load_exc:
-            log.warning("Conformed BigQuery row load warning: %s", load_exc)
+            log.warning("Conformed Databricks row load warning: %s", load_exc)
         kc = KnowledgeCatalogClient(project_id=publisher.project_id, dataset_id=dataset_id)
         dp_res = await asyncio.to_thread(
             kc.register_data_product,

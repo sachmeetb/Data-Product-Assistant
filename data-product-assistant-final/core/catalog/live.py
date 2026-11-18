@@ -163,3 +163,68 @@ class InMemoryCatalog:
         return LiveSnapshot(
             tables=[t for t in self._tables if t.dataset in wanted]
         )
+
+
+_DATABRICKS_COLUMNS_QUERY = """
+SELECT
+  table_name,
+  column_name,
+  data_type,
+  is_nullable,
+  comment AS description
+FROM `{catalog}`.information_schema.columns
+WHERE table_schema = '{schema}'
+ORDER BY table_name, ordinal_position
+"""
+
+
+class DatabricksCatalog:
+    """Reads Unity Catalog `information_schema.columns` via `databricks-sql-connector`."""
+
+    def __init__(self, catalog: str, host: str = "", token: str = "", http_path: str = "", connection=None) -> None:
+        self.catalog = _check_project(catalog)
+        self.host = host
+        self.token = token
+        self.http_path = http_path
+        self._conn = connection
+
+    def _ensure_connection(self):
+        if self._conn is None:
+            from databricks import sql as dbsql
+            server_hostname = self.host.removeprefix("https://").removeprefix("http://").rstrip("/")
+            self._conn = dbsql.connect(
+                server_hostname=server_hostname,
+                http_path=self.http_path,
+                access_token=self.token,
+                catalog=self.catalog,
+            )
+        return self._conn
+
+    def snapshot(self, schemas: list[str]) -> LiveSnapshot:
+        conn = self._ensure_connection()
+        snap = LiveSnapshot()
+        for schema in schemas:
+            _check_dataset(schema)
+            sql = _DATABRICKS_COLUMNS_QUERY.format(catalog=self.catalog, schema=schema)
+            by_table: dict[str, LiveTable] = {}
+            with conn.cursor() as cur:
+                cur.execute(sql)
+                for row in cur.fetchall():
+                    tname, cname, raw_type, is_nullable, desc = row[0], row[1], row[2], row[3], row[4]
+                    try:
+                        ctype = normalize(raw_type)
+                    except UnknownTypeError:
+                        snap.unresolved_types.append(f"{schema}.{tname}.{cname}: {raw_type}")
+                        continue
+                    table = by_table.setdefault(tname, LiveTable(dataset=schema, name=tname))
+                    table.columns.append(
+                        LiveColumn(
+                            name=cname,
+                            canonical_type=ctype,
+                            nullable=(str(is_nullable).upper() == "YES"),
+                            description=desc or "",
+                            raw_type=raw_type,
+                        )
+                    )
+            snap.tables.extend(by_table.values())
+        return snap

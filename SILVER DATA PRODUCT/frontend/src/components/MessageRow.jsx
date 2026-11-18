@@ -225,7 +225,7 @@ function SilverPublishReportCard({ view }) {
       {/* Per-Table Links & dbt DQ Status Table */}
       <div style={{ padding: '14px 18px' }}>
         <div style={{ fontSize: '12px', fontWeight: 700, color: '#334155', textTransform: 'uppercase', marginBottom: '8px' }}>
-          Published Silver Entities — BigQuery & Knowledge Catalog Deep Links
+          Published Silver Entities — Azure Databricks &amp; Unity Catalog Deep Links
         </div>
         <div style={{ overflowX: 'auto' }}>
           <table style={{ width: '100%', minWidth: '580px', tableLayout: 'auto', borderCollapse: 'collapse', fontSize: '12.5px' }}>
@@ -233,8 +233,8 @@ function SilverPublishReportCard({ view }) {
               <tr style={{ background: '#f8fafc', borderBottom: '2px solid #e2e8f0', textAlign: 'left' }}>
                 <th style={{ padding: '8px 12px', color: '#475569', whiteSpace: 'nowrap' }}>Silver Entity</th>
                 <th style={{ padding: '8px 12px', color: '#475569', whiteSpace: 'nowrap' }}>dbt Data Quality</th>
-                <th style={{ padding: '8px 12px', color: '#475569', whiteSpace: 'nowrap' }}>BigQuery Console</th>
-                <th style={{ padding: '8px 12px', color: '#475569', whiteSpace: 'nowrap' }}>GCP Knowledge Catalog</th>
+                <th style={{ padding: '8px 12px', color: '#475569', whiteSpace: 'nowrap' }}>Databricks Explorer</th>
+                <th style={{ padding: '8px 12px', color: '#475569', whiteSpace: 'nowrap' }}>Unity Catalog</th>
               </tr>
             </thead>
             <tbody>
@@ -274,7 +274,7 @@ function SilverPublishReportCard({ view }) {
                         display: 'inline-block',
                       }}
                     >
-                      View in BigQuery ↗
+                      View in Databricks ↗
                     </a>
                   </td>
                   <td style={{ padding: '9px 12px', whiteSpace: 'nowrap' }}>
@@ -330,7 +330,7 @@ function SilverPublishReportCard({ view }) {
           <div style={{ marginTop: '14px' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px', flexWrap: 'wrap', gap: '6px' }}>
               <div style={{ fontSize: '11.5px', fontWeight: 700, color: '#475569', textTransform: 'uppercase' }}>
-                Live BigQuery Conformed Rows Preview ({ previewTable.rows?.length || 0 } rows)
+                Live Databricks Conformed Rows Preview ({ previewTable.rows?.length || 0 } rows)
               </div>
               <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
                 {Object.keys(actualData).map(fqn => {
@@ -447,10 +447,10 @@ function Conformance360Card({ view }) {
       {pub && (
         <div style={{ padding: '12px 16px', background: '#faf5ff', borderBottom: '1px solid #ede9fe' }}>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center', marginBottom: pubTables.length ? '10px' : 0 }}>
-            <span style={{ fontSize: '12px', fontWeight: 700, color: '#4c1d95', marginRight: '4px' }}>GCP Console Links:</span>
+            <span style={{ fontSize: '12px', fontWeight: 700, color: '#4c1d95', marginRight: '4px' }}>Databricks Explorer Links:</span>
             {pub.bigquery_dataset_url && (
               <a href={pub.bigquery_dataset_url} target="_blank" rel="noopener noreferrer" style={{ background: '#1d4ed8', color: '#fff', fontSize: '11.5px', fontWeight: 600, padding: '5px 10px', borderRadius: '6px', textDecoration: 'none' }}>
-                Open Dataset in BigQuery ↗
+                Open Schema in Databricks ↗
               </a>
             )}
             {pub.knowledge_catalog_data_product_url && (

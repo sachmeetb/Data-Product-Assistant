@@ -33,14 +33,14 @@ You will receive in `<context>`:
 | GR006 | All table/column names are snake_case (pattern: `^[a-z][a-z0-9_]*$`) | ERROR |
 | GR007 | Silver table names start with `slv_` | ERROR |
 
-### BigQuery Syntax Checks (BQ001–BQ004)
+### Databricks SQL & Delta Lake Syntax Checks (DBX001–DBX004)
 
 | ID | Check | Severity |
 |---|---|---|
-| BQ001 | No Databricks syntax: USING DELTA, TBLPROPERTIES, LOCATION 'dbfs, PARTITIONED BY | ERROR |
-| BQ002 | Qualified table names are backtick-quoted in DDL | WARNING |
-| BQ003 | Fact tables use PARTITION BY DATE(...) | WARNING |
-| BQ004 | Every CREATE TABLE statement ends with a semicolon | ERROR |
+| DBX001 | No BigQuery-only syntax: `OPTIONS(description=...)`, `INT64`, `FLOAT64`, `PARTITION BY DATE(...)` | ERROR |
+| DBX002 | Qualified table names use Unity Catalog 3-level namespace (`\`catalog\`.\`schema\`.\`table\``) | WARNING |
+| DBX003 | Tables specify `USING DELTA` and `CLUSTER BY` or `PARTITIONED BY` | WARNING |
+| DBX004 | Every `CREATE TABLE` statement ends with a semicolon | ERROR |
 
 ### Banking Domain Checks
 

@@ -13,54 +13,36 @@ import re
 
 from dotenv import load_dotenv
 from .base import run_agent, _PROJECT_ROOT
-from tools.bigquery_tool import BigQueryPublisher, query_table
+from tools.databricks_tool import DatabricksPublisher, query_table
 
 load_dotenv(_PROJECT_ROOT / ".env")
 
-_BQ_PROJECT = os.environ.get("BQ_PROJECT") or os.environ.get("GOOGLE_CLOUD_PROJECT") or "eogwapq-agbg-internal-data-mig"
-
-# Design-time catalog placeholders baked into DDI artifacts and utility_catalog.json.
-# At execute-time these are rewritten to the actual BQ project + layer dataset.
-_LAYER_MAP = {
-    "acn_consumption": "gold",
-    "acn_aggregated":  "silver",
-    "acn_source":      "bronze",
-    "bq_project":     None,   # handled separately — replace with real project only
-}
+_UC_CATALOG = os.environ.get("DATABRICKS_CATALOG") or "main"
 
 
-def _rewrite_sql_to_bq(sql: str) -> str:
+def _rewrite_sql_to_uc(sql: str) -> str:
     """
-    Rewrite design-time Databricks-style catalog.schema.table FQNs to BigQuery
-    project.dataset.table FQNs.
-
-    Mapping:
-      acn_consumption.<domain>.<table>  →  `{BQ_PROJECT}`.gold.<table>
-      acn_aggregated.<domain>.<table>   →  `{BQ_PROJECT}`.silver.<table>
-      acn_source.<domain>.<table>       →  `{BQ_PROJECT}`.bronze.<table>
-      bq_project.<dataset>.<table>     →  `{BQ_PROJECT}`.<dataset>.<table>
+    Rewrite design-time catalog.schema.table FQNs to Unity Catalog
+    `catalog`.layer.table FQNs.
     """
-    if not sql or not _BQ_PROJECT:
+    if not sql or not _UC_CATALOG:
         return sql
 
-    # Three-level: acn_consumption.domain.table → `project`.gold.table
-    for old_catalog, dataset in (
+    for old_catalog, schema_name in (
         ("acn_consumption", "gold"),
         ("acn_aggregated",  "silver"),
         ("acn_source",      "bronze"),
     ):
-        # Match: acn_consumption.any_schema.table_name
         sql = re.sub(
             r"`?" + re.escape(old_catalog) + r"`?\.\w+\.([\w]+)",
-            lambda m, ds=dataset: f"`{_BQ_PROJECT}`.{ds}.{m.group(1)}",
+            lambda m, sc=schema_name: f"`{_UC_CATALOG}`.{sc}.{m.group(1)}",
             sql,
             flags=re.IGNORECASE,
         )
 
-    # Two-level: bq_project.dataset.table → `project`.dataset.table
     sql = re.sub(
         r"`?bq_project`?\.([\w]+)\.([\w]+)",
-        lambda m: f"`{_BQ_PROJECT}`.{m.group(1)}.{m.group(2)}",
+        lambda m: f"`{_UC_CATALOG}`.{m.group(1)}.{m.group(2)}",
         sql,
         flags=re.IGNORECASE,
     )
@@ -100,10 +82,10 @@ def execute(validated_code: str, spec: dict | None = None, test_report: dict | N
     if spec is None:
         spec = {}
 
-    # Rewrite design-time Databricks-style FQNs to BigQuery FQNs
-    validated_code = _rewrite_sql_to_bq(validated_code)
+    # Rewrite design-time FQNs to Unity Catalog FQNs
+    validated_code = _rewrite_sql_to_uc(validated_code)
 
-    publisher = BigQueryPublisher(mode="live")
+    publisher = DatabricksPublisher(mode="live")
     publish_results = publisher.publish(pipeline_code=validated_code)
 
     # Query actual table data for silver/gold tables after publishing

@@ -105,7 +105,7 @@ function GoldPublishReportCard({ view }) {
       >
         <div>
           <div style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.08em', opacity: 0.85, fontWeight: 700 }}>
-            GCP BigQuery & Knowledge Catalog (Dataplex) Deployment · Gold Star Schema
+            Azure Databricks &amp; Unity Catalog Deployment · Gold Star Schema
           </div>
           <div style={{ fontSize: '15px', fontWeight: 700, marginTop: '2px' }}>
             {view.project_id}.{view.dataset_id} ({view.dataset_location || 'us-central1'})
@@ -122,7 +122,7 @@ function GoldPublishReportCard({ view }) {
               borderRadius: '999px',
             }}
           >
-            ✓ {view.publish_status === 'published' ? 'LIVE IN BIGQUERY' : String(view.publish_status || '').toUpperCase()}
+            ✓ {view.publish_status === 'published' ? 'LIVE IN DATABRICKS' : String(view.publish_status || '').toUpperCase()}
           </span>
           <span
             style={{
@@ -175,7 +175,7 @@ function GoldPublishReportCard({ view }) {
                 textDecoration: 'none',
               }}
             >
-              Open Dataset in BigQuery Studio ↗
+              Open Schema in Databricks Explorer ↗
             </a>
           )}
           {view.knowledge_catalog_dataset_url && (
@@ -226,7 +226,7 @@ function GoldPublishReportCard({ view }) {
       {/* Per-Table Links & dbt DQ Status Table */}
       <div style={{ padding: '14px 18px' }}>
         <div style={{ fontSize: '12px', fontWeight: 700, color: '#334155', textTransform: 'uppercase', marginBottom: '8px' }}>
-          Published Gold Star Schema Tables — BigQuery & Knowledge Catalog Deep Links
+          Published Gold Star Schema Tables — Databricks &amp; Unity Catalog Deep Links
         </div>
         <div style={{ overflowX: 'auto' }}>
           <table style={{ width: '100%', tableLayout: 'auto', borderCollapse: 'collapse', fontSize: '12.5px', margin: 0 }}>
@@ -234,8 +234,8 @@ function GoldPublishReportCard({ view }) {
               <tr style={{ background: '#f8fafc', borderBottom: '2px solid #e2e8f0', textAlign: 'left' }}>
                 <th style={{ padding: '8px 10px', color: '#475569', whiteSpace: 'nowrap' }}>Gold Table</th>
                 <th style={{ padding: '8px 10px', color: '#475569', whiteSpace: 'nowrap' }}>dbt Data Quality</th>
-                <th style={{ padding: '8px 10px', color: '#475569', whiteSpace: 'nowrap' }}>BigQuery Console</th>
-                <th style={{ padding: '8px 10px', color: '#475569', whiteSpace: 'nowrap' }}>GCP Knowledge Catalog</th>
+                <th style={{ padding: '8px 10px', color: '#475569', whiteSpace: 'nowrap' }}>Databricks Explorer</th>
+                <th style={{ padding: '8px 10px', color: '#475569', whiteSpace: 'nowrap' }}>Unity Catalog</th>
               </tr>
             </thead>
             <tbody>
@@ -275,7 +275,7 @@ function GoldPublishReportCard({ view }) {
                         display: 'inline-block',
                       }}
                     >
-                      View in BigQuery ↗
+                      View in Databricks ↗
                     </a>
                   </td>
                   <td style={{ padding: '9px 10px', whiteSpace: 'nowrap' }}>

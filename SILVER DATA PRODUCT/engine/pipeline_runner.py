@@ -120,15 +120,18 @@ def _build_arrangements(
 
 
 def _read_bq_or_csv(table_name: str, csv_path: Path, dataset_id: str = "banking_bronze") -> tuple[List[Dict[str, Any]], str]:
-    """Try reading live Bronze rows from BigQuery first; fall back to local CSV."""
+    """Try reading live Bronze rows from Databricks Unity Catalog first; fall back to local CSV."""
     try:
         import os
-        from tools.gcp_auth import get_bigquery_client
-        project_id = os.environ.get("BQ_PROJECT") or os.environ.get("GCP_PROJECT_ID") or "eogwapq-agbg-internal-data-mig"
-        client = get_bigquery_client(project_id=project_id, location="US")
-        rows = [dict(r.items()) for r in client.query(f"SELECT * FROM `{project_id}.{dataset_id}.{table_name}`").result()]
+        from tools.databricks_auth import get_sql_connection
+        catalog = os.environ.get("DATABRICKS_CATALOG") or "main"
+        schema_name = os.environ.get("DATABRICKS_BRONZE_SCHEMA") or dataset_id
+        with get_sql_connection(catalog=catalog, schema=schema_name) as conn, conn.cursor() as cur:
+            cur.execute(f"SELECT * FROM `{catalog}`.`{schema_name}`.`{table_name}`")
+            cols = [d[0] for d in cur.description] if cur.description else []
+            rows = [dict(zip(cols, r)) for r in cur.fetchall()]
         if rows:
-            return rows, "bigquery"
+            return rows, "databricks"
     except Exception:
         pass
     return read_csv(csv_path), "local_csv"
@@ -151,7 +154,7 @@ def run_conformance_pipeline() -> Dict[str, Any]:
     afs_rows, m2 = _read_bq_or_csv("brz_afs_borrower", bronze_dir / "brz_afs_borrower.csv")
     tsys_rows, m3 = _read_bq_or_csv("brz_tsys_cardholder", bronze_dir / "brz_tsys_cardholder.csv")
     acls_rows, m4 = _read_bq_or_csv("brz_acls_applicant", bronze_dir / "brz_acls_applicant.csv")
-    source_mode = "bigquery" if all(m == "bigquery" for m in (m1, m2, m3, m4)) else "local_csv"
+    source_mode = "databricks" if all(m == "databricks" for m in (m1, m2, m3, m4)) else "local_csv"
 
     total_bronze_records = len(hogan_rows) + len(afs_rows) + len(tsys_rows) + len(acls_rows)
     print(f"[*] Ingested {len(hogan_rows)} records from Hogan Core Deposits (CIS)")

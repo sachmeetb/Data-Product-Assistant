@@ -88,8 +88,8 @@ async def run(
                 for r in get_validation_rules().get("global_rules", [])
             ],
         },
-        "gcp_project_id": os.environ.get("GCP_PROJECT_ID", "eogwapq-agbg-internal-data-mig"),
-        "bronze_dataset": os.environ.get("BQ_BRONZE_DATASET", "banking_bronze"),
+        "databricks_catalog": os.environ.get("DATABRICKS_CATALOG", "main"),
+        "bronze_schema": os.environ.get("DATABRICKS_BRONZE_SCHEMA", "banking_bronze"),
 
         # ── Column composition rules ──────────────────────────────────────────
         "column_composition_rules": [
