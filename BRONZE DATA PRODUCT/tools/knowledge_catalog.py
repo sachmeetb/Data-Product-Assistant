@@ -1,32 +1,23 @@
 """
-knowledge_catalog.py — GCP Knowledge Catalog (Dataplex Universal Catalog) & BigQuery
-Governance Synchronization for the Bronze Data Product Assistant.
+knowledge_catalog.py — Azure Databricks Unity Catalog Governance Synchronization
+for the Bronze Data Product Assistant.
 
 Responsibilities:
-  1. Register Bronze Data Products & Data Assets in Dataplex Knowledge Catalog
-     (POST /v1/projects/{project}/locations/{loc}/dataProducts + /dataAssets).
-  2. Create / synchronize a Dataplex Business Glossary & Terms
-     (POST /v1/projects/{project}/locations/global/glossaries + /terms).
-  3. Enrich live BigQuery Bronze tables (table description, governance labels,
-     column descriptions) so @bigquery entries stay synchronized.
-  4. Generate clickable GCP Console deep links for BigQuery Studio, Dataplex
-     Data Products, and Business Glossaries.
+  1. Register Bronze Data Products & Data Assets as Unity Catalog tags/comments.
+  2. Synchronize Business Glossary metadata via Unity Catalog table/schema properties.
+  3. Enrich live Unity Catalog Bronze tables (COMMENT ON TABLE, SET TAGS).
+  4. Generate clickable Azure Databricks Catalog Explorer deep links.
 """
 
 from __future__ import annotations
 
+import json
 import logging
 import os
 import re
 from typing import Any, Dict, List, Optional
 
-import google.auth
-from google.auth.transport.requests import Request as AuthRequest
-import requests
-
 log = logging.getLogger(__name__)
-
-DATAPLEX_API = "https://dataplex.googleapis.com/v1"
 
 
 def _sanitize_label(val: Any, default: str = "bronze") -> str:
@@ -44,68 +35,44 @@ def _sanitize_id(val: Any, default: str = "bronze-data-product") -> str:
     return (cleaned or default)[:63].rstrip("-") or default
 
 
-def _valid_owner_email(owner: Any, project_id: str) -> str:
-    candidate = str(owner or "").strip()
-    if "@" in candidate and "." in candidate.split("@")[-1] and " " not in candidate:
-        return candidate
-    return os.environ.get(
-        "RUNTIME_SA_EMAIL",
-        f"dp-assistant-sa@{project_id}.iam.gserviceaccount.com",
-    )
-
-
 class KnowledgeCatalogClient:
-    """Client for GCP Knowledge Catalog (Dataplex Universal Catalog) & BigQuery enrichment."""
+    """Client for Azure Databricks Unity Catalog governance & enrichment."""
 
     def __init__(
         self,
+        catalog: Optional[str] = None,
+        schema_name: Optional[str] = None,
+        host: Optional[str] = None,
+        # Legacy keyword aliases kept for backwards-compatible callers
         project_id: Optional[str] = None,
         location: Optional[str] = None,
         dataset_id: Optional[str] = None,
     ):
-        self.project_id = (
-            project_id
-            or os.environ.get("BQ_PROJECT")
-            or os.environ.get("GCP_PROJECT_ID")
-            or "eogwapq-agbg-internal-data-mig"
+        self.catalog = (
+            catalog
+            or project_id
+            or os.environ.get("DATABRICKS_CATALOG")
+            or "main"
         ).strip()
-        self.location = (
-            location
-            or os.environ.get("DATAPLEX_LOCATION")
-            or os.environ.get("GCP_LOCATION")
-            or "us-central1"
-        ).strip().lower()
-        self.dataset_id = (
-            dataset_id
-            or os.environ.get("BQ_BRONZE_DATASET")
+        self.schema_name = (
+            schema_name
+            or dataset_id
+            or os.environ.get("DATABRICKS_BRONZE_SCHEMA")
             or "banking_bronze"
         ).strip()
-        self._credentials = None
+        self.host = (
+            host
+            or os.environ.get("DATABRICKS_HOST")
+            or ""
+        ).strip().rstrip("/")
+        if self.host and not self.host.startswith("http"):
+            self.host = f"https://{self.host}"
 
-    def _get_headers(self) -> Dict[str, str]:
-        if self._credentials is None:
-            self._credentials, _ = google.auth.default(
-                scopes=["https://www.googleapis.com/auth/cloud-platform"]
-            )
-        if not self._credentials.valid:
-            self._credentials.refresh(AuthRequest())
-        return {
-            "Authorization": f"Bearer {self._credentials.token}",
-            "Content-Type": "application/json",
-        }
-
-    def _resolve_dataset_location(self, dataset_id: str, fallback: Optional[str] = None) -> str:
-        """Resolve the actual BigQuery dataset location (e.g. 'us' or 'us-central1') for Dataplex."""
-        try:
-            from tools.gcp_auth import get_bigquery_client
-            client = get_bigquery_client(project_id=self.project_id)
-            ds = client.get_dataset(f"{self.project_id}.{dataset_id}")
-            if ds.location:
-                return ds.location.strip().lower()
-        except Exception:
-            pass
-        loc = (fallback or os.environ.get("BQ_LOCATION") or "us").strip().lower()
-        return loc if loc in ("us-central1", "us", "eu", "asia-south1") else "us"
+    def _catalog_url(self, schema_name: str, table_name: Optional[str] = None) -> str:
+        base = self.host or "https://adb-workspace.azuredatabricks.net"
+        if table_name:
+            return f"{base}/explore/data/{self.catalog}/{schema_name}/{table_name}"
+        return f"{base}/explore/data/{self.catalog}/{schema_name}"
 
     def register_data_product(
         self,
@@ -117,78 +84,37 @@ class KnowledgeCatalogClient:
         owner_email: Optional[str] = None,
         location: Optional[str] = None,
     ) -> Dict[str, Any]:
-        """Create/reuse a Dataplex Data Product and register BigQuery tables as Data Assets."""
-        loc = self._resolve_dataset_location(dataset_id, fallback=location)
-        kc_id = _sanitize_id(product_id, default=f"bronze-{dataset_id}")
-        email = _valid_owner_email(owner_email, self.project_id)
-
-        kc_url = (
-            f"https://console.cloud.google.com/dataplex/data-products"
-            f"?project={self.project_id}"
-        )
-
+        """Tag Unity Catalog schema & tables with Data Product metadata."""
+        schema = dataset_id or self.schema_name
+        dp_id = _sanitize_id(product_id)
         try:
-            headers = self._get_headers()
-            create_url = (
-                f"{DATAPLEX_API}/projects/{self.project_id}/locations/{loc}"
-                f"/dataProducts?data_product_id={kc_id}"
-            )
-            body = {
-                "display_name": (display_name or f"Bronze Data Product ({dataset_id})")[:255],
-                "description": (description or f"Bronze Lakehouse Data Product for {dataset_id}")[:1024],
-                "owner_emails": [email],
-            }
-            resp = requests.post(create_url, json=body, headers=headers, timeout=25)
-            if resp.status_code not in (200, 201, 409):
-                log.warning("Dataplex Data Product create returned %s: %s", resp.status_code, resp.text[:300])
-                return {
-                    "ok": False,
-                    "status": "FAILED",
-                    "http_status": resp.status_code,
-                    "error": resp.text[:300],
-                    "data_product_id": kc_id,
-                    "knowledge_catalog_url": kc_url,
-                }
+            from tools.databricks_auth import get_sql_connection
 
-            registered_assets: List[str] = []
-            asset_errors: List[str] = []
-            for raw_tname in table_names[:50]:
-                tbl = raw_tname.strip("`").split(".")[-1]
-                if not tbl:
-                    continue
-                asset_id = _sanitize_id(tbl, default="table")
-                asset_url = (
-                    f"{DATAPLEX_API}/projects/{self.project_id}/locations/{loc}"
-                    f"/dataProducts/{kc_id}/dataAssets?data_asset_id={asset_id}"
-                )
-                resource = (
-                    f"//bigquery.googleapis.com/projects/{self.project_id}"
-                    f"/datasets/{dataset_id}/tables/{tbl}"
-                )
-                ar = requests.post(asset_url, json={"resource": resource}, headers=headers, timeout=20)
-                if ar.status_code in (200, 201, 409):
-                    registered_assets.append(asset_id)
-                else:
-                    asset_errors.append(f"{tbl}: {ar.status_code} {ar.text[:120]}")
-
+            with get_sql_connection(catalog=self.catalog, schema=schema) as conn, conn.cursor() as cur:
+                safe_desc = description.replace("'", "''")
+                cur.execute(f"COMMENT ON SCHEMA `{self.catalog}`.`{schema}` IS '{safe_desc}'")
+                for tbl in table_names:
+                    cur.execute(
+                        f"ALTER TABLE `{self.catalog}`.`{schema}`.`{tbl}` "
+                        f"SET TAGS ('data_product_id' = '{dp_id}', 'layer' = 'bronze')"
+                    )
             return {
                 "ok": True,
-                "status": "REGISTERED_IN_KNOWLEDGE_CATALOG",
-                "data_product_id": kc_id,
-                "location": loc,
-                "assets_registered": len(registered_assets),
-                "registered_assets": registered_assets,
-                "asset_errors": asset_errors,
-                "knowledge_catalog_url": kc_url,
+                "status": "registered",
+                "data_product_id": dp_id,
+                "display_name": display_name,
+                "assets_registered": len(table_names),
+                "knowledge_catalog_url": self._catalog_url(schema),
             }
         except Exception as exc:
-            log.warning("register_data_product error: %s", exc)
+            log.warning("Unity Catalog data product registration skipped/failed: %s", exc)
             return {
                 "ok": False,
-                "status": "ERROR",
+                "status": "skipped",
+                "data_product_id": dp_id,
+                "assets_registered": 0,
                 "error": str(exc),
-                "data_product_id": kc_id,
-                "knowledge_catalog_url": kc_url,
+                "knowledge_catalog_url": self._catalog_url(schema),
             }
 
     def sync_business_glossary(
@@ -198,101 +124,66 @@ class KnowledgeCatalogClient:
         description: str,
         terms: List[Dict[str, str]],
     ) -> Dict[str, Any]:
-        """Create/reuse a Dataplex Business Glossary in global location and populate terms."""
-        gid = _sanitize_id(glossary_id, default="bronze-banking-glossary")
-        glossary_url = (
-            f"https://console.cloud.google.com/dataplex/glossaries"
-            f"?project={self.project_id}"
-        )
+        """Persist glossary metadata as Unity Catalog schema properties."""
+        gl_id = _sanitize_id(glossary_id, "bronze-glossary")
         try:
-            headers = self._get_headers()
-            create_url = (
-                f"{DATAPLEX_API}/projects/{self.project_id}/locations/global"
-                f"/glossaries?glossary_id={gid}"
-            )
-            resp = requests.post(
-                create_url,
-                json={
-                    "displayName": (display_name or "Bronze Data Product Glossary")[:255],
-                    "description": (description or "Business & Technical Glossary")[:1024],
-                },
-                headers=headers,
-                timeout=20,
-            )
-            if resp.status_code not in (200, 201, 409):
-                return {
-                    "ok": False,
-                    "status": "FAILED",
-                    "http_status": resp.status_code,
-                    "error": resp.text[:250],
-                    "glossary_id": gid,
-                    "glossary_url": glossary_url,
-                }
+            from tools.databricks_auth import get_sql_connection
 
-            terms_synced = 0
-            for t in (terms or [])[:25]:
-                t_name = t.get("name") or t.get("displayName") or ""
-                if not t_name:
-                    continue
-                tid = _sanitize_id(t_name, default="term")
-                term_url = (
-                    f"{DATAPLEX_API}/projects/{self.project_id}/locations/global"
-                    f"/glossaries/{gid}/terms?term_id={tid}"
+            glossary_json = json.dumps(terms[:50]).replace("'", "''")
+            with get_sql_connection(catalog=self.catalog, schema=self.schema_name) as conn, conn.cursor() as cur:
+                cur.execute(
+                    f"ALTER SCHEMA `{self.catalog}`.`{self.schema_name}` "
+                    f"SET DBPROPERTIES ('glossary_id' = '{gl_id}', 'glossary_terms' = '{glossary_json}')"
                 )
-                tr = requests.post(
-                    term_url,
-                    json={
-                        "displayName": t_name[:255],
-                        "description": (t.get("description") or t_name)[:1024],
-                        "parent": f"projects/{self.project_id}/locations/global/glossaries/{gid}",
-                    },
-                    headers=headers,
-                    timeout=15,
-                )
-                if tr.status_code in (200, 201, 409):
-                    terms_synced += 1
-
             return {
                 "ok": True,
-                "status": "GLOSSARY_SYNCED",
-                "glossary_id": gid,
-                "terms_synced": terms_synced,
-                "glossary_url": glossary_url,
+                "status": "synced",
+                "glossary_id": gl_id,
+                "terms_synced": len(terms),
+                "glossary_url": self._catalog_url(self.schema_name),
             }
         except Exception as exc:
-            log.warning("sync_business_glossary error: %s", exc)
+            log.warning("Unity Catalog glossary sync skipped/failed: %s", exc)
             return {
                 "ok": False,
-                "status": "ERROR",
+                "status": "skipped",
+                "glossary_id": gl_id,
+                "terms_synced": 0,
                 "error": str(exc),
-                "glossary_id": gid,
-                "glossary_url": glossary_url,
+                "glossary_url": self._catalog_url(self.schema_name),
             }
 
+    def enrich_table(
+        self,
+        schema_name: str,
+        table_name: str,
+        description: str,
+        domain: str = "bronze_banking",
+    ) -> Dict[str, Any]:
+        """Enrich a Unity Catalog table with COMMENT and governance TAGS."""
+        schema = schema_name or self.schema_name
+        safe_desc = (description or f"Bronze raw table {table_name}").replace("'", "''")
+        domain_tag = _sanitize_label(domain, "bronze_banking")
+        try:
+            from tools.databricks_auth import get_sql_connection
+
+            with get_sql_connection(catalog=self.catalog, schema=schema) as conn, conn.cursor() as cur:
+                cur.execute(f"COMMENT ON TABLE `{self.catalog}`.`{schema}`.`{table_name}` IS '{safe_desc}'")
+                cur.execute(
+                    f"ALTER TABLE `{self.catalog}`.`{schema}`.`{table_name}` "
+                    f"SET TAGS ('layer' = 'bronze', 'domain' = '{domain_tag}')"
+                )
+            return {"ok": True, "table": f"{self.catalog}.{schema}.{table_name}"}
+        except Exception as exc:
+            log.warning("Unity Catalog table enrichment failed for %s.%s: %s", schema, table_name, exc)
+            return {"ok": False, "error": str(exc)}
+
+    # Backwards-compatible alias
     def enrich_bigquery_table(
         self,
         dataset_id: str,
         table_name: str,
         description: str,
-        domain: str = "bronze",
-    ) -> bool:
-        """Enrich BigQuery table description and governance labels so @bigquery mirrors them."""
-        try:
-            from tools.gcp_auth import get_bigquery_client
-            client = get_bigquery_client(project_id=self.project_id)
-            tbl = table_name.strip("`").split(".")[-1]
-            table_ref = f"{self.project_id}.{dataset_id}.{tbl}"
-            table = client.get_table(table_ref)
-            table.description = (description or f"Bronze Raw Table {tbl}")[:16000]
-            labels = dict(table.labels or {})
-            labels.update({
-                "layer": "bronze",
-                "domain": _sanitize_label(domain, "banking"),
-                "governance": "dataplex_knowledge_catalog",
-            })
-            table.labels = labels
-            client.update_table(table, ["description", "labels"])
-            return True
-        except Exception as exc:
-            log.warning("Bronze BigQuery table enrichment warning for %s.%s: %s", dataset_id, table_name, exc)
-            return False
+        domain: str = "bronze_banking",
+    ) -> Dict[str, Any]:
+        return self.enrich_table(dataset_id, table_name, description, domain)

@@ -26,7 +26,7 @@ function logResponseHeaders(label, res) {
 }
 // ──────────────────────────────────────────────────────────────────────────
 
-export async function sendChatMessage(sessionId, message, { action, fileRefId } = {}) {
+export async function sendChatMessage(sessionId, message, { action, fileRefId, fileRefIds } = {}) {
   console.info('[api/chat] POST /chat', { sessionId, len: message?.length, action });
   const res = await fetch(`${API_BASE}/chat`, {
     method: 'POST',
@@ -34,8 +34,9 @@ export async function sendChatMessage(sessionId, message, { action, fileRefId } 
     body: JSON.stringify({
       session_id: sessionId,
       message,
-      ...(action    ? { action }              : {}),
-      ...(fileRefId ? { file_ref_id: fileRefId } : {}),
+      ...(action     ? { action }                  : {}),
+      ...(fileRefId  ? { file_ref_id: fileRefId }  : {}),
+      ...(fileRefIds ? { file_ref_ids: fileRefIds } : {}),
     }),
   });
   logResponseHeaders('chat', res);

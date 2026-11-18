@@ -1,0 +1,16 @@
+bundle:
+  name: gold-data-product-assistant
+
+targets:
+  dev:
+    mode: development
+    default: true
+  prod:
+    mode: production
+
+resources:
+  apps:
+    gold_data_product:
+      name: gold-data-product
+      description: "Gold Data Product Assistant on Azure Databricks"
+      source_code_path: .

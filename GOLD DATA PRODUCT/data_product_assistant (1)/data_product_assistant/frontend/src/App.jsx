@@ -323,6 +323,8 @@ function Workspace({ user }) {
       return
     }
     if (
+      label === 'Publish to Databricks' ||
+      label === 'Publish to Databricks & Unity Catalog' ||
       label === 'Publish to BigQuery' ||
       label === 'Publish to BigQuery & Knowledge Catalog' ||
       label === 'Publish to BQ & Knowledge Catalog'

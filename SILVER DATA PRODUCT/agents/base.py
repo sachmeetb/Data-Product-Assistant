@@ -1,12 +1,6 @@
 """
-base.py \u2014 Shared Google ADK agent runner for BFSI-Silver-Agent.
-
-Provides:
-  - Vertex AI initialisation
-  - Agent factory (creates LlmAgent instances from prompt files)
-  - Session management (InMemorySessionService for dev, Redis for production)
-  - Agent runner helper with structured JSON output parsing
-  - OpenTelemetry tracing (optional)
+base.py — Shared agent runner for BFSI-Silver-Agent using Azure Databricks
+Model Serving (or Azure OpenAI) via the OpenAI-compatible AsyncOpenAI client.
 """
 
 from __future__ import annotations
@@ -26,13 +20,15 @@ load_dotenv(_PROJECT_ROOT / ".env")
 
 log = logging.getLogger(__name__)
 
-# \u2500\u2500 Configuration \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+# ── Configuration ─────────────────────────────────────────────────────────────
 
-GCP_PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "")
-GCP_LOCATION = os.environ.get("GCP_LOCATION", "us-central1")
-GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-2.0-flash-001")
+LLM_MODEL = (
+    os.environ.get("DATABRICKS_LLM_MODEL", "").strip()
+    or os.environ.get("AZURE_OPENAI_DEPLOYMENT", "").strip()
+    or os.environ.get("LLM_MODEL", "").strip()
+    or "databricks-meta-llama-3-3-70b-instruct"
+)
 APP_NAME = os.environ.get("AGENT_APP_NAME", "bfsi-silver-agent")
-GCP_CREDENTIALS_PATH = os.environ.get("GCP_CREDENTIALS_PATH", "")
 
 _PROMPTS_DIR = _PROJECT_ROOT / "prompts"
 
@@ -57,46 +53,23 @@ _AGENT_MAX_TOKENS: dict[str, int] = {
 }
 _DEFAULT_MAX_TOKENS = 4096
 
-# \u2500\u2500 Vertex AI initialisation \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+# In-memory history: (agent_name, session_id) -> list of OpenAI message dicts
+_histories: dict[tuple[str, str], list[dict[str, str]]] = {}
 
-_vertex_initialised = False
-
-
-def _ensure_vertex_ai() -> None:
-    """Initialise Vertex AI once per process."""
-    global _vertex_initialised
-    if _vertex_initialised:
-        return
-    if not GCP_PROJECT_ID:
-        raise EnvironmentError(
-            "GCP_PROJECT_ID is not set. Add it to BFSI-Silver-Agent/.env"
-        )
-    from tools.gcp_auth import get_vertexai_credentials
-    get_vertexai_credentials(
-        credentials_path=GCP_CREDENTIALS_PATH or None,
-        project_id=GCP_PROJECT_ID,
-        location=GCP_LOCATION,
-    )
-    _vertex_initialised = True
-    log.info("Vertex AI initialised: project=%s location=%s model=%s",
-             GCP_PROJECT_ID, GCP_LOCATION, GEMINI_MODEL)
+_client_instance = None
 
 
-# \u2500\u2500 Google ADK session service \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+def _get_client():
+    global _client_instance
+    if _client_instance is None:
+        from tools.databricks_auth import get_async_llm_client
 
-_session_service = None
-
-
-def _get_session_service():
-    """Return or create the ADK session service (InMemory for dev)."""
-    global _session_service
-    if _session_service is None:
-        from google.adk.sessions import InMemorySessionService
-        _session_service = InMemorySessionService()
-    return _session_service
+        _client_instance = get_async_llm_client()
+        log.info("LLM client initialised: model=%s", LLM_MODEL)
+    return _client_instance
 
 
-# \u2500\u2500 Prompt loading \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+# ── Prompt loading ────────────────────────────────────────────────────────────
 
 def load_prompt(agent_name: str) -> str:
     """Load the system instruction for the given agent from its prompt file."""
@@ -109,42 +82,7 @@ def load_prompt(agent_name: str) -> str:
         return f.read()
 
 
-# \u2500\u2500 Agent factory \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
-
-_agents_cache: dict = {}
-
-
-def get_agent(agent_name: str):
-    """
-    Return a cached Google ADK LlmAgent for the given name.
-    Creates and caches on first call.
-    """
-    if agent_name not in _agents_cache:
-        _ensure_vertex_ai()
-        from google.adk.agents import LlmAgent
-
-        from google.genai import types as genai_types
-
-        instruction = load_prompt(agent_name)
-        max_tokens = _AGENT_MAX_TOKENS.get(agent_name, _DEFAULT_MAX_TOKENS)
-
-        agent = LlmAgent(
-            name=agent_name.replace("-", "_"),
-            model=GEMINI_MODEL,
-            instruction=instruction,
-            generate_content_config=genai_types.GenerateContentConfig(
-                max_output_tokens=max_tokens,
-                temperature=0.2,
-            ),
-        )
-        _agents_cache[agent_name] = agent
-        log.info("Agent created: %s (model=%s, max_tokens=%d)",
-                 agent_name, GEMINI_MODEL, max_tokens)
-
-    return _agents_cache[agent_name]
-
-
-# \u2500\u2500 Output parsing \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+# ── Output parsing ────────────────────────────────────────────────────────────
 
 def parse_agent_output(raw_text: str) -> dict:
     """
@@ -234,7 +172,7 @@ def parse_agent_output(raw_text: str) -> dict:
     return {"raw_output": text}
 
 
-# \u2500\u2500 Core runner \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+# ── Core runner ───────────────────────────────────────────────────────────────
 
 async def run_agent(
     agent_name: str,
@@ -244,61 +182,22 @@ async def run_agent(
     user_id: str = "system",
 ) -> dict:
     """
-    Invoke a Google ADK LlmAgent with an optional context dict.
-
-    Args:
-        agent_name: Key in PROMPT_REGISTRY.
-        user_input: The prompt / instruction to send.
-        context:    Optional dict injected as a <context> block.
-        session_id: ADK session ID (creates new session if None).
-        user_id:    User identifier for session tracking.
-
-    Returns:
-        Parsed structured dict from the agent's response.
+    Invoke an LLM agent with system instructions and optional context.
     """
-    from google.adk.runners import Runner
-    from google.genai import types as genai_types
+    if agent_name not in PROMPT_REGISTRY:
+        return {"error": f"Unknown agent '{agent_name}'. Registered: {list(PROMPT_REGISTRY)}"}
 
-    agent = get_agent(agent_name)
-    session_service = _get_session_service()
-    runner = Runner(
-        agent=agent,
-        app_name=APP_NAME,
-        session_service=session_service,
-    )
-
-    # Create or reuse session
     if session_id is None:
         session_id = str(uuid.uuid4())
-        await session_service.create_session(
-            app_name=APP_NAME,
-            user_id=user_id,
-            session_id=session_id,
-        )
-    else:
-        try:
-            existing = await session_service.get_session(
-                app_name=APP_NAME,
-                user_id=user_id,
-                session_id=session_id,
-            )
-            if existing is None:
-                await session_service.create_session(
-                    app_name=APP_NAME,
-                    user_id=user_id,
-                    session_id=session_id,
-                )
-        except Exception:
-            try:
-                await session_service.create_session(
-                    app_name=APP_NAME,
-                    user_id=user_id,
-                    session_id=session_id,
-                )
-            except Exception:
-                pass
 
-    # Inject context into the user message
+    try:
+        system_instruction = load_prompt(agent_name)
+    except Exception as e:
+        log.error("Failed to load prompt for %s: %s", agent_name, e)
+        return {"error": f"Failed to load prompt for {agent_name}: {e}"}
+
+    max_tokens = _AGENT_MAX_TOKENS.get(agent_name, _DEFAULT_MAX_TOKENS)
+
     if context:
         full_input = (
             f"<context>\n{json.dumps(context, indent=2, default=str)}\n</context>\n\n"
@@ -307,27 +206,24 @@ async def run_agent(
     else:
         full_input = user_input
 
-    message = genai_types.Content(
-        role="user",
-        parts=[genai_types.Part(text=full_input)],
-    )
+    history_key = (agent_name, session_id)
+    history = _histories.get(history_key, [])
+    new_user_msg = {"role": "user", "content": full_input}
+    messages = [{"role": "system", "content": system_instruction}] + history + [new_user_msg]
 
     try:
-        collected_text = []
-        async for event in runner.run_async(
-            user_id=user_id,
-            session_id=session_id,
-            new_message=message,
-        ):
-            if event.is_final_response() and event.content and event.content.parts:
-                for part in event.content.parts:
-                    if hasattr(part, "text") and part.text:
-                        collected_text.append(part.text)
-
-        raw = "".join(collected_text).strip()
+        client = _get_client()
+        response = await client.chat.completions.create(
+            model=LLM_MODEL,
+            messages=messages,
+            max_tokens=max_tokens,
+            temperature=0.2,
+        )
+        raw = (response.choices[0].message.content or "").strip() if response.choices else ""
         if not raw:
             return {"error": f"Agent '{agent_name}' returned empty response."}
 
+        _histories[history_key] = history + [new_user_msg, {"role": "assistant", "content": raw}]
         return parse_agent_output(raw)
 
     except Exception as exc:
@@ -336,12 +232,5 @@ async def run_agent(
 
 
 async def create_session(user_id: str = "system") -> str:
-    """Create and return a new ADK session ID."""
-    session_service = _get_session_service()
-    session_id = str(uuid.uuid4())
-    await session_service.create_session(
-        app_name=APP_NAME,
-        user_id=user_id,
-        session_id=session_id,
-    )
-    return session_id
+    """Create and return a new session ID."""
+    return str(uuid.uuid4())

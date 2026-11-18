@@ -225,7 +225,7 @@ function SilverPublishReportCard({ view }) {
       {/* Per-Table Links & dbt DQ Status Table */}
       <div style={{ padding: '14px 18px' }}>
         <div style={{ fontSize: '12px', fontWeight: 700, color: '#334155', textTransform: 'uppercase', marginBottom: '8px' }}>
-          Published Silver Entities — BigQuery & Knowledge Catalog Deep Links
+          Published Silver Entities — Azure Databricks &amp; Unity Catalog Deep Links
         </div>
         <div style={{ overflowX: 'auto' }}>
           <table style={{ width: '100%', minWidth: '580px', tableLayout: 'auto', borderCollapse: 'collapse', fontSize: '12.5px' }}>
@@ -233,8 +233,8 @@ function SilverPublishReportCard({ view }) {
               <tr style={{ background: '#f8fafc', borderBottom: '2px solid #e2e8f0', textAlign: 'left' }}>
                 <th style={{ padding: '8px 12px', color: '#475569', whiteSpace: 'nowrap' }}>Silver Entity</th>
                 <th style={{ padding: '8px 12px', color: '#475569', whiteSpace: 'nowrap' }}>dbt Data Quality</th>
-                <th style={{ padding: '8px 12px', color: '#475569', whiteSpace: 'nowrap' }}>BigQuery Console</th>
-                <th style={{ padding: '8px 12px', color: '#475569', whiteSpace: 'nowrap' }}>GCP Knowledge Catalog</th>
+                <th style={{ padding: '8px 12px', color: '#475569', whiteSpace: 'nowrap' }}>Databricks Explorer</th>
+                <th style={{ padding: '8px 12px', color: '#475569', whiteSpace: 'nowrap' }}>Unity Catalog</th>
               </tr>
             </thead>
             <tbody>
@@ -274,7 +274,7 @@ function SilverPublishReportCard({ view }) {
                         display: 'inline-block',
                       }}
                     >
-                      View in BigQuery ↗
+                      View in Databricks ↗
                     </a>
                   </td>
                   <td style={{ padding: '9px 12px', whiteSpace: 'nowrap' }}>
@@ -330,7 +330,7 @@ function SilverPublishReportCard({ view }) {
           <div style={{ marginTop: '14px' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px', flexWrap: 'wrap', gap: '6px' }}>
               <div style={{ fontSize: '11.5px', fontWeight: 700, color: '#475569', textTransform: 'uppercase' }}>
-                Live BigQuery Conformed Rows Preview ({ previewTable.rows?.length || 0 } rows)
+                Live Databricks Conformed Rows Preview ({ previewTable.rows?.length || 0 } rows)
               </div>
               <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
                 {Object.keys(actualData).map(fqn => {
@@ -419,6 +419,97 @@ function SilverPublishReportCard({ view }) {
             </div>
           </div>
         )}
+      </div>
+    </div>
+  )
+}
+
+function Conformance360Card({ view }) {
+  if (!view) return null
+  const customers = view.golden_customers || []
+  const sc = view.source_counts || {}
+  const pub = view.publish_report || null
+  const pubTables = pub?.tables || []
+  return (
+    <div style={{ marginTop: '12px', border: '1px solid #cbd5e1', borderRadius: '12px', background: '#ffffff', overflow: 'hidden' }}>
+      <div style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%)', color: '#ffffff', padding: '12px 16px', display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}>
+        <div>
+          <div style={{ fontSize: '14px', fontWeight: 700 }}>4-Source Bronze → Unified Silver Customer 360</div>
+          <div style={{ fontSize: '11.5px', opacity: 0.9 }}>
+            Hogan ({sc.HOGAN || 0}) + AFS ({sc.AFS || 0}) + TSYS ({sc.TSYS || 0}) + ACLS ({sc.ACLS || 0}) = {view.total_bronze_records || 0} Bronze Records → {view.unified_customers || 0} Unified Customers ({view.dedup_ratio_pct || 0}% dedup)
+          </div>
+        </div>
+        <span style={{ background: '#10b981', color: '#fff', fontSize: '11px', fontWeight: 700, padding: '4px 10px', borderRadius: '999px' }}>
+          {view.total_arrangements || 0} Arrangements Linked
+        </span>
+      </div>
+
+      {pub && (
+        <div style={{ padding: '12px 16px', background: '#faf5ff', borderBottom: '1px solid #ede9fe' }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center', marginBottom: pubTables.length ? '10px' : 0 }}>
+            <span style={{ fontSize: '12px', fontWeight: 700, color: '#4c1d95', marginRight: '4px' }}>Databricks Explorer Links:</span>
+            {pub.bigquery_dataset_url && (
+              <a href={pub.bigquery_dataset_url} target="_blank" rel="noopener noreferrer" style={{ background: '#1d4ed8', color: '#fff', fontSize: '11.5px', fontWeight: 600, padding: '5px 10px', borderRadius: '6px', textDecoration: 'none' }}>
+                Open Schema in Databricks ↗
+              </a>
+            )}
+            {pub.knowledge_catalog_data_product_url && (
+              <a href={pub.knowledge_catalog_data_product_url} target="_blank" rel="noopener noreferrer" style={{ background: '#6d28d9', color: '#fff', fontSize: '11.5px', fontWeight: 600, padding: '5px 10px', borderRadius: '6px', textDecoration: 'none' }}>
+                Open Data Product in Knowledge Catalog ↗
+              </a>
+            )}
+            {pub.knowledge_catalog_glossary_url && (
+              <a href={pub.knowledge_catalog_glossary_url} target="_blank" rel="noopener noreferrer" style={{ background: '#0f766e', color: '#fff', fontSize: '11.5px', fontWeight: 600, padding: '5px 10px', borderRadius: '6px', textDecoration: 'none' }}>
+                Open Business Glossary ↗
+              </a>
+            )}
+          </div>
+          {pubTables.length > 0 && (
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+              {pubTables.map((t, i) => (
+                <div key={t.table_name || i} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: '#ffffff', border: '1px solid #ddd6fe', borderRadius: '6px', padding: '4px 8px', fontSize: '11.5px' }}>
+                  <code style={{ fontWeight: 700, color: '#1e293b' }}>{t.table_name}</code>
+                  <a href={t.bigquery_url} target="_blank" rel="noopener noreferrer" style={{ color: '#1d4ed8', fontWeight: 600, textDecoration: 'none' }}>BigQuery ↗</a>
+                  <span style={{ color: '#cbd5e1' }}>|</span>
+                  <a href={t.knowledge_catalog_url} target="_blank" rel="noopener noreferrer" style={{ color: '#6d28d9', fontWeight: 600, textDecoration: 'none' }}>Knowledge Catalog ↗</a>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      <div style={{ padding: '12px 16px', overflowX: 'auto' }}>
+        <table style={{ width: 'max-content', minWidth: '100%', tableLayout: 'auto', borderCollapse: 'collapse', fontSize: '12px', margin: 0 }}>
+          <thead>
+            <tr style={{ background: '#f8fafc', borderBottom: '2px solid #e2e8f0', textAlign: 'left' }}>
+              <th style={{ padding: '8px 12px', whiteSpace: 'nowrap' }}>Customer Key</th>
+              <th style={{ padding: '8px 12px', whiteSpace: 'nowrap' }}>Golden Legal Name</th>
+              <th style={{ padding: '8px 12px', whiteSpace: 'nowrap' }}>Contributing Sources</th>
+              <th style={{ padding: '8px 12px', whiteSpace: 'nowrap' }}>Linked Banking Arrangements (Deposit / Card / Loans)</th>
+            </tr>
+          </thead>
+          <tbody>
+            {customers.map(c => (
+              <tr key={c.customer_key} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                <td style={{ padding: '8px 12px', fontFamily: 'monospace', fontWeight: 600, whiteSpace: 'nowrap' }}>{c.customer_key}</td>
+                <td style={{ padding: '8px 12px', fontWeight: 600, whiteSpace: 'nowrap' }}>{c.legal_name}</td>
+                <td style={{ padding: '8px 12px', whiteSpace: 'nowrap' }}>
+                  {(c.contributing_sources || []).map(s => (
+                    <span key={s} style={{ display: 'inline-block', background: '#eff6ff', color: '#1d4ed8', border: '1px solid #bfdbfe', borderRadius: '4px', padding: '1px 6px', marginRight: '4px', fontSize: '11px', fontWeight: 600 }}>{s}</span>
+                  ))}
+                </td>
+                <td style={{ padding: '8px 12px', whiteSpace: 'nowrap' }}>
+                  {(c.arrangements || []).map(a => (
+                    <span key={a.arrangement_key} style={{ display: 'inline-block', background: '#ecfdf5', color: '#047857', border: '1px solid #a7f3d0', borderRadius: '4px', padding: '1px 6px', marginRight: '4px', fontSize: '11px', fontWeight: 600 }}>
+                      {a.arrangement_type} ({a.source_account_id})
+                    </span>
+                  ))}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
   )
@@ -741,13 +832,14 @@ export default function MessageRow({
     return () => ro.disconnect()
   }, [isUser, msg.loading, msg.text, msg.discovery_view, msg.glossary, msg.classification_view, msg.challenger_view, msg.sttm_view, msg.silver_transform_view, msg.entity_selector_view, msg.publish_view])
 
-  const showChevron      = tooLong && !isUser && !msg.loading && !msg.entity_selector_view && !msg.data_contract_view && !msg.glossary && !msg.publish_view
+  const showChevron      = tooLong && !isUser && !msg.loading && !msg.entity_selector_view && !msg.data_contract_view && !msg.glossary && !msg.publish_view && !msg.conformance_view
   const isGlossary       = !isUser && !!msg.glossary
   const isClassification = !isUser && !!msg.classification_view
   const isChallenger     = !isUser && !!msg.challenger_view
   const isSttm           = !isUser && !!msg.sttm_view
   const isSilverXform    = !isUser && !!msg.silver_transform_view
   const isPublishView    = !isUser && !!msg.publish_view
+  const isConformance    = !isUser && !!msg.conformance_view
 
   const avatarInitials = isUser ? 'SM' : agentInitials(msg.agent)
   const avatarClass    = isUser ? 'user' : agentAvatarClass(msg.agent)
@@ -770,7 +862,7 @@ export default function MessageRow({
               `bubble ${msg.role}` +
               (msg.loading ? ' thinking' : '') +
               (msg.discovery_view ? ' bubble-discovery' : '') +
-              (isPublishView ? ' bubble-wide' : '') +
+              (isPublishView || isConformance ? ' bubble-wide' : '') +
               (isGlossary ? ' bubble-glossary' : '') +
               (isClassification ? ' bubble-classification' : '') +
               (isChallenger ? ' bubble-challenger' : '') +
@@ -783,6 +875,15 @@ export default function MessageRow({
               msg.text
             ) : msg.discovery_view ? (
               <DiscoveryResultCard view={msg.discovery_view} />
+            ) : isConformance ? (
+              <>
+                {msg.text && (
+                  <ReactMarkdown remarkPlugins={[remarkGfm]} components={MD_COMPONENTS}>
+                    {wrapInfoSections(cleanAgentText(msg.text))}
+                  </ReactMarkdown>
+                )}
+                <Conformance360Card view={msg.conformance_view} />
+              </>
             ) : isPublishView ? (
               <>
                 {msg.text && (

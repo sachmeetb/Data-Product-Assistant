@@ -96,8 +96,8 @@ async def run(
                 for r in get_validation_rules().get("global_rules", [])
             ],
         },
-        "gcp_project_id": os.environ.get("GCP_PROJECT_ID", "eogwapq-agbg-internal-data-mig"),
-        "silver_dataset": os.environ.get("BQ_SILVER_DATASET", "banking_silver"),
+        "databricks_catalog": os.environ.get("DATABRICKS_CATALOG", "main"),
+        "silver_schema": os.environ.get("DATABRICKS_SILVER_SCHEMA", "banking_silver"),
 
         # ── Column composition rules ──────────────────────────────────────────
         "column_composition_rules": [
@@ -110,6 +110,7 @@ async def run(
             "7. NEVER use FLOAT64 for monetary amounts — always NUMERIC.",
             "8. All technical-metadata columns (surrogate_key through is_enriched) are REQUIRED or NULLABLE as specified by the block — do not change their modes.",
             "9. Every column description should cite the common block it came from (e.g. 'From money block. ISO 20022: ActiveCurrencyAndAmount.').",
+            "10. When conforming across multiple heterogeneous Bronze sources (e.g. Hogan, AFS, TSYS, ACLS), include contributing_sources ARRAY<STRING>, survivorship_source STRING, and ensure all originating source keys are linked to an auditable cross-reference entity.",
         ],
     }
 

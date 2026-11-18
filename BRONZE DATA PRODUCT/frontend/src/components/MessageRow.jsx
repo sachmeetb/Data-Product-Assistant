@@ -23,6 +23,19 @@ function _hasLanguageTaggedCode(children) {
 }
 
 const MD_COMPONENTS = {
+  a({ href, children, ...props }) {
+    return (
+      <a
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer"
+        style={{ color: '#9a3412', fontWeight: 600, textDecoration: 'underline' }}
+        {...props}
+      >
+        {children}
+      </a>
+    )
+  },
   code({ inline, className, children, ...props }) {
     const match = /language-(\w+)/.exec(className || '')
     const lang = match ? match[1] : ''

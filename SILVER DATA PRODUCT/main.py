@@ -60,7 +60,9 @@ log = logging.getLogger(__name__)
 
 def _check_env() -> list[str]:
     """Return list of missing/empty required environment variables."""
-    required = ["GCP_PROJECT_ID", "GEMINI_MODEL"]
+    if os.environ.get("AZURE_OPENAI_ENDPOINT", "").strip():
+        return []
+    required = ["DATABRICKS_HOST"]
     missing = []
     for var in required:
         val = os.environ.get(var, "").strip()
@@ -73,22 +75,19 @@ def cmd_validate_env():
     """Print environment configuration status."""
     print("\n=== BFSI-Silver-Agent — Environment Validation ===\n")
     checks = {
-        "GCP_PROJECT_ID":      os.environ.get("GCP_PROJECT_ID", ""),
-        "GCP_LOCATION":        os.environ.get("GCP_LOCATION", ""),
-        "GEMINI_MODEL":        os.environ.get("GEMINI_MODEL", ""),
-        "BQ_SILVER_DATASET":   os.environ.get("BQ_SILVER_DATASET", ""),
-        "BQ_GOLD_DATASET":     os.environ.get("BQ_GOLD_DATASET", ""),
-        "BQ_LOCATION":         os.environ.get("BQ_LOCATION", ""),
-        "BQ_PUBLISHER_MODE":   os.environ.get("BQ_PUBLISHER_MODE", "auto"),
-        "GCP_CREDENTIALS_PATH": os.environ.get("GCP_CREDENTIALS_PATH", ""),
-        "AGENT_LOG_LEVEL":     os.environ.get("AGENT_LOG_LEVEL", ""),
+        "DATABRICKS_HOST":           os.environ.get("DATABRICKS_HOST", ""),
+        "DATABRICKS_WAREHOUSE_ID":   os.environ.get("DATABRICKS_WAREHOUSE_ID", ""),
+        "DATABRICKS_CATALOG":        os.environ.get("DATABRICKS_CATALOG", "main"),
+        "DATABRICKS_SILVER_SCHEMA":  os.environ.get("DATABRICKS_SILVER_SCHEMA", "banking_silver"),
+        "DATABRICKS_GOLD_SCHEMA":    os.environ.get("DATABRICKS_GOLD_SCHEMA", "banking_gold"),
+        "DATABRICKS_LLM_MODEL":      os.environ.get("DATABRICKS_LLM_MODEL", ""),
+        "DATABRICKS_PUBLISHER_MODE": os.environ.get("DATABRICKS_PUBLISHER_MODE", "auto"),
+        "AZURE_OPENAI_ENDPOINT":     os.environ.get("AZURE_OPENAI_ENDPOINT", ""),
+        "AGENT_LOG_LEVEL":           os.environ.get("AGENT_LOG_LEVEL", ""),
     }
     for key, val in checks.items():
         status = "[OK]" if val and not val.startswith("your-") else "[X] NOT SET"
         display = val if val else "(not set)"
-        # mask path-like values
-        if "PATH" in key and val:
-            display = f"...{val[-30:]}" if len(val) > 30 else val
         print(f"  {status}  {key:35s} = {display}")
 
     missing = _check_env()
@@ -97,17 +96,6 @@ def cmd_validate_env():
         print(f"  Copy .env.example to .env and fill in the values.")
     else:
         print("\n[OK] All required environment variables are set.")
-
-    # Check ADC
-    creds_path = os.environ.get("GCP_CREDENTIALS_PATH", "") or os.environ.get("GOOGLE_APPLICATION_CREDENTIALS", "")
-    if creds_path and Path(creds_path).is_file():
-        print(f"\n[OK] Service account key found at: {creds_path}")
-    else:
-        adc_path = Path.home() / ".config" / "gcloud" / "application_default_credentials.json"
-        if adc_path.is_file():
-            print(f"\n[OK] Application Default Credentials found at: {adc_path}")
-        else:
-            print(f"\n[!] No credentials found. Run: gcloud auth application-default login")
 
 
 def cmd_server():
@@ -118,14 +106,14 @@ def cmd_server():
     print(f"\n=== BFSI-Silver-Agent Server ===")
     print(f"  Starting on http://{host}:{port}")
     print(f"  Docs: http://localhost:{port}/docs")
-    print(f"  GCP Project: {os.environ.get('GCP_PROJECT_ID', '(not set)')}")
-    print(f"  Gemini Model: {os.environ.get('GEMINI_MODEL', '(not set)')}")
-    print(f"  Publisher Mode: {os.environ.get('BQ_PUBLISHER_MODE', 'auto')}\n")
+    print(f"  Databricks Host: {os.environ.get('DATABRICKS_HOST', '(not set)')}")
+    print(f"  Unity Catalog: {os.environ.get('DATABRICKS_CATALOG', 'main')}.{os.environ.get('DATABRICKS_SILVER_SCHEMA', 'banking_silver')}")
+    print(f"  Publisher Mode: {os.environ.get('DATABRICKS_PUBLISHER_MODE', 'auto')}\n")
 
     missing = _check_env()
     if missing:
         print(f"WARNING: Missing env vars: {missing}")
-        print("Set GCP_PROJECT_ID and GEMINI_MODEL in .env before making API calls.\n")
+        print("Set DATABRICKS_HOST (or AZURE_OPENAI_ENDPOINT) in .env before making API calls.\n")
 
     uvicorn.run(
         "server:app",

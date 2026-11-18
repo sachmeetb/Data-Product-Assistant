@@ -335,6 +335,97 @@
           ]
         }
       ]
+    },
+    "afs": {
+      "name": "AFS Commercial Lending",
+      "system_type": "Commercial Lending & Obligation Servicing Core",
+      "technology_stack": "Automated Financial Systems (AFSVision / Level III), Relational DB2/Oracle",
+      "default_encoding": "UTF-8",
+      "data_structure": "STRUCTURED",
+      "ingestion_cadence": "BATCH_SCHEDULED",
+      "file_format": "CSV_OR_PARQUET",
+      "associated_standards": ["BIAN Commercial Loan", "FIBO Credit Facilities", "LSTA Syndicated Lending"],
+      "default_retention_years": 7,
+      "regulatory_frameworks": ["Basel III", "CCAR", "SOX", "FATCA"],
+      "primary_entities": [
+        {
+          "table_name": "brz_afs_borrower",
+          "feed_name": "BORROWER-MASTER (Commercial Borrowers & Facilities)",
+          "description": "AFS commercial loan borrowers, corporate guarantor details, obligations, and risk classifications.",
+          "sample_raw_columns": [
+            {"name": "BORROWER_ID", "type": "STRING", "is_pk": true, "description": "AFS Unique Commercial Borrower ID"},
+            {"name": "LEGAL_ENTITY_NAME", "type": "STRING", "is_pk": false, "description": "Registered Corporate Legal Name"},
+            {"name": "DBA_NAME", "type": "STRING", "is_pk": false, "description": "Doing Business As trade name"},
+            {"name": "TAX_EIN", "type": "STRING", "is_pk": false, "is_pii": true, "description": "Federal Employer Identification Number"},
+            {"name": "PRIMARY_CONTACT_NAME", "type": "STRING", "is_pk": false, "is_pii": true, "description": "Primary Corporate Officer / Guarantor Name"},
+            {"name": "CONTACT_PHONE", "type": "STRING", "is_pk": false, "is_pii": true, "description": "Primary Business Phone"},
+            {"name": "CONTACT_EMAIL", "type": "STRING", "is_pk": false, "is_pii": true, "description": "Primary Corporate Email"},
+            {"name": "BORROWER_CLASS", "type": "STRING", "is_pk": false, "description": "Commercial Classification (COM, SME)"},
+            {"name": "FACILITY_LIMIT", "type": "NUMERIC", "is_pk": false, "description": "Total Approved Credit Facility Limit"},
+            {"name": "STATUS", "type": "STRING", "is_pk": false, "description": "Borrower Facility Status (A=Active, L=Liquidated)"}
+          ]
+        }
+      ]
+    },
+    "tsys": {
+      "name": "TSYS / FDR Card Servicing",
+      "system_type": "Revolving Credit Card Processing & Account Servicing",
+      "technology_stack": "Total System Services (TS2) / First Data, Batch Flat File & REST API",
+      "default_encoding": "UTF-8",
+      "data_structure": "STRUCTURED",
+      "ingestion_cadence": "DAILY_BATCH",
+      "file_format": "CSV_OR_FIXED_WIDTH",
+      "associated_standards": ["ISO 8583", "PCI-DSS 4.0", "BIAN Card Servicing"],
+      "default_retention_years": 7,
+      "regulatory_frameworks": ["PCI-DSS", "FCRA", "CARD Act", "CFPB"],
+      "primary_entities": [
+        {
+          "table_name": "brz_tsys_cardholder",
+          "feed_name": "CARDHOLDER-BASE (Card Account & Demographic Feed)",
+          "description": "TSYS revolving credit cardholder demographic and account servicing master.",
+          "sample_raw_columns": [
+            {"name": "cardholder_id", "type": "STRING", "is_pk": true, "description": "TSYS Cardholder Reference Identifier"},
+            {"name": "embossed_name", "type": "STRING", "is_pk": false, "is_pii": true, "description": "Embossed Name on Plastic"},
+            {"name": "tax_ssn", "type": "STRING", "is_pk": false, "is_pii": true, "description": "Cardholder Social Security Number"},
+            {"name": "mobile_phone", "type": "STRING", "is_pk": false, "is_pii": true, "description": "Cardholder Mobile Phone for SMS Alerts"},
+            {"name": "billing_address_1", "type": "STRING", "is_pk": false, "is_pii": true, "description": "Billing Street Address Line 1"},
+            {"name": "billing_postal_code", "type": "STRING", "is_pk": false, "is_pii": true, "description": "Billing Postal Code"},
+            {"name": "card_type", "type": "STRING", "is_pk": false, "description": "Card Program Type (RETAIL, BIZ)"},
+            {"name": "card_status", "type": "STRING", "is_pk": false, "description": "Card Status (OPEN, RESTRICTED, CLOSED)"},
+            {"name": "credit_line", "type": "NUMERIC", "is_pk": false, "description": "Approved Revolving Credit Line"}
+          ]
+        }
+      ]
+    },
+    "acls": {
+      "name": "ACLS Consumer Loans",
+      "system_type": "Automated Consumer Loan System & Installment Servicing",
+      "technology_stack": "Consumer Lending Core, Relational SQL / Delimited Extract",
+      "default_encoding": "UTF-8",
+      "data_structure": "STRUCTURED",
+      "ingestion_cadence": "DAILY_BATCH",
+      "file_format": "CSV",
+      "associated_standards": ["BIAN Consumer Loan", "MISMO Lending Standards", "ISO 20022"],
+      "default_retention_years": 7,
+      "regulatory_frameworks": ["TILA / RESPA", "CFPB", "FCRA", "ECOA"],
+      "primary_entities": [
+        {
+          "table_name": "brz_acls_applicant",
+          "feed_name": "APPLICANT-MASTER (Consumer Loan Applicant Master)",
+          "description": "ACLS retail installment loan applicants, mortgage demographics, and servicing notes.",
+          "sample_raw_columns": [
+            {"name": "APPLICANT_ID", "type": "STRING", "is_pk": true, "description": "Unique Consumer Loan Applicant ID"},
+            {"name": "FIRST_NAME", "type": "STRING", "is_pk": false, "is_pii": true, "description": "Applicant Legal First Name"},
+            {"name": "LAST_NAME", "type": "STRING", "is_pk": false, "is_pii": true, "description": "Applicant Legal Last Name"},
+            {"name": "DOB", "type": "STRING", "is_pk": false, "is_pii": true, "description": "Date of Birth (MM/DD/YYYY)"},
+            {"name": "NATIONAL_ID", "type": "STRING", "is_pk": false, "is_pii": true, "description": "National Identifier / SSN"},
+            {"name": "CELL_PHONE", "type": "STRING", "is_pk": false, "is_pii": true, "description": "Primary Contact Cell Phone"},
+            {"name": "EMAIL", "type": "STRING", "is_pk": false, "is_pii": true, "description": "Verified Contact Email Address"},
+            {"name": "APP_STATUS", "type": "STRING", "is_pk": false, "description": "Loan Status (A=Active, D=Delinquent, P=Paid in Full)"},
+            {"name": "ORIGINATION_AMT", "type": "NUMERIC", "is_pk": false, "description": "Original Loan Principal Amount"}
+          ]
+        }
+      ]
     }
   }
 }

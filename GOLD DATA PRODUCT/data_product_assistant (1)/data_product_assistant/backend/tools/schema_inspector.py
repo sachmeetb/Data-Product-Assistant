@@ -22,63 +22,38 @@ from dotenv import load_dotenv
 ROOT_DIR = Path(__file__).parent.parent
 load_dotenv(ROOT_DIR / ".env")
 
-_BQ_PROJECT  = os.environ.get("BQ_PROJECT") or os.environ.get("GOOGLE_CLOUD_PROJECT", "")
-_BQ_LOCATION = os.environ.get("BQ_LOCATION", "us-central1")
-
-
-def _parse_bq_schema(bq_table) -> list[dict]:
-    """Convert a BigQuery Table schema to a list of {name, data_type} dicts."""
-    return [
-        {"name": field.name, "data_type": field.field_type}
-        for field in (bq_table.schema or [])
-    ]
+_UC_CATALOG = os.environ.get("DATABRICKS_CATALOG", "main")
 
 
 def inspect_tables(table_names: list[str]) -> dict[str, dict]:
     """
-    Return the current schema for each fully-qualified BigQuery target table.
-
-    Args:
-        table_names: List of three-level names, e.g.
-                     ["my-project.silver.silver_sales", "my-project.gold.gold_sales"]
-
-    Returns:
-        {
-            "my-project.silver.silver_sales": {
-                "exists": True,
-                "columns": [
-                    {"name": "customer_id", "data_type": "STRING"},
-                    {"name": "sales",       "data_type": "NUMERIC"},
-                ]
-            },
-            "my-project.gold.gold_sales": {
-                "exists": False,
-                "columns": []
-            }
-        }
+    Return the current schema for each fully-qualified Unity Catalog target table.
     """
     if not table_names:
         return {}
 
-    if not _BQ_PROJECT:
-        return {t: {"exists": False, "columns": []} for t in table_names}
-
-    try:
-        from google.cloud import bigquery  # noqa: PLC0415
-        from google.cloud.exceptions import NotFound  # noqa: PLC0415
-        client = bigquery.Client(project=_BQ_PROJECT, location=_BQ_LOCATION)
-    except Exception:
+    if not os.environ.get("DATABRICKS_HOST"):
         return {t: {"exists": False, "columns": []} for t in table_names}
 
     output: dict[str, dict] = {}
-    for table in table_names:
-        try:
-            bq_table = client.get_table(table.strip("`"))
-            output[table] = {"exists": True, "columns": _parse_bq_schema(bq_table)}
-        except NotFound:
-            output[table] = {"exists": False, "columns": []}
-        except Exception:
-            output[table] = {"exists": False, "columns": []}
+    try:
+        from tools.databricks_auth import get_sql_connection
+        with get_sql_connection(catalog=_UC_CATALOG) as conn, conn.cursor() as cur:
+            for table in table_names:
+                clean = table.strip("`")
+                quoted = ".".join(f"`{p}`" for p in clean.split("."))
+                try:
+                    cur.execute(f"DESCRIBE TABLE {quoted}")
+                    cols = [
+                        {"name": r[0], "data_type": str(r[1]).upper()}
+                        for r in cur.fetchall()
+                        if r[0] and not str(r[0]).startswith("#")
+                    ]
+                    output[table] = {"exists": True, "columns": cols}
+                except Exception:
+                    output[table] = {"exists": False, "columns": []}
+    except Exception:
+        return {t: {"exists": False, "columns": []} for t in table_names}
 
     return output
 

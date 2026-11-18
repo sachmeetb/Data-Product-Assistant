@@ -51,7 +51,7 @@ from agents import (
     spec_generator_agent,
     validator_agent,
 )
-from tools.bigquery_tool import BigQueryPublisher
+from tools.databricks_tool import DatabricksPublisher
 from tools.knowledge_catalog import KnowledgeCatalogClient
 from tools.datacontract_generator import (
     generate_data_contract_dict,
@@ -84,7 +84,7 @@ app = FastAPI(
     title="Bronze Agent API",
     description=(
         "Agentic banking Bronze-layer schema generator powered by "
-        "Google ADK + Vertex AI Gemini + BigQuery"
+        "Azure Databricks Model Serving + Unity Catalog + Delta Lake"
     ),
     version="1.0.0",
     docs_url="/docs",
@@ -144,8 +144,9 @@ async def health_check():
         "status": "ok",
         "service": "Bronze-Agent",
         "timestamp": datetime.utcnow().isoformat() + "Z",
-        "gcp_project": os.environ.get("GCP_PROJECT_ID", "(not set)"),
-        "gemini_model": os.environ.get("GEMINI_MODEL", "(not set)"),
+        "databricks_host": os.environ.get("DATABRICKS_HOST", "(not set)"),
+        "unity_catalog": f"{os.environ.get('DATABRICKS_CATALOG', 'main')}.{os.environ.get('DATABRICKS_BRONZE_SCHEMA', 'banking_bronze')}",
+        "llm_model": os.environ.get("DATABRICKS_LLM_MODEL") or os.environ.get("AZURE_OPENAI_DEPLOYMENT") or "(default)",
     }
 
 
@@ -280,13 +281,13 @@ async def get_contract(session_id: str):
 
 @app.post("/v1/sessions/{session_id}/publish")
 async def publish_session(session_id: str, body: PublishRequest):
-    """Publish the generated DDL to BigQuery."""
+    """Publish the generated DDL to Azure Databricks Unity Catalog."""
     session = _get_session(session_id)
     ddl = session.get("ddl_script", "")
     if not ddl:
         raise HTTPException(status_code=400, detail="No DDL to publish. Run the pipeline first.")
 
-    publisher = BigQueryPublisher(mode=body.mode)
+    publisher = DatabricksPublisher(mode=body.mode)
     report = await asyncio.to_thread(publisher.publish, ddl)
 
     session["publish_report"] = report
@@ -300,61 +301,52 @@ async def publish_session(session_id: str, body: PublishRequest):
 
 class ContractCommitRequest(BaseModel):
     contract: dict = Field(..., description="Data contract object from the UI")
-    session_id: Optional[str] = Field(None, description="Session to pull DDL from for BQ publish")
+    session_id: Optional[str] = Field(None, description="Session to pull DDL from for Databricks publish")
 
 
 @app.post("/v1/data-contract/commit")
 async def commit_data_contract(body: ContractCommitRequest):
-    """Commit a data contract: publish DDL to BigQuery, register in Dataplex Knowledge Catalog.
-
-    Returns kc_url — the direct GCP console link for the registered data product.
-    Returns bq_url — the BigQuery dataset console link.
-    Bronze tables are registered as a KC data product under the bronze dataset.
-    """
-    project_id = os.environ.get("GCP_PROJECT_ID", "")
-    location = os.environ.get("GCP_LOCATION", "us-central1")
-    bq_dataset = os.environ.get("BQ_BRONZE_DATASET", "banking_bronze")
+    """Commit a data contract: publish DDL to Azure Databricks Unity Catalog and register governance metadata."""
+    catalog = os.environ.get("DATABRICKS_CATALOG", "main")
+    bronze_schema = os.environ.get("DATABRICKS_BRONZE_SCHEMA", "banking_bronze")
+    db_host = (os.environ.get("DATABRICKS_HOST", "") or "").strip().rstrip("/")
+    if db_host and not db_host.startswith("http"):
+        db_host = f"https://{db_host}"
 
     contract = body.contract
     info = contract.get("info", {})
     contract_id = contract.get("id", "urn:datacontract:banking_bronze:unknown")
 
-    # Derive a Dataplex-compatible id: lowercase, hyphens, max 63 chars
     kc_id = re.sub(r"[^a-z0-9]+", "-", contract_id.lower()).strip("-")[:63].rstrip("-")
 
     result: dict = {
         "status": "committed",
         "contract_id": contract_id,
-        "bq_result": None,
+        "databricks_result": None,
         "kc_result": None,
         "kc_url": None,
-        "bq_url": None,
+        "databricks_url": None,
     }
 
-    # 1. Publish DDL to BigQuery when the session has one
+    # 1. Publish DDL to Databricks when the session has one
     if body.session_id:
         session = store.get(body.session_id)
         if session and session.get("ddl_script"):
-            publisher = BigQueryPublisher(mode="live")
-            bq_report = await asyncio.to_thread(publisher.publish, session["ddl_script"])
-            result["bq_result"] = bq_report
-            if bq_report.get("dataset_id"):
-                bq_dataset = bq_report["dataset_id"]
+            publisher = DatabricksPublisher(mode="live")
+            db_report = await asyncio.to_thread(publisher.publish, session["ddl_script"])
+            result["databricks_result"] = db_report
 
-    effective_project = project_id or os.environ.get("BQ_PROJECT") or "eogwapq-agbg-internal-data-mig"
-    result["bq_url"] = (
-        f"https://console.cloud.google.com/bigquery"
-        f"?project={effective_project}&p={effective_project}&d={bq_dataset}&page=dataset"
-    )
+    explorer_base = db_host or "https://adb-workspace.azuredatabricks.net"
+    result["databricks_url"] = f"{explorer_base}/explore/data/{catalog}/{bronze_schema}"
 
-    # 2. Register Data Product + Data Assets + Business Glossary in Dataplex Knowledge Catalog
+    # 2. Enrich Unity Catalog tables & register governance metadata
     try:
-        kc = KnowledgeCatalogClient(project_id=effective_project, location=location, dataset_id=bq_dataset)
+        kc = KnowledgeCatalogClient(catalog=catalog, schema_name=bronze_schema, host=db_host)
         models = contract.get("models", {})
         table_names = []
         glossary_terms = []
         for table_name, model_def in list(models.items())[:50]:
-            physical = model_def.get("physicalName", f"{bq_dataset}.{table_name}")
+            physical = model_def.get("physicalName", f"{bronze_schema}.{table_name}")
             tbl = physical.split(".")[-1]
             table_names.append(tbl)
             glossary_terms.append({
@@ -362,8 +354,8 @@ async def commit_data_contract(body: ContractCommitRequest):
                 "description": model_def.get("description") or f"Bronze raw table {tbl}",
             })
             await asyncio.to_thread(
-                kc.enrich_bigquery_table,
-                bq_dataset,
+                kc.enrich_table,
+                bronze_schema,
                 tbl,
                 model_def.get("description") or f"Bronze raw table {tbl}",
                 info.get("domain") or "bronze_banking",
@@ -371,7 +363,7 @@ async def commit_data_contract(body: ContractCommitRequest):
 
         dp_res = await asyncio.to_thread(
             kc.register_data_product,
-            bq_dataset,
+            bronze_schema,
             kc_id,
             info.get("title", "Bronze Data Contract"),
             info.get("description", ""),
@@ -485,6 +477,7 @@ class ChatRequest(BaseModel):
     message: str = Field("", description="User message text")
     action: Optional[str] = Field(None, description="Action override")
     file_ref_id: Optional[str] = Field(None, description="Uploaded file reference ID")
+    file_ref_ids: Optional[list[str]] = Field(None, description="Multiple uploaded file reference IDs")
 
 
 @app.post("/upload")
@@ -659,27 +652,43 @@ async def _handle_chat(body: ChatRequest, session_id: str):
     action = body.action
     session["turns"] = session.get("turns", 0) + 1
 
-    # Ingest uploaded file if referenced or mentioned
-    file_info = None
-    if body.file_ref_id:
-        file_info = _get_file_info(body.file_ref_id, filename_hint=session.get("uploaded_file_name", ""))
+    # Ingest one or multiple uploaded files if referenced or mentioned
+    ref_ids: list[str] = []
+    if body.file_ref_ids:
+        ref_ids.extend([r for r in body.file_ref_ids if r])
+    if body.file_ref_id and body.file_ref_id not in ref_ids:
+        ref_ids.append(body.file_ref_id)
 
-    # If not found by ID, inspect user_msg for any sample filename
-    if not file_info and user_msg:
+    extracted_parts: list[str] = []
+    uploaded_names: list[str] = []
+    for rid in ref_ids:
+        fi = _get_file_info(rid, filename_hint=session.get("uploaded_file_name", ""))
+        if fi:
+            txt = _extract_text_from_file_info(fi)
+            fname = fi.get("name", "uploaded_file")
+            uploaded_names.append(fname)
+            extracted_parts.append(f"=== Source File: {fname} ===\n{txt}")
+
+    # Fallback: inspect user_msg for any sample filename
+    if not extracted_parts and user_msg:
         for s_file in (_ROOT / "samples").glob("*.*"):
             if s_file.name.lower() in user_msg.lower():
-                file_info = _get_file_info(s_file.name, s_file.name)
+                fi = _get_file_info(s_file.name, s_file.name)
+                if fi:
+                    uploaded_names.append(fi.get("name", s_file.name))
+                    extracted_parts.append(f"=== Source File: {fi.get('name', s_file.name)} ===\n{_extract_text_from_file_info(fi)}")
                 break
 
-    if file_info:
-        extracted_text = _extract_text_from_file_info(file_info)
-        session["uploaded_file_id"] = file_info.get("id") or body.file_ref_id
-        session["uploaded_file_name"] = file_info.get("name", "uploaded_file")
-        session["uploaded_file_text"] = extracted_text
-        if not user_msg or body.action == "use_file" or "use this file" in user_msg.lower():
-            user_msg = f"User uploaded requirements file '{file_info.get('name')}':\n\n{extracted_text}"
+    if extracted_parts:
+        combined_text = "\n\n".join(extracted_parts)
+        session["uploaded_file_id"] = ref_ids[0] if ref_ids else None
+        session["uploaded_file_ids"] = ref_ids
+        session["uploaded_file_name"] = ", ".join(uploaded_names)
+        session["uploaded_file_text"] = combined_text
+        if not user_msg or body.action == "use_file" or "use this file" in user_msg.lower() or "use uploaded file" in user_msg.lower():
+            user_msg = f"User uploaded {len(uploaded_names)} file(s) ({', '.join(uploaded_names)}):\n\n{combined_text}"
         else:
-            user_msg = f"{user_msg}\n\nDocument '{file_info.get('name')}':\n\n{extracted_text}"
+            user_msg = f"{user_msg}\n\nUploaded Documents ({', '.join(uploaded_names)}):\n\n{combined_text}"
 
     current_step = session.get("step", "bank_profile")
 
@@ -687,7 +696,92 @@ async def _handle_chat(body: ChatRequest, session_id: str):
         current_step = "requirement"
         session["step"] = "requirement"
 
-    if action == "publish" or user_msg.lower() == "publish to bigquery":
+    if "design bronze data product" in user_msg.lower() or "switch to standard bronze flow" in user_msg.lower():
+        session["step"] = "bank_profile"
+        store.set(session_id, session)
+        return {
+            "session_id": session_id,
+            "current_step": "initial",
+            "messages": [{
+                "agent": "Bronze Agent",
+                "text": (
+                    "Switched to the **Standard Bronze Data Product Design Flow**. "
+                    "Please describe your institution & incoming data sources (e.g., Hogan Mainframe, SWIFT, SAP ERP, Kafka streams), "
+                    "or attach an Excel/JSON/Word requirements file."
+                ),
+                "chips": ["Hogan Core Banking (Mainframe)", "SWIFT & Faster Payments", "Land 4-Source Banking Data"],
+                "files": [],
+            }],
+            "chips": ["Hogan Core Banking (Mainframe)", "SWIFT & Faster Payments", "Land 4-Source Banking Data"],
+        }
+
+    # Step 1 of 4-Source Landing: prompt user to upload their CSV/Excel files (or use sample files)
+    if (action == "land_4_sources" or "land 4-source" in user_msg.lower()) and not ref_ids:
+        session["step"] = "awaiting_4_source_upload"
+        store.set(session_id, session)
+        return {
+            "session_id": session_id,
+            "current_step": "awaiting_4_source_upload",
+            "messages": [{
+                "agent": "Bronze Agent",
+                "text": (
+                    "📤 **Upload Your 4-Source Banking Files (CSV or Excel `.xlsx`/`.xls`)**\n\n"
+                    "Please use the **📎 attachment button** below to select and upload one or multiple CSV / Excel files for:\n"
+                    "1. **Card** (e.g. `brz_tsys_cardholder.csv` — `cardholder_id`, `embossed_name`, `tax_ssn`, `mobile_phone`, `card_type`, `credit_line`)\n"
+                    "2. **Deposit** (e.g. `brz_hogan_ci_customer.csv` — `CI_CUST_NUM`, `CI_LEGAL_NAME`, `CI_TAX_ID`, `CI_BIRTH_DT`, `CI_PHONE`, `CI_POST_CODE`)\n"
+                    "3. **Commercial Loan** (e.g. `brz_afs_borrower.csv` — `BORROWER_ID`, `LEGAL_ENTITY_NAME`, `TAX_EIN`, `PRIMARY_CONTACT_NAME`, `CONTACT_PHONE`, `FACILITY_LIMIT`)\n"
+                    "4. **Retail Loan** (e.g. `brz_acls_applicant.csv` — `APPLICANT_ID`, `FIRST_NAME`, `LAST_NAME`, `DOB`, `NATIONAL_ID`, `CELL_PHONE`, `EMAIL`, `LOAN_PURPOSE`)\n\n"
+                    "Once uploaded, click **Extract & Use** to land them into `banking_bronze` and sync with **GCP Knowledge Catalog**, "
+                    "or click **Use Sample 4-Source Files** below to load the built-in sample datasets."
+                ),
+                "chips": ["Use Sample 4-Source Files", "Switch to Standard Bronze Flow"],
+                "files": [],
+            }],
+            "chips": ["Use Sample 4-Source Files", "Switch to Standard Bronze Flow"],
+        }
+
+    # Step 2 of 4-Source Landing: execute landing from uploaded files OR sample files
+    if (
+        (session.get("step") == "awaiting_4_source_upload" and ref_ids)
+        or "use sample 4-source" in user_msg.lower()
+    ):
+        uploaded_file_objs = [
+            _get_file_info(rid, filename_hint=session.get("uploaded_file_name", ""))
+            for rid in ref_ids
+        ] if ref_ids else None
+        if uploaded_file_objs:
+            uploaded_file_objs = [f for f in uploaded_file_objs if f]
+        landed = await asyncio.to_thread(_land_4_sources_to_bronze, None, uploaded_file_objs or None)
+        session["landed_4_sources"] = landed
+        session["step"] = "bronze_landed"
+        store.set(session_id, session)
+        rows_md = "\n".join(
+            f"| `{t['source_system']}` | `{t['fqn']}` | {t['row_count']} | {len(t['columns'])} cols | [Unity Catalog ↗]({t.get('databricks_url', t.get('bigquery_url', '#'))}) |"
+            for t in landed["tables"]
+        )
+        dp = landed.get("knowledge_catalog_data_product") or {}
+        gl = landed.get("knowledge_catalog_glossary") or {}
+        source_label = "Uploaded Files" if uploaded_file_objs else "Built-in Sample Datasets"
+        msg = (
+            f"✅ **Landed {len(landed['tables'])} Banking Source Table(s) into `{landed['catalog']}.{landed['schema_name']}`** *(from {source_label})*\n\n"
+            f"| Source System | Unity Catalog Bronze Table | Rows | Schema | Explorer |\n"
+            f"| :--- | :--- | ---: | ---: | :--- |\n"
+            f"{rows_md}\n\n"
+            f"- **Total Bronze Records Landed**: `{landed['total_rows']}`\n"
+        )
+        if dp.get("ok"):
+            msg += f"- **Unity Catalog Data Product**: `{dp.get('data_product_id')}` ({dp.get('assets_registered', 0)} assets) — [Open Catalog Explorer ↗]({dp.get('knowledge_catalog_url')})\n"
+        if gl.get("ok"):
+            msg += f"- **Unity Catalog Glossary**: `{gl.get('glossary_id')}` ({gl.get('terms_synced', 0)} terms) — [Open Catalog Explorer ↗]({gl.get('glossary_url')})\n"
+        msg += "\n**Next Step**: Open **Silver Data Product Assistant** and click **Map Bronze → Silver Customer (4-to-1 STTM)** to discover these Bronze tables and build the multi-source STTM."
+        return {
+            "session_id": session_id,
+            "current_step": "bronze_landed",
+            "messages": [{"agent": "Bronze Agent", "text": msg, "chips": ["Land 4-Source Banking Data", "Design Bronze Data Product (Standard Flow)"], "files": []}],
+            "chips": ["Land 4-Source Banking Data", "Design Bronze Data Product (Standard Flow)"],
+        }
+
+    if action == "publish" or user_msg.lower() in {"publish to databricks", "publish to bigquery"}:
         ddl = session.get("ddl_script", "")
         if not ddl:
             return {
@@ -696,30 +790,30 @@ async def _handle_chat(body: ChatRequest, session_id: str):
                 "messages": [{"agent": "Bronze Agent", "text": "No DDL available to publish. Please design the Bronze schema first."}],
                 "chips": ["Design Bronze Schema"],
             }
-        publisher = BigQueryPublisher(mode="live")
+        publisher = DatabricksPublisher(mode="live")
         report = await asyncio.to_thread(publisher.publish, ddl)
         session["publish_report"] = report
 
-        # Register Data Product, Data Assets & Business Glossary in GCP Knowledge Catalog (Dataplex)
+        # Register Data Product, Data Assets & Business Glossary in Unity Catalog
         contract_dict = session.get("contract_dict") or {}
         c_info = contract_dict.get("info", {}) or {}
-        ds_id = report.get("dataset_id") or os.environ.get("BQ_BRONZE_DATASET", "banking_bronze")
+        schema_name = os.environ.get("DATABRICKS_BRONZE_SCHEMA", "banking_bronze")
         pub_tables = report.get("published_tables") or []
         short_tables = [t.split(".")[-1] for t in pub_tables]
-        kc = KnowledgeCatalogClient(project_id=publisher.project_id, dataset_id=ds_id)
+        kc = KnowledgeCatalogClient(catalog=publisher.catalog, schema_name=schema_name)
         for tbl in short_tables:
             await asyncio.to_thread(
-                kc.enrich_bigquery_table,
-                ds_id,
+                kc.enrich_table,
+                schema_name,
                 tbl,
                 f"Bronze raw landing table {tbl}",
                 session.get("domain") or "bronze_banking",
             )
         dp_res = await asyncio.to_thread(
             kc.register_data_product,
-            ds_id,
-            f"bronze-{ds_id}-{session_id[:6]}",
-            c_info.get("title") or f"Bronze Data Product ({ds_id})",
+            schema_name,
+            f"bronze-{schema_name}-{session_id[:6]}",
+            c_info.get("title") or f"Bronze Data Product ({schema_name})",
             c_info.get("description") or "Raw Bronze Lakehouse tables published via Data Product Assistant.",
             short_tables,
             c_info.get("owner_email") or c_info.get("owner"),
@@ -727,18 +821,18 @@ async def _handle_chat(body: ChatRequest, session_id: str):
         gl_terms = [{"name": t, "description": f"Bronze raw table {t}"} for t in short_tables]
         gl_res = await asyncio.to_thread(
             kc.sync_business_glossary,
-            f"bronze-{ds_id}-glossary",
-            f"Bronze Glossary ({ds_id})",
-            f"Business & Technical Glossary for {ds_id}",
+            f"bronze-{schema_name}-glossary",
+            f"Bronze Glossary ({schema_name})",
+            f"Business & Technical Glossary for {schema_name}",
             gl_terms,
         )
         session["kc_result"] = {**dp_res, "glossary": gl_res}
         store.set(session_id, session)
 
         status_icon = "✅" if report.get("publish_status") == "published" else "ℹ️"
-        msg = f"{status_icon} **BigQuery & Knowledge Catalog Publication Report**\n\n"
+        msg = f"{status_icon} **Azure Databricks & Unity Catalog Publication Report**\n\n"
         msg += f"- **Status**: `{report.get('publish_status', 'published')}`\n"
-        msg += f"- **Project / Dataset**: `{publisher.project_id}.{ds_id}`\n"
+        msg += f"- **Catalog / Schema**: `{publisher.catalog}.{schema_name}`\n"
         if pub_tables:
             msg += f"- **Published Tables**: {', '.join([f'`{t}`' for t in pub_tables])}\n"
         if dp_res.get("ok"):
@@ -1331,3 +1425,196 @@ async def _handle_chat(body: ChatRequest, session_id: str):
         ],
         "chips": chips,
     }
+
+
+# ── 4-Source Banking Landing (Card, Deposit, Commercial Loan, Retail Loan) ────
+
+_FOUR_SOURCE_SPECS = [
+    {
+        "source_system": "TSYS (Card)",
+        "table_name": "brz_tsys_cardholder",
+        "csv_file": "brz_tsys_cardholder.csv",
+        "description": "TSYS / FDR Revolving Credit Card cardholder raw landing table.",
+    },
+    {
+        "source_system": "HOGAN (Deposit)",
+        "table_name": "brz_hogan_ci_customer",
+        "csv_file": "brz_hogan_ci_customer.csv",
+        "description": "Hogan Core Deposits CIS customer raw landing table.",
+    },
+    {
+        "source_system": "AFS (Commercial Loan)",
+        "table_name": "brz_afs_borrower",
+        "csv_file": "brz_afs_borrower.csv",
+        "description": "AFS Commercial Lending borrower & credit facility raw landing table.",
+    },
+    {
+        "source_system": "ACLS (Retail Loan)",
+        "table_name": "brz_acls_applicant",
+        "csv_file": "brz_acls_applicant.csv",
+        "description": "ACLS Consumer Retail Loan applicant raw landing table.",
+    },
+]
+
+
+def _parse_uploaded_tabular_rows(file_info: dict) -> tuple[str, str, list[dict]]:
+    """Parse an uploaded CSV or Excel (.xlsx/.xls) file into (source_system, table_name, rows)."""
+    import csv, io
+    fname = file_info.get("name") or "uploaded_source.csv"
+    stem = Path(fname).stem.lower()
+    clean_tbl = re.sub(r"[^a-z0-9_]+", "_", stem).strip("_") or "uploaded_source"
+    if not clean_tbl.startswith("brz_"):
+        clean_tbl = f"brz_{clean_tbl}"
+
+    if "tsys" in stem or "card" in stem:
+        src_sys = "TSYS (Card)"
+    elif "hogan" in stem or "deposit" in stem:
+        src_sys = "HOGAN (Deposit)"
+    elif "afs" in stem or "comm" in stem:
+        src_sys = "AFS (Commercial Loan)"
+    elif "acls" in stem or "retail" in stem or "loan" in stem:
+        src_sys = "ACLS (Retail Loan)"
+    else:
+        src_sys = stem.replace("_", " ").title()
+
+    content = file_info.get("content") or b""
+    ext = Path(fname).suffix.lower().lstrip(".")
+    rows: list[dict] = []
+
+    if ext == "csv":
+        text = content.decode("utf-8-sig", errors="ignore")
+        rows = [dict(r) for r in csv.DictReader(io.StringIO(text))]
+    elif ext in ("xlsx", "xls"):
+        import openpyxl
+        wb = openpyxl.load_workbook(io.BytesIO(content), data_only=True)
+        ws = wb.active
+        all_rows = list(ws.iter_rows(values_only=True))
+        if len(all_rows) >= 2:
+            headers = [re.sub(r"[^a-zA-Z0-9_]+", "_", str(h or f"col_{i}")).strip("_") for i, h in enumerate(all_rows[0])]
+            for r in all_rows[1:]:
+                if any(v is not None for v in r):
+                    rows.append({headers[i]: ("" if r[i] is None else str(r[i])) for i in range(len(headers))})
+    return src_sys, clean_tbl, rows
+
+
+def _land_4_sources_to_bronze(dataset_id: Optional[str] = None, uploaded_files: Optional[list[dict]] = None) -> dict:
+    import csv
+    from tools.databricks_auth import get_sql_connection
+
+    catalog = os.environ.get("DATABRICKS_CATALOG") or "main"
+    schema_name = dataset_id or os.environ.get("DATABRICKS_BRONZE_SCHEMA") or "banking_bronze"
+    db_host = (os.environ.get("DATABRICKS_HOST", "") or "").strip().rstrip("/")
+    if db_host and not db_host.startswith("http"):
+        db_host = f"https://{db_host}"
+    explorer_base = db_host or "https://adb-workspace.azuredatabricks.net"
+    samples_dir = Path(__file__).parent / "samples" / "banking_4_sources"
+
+    sources_to_load: list[tuple[str, str, str, list[dict]]] = []
+    if uploaded_files:
+        for fi in uploaded_files:
+            src_sys, tbl_name, rows = _parse_uploaded_tabular_rows(fi)
+            if rows:
+                sources_to_load.append((src_sys, tbl_name, f"Uploaded Bronze raw table {tbl_name} from {fi.get('name')}", rows))
+    else:
+        for spec in _FOUR_SOURCE_SPECS:
+            csv_path = samples_dir / spec["csv_file"]
+            with open(csv_path, "r", encoding="utf-8-sig") as f:
+                rows = list(csv.DictReader(f))
+            if rows:
+                sources_to_load.append((spec["source_system"], spec["table_name"], spec["description"], rows))
+
+    landed_tables = []
+    total_rows = 0
+    with get_sql_connection(catalog=catalog, schema=schema_name) as conn, conn.cursor() as cur:
+        cur.execute(f"CREATE CATALOG IF NOT EXISTS `{catalog}`")
+        cur.execute(f"CREATE SCHEMA IF NOT EXISTS `{catalog}`.`{schema_name}`")
+
+        for src_sys, tbl_name, tbl_desc, rows in sources_to_load:
+            cols = list(rows[0].keys())
+            col_defs = ", ".join(f"`{c}` STRING COMMENT 'Raw field {c} from {src_sys}'" for c in cols)
+            fqn = f"{catalog}.{schema_name}.{tbl_name}"
+            quoted_fqn = f"`{catalog}`.`{schema_name}`.`{tbl_name}`"
+            safe_desc = tbl_desc.replace("'", "''")
+            cur.execute(f"CREATE OR REPLACE TABLE {quoted_fqn} ({col_defs}) USING DELTA COMMENT '{safe_desc}'")
+
+            if rows:
+                placeholders = ", ".join(["?"] * len(cols))
+                col_list = ", ".join(f"`{c}`" for c in cols)
+                insert_sql = f"INSERT INTO {quoted_fqn} ({col_list}) VALUES ({placeholders})"
+                values = [tuple(str(r.get(c, "")) for c in cols) for r in rows]
+                cur.executemany(insert_sql, values)
+
+            src_tag = re.sub(r"[^a-z0-9_-]", "_", src_sys.lower())[:63]
+            cur.execute(f"ALTER TABLE {quoted_fqn} SET TAGS ('layer' = 'bronze', 'source_system' = '{src_tag}')")
+
+            total_rows += len(rows)
+            landed_tables.append({
+                "source_system": src_sys,
+                "table_name": tbl_name,
+                "fqn": fqn,
+                "row_count": len(rows),
+                "columns": cols,
+                "databricks_url": f"{explorer_base}/explore/data/{catalog}/{schema_name}/{tbl_name}",
+            })
+
+    kc = KnowledgeCatalogClient(catalog=catalog, schema_name=schema_name, host=db_host)
+    dp_res = kc.register_data_product(
+        schema_name,
+        "bronze-banking-4-sources",
+        "Bronze 4-Source Banking Raw Landing (TSYS, Hogan, AFS, ACLS)",
+        "Heterogeneous Card, Deposit, Commercial Loan, and Retail Loan Bronze tables.",
+        [t["table_name"] for t in landed_tables],
+    )
+    gl_res = kc.sync_business_glossary(
+        "bronze-banking-4-sources-glossary",
+        "Bronze 4-Source Banking Glossary",
+        "Raw Source Schemas for Card, Deposit, Commercial Loan, and Retail Loan",
+        [{"name": t["table_name"], "description": f"{t['source_system']} raw table ({len(t['columns'])} cols)"} for t in landed_tables],
+    )
+    return {
+        "status": "landed",
+        "catalog": catalog,
+        "schema_name": schema_name,
+        "total_rows": total_rows,
+        "tables": landed_tables,
+        "knowledge_catalog_data_product": dp_res,
+        "knowledge_catalog_glossary": gl_res,
+    }
+
+
+@app.post("/v1/bronze/land-4-sources")
+async def land_4_sources_endpoint(dataset_id: Optional[str] = None):
+    """Land all 4 heterogeneous banking source CSVs into Azure Databricks Unity Catalog + governance tags."""
+    return await asyncio.to_thread(_land_4_sources_to_bronze, dataset_id)
+
+
+@app.get("/v1/bronze/catalog")
+async def get_bronze_catalog(dataset_id: Optional[str] = None):
+    """Return live Unity Catalog Bronze table schemas and row counts for downstream Silver STTM discovery."""
+    from tools.databricks_auth import get_sql_connection
+    catalog = os.environ.get("DATABRICKS_CATALOG") or "main"
+    schema_name = dataset_id or os.environ.get("DATABRICKS_BRONZE_SCHEMA") or "banking_bronze"
+    tables_out = []
+    with get_sql_connection(catalog=catalog, schema=schema_name) as conn, conn.cursor() as cur:
+        for spec in _FOUR_SOURCE_SPECS:
+            fqn = f"{catalog}.{schema_name}.{spec['table_name']}"
+            quoted_fqn = f"`{catalog}`.`{schema_name}`.`{spec['table_name']}`"
+            try:
+                cur.execute(f"SELECT COUNT(*) FROM {quoted_fqn}")
+                row_count = cur.fetchone()[0]
+                cur.execute(f"DESCRIBE TABLE {quoted_fqn}")
+                cols = [
+                    {"name": r[0], "type": r[1], "description": r[2] if len(r) > 2 else ""}
+                    for r in cur.fetchall()
+                    if r[0] and not str(r[0]).startswith("#")
+                ]
+                tables_out.append({
+                    "source_system": spec["source_system"],
+                    "table_name": spec["table_name"],
+                    "fqn": fqn,
+                    "row_count": row_count,
+                    "columns": cols,
+                })
+            except Exception:
+                continue
+    return {"catalog": catalog, "schema_name": schema_name, "tables": tables_out}
