@@ -19,10 +19,11 @@ function ts() {
 export default function App() {
   const [messages, setMessages]           = useState([{
     id: 0, role: 'agent', agent: 'Silver Data Product Assistant',
-    text: "Welcome to **Silver Data Product Assistant**! To get started, please select your target **Industry** to explore available canonical domain models, or click **Domain Navigator** to drill down into entities and attributes.",
+    text: "Welcome to **Silver Data Product Assistant**! Our generalized **N-to-M Mapping & Mastering Engine** maps **Many Source Systems → Many Bronze Tables (1:N) → Business Domain → Multiple Silver Tables**.\n\nSelect a multi-source N-to-M mapping template below, choose an **Industry** to explore canonical models, or open **Domain Navigator**:",
     chips: [
+      "Map Multi-Source Bronze → Silver Customer 360 (N-to-M STTM)",
+      "Map Water Account 360 (Cross-Industry STTM)",
       "Banking & Financial Services",
-      "Map Bronze → Silver Customer (4-to-1 STTM)",
       "Industrial & Water (Ecolab)",
       "Retail & Commerce",
       "Automotive & Fleet",

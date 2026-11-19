@@ -37,7 +37,7 @@ from agents import (
     validator_agent,
 )
 from agents.base import create_session
-from tools.databricks_tool import DatabricksPublisher
+from tools.bigquery_tool import BigQueryPublisher
 
 MAX_CLARIFICATION_TURNS = 3
 MAX_SPEC_ITERATIONS = 3
@@ -338,11 +338,11 @@ async def _run_spec_generator_with_validation(
 
 
 async def _publish(ddl_script: str, spec: dict) -> dict:
-    _log("\n[Pipeline] Step 7 — Databricks SQL Publisher...")
-    publisher = DatabricksPublisher()
+    _log("\n[Pipeline] Step 7 — BigQuery Publisher...")
+    publisher = BigQueryPublisher()
 
     if not publisher.can_execute():
-        _log(f"[Publisher] Mode={publisher.mode} — dry run (no Databricks credentials configured)")
+        _log(f"[Publisher] Mode={publisher.mode} — dry run (no GCP credentials configured)")
 
     report = publisher.publish(ddl_script)
     _log(f"[Publisher] Status: {report.get('publish_status')}")
@@ -474,12 +474,12 @@ async def run_pipeline(
 
 def _publish_sync(ddl: str, spec: dict) -> dict:
     """Synchronous wrapper for publish (runs in thread pool)."""
-    publisher = DatabricksPublisher()
+    publisher = BigQueryPublisher()
     if not publisher.can_execute():
         return {
             "publish_status": "dry_run",
             "published_tables": [],
-            "summary": "Dry run — set DATABRICKS_HOST and DATABRICKS_WAREHOUSE_ID in .env to publish.",
+            "summary": "Dry run — set GCP_PROJECT_ID in .env and configure credentials to publish.",
         }
     return publisher.publish(ddl)
 

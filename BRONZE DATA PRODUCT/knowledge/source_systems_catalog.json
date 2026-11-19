@@ -17,28 +17,11 @@
       "regulatory_frameworks": ["PRA", "FCA", "Basel III", "GDPR"],
       "primary_entities": [
         {
-          "table_name": "brz_hogan_dd_account",
-          "feed_name": "DD-REC (Demand Deposit Account Master)",
-          "copybook": "DDBASIC.CPY",
-          "record_length_bytes": 450,
-          "description": "Hogan DDA master record containing deposit account statuses, ledgers, and balances.",
-          "sample_raw_columns": [
-            {"name": "DD_ACCT_NUM", "type": "STRING", "pic_clause": "PIC X(10)", "start_byte": 1, "length": 10, "is_pk": true, "description": "Demand Deposit Account Number"},
-            {"name": "DD_CUST_NUM", "type": "STRING", "pic_clause": "PIC X(12)", "start_byte": 11, "length": 12, "is_pk": false, "description": "CIS Customer Reference Number"},
-            {"name": "DD_PROD_TYPE", "type": "STRING", "pic_clause": "PIC X(4)", "start_byte": 23, "length": 4, "is_pk": false, "description": "Deposit Product Code (e.g. CHKG, SAVG)"},
-            {"name": "DD_STATUS_CD", "type": "STRING", "pic_clause": "PIC X(2)", "start_byte": 27, "length": 2, "is_pk": false, "description": "Account Status Code (01=Active, 05=Dormant, 09=Closed)"},
-            {"name": "DD_OPEN_DT", "type": "STRING", "pic_clause": "PIC 9(8)", "start_byte": 29, "length": 8, "is_pk": false, "description": "Account Opening Date (YYYYMMDD)"},
-            {"name": "DD_CURR_BAL", "type": "STRING", "pic_clause": "PIC S9(11)V99 COMP-3", "start_byte": 37, "length": 7, "is_pk": false, "description": "Current Ledger Balance in Minor Units"},
-            {"name": "DD_AVAIL_BAL", "type": "STRING", "pic_clause": "PIC S9(11)V99 COMP-3", "start_byte": 44, "length": 7, "is_pk": false, "description": "Available Balance in Minor Units"},
-            {"name": "DD_BRANCH_NUM", "type": "STRING", "pic_clause": "PIC 9(4)", "start_byte": 51, "length": 4, "is_pk": false, "description": "Booking Branch Number"},
-            {"name": "DD_CURRENCY", "type": "STRING", "pic_clause": "PIC X(3)", "start_byte": 55, "length": 3, "is_pk": false, "description": "ISO Currency Code"}
-          ]
-        },
-        {
           "table_name": "brz_hogan_ci_customer",
           "feed_name": "CI-REC (Customer Information System Master)",
           "copybook": "CIBASIC.CPY",
           "record_length_bytes": 600,
+          "ingestion_mode": "BATCH_COPYBOOK",
           "description": "Hogan CIS master customer demographic and tax classification records.",
           "sample_raw_columns": [
             {"name": "CI_CUST_NUM", "type": "STRING", "pic_clause": "PIC X(12)", "start_byte": 1, "length": 12, "is_pk": true, "description": "Unique CIS Customer Number"},
@@ -46,8 +29,53 @@
             {"name": "CI_LEGAL_NAME", "type": "STRING", "pic_clause": "PIC X(60)", "start_byte": 15, "length": 60, "is_pk": false, "is_pii": true, "description": "Full Legal Name"},
             {"name": "CI_TAX_ID", "type": "STRING", "pic_clause": "PIC X(15)", "start_byte": 75, "length": 15, "is_pk": false, "is_pii": true, "description": "National Tax Identifier (SSN / NIN / CRN)"},
             {"name": "CI_BIRTH_DT", "type": "STRING", "pic_clause": "PIC 9(8)", "start_byte": 90, "length": 8, "is_pk": false, "is_pii": true, "description": "Date of Birth (YYYYMMDD)"},
-            {"name": "CI_POST_CODE", "type": "STRING", "pic_clause": "PIC X(10)", "start_byte": 98, "length": 10, "is_pk": false, "is_pii": true, "description": "Residential Postcode / ZIP"},
-            {"name": "CI_RISK_RATING", "type": "STRING", "pic_clause": "PIC X(3)", "start_byte": 108, "length": 3, "is_pk": false, "description": "Internal AML/KYC Risk Rating"}
+            {"name": "CI_PHONE", "type": "STRING", "pic_clause": "PIC X(15)", "start_byte": 98, "length": 15, "is_pk": false, "is_pii": true, "description": "Primary Telephone Number"},
+            {"name": "CI_POST_CODE", "type": "STRING", "pic_clause": "PIC X(10)", "start_byte": 113, "length": 10, "is_pk": false, "is_pii": true, "description": "Residential Postcode / ZIP"},
+            {"name": "CI_STATUS_CD", "type": "STRING", "pic_clause": "PIC X(2)", "start_byte": 123, "length": 2, "is_pk": false, "description": "CIS Relationship Status (01=Active, 05=Dormant)"},
+            {"name": "CI_BRANCH_NUM", "type": "STRING", "pic_clause": "PIC 9(4)", "start_byte": 125, "length": 4, "is_pk": false, "description": "Home Branch Number"},
+            {"name": "CI_EXTRACT_TS", "type": "STRING", "pic_clause": "PIC X(20)", "start_byte": 129, "length": 20, "is_pk": false, "description": "Mainframe Extract Timestamp"}
+          ]
+        },
+        {
+          "table_name": "brz_hogan_dd_account",
+          "feed_name": "DD-REC (Demand Deposit Account Master)",
+          "copybook": "DDBASIC.CPY",
+          "record_length_bytes": 450,
+          "ingestion_mode": "BATCH_COPYBOOK",
+          "parent_key": "CI_CUST_NUM",
+          "foreign_key": "DD_CUST_NUM",
+          "description": "Hogan DDA master record containing deposit account statuses, ledgers, and balances (1:N per CIS Customer).",
+          "sample_raw_columns": [
+            {"name": "DD_ACCT_NUM", "type": "STRING", "pic_clause": "PIC X(10)", "start_byte": 1, "length": 10, "is_pk": true, "description": "Demand Deposit Account Number"},
+            {"name": "DD_CUST_NUM", "type": "STRING", "pic_clause": "PIC X(12)", "start_byte": 11, "length": 12, "is_pk": false, "description": "CIS Customer Reference Number"},
+            {"name": "DD_PROD_TYPE", "type": "STRING", "pic_clause": "PIC X(4)", "start_byte": 23, "length": 4, "is_pk": false, "description": "Deposit Product Code (e.g. CHKG, SAVG, MMDA)"},
+            {"name": "DD_STATUS_CD", "type": "STRING", "pic_clause": "PIC X(2)", "start_byte": 27, "length": 2, "is_pk": false, "description": "Account Status Code (01=Active, 05=Dormant, 09=Closed)"},
+            {"name": "DD_OPEN_DT", "type": "STRING", "pic_clause": "PIC 9(8)", "start_byte": 29, "length": 8, "is_pk": false, "description": "Account Opening Date (YYYYMMDD)"},
+            {"name": "DD_CURR_BAL", "type": "NUMERIC", "pic_clause": "PIC S9(11)V99 COMP-3", "start_byte": 37, "length": 7, "is_pk": false, "description": "Current Ledger Balance"},
+            {"name": "DD_AVAIL_BAL", "type": "NUMERIC", "pic_clause": "PIC S9(11)V99 COMP-3", "start_byte": 44, "length": 7, "is_pk": false, "description": "Available Balance"},
+            {"name": "DD_BRANCH_NUM", "type": "STRING", "pic_clause": "PIC 9(4)", "start_byte": 51, "length": 4, "is_pk": false, "description": "Booking Branch Number"},
+            {"name": "DD_CURRENCY", "type": "STRING", "pic_clause": "PIC X(3)", "start_byte": 55, "length": 3, "is_pk": false, "description": "ISO Currency Code"}
+          ]
+        },
+        {
+          "table_name": "brz_hogan_ci_address",
+          "feed_name": "CI-ADDR (CIS Customer Address & Domicile Feed)",
+          "copybook": "CIADDR.CPY",
+          "record_length_bytes": 320,
+          "ingestion_mode": "BATCH_COPYBOOK",
+          "parent_key": "CI_CUST_NUM",
+          "foreign_key": "CI_CUST_NUM",
+          "description": "Hogan CIS multi-address feed capturing residential, mailing, and statement addresses per customer.",
+          "sample_raw_columns": [
+            {"name": "CI_ADDR_ID", "type": "STRING", "is_pk": true, "description": "CIS Address Record Sequence ID"},
+            {"name": "CI_CUST_NUM", "type": "STRING", "is_pk": false, "description": "CIS Customer Reference Number"},
+            {"name": "ADDR_USAGE_CD", "type": "STRING", "is_pk": false, "description": "Address Usage (RES=Residential, MAIL=Mailing, STMT=Statement)"},
+            {"name": "STREET_LINE_1", "type": "STRING", "is_pk": false, "is_pii": true, "description": "Primary Street Address"},
+            {"name": "CITY_NAME", "type": "STRING", "is_pk": false, "description": "City / Municipality"},
+            {"name": "STATE_CD", "type": "STRING", "is_pk": false, "description": "US State / Province Code"},
+            {"name": "POSTAL_CD", "type": "STRING", "is_pk": false, "is_pii": true, "description": "5-or-9 Digit Postal ZIP Code"},
+            {"name": "COUNTRY_CD", "type": "STRING", "is_pk": false, "description": "ISO Country Code"},
+            {"name": "VERIFIED_DT", "type": "STRING", "is_pk": false, "description": "KYC Address Verification Date (YYYYMMDD)"}
           ]
         }
       ]
@@ -350,8 +378,9 @@
       "primary_entities": [
         {
           "table_name": "brz_afs_borrower",
-          "feed_name": "BORROWER-MASTER (Commercial Borrowers & Facilities)",
-          "description": "AFS commercial loan borrowers, corporate guarantor details, obligations, and risk classifications.",
+          "feed_name": "BORROWER-MASTER (Commercial Borrowers & Obligors)",
+          "ingestion_mode": "BATCH_SCHEDULED",
+          "description": "AFS commercial loan borrowers, corporate obligor demographics, and risk classifications.",
           "sample_raw_columns": [
             {"name": "BORROWER_ID", "type": "STRING", "is_pk": true, "description": "AFS Unique Commercial Borrower ID"},
             {"name": "LEGAL_ENTITY_NAME", "type": "STRING", "is_pk": false, "description": "Registered Corporate Legal Name"},
@@ -362,19 +391,76 @@
             {"name": "CONTACT_EMAIL", "type": "STRING", "is_pk": false, "is_pii": true, "description": "Primary Corporate Email"},
             {"name": "BORROWER_CLASS", "type": "STRING", "is_pk": false, "description": "Commercial Classification (COM, SME)"},
             {"name": "FACILITY_LIMIT", "type": "NUMERIC", "is_pk": false, "description": "Total Approved Credit Facility Limit"},
-            {"name": "STATUS", "type": "STRING", "is_pk": false, "description": "Borrower Facility Status (A=Active, L=Liquidated)"}
+            {"name": "STATUS", "type": "STRING", "is_pk": false, "description": "Borrower Facility Status (A=Active, L=Liquidated)"},
+            {"name": "BUSINESS_ADDRESS", "type": "STRING", "is_pk": false, "description": "Registered Business Address & ZIP"},
+            {"name": "LAST_REVIEW_DATE", "type": "STRING", "is_pk": false, "description": "Annual Credit Review Date"}
+          ]
+        },
+        {
+          "table_name": "brz_afs_facility",
+          "feed_name": "FACILITY-LINE (Commercial Credit Facilities & Sub-Limits)",
+          "ingestion_mode": "BATCH_SCHEDULED",
+          "parent_key": "BORROWER_ID",
+          "foreign_key": "BORROWER_ID",
+          "description": "AFS syndicated and bilateral commercial credit facilities, revolving lines, and drawdowns (1:N per Borrower).",
+          "sample_raw_columns": [
+            {"name": "FACILITY_ID", "type": "STRING", "is_pk": true, "description": "Unique AFS Credit Facility Identifier"},
+            {"name": "BORROWER_ID", "type": "STRING", "is_pk": false, "description": "Parent AFS Commercial Borrower ID"},
+            {"name": "FACILITY_TYPE", "type": "STRING", "is_pk": false, "description": "Facility Structure (REVOLVER, TERM_LOAN_A, LETTER_OF_CREDIT, CAPEX_LINE)"},
+            {"name": "COMMITMENT_AMT", "type": "NUMERIC", "is_pk": false, "description": "Total Committed Credit Line Amount"},
+            {"name": "OUTSTANDING_BAL", "type": "NUMERIC", "is_pk": false, "description": "Current Drawn Principal Balance"},
+            {"name": "RATE_INDEX", "type": "STRING", "is_pk": false, "description": "Reference Rate Index (SOFR_1M, SOFR_3M, PRIME)"},
+            {"name": "SPREAD_BPS", "type": "INT64", "is_pk": false, "description": "Credit Spread in Basis Points"},
+            {"name": "MATURITY_DATE", "type": "STRING", "is_pk": false, "description": "Facility Contractual Maturity Date"},
+            {"name": "FACILITY_STATUS", "type": "STRING", "is_pk": false, "description": "Facility Status (ACTIVE, FROZEN, PAID_OFF)"}
+          ]
+        },
+        {
+          "table_name": "brz_afs_collateral",
+          "feed_name": "COLLATERAL-PLEDGE (Commercial Collateral & UCC Liens)",
+          "ingestion_mode": "BATCH_SCHEDULED",
+          "parent_key": "BORROWER_ID",
+          "foreign_key": "BORROWER_ID",
+          "description": "AFS pledged commercial real estate, equipment, inventory, and UCC-1 lien valuations securing credit facilities.",
+          "sample_raw_columns": [
+            {"name": "COLLATERAL_ID", "type": "STRING", "is_pk": true, "description": "Unique Collateral Asset ID"},
+            {"name": "FACILITY_ID", "type": "STRING", "is_pk": false, "description": "Secured Credit Facility ID"},
+            {"name": "BORROWER_ID", "type": "STRING", "is_pk": false, "description": "Pledging Commercial Borrower ID"},
+            {"name": "COLLATERAL_TYPE", "type": "STRING", "is_pk": false, "description": "Asset Class (CRE_FIRST_LIEN, EQUIPMENT_UCC, AR_INVENTORY, CASH_DEPOSIT)"},
+            {"name": "APPRAISED_VALUE", "type": "NUMERIC", "is_pk": false, "description": "Latest Appraised Market Valuation"},
+            {"name": "ADVANCE_RATE_PCT", "type": "NUMERIC", "is_pk": false, "description": "Lending Advance Rate Percentage"},
+            {"name": "VALUATION_DATE", "type": "STRING", "is_pk": false, "description": "Date of Last Independent Appraisal"}
+          ]
+        },
+        {
+          "table_name": "brz_afs_guarantor",
+          "feed_name": "GUARANTOR-LINK (Personal & Cross-Corporate Guarantors)",
+          "ingestion_mode": "BATCH_SCHEDULED",
+          "parent_key": "BORROWER_ID",
+          "foreign_key": "BORROWER_ID",
+          "description": "AFS individual principals and parent corporations guaranteeing commercial borrower obligations.",
+          "sample_raw_columns": [
+            {"name": "GUARANTOR_ID", "type": "STRING", "is_pk": true, "description": "Unique AFS Guarantor Record ID"},
+            {"name": "BORROWER_ID", "type": "STRING", "is_pk": false, "description": "Guaranteed AFS Borrower ID"},
+            {"name": "GUARANTOR_NAME", "type": "STRING", "is_pk": false, "is_pii": true, "description": "Full Legal Name of Individual or Corporate Guarantor"},
+            {"name": "GUARANTOR_SSN_TIN", "type": "STRING", "is_pk": false, "is_pii": true, "description": "Guarantor SSN or EIN Tax Identifier"},
+            {"name": "GUARANTOR_DOB", "type": "STRING", "is_pk": false, "is_pii": true, "description": "Guarantor Date of Birth (YYYY-MM-DD)"},
+            {"name": "GUARANTOR_PHONE", "type": "STRING", "is_pk": false, "is_pii": true, "description": "Guarantor Direct Phone"},
+            {"name": "GUARANTOR_EMAIL", "type": "STRING", "is_pk": false, "is_pii": true, "description": "Guarantor Direct Email"},
+            {"name": "GUARANTOR_ZIP", "type": "STRING", "is_pk": false, "is_pii": true, "description": "Guarantor Postal ZIP Code"},
+            {"name": "GUARANTEE_PCT", "type": "NUMERIC", "is_pk": false, "description": "Percentage of Obligation Guaranteed (0-100)"}
           ]
         }
       ]
     },
     "tsys": {
       "name": "TSYS / FDR Card Servicing",
-      "system_type": "Revolving Credit Card Processing & Account Servicing",
-      "technology_stack": "Total System Services (TS2) / First Data, Batch Flat File & REST API",
+      "system_type": "Revolving Credit Card Processing & Real-Time Authorization",
+      "technology_stack": "Total System Services (TS2) / First Data, Batch Flat File & Apache Kafka Event Stream",
       "default_encoding": "UTF-8",
       "data_structure": "STRUCTURED",
-      "ingestion_cadence": "DAILY_BATCH",
-      "file_format": "CSV_OR_FIXED_WIDTH",
+      "ingestion_cadence": "HYBRID_BATCH_AND_KAFKA_STREAM",
+      "file_format": "CSV_AND_KAFKA_JSON",
       "associated_standards": ["ISO 8583", "PCI-DSS 4.0", "BIAN Card Servicing"],
       "default_retention_years": 7,
       "regulatory_frameworks": ["PCI-DSS", "FCRA", "CARD Act", "CFPB"],
@@ -382,6 +468,7 @@
         {
           "table_name": "brz_tsys_cardholder",
           "feed_name": "CARDHOLDER-BASE (Card Account & Demographic Feed)",
+          "ingestion_mode": "DAILY_BATCH",
           "description": "TSYS revolving credit cardholder demographic and account servicing master.",
           "sample_raw_columns": [
             {"name": "cardholder_id", "type": "STRING", "is_pk": true, "description": "TSYS Cardholder Reference Identifier"},
@@ -392,7 +479,51 @@
             {"name": "billing_postal_code", "type": "STRING", "is_pk": false, "is_pii": true, "description": "Billing Postal Code"},
             {"name": "card_type", "type": "STRING", "is_pk": false, "description": "Card Program Type (RETAIL, BIZ)"},
             {"name": "card_status", "type": "STRING", "is_pk": false, "description": "Card Status (OPEN, RESTRICTED, CLOSED)"},
-            {"name": "credit_line", "type": "NUMERIC", "is_pk": false, "description": "Approved Revolving Credit Line"}
+            {"name": "credit_line", "type": "NUMERIC", "is_pk": false, "description": "Approved Revolving Credit Line"},
+            {"name": "open_date", "type": "STRING", "is_pk": false, "description": "Account Open Date"}
+          ]
+        },
+        {
+          "table_name": "brz_tsys_card_account",
+          "feed_name": "CARD-ACCT (Revolving Card Accounts, Balances & Delinquency)",
+          "ingestion_mode": "DAILY_BATCH",
+          "parent_key": "cardholder_id",
+          "foreign_key": "cardholder_id",
+          "description": "TSYS card account cycle balances, APR tiers, minimum payment due, and utilization metrics (1:N per Cardholder).",
+          "sample_raw_columns": [
+            {"name": "card_account_id", "type": "STRING", "is_pk": true, "description": "TSYS Revolving Account Number"},
+            {"name": "cardholder_id", "type": "STRING", "is_pk": false, "description": "Owning TSYS Cardholder ID"},
+            {"name": "product_code", "type": "STRING", "is_pk": false, "description": "Card Product Tier (PLATINUM_REWARDS, CASH_BACK, CORP_T_AND_E)"},
+            {"name": "credit_limit", "type": "NUMERIC", "is_pk": false, "description": "Current Revolving Credit Limit"},
+            {"name": "current_balance", "type": "NUMERIC", "is_pk": false, "description": "Current Statement Balance"},
+            {"name": "available_credit", "type": "NUMERIC", "is_pk": false, "description": "Remaining Available Credit"},
+            {"name": "apr_rate", "type": "NUMERIC", "is_pk": false, "description": "Purchase Annual Percentage Rate"},
+            {"name": "days_past_due", "type": "INT64", "is_pk": false, "description": "Delinquency Days Past Due"},
+            {"name": "account_status", "type": "STRING", "is_pk": false, "description": "Account Status (OPEN, FROZEN, CHARGED_OFF)"},
+            {"name": "cycle_date", "type": "STRING", "is_pk": false, "description": "Last Statement Billing Cycle Date"}
+          ]
+        },
+        {
+          "table_name": "brz_tsys_auth_events",
+          "feed_name": "KAFKA-AUTH-STREAM (Real-Time ISO 8583 Card Authorizations)",
+          "ingestion_mode": "KAFKA_STREAM",
+          "kafka_topic": "payments.tsys.card.auth.v1",
+          "parent_key": "cardholder_id",
+          "foreign_key": "cardholder_id",
+          "description": "Real-time Kafka event stream capturing card POS/e-commerce authorizations, merchant MCCs, and verified mobile/email touchpoints.",
+          "sample_raw_columns": [
+            {"name": "auth_event_id", "type": "STRING", "is_pk": true, "description": "Unique Authorization Event UUID"},
+            {"name": "cardholder_id", "type": "STRING", "is_pk": false, "description": "TSYS Cardholder Reference Identifier"},
+            {"name": "card_account_id", "type": "STRING", "is_pk": false, "description": "TSYS Card Account Number"},
+            {"name": "event_ts", "type": "TIMESTAMP", "is_pk": false, "description": "ISO-8601 Event Timestamp"},
+            {"name": "merchant_name", "type": "STRING", "is_pk": false, "description": "Merchant / Acceptor Name"},
+            {"name": "mcc_code", "type": "STRING", "is_pk": false, "description": "Merchant Category Code"},
+            {"name": "auth_amount", "type": "NUMERIC", "is_pk": false, "description": "Transaction Authorization Amount"},
+            {"name": "auth_status", "type": "STRING", "is_pk": false, "description": "Authorization Decision (APPROVED, DECLINED, STEP_UP_OTP)"},
+            {"name": "verified_mobile", "type": "STRING", "is_pk": false, "is_pii": true, "description": "3DS / SMS OTP Verified Mobile Phone"},
+            {"name": "kafka_topic", "type": "STRING", "is_pk": false, "description": "Originating Kafka Topic"},
+            {"name": "kafka_partition", "type": "INT64", "is_pk": false, "description": "Kafka Topic Partition"},
+            {"name": "kafka_offset", "type": "INT64", "is_pk": false, "description": "Kafka Partition Offset"}
           ]
         }
       ]
@@ -412,17 +543,42 @@
         {
           "table_name": "brz_acls_applicant",
           "feed_name": "APPLICANT-MASTER (Consumer Loan Applicant Master)",
+          "ingestion_mode": "DAILY_BATCH",
           "description": "ACLS retail installment loan applicants, mortgage demographics, and servicing notes.",
           "sample_raw_columns": [
             {"name": "APPLICANT_ID", "type": "STRING", "is_pk": true, "description": "Unique Consumer Loan Applicant ID"},
             {"name": "FIRST_NAME", "type": "STRING", "is_pk": false, "is_pii": true, "description": "Applicant Legal First Name"},
+            {"name": "MIDDLE_NAME", "type": "STRING", "is_pk": false, "is_pii": true, "description": "Applicant Middle Initial / Name"},
             {"name": "LAST_NAME", "type": "STRING", "is_pk": false, "is_pii": true, "description": "Applicant Legal Last Name"},
             {"name": "DOB", "type": "STRING", "is_pk": false, "is_pii": true, "description": "Date of Birth (MM/DD/YYYY)"},
             {"name": "NATIONAL_ID", "type": "STRING", "is_pk": false, "is_pii": true, "description": "National Identifier / SSN"},
             {"name": "CELL_PHONE", "type": "STRING", "is_pk": false, "is_pii": true, "description": "Primary Contact Cell Phone"},
             {"name": "EMAIL", "type": "STRING", "is_pk": false, "is_pii": true, "description": "Verified Contact Email Address"},
+            {"name": "POSTAL_CODE", "type": "STRING", "is_pk": false, "is_pii": true, "description": "Applicant Residential Postal Code"},
             {"name": "APP_STATUS", "type": "STRING", "is_pk": false, "description": "Loan Status (A=Active, D=Delinquent, P=Paid in Full)"},
-            {"name": "ORIGINATION_AMT", "type": "NUMERIC", "is_pk": false, "description": "Original Loan Principal Amount"}
+            {"name": "LOAN_PURPOSE", "type": "STRING", "is_pk": false, "description": "Loan Purpose Code (AUTO, MORTGAGE, PERSONAL, HELOC)"},
+            {"name": "ORIGINATION_AMT", "type": "NUMERIC", "is_pk": false, "description": "Original Loan Principal Amount"},
+            {"name": "APP_DATE", "type": "STRING", "is_pk": false, "description": "Loan Application Date"}
+          ]
+        },
+        {
+          "table_name": "brz_acls_loan_application",
+          "feed_name": "LOAN-APP (Retail Installment & Auto Loan Contracts)",
+          "ingestion_mode": "DAILY_BATCH",
+          "parent_key": "APPLICANT_ID",
+          "foreign_key": "APPLICANT_ID",
+          "description": "ACLS originated installment loan contracts, DTI ratios, FICO scores, and repayment schedules (1:N per Applicant).",
+          "sample_raw_columns": [
+            {"name": "LOAN_CONTRACT_ID", "type": "STRING", "is_pk": true, "description": "Unique ACLS Loan Contract Number"},
+            {"name": "APPLICANT_ID", "type": "STRING", "is_pk": false, "description": "Primary Applicant ID"},
+            {"name": "PRODUCT_SUBTYPE", "type": "STRING", "is_pk": false, "description": "Installment Loan Type (AUTO_NEW, AUTO_USED, PERSONAL_UNSECURED, HELOC)"},
+            {"name": "PRINCIPAL_AMT", "type": "NUMERIC", "is_pk": false, "description": "Originated Principal Amount"},
+            {"name": "CURRENT_BAL", "type": "NUMERIC", "is_pk": false, "description": "Remaining Unpaid Principal Balance"},
+            {"name": "INTEREST_RATE", "type": "NUMERIC", "is_pk": false, "description": "Fixed Annual Interest Rate (%)"},
+            {"name": "TERM_MONTHS", "type": "INT64", "is_pk": false, "description": "Loan Term in Months (e.g. 36, 60, 120)"},
+            {"name": "FICO_SCORE", "type": "INT64", "is_pk": false, "description": "Origination Bureau FICO Score"},
+            {"name": "CONTRACT_STATUS", "type": "STRING", "is_pk": false, "description": "Contract Status (ACTIVE, PAID_OFF, DELINQUENT)"},
+            {"name": "ORIGINATION_DATE", "type": "STRING", "is_pk": false, "description": "Contract Funding Date"}
           ]
         }
       ]

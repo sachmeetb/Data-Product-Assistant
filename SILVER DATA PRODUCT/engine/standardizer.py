@@ -114,6 +114,76 @@ class Standardizer:
         last = parts[-1].title()
         return {"legal_name": s.title(), "first_name": first, "last_name": last}
 
+    def standardize_from_spec(
+        self,
+        row: Dict[str, Any],
+        source_system: str,
+        table_spec: Dict[str, Any],
+    ) -> Dict[str, Any]:
+        """
+        Declarative standardization driven by a domain mapping YAML `table_spec`.
+        Supports reusable cross-domain and cross-industry party/account normalization.
+        """
+        fm = table_spec.get("field_mappings") or {}
+        table_name = table_spec.get("table_name", "")
+        pk_col = fm.get("source_customer_id") or table_spec.get("primary_key") or ""
+        src_id = str(row.get(pk_col, "")).strip()
+
+        name_fmt = fm.get("name_format", "FIRST_LAST_SPACE")
+        if name_fmt == "SPLIT_FIRST_MIDDLE_LAST":
+            first = str(row.get(fm.get("raw_first_name", ""), "") or "").strip().title()
+            middle = str(row.get(fm.get("raw_middle_name", ""), "") or "").strip().title()
+            last = str(row.get(fm.get("raw_last_name", ""), "") or "").strip().title()
+            full = f"{first} {middle} {last}".replace("  ", " ").strip()
+            parsed = {"legal_name": full, "first_name": first, "last_name": last}
+        else:
+            raw_name_val = row.get(fm.get("raw_name", ""))
+            parsed = self.parse_name(raw_name_val)
+
+        fallback_org_col = fm.get("fallback_org_name")
+        legal_name = parsed["legal_name"]
+        if fallback_org_col and row.get(fallback_org_col):
+            legal_name = str(row.get(fallback_org_col)).strip().title()
+
+        raw_postal = str(row.get(fm.get("raw_postal_code", ""), "") or "").strip()
+        if fm.get("postal_extract_regex") and raw_postal:
+            m = re.search(r"\b(\d{5})(?:-\d{4})?\b", raw_postal)
+            postal_code = m.group(1) if m else (raw_postal.split()[-1][:5] if raw_postal.split() else None)
+        else:
+            postal_code = raw_postal[:5] if raw_postal else None
+
+        raw_type_col = fm.get("raw_customer_type", "")
+        raw_type_val = row.get(raw_type_col, raw_type_col) if raw_type_col in row else raw_type_col
+        if str(raw_type_val).upper() in ("INDIVIDUAL", "ORGANIZATION"):
+            cust_type = str(raw_type_val).upper()
+        else:
+            cust_type = self.lookup_customer_type(source_system, str(raw_type_val or "IND"))
+
+        raw_status_col = fm.get("raw_status", "")
+        raw_status_val = row.get(raw_status_col, raw_status_col) if raw_status_col in row else raw_status_col
+        rel_status = self.lookup_status(source_system, str(raw_status_val or "A"))
+
+        raw_email_col = fm.get("raw_email", "")
+        email_val = (str(row.get(raw_email_col, "") or "").strip().lower() or None) if raw_email_col else None
+
+        return {
+            "source_system": source_system.upper(),
+            "source_entity": table_name,
+            "table_role": table_spec.get("role", "PARTY_MASTER"),
+            "source_customer_id": src_id,
+            "customer_type": cust_type,
+            "legal_name": legal_name,
+            "first_name": parsed["first_name"],
+            "last_name": parsed["last_name"],
+            "tax_id_normalized": self.clean_tax_id(row.get(fm.get("raw_tax_id", ""))),
+            "date_of_birth": self.parse_date_iso(row.get(fm.get("raw_dob", ""))),
+            "primary_phone_e164": self.normalize_phone_e164(row.get(fm.get("raw_phone", ""))),
+            "primary_email": email_val,
+            "primary_postal_code": postal_code,
+            "relationship_status": rel_status,
+            "raw_payload": row,
+        }
+
     def standardize_hogan(self, row: Dict[str, Any]) -> Dict[str, Any]:
         parsed = self.parse_name(row.get("CI_LEGAL_NAME"))
         return {

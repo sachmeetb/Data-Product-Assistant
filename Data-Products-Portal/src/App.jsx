@@ -8,7 +8,7 @@ export const PRODUCTS = [
   {
     id: "bronze",
     title: "Bronze Product Assistant",
-    url: import.meta.env.VITE_BRONZE_URL || "https://bronze-data-product.<databricks-apps-domain>",
+    url: "https://yk-bronze-a74bkpgdzq-uc.a.run.app",
     gradient: "linear-gradient(135deg, #7C2D12 0%, #9A3412 50%, #C2410C 100%)",
     badgeBg: "#FFEDD5",
     badgeColor: "#9A3412"
@@ -16,7 +16,7 @@ export const PRODUCTS = [
   {
     id: "silver",
     title: "Silver Product Assistant (Multi-Industry)",
-    url: import.meta.env.VITE_SILVER_URL || "https://silver-data-product.<databricks-apps-domain>",
+    url: "https://yk-silver-a74bkpgdzq-uc.a.run.app",
     gradient: "linear-gradient(135deg, #1E293B 0%, #334155 100%)",
     badgeBg: "#E2E8F0",
     badgeColor: "#334155"
@@ -24,7 +24,7 @@ export const PRODUCTS = [
   {
     id: "gold",
     title: "Gold Product Assistant",
-    url: import.meta.env.VITE_GOLD_URL || "https://gold-data-product.<databricks-apps-domain>",
+    url: "https://yk-gold-a74bkpgdzq-uc.a.run.app",
     gradient: "linear-gradient(135deg, #451A03 0%, #78350F 50%, #B45309 100%)",
     badgeBg: "#FEF3C7",
     badgeColor: "#92400E"

@@ -49,7 +49,7 @@ from agents import (
     spec_generator_agent,
     validator_agent,
 )
-from tools.databricks_tool import DatabricksPublisher
+from tools.bigquery_tool import BigQueryPublisher
 from tools.knowledge_catalog import KnowledgeCatalogClient
 from tools.datacontract_generator import (
     generate_data_contract_dict,
@@ -155,9 +155,8 @@ async def health_check():
         "status": "ok",
         "service": "Silver-Data-Product-Assistant",
         "timestamp": datetime.utcnow().isoformat() + "Z",
-        "databricks_host": os.environ.get("DATABRICKS_HOST", "(not set)"),
-        "unity_catalog": f"{os.environ.get('DATABRICKS_CATALOG', 'main')}.{os.environ.get('DATABRICKS_SILVER_SCHEMA', 'banking_silver')}",
-        "llm_model": os.environ.get("DATABRICKS_LLM_MODEL") or os.environ.get("AZURE_OPENAI_DEPLOYMENT") or "(default)",
+        "gcp_project": os.environ.get("GCP_PROJECT_ID", "(not set)"),
+        "gemini_model": os.environ.get("GEMINI_MODEL", "(not set)"),
     }
 
 
@@ -1617,7 +1616,7 @@ async def _execute_silver_publish_and_catalog_sync(session: dict, mode: Optional
         contract_dict,
     )
 
-    publisher = DatabricksPublisher(silver_schema=target_dataset, mode=mode or "live")
+    publisher = BigQueryPublisher(silver_dataset=target_dataset, mode=mode or "live")
     bq_report = await asyncio.to_thread(publisher.publish, ddl)
 
     project_id = publisher.project_id
@@ -1958,13 +1957,39 @@ async def chat_endpoint(body: ChatRequest):
             "chips": ["Publish to BigQuery", "Open & Edit Existing Silver Structure", "Adjust the model", "Tweak the mapping", "Change Entity Selection"],
         }
 
-    # Direct handler for Multi-Source Bronze -> Silver STTM (Hogan + AFS + TSYS + ACLS)
-    if action == "multi_source_sttm" or any(
+    # Direct handler for Generalized N-to-M Multi-Source Bronze -> Silver STTM (Banking Customer 360 & Water Account 360)
+    if action in ("multi_source_sttm", "water_sttm") or any(
         kw in user_msg.lower()
-        for kw in ("map bronze", "4-to-1 sttm", "multi-source sttm", "bronze → silver")
+        for kw in (
+            "map bronze",
+            "map multi-source",
+            "4-to-1 sttm",
+            "n-to-m sttm",
+            "multi-source sttm",
+            "bronze → silver",
+            "map water account 360",
+            "water account 360 sttm",
+        )
     ):
         from engine.sttm_builder import build_multi_source_sttm_view
-        sttm_view = await asyncio.to_thread(build_multi_source_sttm_view)
+
+        is_water = "water" in user_msg.lower() or action == "water_sttm"
+        ind = "water" if is_water else "banking"
+        dom = "account_360" if is_water else "customer_360"
+        brz_ds = "water_bronze" if is_water else "banking_bronze"
+        slv_ds = "water_silver" if is_water else "banking_silver"
+
+        session["conformance_industry"] = ind
+        session["conformance_domain"] = dom
+        store.set(session_id, session)
+
+        sttm_view = await asyncio.to_thread(build_multi_source_sttm_view, brz_ds, slv_ds, ind, dom)
+        sys_hierarchy = sttm_view.get("systems_hierarchy", [])
+        sys_bullets = "\n".join(
+            f"  - **{s['source_system']} ({s['system_name']})** → `{s['table_count']} tables` (`{', '.join(t['table_name'] for t in s['tables'])}`)"
+            for s in sys_hierarchy
+        )
+        slv_short = ", ".join(f"`{t.split('.')[-1]}`" for t in sttm_view.get("silver_tables", []))
         return {
             "session_id": session_id,
             "current_step": "sttm_ready",
@@ -1973,25 +1998,46 @@ async def chat_endpoint(body: ChatRequest):
                 {
                     "agent": "Silver STTM & Conformance Architect",
                     "text": (
-                        f"Discovered **4 heterogeneous Bronze tables** (`{sttm_view['bronze_source_mode']}`) and generated the "
-                        f"**4-to-1 Multi-Source STTM** mapping **TSYS (Card)**, **HOGAN (Deposit)**, **AFS (Commercial Loan)**, "
-                        f"and **ACLS (Retail Loan)** into **Unified Silver Customer (`slv_customer_360`)**, **XREF (`slv_customer_source_xref`)**, "
-                        f"and **Banking Arrangements (`slv_customer_arrangement`)**.\n\n"
-                        f"Review the column mappings and 4-to-1 lineage below, then click **Execute STTM & Conform**."
+                        f"Discovered **{len(sys_hierarchy)} Source Systems → {len(sttm_view.get('bronze_tables', []))} Bronze Tables** "
+                        f"(`{sttm_view['bronze_source_mode']}`) and generated the generalized **N-to-M Domain STTM** for **{sttm_view.get('domain_display_name')}**:\n\n"
+                        f"{sys_bullets}\n\n"
+                        f"**Target Silver Domain Tables ({len(sttm_view.get('silver_tables', []))})**: {slv_short}\n\n"
+                        f"Review the declarative column mappings and N-to-M lineage below, then click **Execute STTM & Conform**."
                     ),
                     "silver_transform_view": sttm_view,
-                    "chips": ["Execute STTM & Conform", "Publish Customer 360 to BigQuery", "Start New Silver Product"],
+                    "chips": [
+                        "Execute STTM & Conform",
+                        "Publish Customer 360 to BigQuery",
+                        "Map Water Account 360 (Cross-Industry STTM)",
+                        "Start New Silver Product",
+                    ],
                 }
             ],
-            "chips": ["Execute STTM & Conform", "Publish Customer 360 to BigQuery", "Start New Silver Product"],
+            "chips": [
+                "Execute STTM & Conform",
+                "Publish Customer 360 to BigQuery",
+                "Map Water Account 360 (Cross-Industry STTM)",
+                "Start New Silver Product",
+            ],
         }
 
-    # Direct handler for 4-Source Customer 360 & Arrangements Conformance (Hogan + AFS + TSYS + ACLS -> Silver)
+    # Direct handler for N-to-M Customer 360 / Water Account 360 Conformance
     if action == "run_conformance" or any(
         kw in user_msg.lower()
-        for kw in ("execute sttm", "run 4-source customer 360", "4-source customer 360", "run conformance", "conformance pipeline")
+        for kw in (
+            "execute sttm",
+            "run 4-source customer 360",
+            "4-source customer 360",
+            "run conformance",
+            "conformance pipeline",
+            "conform water account 360",
+        )
     ):
-        conf_res = await _run_and_format_conformance(publish=False)
+        ind = "water" if "water" in user_msg.lower() else session.get("conformance_industry", "banking")
+        dom = "account_360" if ind == "water" else session.get("conformance_domain", "customer_360")
+        slv_ds = "water_silver" if ind == "water" else "banking_silver"
+        conf_res = await _run_and_format_conformance(publish=False, dataset_id=slv_ds, industry=ind, domain=dom)
+        sys_counts_str = ", ".join(f"{k}: {v}" for k, v in conf_res.get("source_counts", {}).items())
         return {
             "session_id": session_id,
             "current_step": "conformance_ready",
@@ -2000,24 +2046,36 @@ async def chat_endpoint(body: ChatRequest):
                 {
                     "agent": "Silver Conformance Engine",
                     "text": (
-                        f"Executed **4-Source Bronze → Silver Customer 360 Conformance** (source: `{conf_res.get('source_mode', 'bigquery')}`) across **Hogan, AFS, TSYS, and ACLS**:\n\n"
-                        f"- **Bronze Records Ingested**: `{conf_res['total_bronze_records']}` "
-                        f"(Hogan: {conf_res['source_counts']['HOGAN']}, AFS: {conf_res['source_counts']['AFS']}, "
-                        f"TSYS: {conf_res['source_counts']['TSYS']}, ACLS: {conf_res['source_counts']['ACLS']})\n"
-                        f"- **Unified Silver Golden Customers**: `{conf_res['unified_customers']}` "
+                        f"Executed **N-to-M Multi-Table Bronze → {conf_res.get('domain_display_name', 'Silver Customer 360')} Conformance** "
+                        f"(`{conf_res.get('source_system_count', 4)} Systems` · `{conf_res.get('total_bronze_tables', 12)} Bronze Tables` → `5 Silver Domain Tables`):\n\n"
+                        f"- **Bronze Tables & Records Ingested**: `{conf_res.get('total_bronze_tables', 12)} tables` (`{conf_res.get('total_all_table_rows', 0)} total rows`; `{conf_res['total_bronze_records']}` primary party records across {sys_counts_str})\n"
+                        f"- **Unified Silver Golden Entities (`slv_customer_360`)**: `{conf_res['unified_customers']}` "
                         f"({conf_res['deduplicated_count']} duplicates merged — **{conf_res['dedup_ratio_pct']}%** compression)\n"
-                        f"- **Linked Banking Arrangements**: `{conf_res['total_arrangements']}` "
-                        f"(Deposit, Credit Card, Retail Loan & Commercial Loan)"
+                        f"- **Multi-Table Source XREFs (`slv_customer_source_xref`)**: `{conf_res['total_xrefs']}` bi-directional links\n"
+                        f"- **Linked Domain Arrangements (`slv_customer_arrangement`)**: `{conf_res['total_arrangements']}`\n"
+                        f"- **Normalized 1:N Contacts (`slv_customer_contact`)**: `{conf_res.get('total_contacts', 0)}` (E.164 Phones, Emails, Addresses & Kafka OTP Streams)\n"
+                        f"- **Steward Review Queue (`slv_steward_review_queue`)**: `{conf_res.get('total_steward_reviews', 0)}` Tier-3 fuzzy match candidates"
                     ),
                     "conformance_view": conf_res,
-                    "chips": ["Publish Customer 360 to BigQuery", "Start New Silver Product"],
+                    "chips": [
+                        "Publish Customer 360 to BigQuery",
+                        "Map Water Account 360 (Cross-Industry STTM)",
+                        "Start New Silver Product",
+                    ],
                 }
             ],
-            "chips": ["Publish Customer 360 to BigQuery", "Start New Silver Product"],
+            "chips": [
+                "Publish Customer 360 to BigQuery",
+                "Map Water Account 360 (Cross-Industry STTM)",
+                "Start New Silver Product",
+            ],
         }
 
-    if user_msg.lower() == "publish customer 360 to bigquery":
-        conf_res = await _run_and_format_conformance(publish=True)
+    if user_msg.lower() in ("publish customer 360 to bigquery", "publish water account 360 to bigquery"):
+        ind = "water" if "water" in user_msg.lower() else session.get("conformance_industry", "banking")
+        dom = "account_360" if ind == "water" else session.get("conformance_domain", "customer_360")
+        slv_ds = "water_silver" if ind == "water" else "banking_silver"
+        conf_res = await _run_and_format_conformance(publish=True, dataset_id=slv_ds, industry=ind, domain=dom)
         return {
             "session_id": session_id,
             "current_step": "conformance_published",
@@ -2026,14 +2084,15 @@ async def chat_endpoint(body: ChatRequest):
                 {
                     "agent": "Silver Conformance Engine",
                     "text": (
-                        f"✅ Materialized **Customer 360 (`slv_customer_360`, `slv_customer_source_xref`, `slv_customer_arrangement`)** "
-                        f"in BigQuery & synced to **GCP Knowledge Catalog**!"
+                        f"✅ Materialized **5 Silver Domain Tables (`slv_customer_360`, `slv_customer_source_xref`, "
+                        f"`slv_customer_arrangement`, `slv_customer_contact`, `slv_steward_review_queue`)** "
+                        f"in BigQuery (`{slv_ds}`) & synced to **GCP Knowledge Catalog**!"
                     ),
                     "conformance_view": conf_res,
-                    "chips": ["Start New Silver Product"],
+                    "chips": ["Map Water Account 360 (Cross-Industry STTM)", "Start New Silver Product"],
                 }
             ],
-            "chips": ["Start New Silver Product"],
+            "chips": ["Map Water Account 360 (Cross-Industry STTM)", "Start New Silver Product"],
         }
 
     # Direct handler for "Publish to BigQuery" (executes live BigQuery DDL + syncs to GCP Knowledge Catalog)
@@ -2652,31 +2711,43 @@ async def chat_endpoint(body: ChatRequest):
     }
 
 
-# ── 4-Source Customer 360 & Banking Arrangements Conformance Endpoint ─────────
+# ── N-to-M Multi-Table Customer 360 / Domain Conformance Endpoint ─────────────
 
 class ConformanceRunRequest(BaseModel):
-    publish: bool = Field(False, description="When true, materialize Customer 360, XREF, and Arrangements in BigQuery & Knowledge Catalog")
+    publish: bool = Field(False, description="When true, materialize all 5 Silver Domain tables in BigQuery & GCP Knowledge Catalog")
     dataset_id: str = Field("banking_silver", description="Target Silver BigQuery dataset")
+    industry: str = Field("banking", description="Industry key (e.g. banking, water)")
+    domain: str = Field("customer_360", description="Domain key (e.g. customer_360, account_360)")
 
 
-async def _run_and_format_conformance(publish: bool = False, dataset_id: str = "banking_silver") -> dict:
+async def _run_and_format_conformance(
+    publish: bool = False,
+    dataset_id: str = "banking_silver",
+    industry: str = "banking",
+    domain: str = "customer_360",
+) -> dict:
     from engine.pipeline_runner import run_conformance_pipeline
 
-    res = await asyncio.to_thread(run_conformance_pipeline)
+    res = await asyncio.to_thread(run_conformance_pipeline, industry, domain)
     arr_by_cust: dict[str, list[dict]] = {}
     for arr in res.get("arrangements", []):
         arr_by_cust.setdefault(arr["customer_key"], []).append(arr)
+
+    cnt_by_cust: dict[str, list[dict]] = {}
+    for cnt in res.get("contacts", []):
+        cnt_by_cust.setdefault(cnt["customer_key"], []).append(cnt)
 
     enriched_customers = []
     for gc in res.get("golden_customers", []):
         enriched_customers.append({
             **gc,
             "arrangements": arr_by_cust.get(gc["customer_key"], []),
+            "contacts": cnt_by_cust.get(gc["customer_key"], []),
         })
     res["golden_customers"] = enriched_customers
 
     if publish:
-        publisher = DatabricksPublisher(silver_schema=dataset_id, mode="live")
+        publisher = BigQueryPublisher(silver_dataset=dataset_id, mode="live")
         ddl = f"""
 CREATE OR REPLACE TABLE `{publisher.project_id}.{dataset_id}.slv_customer_360` (
   customer_key STRING NOT NULL OPTIONS(description='[PK] Unified Silver Customer Surrogate Key'),
@@ -2692,8 +2763,9 @@ CREATE OR REPLACE TABLE `{publisher.project_id}.{dataset_id}.slv_customer_360` (
   contributing_sources STRING OPTIONS(description='Pipe-delimited Contributing Bronze Systems'),
   source_record_count INT64 OPTIONS(description='Count of Merged Bronze Records'),
   arrangement_count INT64 OPTIONS(description='Count of Linked Banking Arrangements'),
-  arrangement_types STRING OPTIONS(description='Pipe-delimited Linked Arrangement Types')
-) OPTIONS(description='Conformed Silver Customer 360 Golden Record (Hogan + AFS + TSYS + ACLS)');
+  arrangement_types STRING OPTIONS(description='Pipe-delimited Linked Arrangement Types'),
+  contact_count INT64 OPTIONS(description='Count of 1:N Normalized Contact Points')
+) OPTIONS(description='Conformed Silver Customer 360 Golden Record (N-to-M Domain Mastering)');
 
 CREATE OR REPLACE TABLE `{publisher.project_id}.{dataset_id}.slv_customer_source_xref` (
   xref_key STRING NOT NULL OPTIONS(description='[PK] Cross-Reference Surrogate Key'),
@@ -2703,25 +2775,51 @@ CREATE OR REPLACE TABLE `{publisher.project_id}.{dataset_id}.slv_customer_source
   source_customer_id STRING NOT NULL OPTIONS(description='Source System Natural Key'),
   match_method STRING OPTIONS(description='Identity Resolution Match Rule'),
   match_score FLOAT64 OPTIONS(description='Entity Resolution Confidence Score')
-) OPTIONS(description='Auditable Multi-Source Customer Cross-Reference (XREF)');
+) OPTIONS(description='Auditable Multi-Table Source Cross-Reference (XREF)');
 
 CREATE OR REPLACE TABLE `{publisher.project_id}.{dataset_id}.slv_customer_arrangement` (
   arrangement_key STRING NOT NULL OPTIONS(description='[PK] Silver Arrangement Surrogate Key'),
   customer_key STRING NOT NULL OPTIONS(description='[FK->slv_customer_360.customer_key] Unified Customer Key'),
-  source_system STRING NOT NULL OPTIONS(description='Originating System (HOGAN/TSYS/ACLS/AFS)'),
-  source_account_id STRING NOT NULL OPTIONS(description='Source Account or Loan ID'),
-  arrangement_type STRING NOT NULL OPTIONS(description='DEPOSIT | CREDIT_CARD | RETAIL_LOAN | COMMERCIAL_LOAN'),
+  source_system STRING NOT NULL OPTIONS(description='Originating System'),
+  source_table STRING OPTIONS(description='Originating Bronze Table'),
+  source_account_id STRING NOT NULL OPTIONS(description='Source Account, Facility, or Contract ID'),
+  arrangement_type STRING NOT NULL OPTIONS(description='DEPOSIT | CREDIT_CARD | RETAIL_LOAN | COMMERCIAL_LOAN | COMMERCIAL_COLLATERAL'),
   product_subtype STRING OPTIONS(description='Product Subtype Description'),
   status STRING OPTIONS(description='Normalized Arrangement Status'),
-  limit_or_amount FLOAT64 OPTIONS(description='Credit Line or Loan Amount'),
+  limit_or_amount FLOAT64 OPTIONS(description='Credit Line, Principal, or Appraised Amount'),
   branch_or_channel STRING OPTIONS(description='Branch or Servicing Channel')
-) OPTIONS(description='Many-to-One Banking Arrangements Linked to Unified Silver Customer');
+) OPTIONS(description='Many-to-One Domain Arrangements Linked to Unified Silver Customer');
+
+CREATE OR REPLACE TABLE `{publisher.project_id}.{dataset_id}.slv_customer_contact` (
+  contact_key STRING NOT NULL OPTIONS(description='[PK] Normalized Contact Point Surrogate Key'),
+  customer_key STRING NOT NULL OPTIONS(description='[FK->slv_customer_360.customer_key] Unified Customer Key'),
+  contact_type STRING NOT NULL OPTIONS(description='PHONE_E164 | EMAIL | POSTAL_ADDRESS | KAFKA_OTP_MOBILE'),
+  contact_usage STRING OPTIONS(description='Usage Classification'),
+  contact_value_normalized STRING NOT NULL OPTIONS(description='Normalized Contact Value'),
+  source_system STRING NOT NULL OPTIONS(description='Originating Source System'),
+  source_table STRING NOT NULL OPTIONS(description='Originating Bronze Table'),
+  verification_status STRING OPTIONS(description='Verification Status')
+) OPTIONS(description='1:N Normalized Contact Points & Kafka Verified Touchpoints');
+
+CREATE OR REPLACE TABLE `{publisher.project_id}.{dataset_id}.slv_steward_review_queue` (
+  review_id STRING NOT NULL OPTIONS(description='[PK] Steward Review Queue ID'),
+  candidate_a_system STRING NOT NULL OPTIONS(description='Candidate A Source System'),
+  candidate_a_entity STRING OPTIONS(description='Candidate A Bronze Table'),
+  candidate_a_id STRING NOT NULL OPTIONS(description='Candidate A Natural Key'),
+  candidate_a_name STRING OPTIONS(description='Candidate A Legal Name'),
+  candidate_b_system STRING NOT NULL OPTIONS(description='Candidate B Source System'),
+  candidate_b_entity STRING OPTIONS(description='Candidate B Bronze Table'),
+  candidate_b_id STRING NOT NULL OPTIONS(description='Candidate B Natural Key'),
+  candidate_b_name STRING OPTIONS(description='Candidate B Legal Name'),
+  match_rule STRING OPTIONS(description='Tier-3 Probabilistic Rule Triggered'),
+  similarity_score FLOAT64 OPTIONS(description='Fuzzy Match Similarity Score'),
+  review_status STRING OPTIONS(description='Steward Review Status')
+) OPTIONS(description='Tier-3 Probabilistic Identity Resolution Candidates for Steward Review');
 """
         bq_report = await asyncio.to_thread(publisher.publish, ddl)
-        # Materialize conformed Golden Customers, XREF, and Arrangements rows in Databricks Unity Catalog
         try:
-            from tools.databricks_auth import get_sql_connection
-            catalog = publisher.catalog
+            from google.cloud import bigquery as _bq
+            bq_client = publisher._get_client()
             cust_rows = [
                 {
                     "customer_key": gc["customer_key"],
@@ -2738,6 +2836,7 @@ CREATE OR REPLACE TABLE `{publisher.project_id}.{dataset_id}.slv_customer_arrang
                     "source_record_count": int(gc.get("source_record_count", 1)),
                     "arrangement_count": int(gc.get("arrangement_count", 0)),
                     "arrangement_types": "|".join(gc.get("arrangement_types", [])),
+                    "contact_count": int(gc.get("contact_count", 0)),
                 }
                 for gc in enriched_customers
             ]
@@ -2758,6 +2857,7 @@ CREATE OR REPLACE TABLE `{publisher.project_id}.{dataset_id}.slv_customer_arrang
                     "arrangement_key": a["arrangement_key"],
                     "customer_key": a["customer_key"],
                     "source_system": a["source_system"],
+                    "source_table": a.get("source_table", ""),
                     "source_account_id": a["source_account_id"],
                     "arrangement_type": a["arrangement_type"],
                     "product_subtype": a.get("product_subtype", ""),
@@ -2767,49 +2867,86 @@ CREATE OR REPLACE TABLE `{publisher.project_id}.{dataset_id}.slv_customer_arrang
                 }
                 for a in res.get("arrangements", [])
             ]
-            def _load_conformed_rows():
-                with get_sql_connection(catalog=catalog, schema=dataset_id) as conn, conn.cursor() as cur:
-                    for tname, rows_payload in [
-                        ("slv_customer_360", cust_rows),
-                        ("slv_customer_source_xref", xref_rows),
-                        ("slv_customer_arrangement", arr_rows),
-                    ]:
-                        if not rows_payload:
-                            continue
-                        quoted = f"`{catalog}`.`{dataset_id}`.`{tname}`"
-                        cur.execute(f"TRUNCATE TABLE {quoted}")
-                        cols = list(rows_payload[0].keys())
-                        placeholders = ", ".join(["?"] * len(cols))
-                        col_list = ", ".join(f"`{c}`" for c in cols)
-                        values = [tuple(r[c] for c in cols) for r in rows_payload]
-                        cur.executemany(f"INSERT INTO {quoted} ({col_list}) VALUES ({placeholders})", values)
-            await asyncio.to_thread(_load_conformed_rows)
+            cnt_rows = [
+                {
+                    "contact_key": c["contact_key"],
+                    "customer_key": c["customer_key"],
+                    "contact_type": c["contact_type"],
+                    "contact_usage": c.get("contact_usage", ""),
+                    "contact_value_normalized": c["contact_value_normalized"],
+                    "source_system": c["source_system"],
+                    "source_table": c.get("source_table", ""),
+                    "verification_status": c.get("verification_status", "VERIFIED"),
+                }
+                for c in res.get("contacts", [])
+            ]
+            rev_rows = [
+                {
+                    "review_id": r["review_id"],
+                    "candidate_a_system": r["candidate_a_system"],
+                    "candidate_a_entity": r.get("candidate_a_entity", ""),
+                    "candidate_a_id": r["candidate_a_id"],
+                    "candidate_a_name": r.get("candidate_a_name", ""),
+                    "candidate_b_system": r["candidate_b_system"],
+                    "candidate_b_entity": r.get("candidate_b_entity", ""),
+                    "candidate_b_id": r["candidate_b_id"],
+                    "candidate_b_name": r.get("candidate_b_name", ""),
+                    "match_rule": r.get("match_rule", ""),
+                    "similarity_score": float(r.get("similarity_score", 0.85)),
+                    "review_status": r.get("review_status", "PENDING_STEWARD_REVIEW"),
+                }
+                for r in res.get("steward_review_queue", [])
+            ]
+            w_cfg = _bq.LoadJobConfig(write_disposition=_bq.WriteDisposition.WRITE_TRUNCATE)
+            for tname, rows_payload in [
+                ("slv_customer_360", cust_rows),
+                ("slv_customer_source_xref", xref_rows),
+                ("slv_customer_arrangement", arr_rows),
+                ("slv_customer_contact", cnt_rows),
+                ("slv_steward_review_queue", rev_rows),
+            ]:
+                if rows_payload:
+                    await asyncio.to_thread(
+                        lambda tn=tname, rp=rows_payload: bq_client.load_table_from_json(
+                            rp, f"{publisher.project_id}.{dataset_id}.{tn}", job_config=w_cfg
+                        ).result()
+                    )
         except Exception as load_exc:
-            log.warning("Conformed Databricks row load warning: %s", load_exc)
+            log.warning("Conformed BigQuery row load warning: %s", load_exc)
+
+        all_5_tables = [
+            "slv_customer_360",
+            "slv_customer_source_xref",
+            "slv_customer_arrangement",
+            "slv_customer_contact",
+            "slv_steward_review_queue",
+        ]
         kc = KnowledgeCatalogClient(project_id=publisher.project_id, dataset_id=dataset_id)
         dp_res = await asyncio.to_thread(
             kc.register_data_product,
             dataset_id,
-            "silver-customer-360-multi-source",
-            "Silver Customer 360 (Hogan + AFS + TSYS + ACLS)",
-            "Unified Silver Customer Golden Records, XREF, and Deposit/Card/Loan Arrangements",
-            ["slv_customer_360", "slv_customer_source_xref", "slv_customer_arrangement"],
+            f"silver-{domain}-n-to-m",
+            f"Silver {res.get('domain_display_name', 'Customer 360')} (N-to-M Multi-Table Mastering)",
+            "Unified Silver Golden Records, Multi-Table XREF, Arrangements, 1:N Contacts & Steward Review Queue",
+            all_5_tables,
         )
         gl_res = await asyncio.to_thread(
             kc.sync_business_glossary,
-            "silver-customer-360-glossary",
-            "Silver Customer 360 Business Glossary",
-            "Multi-Source Customer Conformance & Arrangement Definitions",
+            f"silver-{domain}-glossary",
+            f"Silver {res.get('domain_display_name', 'Customer 360')} Business Glossary",
+            "N-to-M Domain Conformance, Survivorship & MDM Definitions",
             [
-                {"name": "slv_customer_360", "description": "Unified Silver Customer Golden Record"},
-                {"name": "slv_customer_source_xref", "description": "Multi-Source Identity Resolution Cross-Reference"},
-                {"name": "slv_customer_arrangement", "description": "Linked Deposit, Card, and Loan Arrangements"},
+                {"name": "slv_customer_360", "description": "Unified Silver Golden Master Record"},
+                {"name": "slv_customer_source_xref", "description": "Multi-Table Identity Resolution Cross-Reference"},
+                {"name": "slv_customer_arrangement", "description": "Linked Deposits, Cards, Commercial Facilities, Collateral & Loans"},
+                {"name": "slv_customer_contact", "description": "1:N Normalized Phones, Emails, Addresses & Kafka Verified Mobiles"},
+                {"name": "slv_steward_review_queue", "description": "Tier-3 Probabilistic Identity Match Candidates for Steward Review"},
             ],
         )
         console_links = kc.build_console_links(
             project_id=publisher.project_id,
             dataset_id=dataset_id,
-            table_names=["slv_customer_360", "slv_customer_source_xref", "slv_customer_arrangement"],
+            table_names=all_5_tables,
             dataset_location="US",
         )
         res["publish_report"] = {
@@ -2824,17 +2961,34 @@ CREATE OR REPLACE TABLE `{publisher.project_id}.{dataset_id}.slv_customer_arrang
     return res
 
 
+@app.get("/v1/mappings/domains")
+async def list_reusable_domain_mappings_endpoint():
+    """Return all registered declarative N-to-M cross-industry domain mapping specifications."""
+    from mappings.registry import list_available_mappings
+    return {"mappings": await asyncio.to_thread(list_available_mappings)}
+
+
 @app.post("/v1/sttm/multi-source")
-async def get_multi_source_sttm_endpoint(bronze_dataset: str = "banking_bronze", target_dataset: str = "banking_silver"):
-    """Discover the 4 Bronze tables and generate the 4-to-1 Multi-Source STTM specification."""
+async def get_multi_source_sttm_endpoint(
+    bronze_dataset: str = "banking_bronze",
+    target_dataset: str = "banking_silver",
+    industry: str = "banking",
+    domain: str = "customer_360",
+):
+    """Discover 1-to-many Bronze tables per source system and generate the generalized N-to-M STTM specification."""
     from engine.sttm_builder import build_multi_source_sttm_view
-    return await asyncio.to_thread(build_multi_source_sttm_view, bronze_dataset, target_dataset)
+    return await asyncio.to_thread(build_multi_source_sttm_view, bronze_dataset, target_dataset, industry, domain)
 
 
 @app.post("/v1/conformance/run")
 async def run_multi_source_conformance_endpoint(body: Optional[ConformanceRunRequest] = None):
-    """Execute the 4-Source (Hogan + AFS + TSYS + ACLS) Customer 360 & Arrangements Conformance Engine."""
+    """Execute the N-to-M Multi-Table Domain Conformance Engine (Banking Customer 360 or Water Account 360)."""
     req = body or ConformanceRunRequest()
-    return await _run_and_format_conformance(publish=req.publish, dataset_id=req.dataset_id)
+    return await _run_and_format_conformance(
+        publish=req.publish,
+        dataset_id=req.dataset_id,
+        industry=req.industry,
+        domain=req.domain,
+    )
 
 

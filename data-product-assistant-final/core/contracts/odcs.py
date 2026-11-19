@@ -185,27 +185,17 @@ def domain_to_contract(
         contract["authoritativeDefinitions"] = _authoritative(domain.standards)
 
     if project and dataset:
-        # ODCS servers are type-discriminated.
-        if target == "databricks":
-            contract["servers"] = [
-                {
-                    "server": "production",
-                    "type": "databricks",
-                    "environment": "prod",
-                    "catalog": project,
-                    "schema": dataset,
-                }
-            ]
-        else:
-            contract["servers"] = [
-                {
-                    "server": "production",
-                    "type": "bigquery",
-                    "environment": "prod",
-                    "project": project,
-                    "dataset": dataset,
-                }
-            ]
+        # ODCS servers are type-discriminated. Validate these two keys against
+        # the JSON Schema for the pinned apiVersion before relying on them.
+        contract["servers"] = [
+            {
+                "server": "production",
+                "type": "bigquery",
+                "environment": "prod",
+                "project": project,
+                "dataset": dataset,
+            }
+        ]
 
     if meta.owner_team:
         contract["team"] = {"name": meta.owner_team}

@@ -78,7 +78,7 @@ export default function ChatPane({
             <div className="chat-title">
               Bronze Agent <span className="online-dot" />
             </div>
-            <div className="chat-subtitle">Powered by Enterprise Data Domain Architecture &amp; Azure Databricks</div>
+            <div className="chat-subtitle">Powered by Enterprise Data Domain Architecture &amp; BigQuery</div>
           </div>
         </div>
         <div className="header-actions">

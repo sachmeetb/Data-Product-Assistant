@@ -51,7 +51,7 @@ from agents import (
     spec_generator_agent,
     validator_agent,
 )
-from tools.databricks_tool import DatabricksPublisher
+from tools.bigquery_tool import BigQueryPublisher
 from tools.knowledge_catalog import KnowledgeCatalogClient
 from tools.datacontract_generator import (
     generate_data_contract_dict,
@@ -84,7 +84,7 @@ app = FastAPI(
     title="Bronze Agent API",
     description=(
         "Agentic banking Bronze-layer schema generator powered by "
-        "Azure Databricks Model Serving + Unity Catalog + Delta Lake"
+        "Google ADK + Vertex AI Gemini + BigQuery"
     ),
     version="1.0.0",
     docs_url="/docs",
@@ -144,9 +144,8 @@ async def health_check():
         "status": "ok",
         "service": "Bronze-Agent",
         "timestamp": datetime.utcnow().isoformat() + "Z",
-        "databricks_host": os.environ.get("DATABRICKS_HOST", "(not set)"),
-        "unity_catalog": f"{os.environ.get('DATABRICKS_CATALOG', 'main')}.{os.environ.get('DATABRICKS_BRONZE_SCHEMA', 'banking_bronze')}",
-        "llm_model": os.environ.get("DATABRICKS_LLM_MODEL") or os.environ.get("AZURE_OPENAI_DEPLOYMENT") or "(default)",
+        "gcp_project": os.environ.get("GCP_PROJECT_ID", "(not set)"),
+        "gemini_model": os.environ.get("GEMINI_MODEL", "(not set)"),
     }
 
 
@@ -281,13 +280,13 @@ async def get_contract(session_id: str):
 
 @app.post("/v1/sessions/{session_id}/publish")
 async def publish_session(session_id: str, body: PublishRequest):
-    """Publish the generated DDL to Azure Databricks Unity Catalog."""
+    """Publish the generated DDL to BigQuery."""
     session = _get_session(session_id)
     ddl = session.get("ddl_script", "")
     if not ddl:
         raise HTTPException(status_code=400, detail="No DDL to publish. Run the pipeline first.")
 
-    publisher = DatabricksPublisher(mode=body.mode)
+    publisher = BigQueryPublisher(mode=body.mode)
     report = await asyncio.to_thread(publisher.publish, ddl)
 
     session["publish_report"] = report
@@ -301,52 +300,61 @@ async def publish_session(session_id: str, body: PublishRequest):
 
 class ContractCommitRequest(BaseModel):
     contract: dict = Field(..., description="Data contract object from the UI")
-    session_id: Optional[str] = Field(None, description="Session to pull DDL from for Databricks publish")
+    session_id: Optional[str] = Field(None, description="Session to pull DDL from for BQ publish")
 
 
 @app.post("/v1/data-contract/commit")
 async def commit_data_contract(body: ContractCommitRequest):
-    """Commit a data contract: publish DDL to Azure Databricks Unity Catalog and register governance metadata."""
-    catalog = os.environ.get("DATABRICKS_CATALOG", "main")
-    bronze_schema = os.environ.get("DATABRICKS_BRONZE_SCHEMA", "banking_bronze")
-    db_host = (os.environ.get("DATABRICKS_HOST", "") or "").strip().rstrip("/")
-    if db_host and not db_host.startswith("http"):
-        db_host = f"https://{db_host}"
+    """Commit a data contract: publish DDL to BigQuery, register in Dataplex Knowledge Catalog.
+
+    Returns kc_url — the direct GCP console link for the registered data product.
+    Returns bq_url — the BigQuery dataset console link.
+    Bronze tables are registered as a KC data product under the bronze dataset.
+    """
+    project_id = os.environ.get("GCP_PROJECT_ID", "")
+    location = os.environ.get("GCP_LOCATION", "us-central1")
+    bq_dataset = os.environ.get("BQ_BRONZE_DATASET", "banking_bronze")
 
     contract = body.contract
     info = contract.get("info", {})
     contract_id = contract.get("id", "urn:datacontract:banking_bronze:unknown")
 
+    # Derive a Dataplex-compatible id: lowercase, hyphens, max 63 chars
     kc_id = re.sub(r"[^a-z0-9]+", "-", contract_id.lower()).strip("-")[:63].rstrip("-")
 
     result: dict = {
         "status": "committed",
         "contract_id": contract_id,
-        "databricks_result": None,
+        "bq_result": None,
         "kc_result": None,
         "kc_url": None,
-        "databricks_url": None,
+        "bq_url": None,
     }
 
-    # 1. Publish DDL to Databricks when the session has one
+    # 1. Publish DDL to BigQuery when the session has one
     if body.session_id:
         session = store.get(body.session_id)
         if session and session.get("ddl_script"):
-            publisher = DatabricksPublisher(mode="live")
-            db_report = await asyncio.to_thread(publisher.publish, session["ddl_script"])
-            result["databricks_result"] = db_report
+            publisher = BigQueryPublisher(mode="live")
+            bq_report = await asyncio.to_thread(publisher.publish, session["ddl_script"])
+            result["bq_result"] = bq_report
+            if bq_report.get("dataset_id"):
+                bq_dataset = bq_report["dataset_id"]
 
-    explorer_base = db_host or "https://adb-workspace.azuredatabricks.net"
-    result["databricks_url"] = f"{explorer_base}/explore/data/{catalog}/{bronze_schema}"
+    effective_project = project_id or os.environ.get("BQ_PROJECT") or "eogwapq-agbg-internal-data-mig"
+    result["bq_url"] = (
+        f"https://console.cloud.google.com/bigquery"
+        f"?project={effective_project}&p={effective_project}&d={bq_dataset}&page=dataset"
+    )
 
-    # 2. Enrich Unity Catalog tables & register governance metadata
+    # 2. Register Data Product + Data Assets + Business Glossary in Dataplex Knowledge Catalog
     try:
-        kc = KnowledgeCatalogClient(catalog=catalog, schema_name=bronze_schema, host=db_host)
+        kc = KnowledgeCatalogClient(project_id=effective_project, location=location, dataset_id=bq_dataset)
         models = contract.get("models", {})
         table_names = []
         glossary_terms = []
         for table_name, model_def in list(models.items())[:50]:
-            physical = model_def.get("physicalName", f"{bronze_schema}.{table_name}")
+            physical = model_def.get("physicalName", f"{bq_dataset}.{table_name}")
             tbl = physical.split(".")[-1]
             table_names.append(tbl)
             glossary_terms.append({
@@ -354,8 +362,8 @@ async def commit_data_contract(body: ContractCommitRequest):
                 "description": model_def.get("description") or f"Bronze raw table {tbl}",
             })
             await asyncio.to_thread(
-                kc.enrich_table,
-                bronze_schema,
+                kc.enrich_bigquery_table,
+                bq_dataset,
                 tbl,
                 model_def.get("description") or f"Bronze raw table {tbl}",
                 info.get("domain") or "bronze_banking",
@@ -363,7 +371,7 @@ async def commit_data_contract(body: ContractCommitRequest):
 
         dp_res = await asyncio.to_thread(
             kc.register_data_product,
-            bronze_schema,
+            bq_dataset,
             kc_id,
             info.get("title", "Bronze Data Contract"),
             info.get("description", ""),
@@ -756,32 +764,146 @@ async def _handle_chat(body: ChatRequest, session_id: str):
         session["step"] = "bronze_landed"
         store.set(session_id, session)
         rows_md = "\n".join(
-            f"| `{t['source_system']}` | `{t['fqn']}` | {t['row_count']} | {len(t['columns'])} cols | [Unity Catalog ↗]({t.get('databricks_url', t.get('bigquery_url', '#'))}) |"
+            f"| `{t['source_system']}` | `{t['fqn']}` | {t['row_count']} | {len(t['columns'])} cols | [BigQuery ↗]({t['bigquery_url']}) |"
             for t in landed["tables"]
         )
         dp = landed.get("knowledge_catalog_data_product") or {}
         gl = landed.get("knowledge_catalog_glossary") or {}
         source_label = "Uploaded Files" if uploaded_file_objs else "Built-in Sample Datasets"
         msg = (
-            f"✅ **Landed {len(landed['tables'])} Banking Source Table(s) into `{landed['catalog']}.{landed['schema_name']}`** *(from {source_label})*\n\n"
-            f"| Source System | Unity Catalog Bronze Table | Rows | Schema | Explorer |\n"
+            f"✅ **Landed {len(landed['tables'])} Banking Source Table(s) into `{landed['project_id']}.{landed['dataset_id']}`** *(from {source_label})*\n\n"
+            f"| Source System | BigQuery Bronze Table | Rows | Schema | Console |\n"
             f"| :--- | :--- | ---: | ---: | :--- |\n"
             f"{rows_md}\n\n"
             f"- **Total Bronze Records Landed**: `{landed['total_rows']}`\n"
         )
         if dp.get("ok"):
-            msg += f"- **Unity Catalog Data Product**: `{dp.get('data_product_id')}` ({dp.get('assets_registered', 0)} assets) — [Open Catalog Explorer ↗]({dp.get('knowledge_catalog_url')})\n"
+            msg += f"- **Knowledge Catalog Data Product**: `{dp.get('data_product_id')}` ({dp.get('assets_registered', 0)} assets) — [Open Data Products ↗]({dp.get('knowledge_catalog_url')})\n"
         if gl.get("ok"):
-            msg += f"- **Unity Catalog Glossary**: `{gl.get('glossary_id')}` ({gl.get('terms_synced', 0)} terms) — [Open Catalog Explorer ↗]({gl.get('glossary_url')})\n"
-        msg += "\n**Next Step**: Open **Silver Data Product Assistant** and click **Map Bronze → Silver Customer (4-to-1 STTM)** to discover these Bronze tables and build the multi-source STTM."
+            msg += f"- **Knowledge Catalog Glossary**: `{gl.get('glossary_id')}` ({gl.get('terms_synced', 0)} terms) — [Open Glossaries ↗]({gl.get('glossary_url')})\n"
+        msg += "\n**Next Step**: Open **Silver Data Product Assistant** and click **Map Multi-Source Bronze → Silver Customer 360 (N-to-M STTM)** to discover these Bronze tables and build the multi-source STTM."
         return {
             "session_id": session_id,
             "current_step": "bronze_landed",
-            "messages": [{"agent": "Bronze Agent", "text": msg, "chips": ["Land 4-Source Banking Data", "Design Bronze Data Product (Standard Flow)"], "files": []}],
-            "chips": ["Land 4-Source Banking Data", "Design Bronze Data Product (Standard Flow)"],
+            "messages": [{"agent": "Bronze Agent", "text": msg, "chips": ["Auto-Ingest Multi-Table Sources (Batch + Kafka)", "Land 4-Source Banking Data", "Design Bronze Data Product (Standard Flow)"], "files": []}],
+            "chips": ["Auto-Ingest Multi-Table Sources (Batch + Kafka)", "Land 4-Source Banking Data", "Design Bronze Data Product (Standard Flow)"],
         }
 
-    if action == "publish" or user_msg.lower() in {"publish to databricks", "publish to bigquery"}:
+    # Automated 1-to-Many Multi-Table Bronze Ingestion (Batch + Kafka Streaming) -> GCP BigQuery & Dataplex
+    if (
+        action in ("auto_ingest_multi_table", "auto_ingest_water")
+        or "auto-ingest multi-table" in user_msg.lower()
+        or "auto-ingest water" in user_msg.lower()
+        or "1-to-many bronze" in user_msg.lower()
+    ):
+        from ingestion.orchestrator import AutomatedBronzeOrchestrator
+
+        ind_domain = "water" if ("water" in user_msg.lower() or action == "auto_ingest_water") else "banking"
+        orchestrator = AutomatedBronzeOrchestrator()
+        res = await asyncio.to_thread(orchestrator.run_automated_ingestion, None, ind_domain, None)
+        session["auto_ingested_bronze"] = res
+        session["step"] = "bronze_landed"
+        store.set(session_id, session)
+
+        sys_rows_md = "\n".join(
+            f"| **{s['source_system']}** ({s['system_label']}) | **{s['table_count']} tables** | `{', '.join(s['tables'])}` | `{', '.join(s['ingestion_modes'])}` | {s['total_rows']} |"
+            for s in res["systems_summary"]
+        )
+        tbl_rows_md = "\n".join(
+            f"| `{t['source_system']}` | `{t['fqn']}` | `{t['ingestion_mode']}` | {t['row_count']} | {len(t['columns'])} raw + {len(t.get('envelope_columns', []))} env | [BigQuery ↗]({t.get('bigquery_url', '#')}) |"
+            for t in res["tables"]
+        )
+        dp = res.get("knowledge_catalog_data_product") or {}
+        gl = res.get("knowledge_catalog_glossary") or {}
+
+        msg = (
+            f"⚡ **Automated 1-to-Many Bronze Ingestion Complete (`{res['project_id']}.{res['dataset_id']}`)**\n\n"
+            f"Modeled **{res['source_system_count']} Source Systems → {res['total_tables']} Bronze Tables** "
+            f"(`{res['batch_tables_count']}` Batch + `{res['streaming_tables_count']}` Real-Time Kafka Stream, **{res['total_rows']} total records**) "
+            f"with automated schema inference and 6-field ingestion envelopes (`_ingest_batch_id`, `_ingest_ts`, `_source_system`, `_source_file_or_topic`, `_ingestion_mode`, `_record_hash`).\n\n"
+            f"### 1-to-Many Source System Summary\n"
+            f"| Source System | Dataset Cardinality | Bronze Tables Provisioned | Ingestion Modes | Total Rows |\n"
+            f"| :--- | :--- | :--- | :--- | ---: |\n"
+            f"{sys_rows_md}\n\n"
+            f"### Provisioned BigQuery Bronze Tables & Console Links\n"
+            f"| System | BigQuery Bronze Table | Mode | Rows | Columns | Console |\n"
+            f"| :--- | :--- | :--- | ---: | :--- | :--- |\n"
+            f"{tbl_rows_md}\n\n"
+        )
+        if dp.get("ok"):
+            msg += f"- **GCP Knowledge Catalog Data Product**: `{dp.get('data_product_id')}` ({dp.get('assets_registered', 0)} assets) — [Open Data Products ↗]({dp.get('knowledge_catalog_url')})\n"
+        if gl.get("ok"):
+            msg += f"- **GCP Knowledge Catalog Glossary**: `{gl.get('glossary_id')}` ({gl.get('terms_synced', 0)} terms) — [Open Glossaries ↗]({gl.get('glossary_url')})\n"
+        msg += "\n**Next Step**: Open **Silver Data Product Assistant** to run the **N-to-M Multi-Source Domain Mapping** (`Many Sources → Many Tables → Domain → Multiple Silver Tables`)."
+
+        return {
+            "session_id": session_id,
+            "current_step": "bronze_landed",
+            "messages": [
+                {
+                    "agent": "Bronze Agent",
+                    "text": msg,
+                    "chips": [
+                        "Simulate Kafka Card Auth Stream",
+                        "Auto-Ingest Water Account 360 Sources",
+                        "Land 4-Source Banking Data",
+                        "Design Bronze Data Product (Standard Flow)",
+                    ],
+                    "files": [],
+                }
+            ],
+            "chips": [
+                "Simulate Kafka Card Auth Stream",
+                "Auto-Ingest Water Account 360 Sources",
+                "Land 4-Source Banking Data",
+                "Design Bronze Data Product (Standard Flow)",
+            ],
+        }
+
+    # Dedicated Kafka Streaming Simulation Handler -> GCP BigQuery
+    if action == "simulate_kafka" or "simulate kafka" in user_msg.lower():
+        from ingestion.kafka_connector import KafkaStreamingConnector
+
+        kafka_conn = KafkaStreamingConnector()
+        k_res = await asyncio.to_thread(
+            kafka_conn.ingest_stream_table,
+            "TSYS",
+            "brz_tsys_auth_events",
+            "payments.tsys.card.auth.v1",
+            "KAFKA-AUTH-STREAM (ISO 8583 Card Authorizations)",
+            "Real-time Kafka event stream capturing card authorizations and verified mobile touchpoints.",
+        )
+        msg = (
+            f"📡 **Kafka Streaming Ingestion Executed (`{k_res['kafka_topic']}` → `{k_res['fqn']}`)**\n\n"
+            f"- **Stream Execution Mode**: `{k_res['stream_mode']}`\n"
+            f"- **Events Materialized in BigQuery**: `{k_res['row_count']}` real-time ISO 8583 authorization events\n"
+            f"- **Dead-Letter Queue (DLQ) Rejects**: `{k_res.get('dlq_count', 0)}`\n"
+            f"- **Kafka Lineage Captured**: `kafka_topic`, `kafka_partition`, `kafka_offset`, `event_ts`, plus Bronze envelope (`_ingest_batch_id`, `_record_hash`)\n"
+            f"- **BigQuery Console Link**: [Open `{k_res['table_name']}` in BigQuery ↗]({k_res['bigquery_url']})"
+        )
+        return {
+            "session_id": session_id,
+            "current_step": "bronze_landed",
+            "messages": [
+                {
+                    "agent": "Bronze Agent",
+                    "text": msg,
+                    "chips": [
+                        "Auto-Ingest Multi-Table Sources (Batch + Kafka)",
+                        "Land 4-Source Banking Data",
+                        "Design Bronze Data Product (Standard Flow)",
+                    ],
+                    "files": [],
+                }
+            ],
+            "chips": [
+                "Auto-Ingest Multi-Table Sources (Batch + Kafka)",
+                "Land 4-Source Banking Data",
+                "Design Bronze Data Product (Standard Flow)",
+            ],
+        }
+
+    if action == "publish" or user_msg.lower() == "publish to bigquery":
         ddl = session.get("ddl_script", "")
         if not ddl:
             return {
@@ -790,30 +912,30 @@ async def _handle_chat(body: ChatRequest, session_id: str):
                 "messages": [{"agent": "Bronze Agent", "text": "No DDL available to publish. Please design the Bronze schema first."}],
                 "chips": ["Design Bronze Schema"],
             }
-        publisher = DatabricksPublisher(mode="live")
+        publisher = BigQueryPublisher(mode="live")
         report = await asyncio.to_thread(publisher.publish, ddl)
         session["publish_report"] = report
 
-        # Register Data Product, Data Assets & Business Glossary in Unity Catalog
+        # Register Data Product, Data Assets & Business Glossary in GCP Knowledge Catalog (Dataplex)
         contract_dict = session.get("contract_dict") or {}
         c_info = contract_dict.get("info", {}) or {}
-        schema_name = os.environ.get("DATABRICKS_BRONZE_SCHEMA", "banking_bronze")
+        ds_id = report.get("dataset_id") or os.environ.get("BQ_BRONZE_DATASET", "banking_bronze")
         pub_tables = report.get("published_tables") or []
         short_tables = [t.split(".")[-1] for t in pub_tables]
-        kc = KnowledgeCatalogClient(catalog=publisher.catalog, schema_name=schema_name)
+        kc = KnowledgeCatalogClient(project_id=publisher.project_id, dataset_id=ds_id)
         for tbl in short_tables:
             await asyncio.to_thread(
-                kc.enrich_table,
-                schema_name,
+                kc.enrich_bigquery_table,
+                ds_id,
                 tbl,
                 f"Bronze raw landing table {tbl}",
                 session.get("domain") or "bronze_banking",
             )
         dp_res = await asyncio.to_thread(
             kc.register_data_product,
-            schema_name,
-            f"bronze-{schema_name}-{session_id[:6]}",
-            c_info.get("title") or f"Bronze Data Product ({schema_name})",
+            ds_id,
+            f"bronze-{ds_id}-{session_id[:6]}",
+            c_info.get("title") or f"Bronze Data Product ({ds_id})",
             c_info.get("description") or "Raw Bronze Lakehouse tables published via Data Product Assistant.",
             short_tables,
             c_info.get("owner_email") or c_info.get("owner"),
@@ -821,18 +943,18 @@ async def _handle_chat(body: ChatRequest, session_id: str):
         gl_terms = [{"name": t, "description": f"Bronze raw table {t}"} for t in short_tables]
         gl_res = await asyncio.to_thread(
             kc.sync_business_glossary,
-            f"bronze-{schema_name}-glossary",
-            f"Bronze Glossary ({schema_name})",
-            f"Business & Technical Glossary for {schema_name}",
+            f"bronze-{ds_id}-glossary",
+            f"Bronze Glossary ({ds_id})",
+            f"Business & Technical Glossary for {ds_id}",
             gl_terms,
         )
         session["kc_result"] = {**dp_res, "glossary": gl_res}
         store.set(session_id, session)
 
         status_icon = "✅" if report.get("publish_status") == "published" else "ℹ️"
-        msg = f"{status_icon} **Azure Databricks & Unity Catalog Publication Report**\n\n"
+        msg = f"{status_icon} **BigQuery & Knowledge Catalog Publication Report**\n\n"
         msg += f"- **Status**: `{report.get('publish_status', 'published')}`\n"
-        msg += f"- **Catalog / Schema**: `{publisher.catalog}.{schema_name}`\n"
+        msg += f"- **Project / Dataset**: `{publisher.project_id}.{ds_id}`\n"
         if pub_tables:
             msg += f"- **Published Tables**: {', '.join([f'`{t}`' for t in pub_tables])}\n"
         if dp_res.get("ok"):
@@ -1499,15 +1621,17 @@ def _parse_uploaded_tabular_rows(file_info: dict) -> tuple[str, str, list[dict]]
 
 def _land_4_sources_to_bronze(dataset_id: Optional[str] = None, uploaded_files: Optional[list[dict]] = None) -> dict:
     import csv
-    from tools.databricks_auth import get_sql_connection
+    from google.cloud import bigquery
+    from tools.gcp_auth import get_bigquery_client
 
-    catalog = os.environ.get("DATABRICKS_CATALOG") or "main"
-    schema_name = dataset_id or os.environ.get("DATABRICKS_BRONZE_SCHEMA") or "banking_bronze"
-    db_host = (os.environ.get("DATABRICKS_HOST", "") or "").strip().rstrip("/")
-    if db_host and not db_host.startswith("http"):
-        db_host = f"https://{db_host}"
-    explorer_base = db_host or "https://adb-workspace.azuredatabricks.net"
+    project_id = os.environ.get("BQ_PROJECT") or os.environ.get("GCP_PROJECT_ID") or "eogwapq-agbg-internal-data-mig"
+    ds_id = dataset_id or os.environ.get("BQ_BRONZE_DATASET") or "banking_bronze"
     samples_dir = Path(__file__).parent / "samples" / "banking_4_sources"
+
+    client = get_bigquery_client(project_id=project_id, location="US")
+    ds_ref = bigquery.Dataset(f"{project_id}.{ds_id}")
+    ds_ref.location = "US"
+    client.create_dataset(ds_ref, exists_ok=True)
 
     sources_to_load: list[tuple[str, str, str, list[dict]]] = []
     if uploaded_files:
@@ -1525,41 +1649,36 @@ def _land_4_sources_to_bronze(dataset_id: Optional[str] = None, uploaded_files: 
 
     landed_tables = []
     total_rows = 0
-    with get_sql_connection(catalog=catalog, schema=schema_name) as conn, conn.cursor() as cur:
-        cur.execute(f"CREATE CATALOG IF NOT EXISTS `{catalog}`")
-        cur.execute(f"CREATE SCHEMA IF NOT EXISTS `{catalog}`.`{schema_name}`")
+    for src_sys, tbl_name, tbl_desc, rows in sources_to_load:
+        cols = list(rows[0].keys())
+        schema = [bigquery.SchemaField(c, "STRING", mode="NULLABLE", description=f"Raw field {c} from {src_sys}") for c in cols]
+        fqn = f"{project_id}.{ds_id}.{tbl_name}"
+        job_cfg = bigquery.LoadJobConfig(
+            schema=schema,
+            write_disposition=bigquery.WriteDisposition.WRITE_TRUNCATE,
+        )
+        job = client.load_table_from_json(rows, fqn, job_config=job_cfg)
+        job.result()
 
-        for src_sys, tbl_name, tbl_desc, rows in sources_to_load:
-            cols = list(rows[0].keys())
-            col_defs = ", ".join(f"`{c}` STRING COMMENT 'Raw field {c} from {src_sys}'" for c in cols)
-            fqn = f"{catalog}.{schema_name}.{tbl_name}"
-            quoted_fqn = f"`{catalog}`.`{schema_name}`.`{tbl_name}`"
-            safe_desc = tbl_desc.replace("'", "''")
-            cur.execute(f"CREATE OR REPLACE TABLE {quoted_fqn} ({col_defs}) USING DELTA COMMENT '{safe_desc}'")
+        # Enrich table description & labels
+        tbl_obj = client.get_table(fqn)
+        tbl_obj.description = tbl_desc
+        tbl_obj.labels = {"layer": "bronze", "source_system": re.sub(r"[^a-z0-9_-]", "_", src_sys.lower())[:63]}
+        client.update_table(tbl_obj, ["description", "labels"])
 
-            if rows:
-                placeholders = ", ".join(["?"] * len(cols))
-                col_list = ", ".join(f"`{c}`" for c in cols)
-                insert_sql = f"INSERT INTO {quoted_fqn} ({col_list}) VALUES ({placeholders})"
-                values = [tuple(str(r.get(c, "")) for c in cols) for r in rows]
-                cur.executemany(insert_sql, values)
+        total_rows += len(rows)
+        landed_tables.append({
+            "source_system": src_sys,
+            "table_name": tbl_name,
+            "fqn": fqn,
+            "row_count": len(rows),
+            "columns": cols,
+            "bigquery_url": f"https://console.cloud.google.com/bigquery?project={project_id}&ws=!1m5!1m4!4m3!1s{project_id}!2s{ds_id}!3s{tbl_name}",
+        })
 
-            src_tag = re.sub(r"[^a-z0-9_-]", "_", src_sys.lower())[:63]
-            cur.execute(f"ALTER TABLE {quoted_fqn} SET TAGS ('layer' = 'bronze', 'source_system' = '{src_tag}')")
-
-            total_rows += len(rows)
-            landed_tables.append({
-                "source_system": src_sys,
-                "table_name": tbl_name,
-                "fqn": fqn,
-                "row_count": len(rows),
-                "columns": cols,
-                "databricks_url": f"{explorer_base}/explore/data/{catalog}/{schema_name}/{tbl_name}",
-            })
-
-    kc = KnowledgeCatalogClient(catalog=catalog, schema_name=schema_name, host=db_host)
+    kc = KnowledgeCatalogClient(project_id=project_id, dataset_id=ds_id)
     dp_res = kc.register_data_product(
-        schema_name,
+        ds_id,
         "bronze-banking-4-sources",
         "Bronze 4-Source Banking Raw Landing (TSYS, Hogan, AFS, ACLS)",
         "Heterogeneous Card, Deposit, Commercial Loan, and Retail Loan Bronze tables.",
@@ -1573,8 +1692,8 @@ def _land_4_sources_to_bronze(dataset_id: Optional[str] = None, uploaded_files: 
     )
     return {
         "status": "landed",
-        "catalog": catalog,
-        "schema_name": schema_name,
+        "project_id": project_id,
+        "dataset_id": ds_id,
         "total_rows": total_rows,
         "tables": landed_tables,
         "knowledge_catalog_data_product": dp_res,
@@ -1584,37 +1703,146 @@ def _land_4_sources_to_bronze(dataset_id: Optional[str] = None, uploaded_files: 
 
 @app.post("/v1/bronze/land-4-sources")
 async def land_4_sources_endpoint(dataset_id: Optional[str] = None):
-    """Land all 4 heterogeneous banking source CSVs into Azure Databricks Unity Catalog + governance tags."""
+    """Land all 4 heterogeneous banking source CSVs into BigQuery banking_bronze + Knowledge Catalog."""
     return await asyncio.to_thread(_land_4_sources_to_bronze, dataset_id)
 
 
+class AutoIngestRequest(BaseModel):
+    source_systems: Optional[list[str]] = None
+    industry_domain: str = "banking"
+    dataset_id: Optional[str] = None
+
+
+class KafkaSimulateRequest(BaseModel):
+    source_system: str = "TSYS"
+    table_name: str = "brz_tsys_auth_events"
+    topic: str = "payments.tsys.card.auth.v1"
+    events: Optional[list[dict]] = None
+    dataset_id: Optional[str] = None
+
+
+@app.post("/v1/bronze/ingest/auto")
+async def auto_ingest_multi_table_endpoint(body: Optional[AutoIngestRequest] = None):
+    """Automated 1-to-many Bronze ingestion (Batch + Kafka Streaming) across multiple tables per source system into BigQuery."""
+    from ingestion.orchestrator import AutomatedBronzeOrchestrator
+
+    req = body or AutoIngestRequest()
+    orchestrator = AutomatedBronzeOrchestrator()
+    return await asyncio.to_thread(
+        orchestrator.run_automated_ingestion,
+        req.source_systems,
+        req.industry_domain,
+        req.dataset_id,
+    )
+
+
+@app.post("/v1/bronze/ingest/kafka/simulate")
+async def simulate_kafka_ingest_endpoint(body: Optional[KafkaSimulateRequest] = None):
+    """Consume from live Kafka topic or replay JSONL event stream into BigQuery Bronze with offset lineage and DLQ routing."""
+    from ingestion.kafka_connector import KafkaStreamingConnector
+
+    req = body or KafkaSimulateRequest()
+    connector = KafkaStreamingConnector()
+    return await asyncio.to_thread(
+        connector.ingest_stream_table,
+        req.source_system,
+        req.table_name,
+        req.topic,
+        f"KAFKA-STREAM ({req.topic})",
+        f"Real-time Kafka event stream for {req.source_system}.{req.table_name}",
+        "brz_tsys_auth_events.jsonl",
+        req.events,
+        None,
+        req.dataset_id,
+    )
+
+
+@app.get("/v1/bronze/sources")
+async def get_bronze_multi_table_sources(industry_domain: str = "banking"):
+    """Return 1-to-many source system definitions and their provisioned Bronze tables (Batch, Streaming, Upload)."""
+    from ingestion.orchestrator import MULTI_TABLE_SOURCE_SPECS, WATER_MULTI_TABLE_SPECS
+
+    specs_map = WATER_MULTI_TABLE_SPECS if industry_domain == "water" else MULTI_TABLE_SOURCE_SPECS
+    systems = []
+    for sys_code, tbl_specs in specs_map.items():
+        systems.append({
+            "source_system": sys_code,
+            "system_label": tbl_specs[0]["system_label"] if tbl_specs else sys_code,
+            "table_count": len(tbl_specs),
+            "tables": tbl_specs,
+        })
+    return {
+        "architecture_model": "1_TO_MANY_PER_SOURCE_SYSTEM",
+        "industry_domain": industry_domain,
+        "source_system_count": len(systems),
+        "total_tables": sum(s["table_count"] for s in systems),
+        "systems": systems,
+    }
+
+
 @app.get("/v1/bronze/catalog")
-async def get_bronze_catalog(dataset_id: Optional[str] = None):
-    """Return live Unity Catalog Bronze table schemas and row counts for downstream Silver STTM discovery."""
-    from tools.databricks_auth import get_sql_connection
-    catalog = os.environ.get("DATABRICKS_CATALOG") or "main"
-    schema_name = dataset_id or os.environ.get("DATABRICKS_BRONZE_SCHEMA") or "banking_bronze"
+async def get_bronze_catalog(dataset_id: Optional[str] = None, industry_domain: str = "banking"):
+    """Return live BigQuery Bronze table schemas and row counts (supporting 1-to-many tables per source system)."""
+    from ingestion.orchestrator import MULTI_TABLE_SOURCE_SPECS, WATER_MULTI_TABLE_SPECS
+
+    project_id = os.environ.get("BQ_PROJECT") or os.environ.get("GCP_PROJECT_ID") or "eogwapq-agbg-internal-data-mig"
+    ds_id = dataset_id or os.environ.get("BQ_BRONZE_DATASET") or (
+        "water_bronze" if industry_domain == "water" else "banking_bronze"
+    )
+    specs_map = WATER_MULTI_TABLE_SPECS if industry_domain == "water" else MULTI_TABLE_SOURCE_SPECS
+    all_specs = [spec for tbl_list in specs_map.values() for spec in tbl_list]
     tables_out = []
-    with get_sql_connection(catalog=catalog, schema=schema_name) as conn, conn.cursor() as cur:
-        for spec in _FOUR_SOURCE_SPECS:
-            fqn = f"{catalog}.{schema_name}.{spec['table_name']}"
-            quoted_fqn = f"`{catalog}`.`{schema_name}`.`{spec['table_name']}`"
+
+    try:
+        from tools.gcp_auth import get_bigquery_client
+
+        client = get_bigquery_client(project_id=project_id, location="US")
+        for spec in all_specs:
+            fqn = f"{project_id}.{ds_id}.{spec['table_name']}"
             try:
-                cur.execute(f"SELECT COUNT(*) FROM {quoted_fqn}")
-                row_count = cur.fetchone()[0]
-                cur.execute(f"DESCRIBE TABLE {quoted_fqn}")
-                cols = [
-                    {"name": r[0], "type": r[1], "description": r[2] if len(r) > 2 else ""}
-                    for r in cur.fetchall()
-                    if r[0] and not str(r[0]).startswith("#")
-                ]
+                tbl = client.get_table(fqn)
                 tables_out.append({
                     "source_system": spec["source_system"],
+                    "system_label": spec.get("system_label", spec["source_system"]),
                     "table_name": spec["table_name"],
+                    "ingestion_mode": spec.get("ingestion_mode", "BATCH"),
                     "fqn": fqn,
-                    "row_count": row_count,
-                    "columns": cols,
+                    "row_count": tbl.num_rows,
+                    "columns": [{"name": f.name, "type": f.field_type, "description": f.description} for f in tbl.schema],
                 })
             except Exception:
                 continue
-    return {"catalog": catalog, "schema_name": schema_name, "tables": tables_out}
+    except Exception:
+        pass
+
+    if not tables_out:
+        import csv as _csv
+
+        sdir = _ROOT / "samples" / ("water_multi_table" if industry_domain == "water" else "banking_multi_table")
+        for spec in all_specs:
+            csv_name = spec["file_name"].replace(".jsonl", ".csv")
+            cpath = sdir / csv_name
+            cols = []
+            rc = 0
+            if cpath.exists():
+                with open(cpath, "r", encoding="utf-8-sig") as f:
+                    rows = list(_csv.DictReader(f))
+                    rc = len(rows)
+                    if rows:
+                        cols = [{"name": k, "type": "STRING", "description": ""} for k in rows[0].keys()]
+            tables_out.append({
+                "source_system": spec["source_system"],
+                "system_label": spec.get("system_label", spec["source_system"]),
+                "table_name": spec["table_name"],
+                "ingestion_mode": spec.get("ingestion_mode", "BATCH"),
+                "fqn": f"{project_id}.{ds_id}.{spec['table_name']}",
+                "row_count": rc,
+                "columns": cols,
+            })
+
+    return {
+        "architecture_model": "1_TO_MANY_PER_SOURCE_SYSTEM",
+        "project_id": project_id,
+        "dataset_id": ds_id,
+        "tables": tables_out,
+    }

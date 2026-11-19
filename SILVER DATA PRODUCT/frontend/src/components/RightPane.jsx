@@ -36,7 +36,7 @@ export default function RightPane({ generatedFiles, onDownload }) {
           <div className="right-empty">
             <div className="right-empty-icon"><FileIcon size={36} /></div>
             <p className="right-empty-title">No files yet</p>
-            <p className="right-empty-hint">Generated Databricks SQL Silver DDL scripts (.sql), Data Contracts (.yaml), STTM Workbooks (.xlsx), and PDF reports will appear here progressively.</p>
+            <p className="right-empty-hint">Generated BigQuery Silver DDL scripts (.sql), Data Contracts (.yaml), STTM Workbooks (.xlsx), and PDF reports will appear here progressively.</p>
             <p className="right-empty-tip">
               <strong>Tip —</strong> select a Bank Profile and business prompt to begin progressive file generation.
             </p>

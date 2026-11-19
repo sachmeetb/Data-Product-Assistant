@@ -27,8 +27,13 @@ class SurvivorshipEngine:
     EMAIL_PRIORITY = ["ACLS", "AFS", "TSYS", "HOGAN"]
     ADDRESS_PRIORITY = ["HOGAN", "ACLS", "TSYS", "AFS"]
 
-    def __init__(self):
-        pass
+    def __init__(self, policies: Optional[Dict[str, Any]] = None):
+        if policies:
+            self.NAME_PRIORITY = policies.get("legal_name", {}).get("priority_order", self.NAME_PRIORITY)
+            self.DOB_PRIORITY = policies.get("date_of_birth", {}).get("priority_order", self.DOB_PRIORITY)
+            self.PHONE_PRIORITY = policies.get("primary_phone_e164", {}).get("priority_order", self.PHONE_PRIORITY)
+            self.EMAIL_PRIORITY = policies.get("primary_email", {}).get("priority_order", self.EMAIL_PRIORITY)
+            self.ADDRESS_PRIORITY = policies.get("primary_postal_code", {}).get("priority_order", self.ADDRESS_PRIORITY)
 
     def _pick_by_priority(self, records: List[Dict[str, Any]], field: str, priority_list: List[str]) -> Tuple[Optional[Any], Optional[str]]:
         """Select field value based on source system precedence."""

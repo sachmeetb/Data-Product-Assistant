@@ -1,0 +1,150 @@
+# ==============================================================================
+# DECLARATIVE N-TO-M DOMAIN MAPPING SPECIFICATION
+# Industry: Industrial, Water & Hygiene (energy_industrial / water)
+# Business Domain: Water Account 360 & Facility Mastering (account_360)
+# Architecture: Many Source Systems (3) -> Many Source Tables (4) -> Domain -> Multiple Silver Tables (5)
+# ==============================================================================
+
+mapping_version: "3.0.0"
+architecture_model: "N_SOURCES_TO_MANY_TABLES_TO_DOMAIN_TO_MULTIPLE_SILVER_TABLES"
+industry: "energy_industrial"
+industry_name: "Industrial, Water & Hygiene (Ecolab Model)"
+domain: "account_360"
+domain_display_name: "Water Account 360 & Facility Hygiene Domain"
+standards:
+  - "EPA Clean Water Act"
+  - "ISO 14001 Environmental Management"
+  - "3D TRASAR Industrial Telemetry"
+  - "Tony Giordano Conforming Logic (Steps 3, 4, 5)"
+
+target_silver_tables:
+  - table_name: "slv_customer_360"
+    entity_role: "GOLDEN_MASTER"
+    grain: "One row per resolved industrial water & hygiene enterprise account"
+    primary_key: "customer_key"
+    description: "Unified Silver Water Account 360 Golden Record mastered across SAP ERP, 3D TRASAR IoT, and Salesforce FSL."
+  - table_name: "slv_customer_source_xref"
+    entity_role: "SOURCE_LINEAGE_XREF"
+    grain: "One row per contributing SAP / TRASAR / Salesforce source record"
+    primary_key: "xref_key"
+    foreign_key: "customer_key"
+    description: "Cross-reference lineage linking unified Water Account keys back to SAP KUNNR, TRASAR skid IDs, and Salesforce Site IDs."
+  - table_name: "slv_customer_arrangement"
+    entity_role: "DOMAIN_RELATIONSHIP"
+    grain: "One row per water treatment contract or monitored cooling/RO skid asset"
+    primary_key: "arrangement_key"
+    foreign_key: "customer_key"
+    description: "Linked water treatment chemical contracts and 3D TRASAR equipment skids per account."
+  - table_name: "slv_customer_contact"
+    entity_role: "NORMALIZED_CHILD"
+    grain: "One row per plant EHS steward phone, email, or facility address"
+    primary_key: "contact_key"
+    foreign_key: "customer_key"
+    description: "1:N normalized plant site addresses, steward emails, and emergency telemetry alert numbers."
+  - table_name: "slv_steward_review_queue"
+    entity_role: "MDM_GOVERNANCE_QUEUE"
+    grain: "One row per fuzzy facility match candidate requiring steward review"
+    primary_key: "review_id"
+    description: "Probabilistic plant/account identity matches queued for Data Steward review."
+
+source_systems:
+  - source_system: "SAP_ERP"
+    system_name: "SAP S/4HANA Commercial ERP"
+    ingestion_modes: ["BATCH_CDC"]
+    tables:
+      - table_name: "brz_sap_water_customer"
+        role: "PARTY_MASTER"
+        primary_key: "KUNNR"
+        field_mappings:
+          source_customer_id: "KUNNR"
+          raw_name: "NAME1"
+          name_format: "FIRST_LAST_SPACE"
+          raw_tax_id: "STCD1"
+          raw_dob: ""
+          raw_phone: "TELF1"
+          raw_email: "SMTP_ADDR"
+          raw_postal_code: "PSTLZ"
+          raw_customer_type: "KTOKD"
+          raw_status: "STATUS"
+      - table_name: "brz_sap_service_contract"
+        role: "ARRANGEMENT_SOURCE"
+        primary_key: "VBELN"
+        parent_join_key: "KUNNR"
+        arrangement_mapping:
+          arrangement_prefix: "ARR-WCON"
+          source_account_id: "VBELN"
+          arrangement_type: "WATER_SERVICE_CONTRACT"
+          subtype_column: "CONTRACT_TYPE"
+          subtype_suffix: "Service Agreement"
+          amount_column: "ANNUAL_VALUE"
+          status_column: "STATUS"
+          channel_column: "PLANT_CODE"
+          date_column: "START_DATE"
+
+  - source_system: "TRASAR_IOT"
+    system_name: "3D TRASAR IoT Water Telemetry"
+    ingestion_modes: ["KAFKA_STREAM"]
+    tables:
+      - table_name: "brz_trasar_cooling_asset"
+        role: "PARTY_MASTER"
+        primary_key: "ASSET_SKID_ID"
+        field_mappings:
+          source_customer_id: "ASSET_SKID_ID"
+          raw_name: "FACILITY_NAME"
+          name_format: "FIRST_LAST_SPACE"
+          raw_tax_id: "CUSTOMER_TAX_ID"
+          raw_dob: ""
+          raw_phone: "PLANT_CONTACT_PHONE"
+          raw_email: ""
+          raw_postal_code: "SITE_ZIP"
+          raw_customer_type: "ORGANIZATION"
+          raw_status: "ACTIVE"
+        arrangement_mapping:
+          arrangement_prefix: "ARR-SKID"
+          source_account_id: "ASSET_SKID_ID"
+          arrangement_type: "IOT_WATER_SKID"
+          subtype_column: "ASSET_TYPE"
+          subtype_suffix: "Monitored Skid"
+          amount_column: "LOOP_CAPACITY_GAL"
+          status_literal: "ONLINE_STREAMING"
+          channel_literal: "3D_TRASAR_IOT"
+          date_column: "COMMISSION_DATE"
+
+  - source_system: "SFDC_FSL"
+    system_name: "Salesforce Field Service Lightning"
+    ingestion_modes: ["BATCH_SCHEDULED"]
+    tables:
+      - table_name: "brz_sfdc_plant_site"
+        role: "PARTY_MASTER"
+        primary_key: "SFDC_SITE_ID"
+        field_mappings:
+          source_customer_id: "SFDC_SITE_ID"
+          raw_name: "ACCOUNT_NAME"
+          name_format: "FIRST_LAST_SPACE"
+          raw_tax_id: "TAX_EIN"
+          raw_dob: ""
+          raw_phone: "SITE_PHONE"
+          raw_email: "SITE_EMAIL"
+          raw_postal_code: "POSTAL_CODE"
+          raw_customer_type: "ORGANIZATION"
+          raw_status: "ACTIVE"
+
+survivorship_policies:
+  legal_name:
+    policy: "SYSTEM_OF_RECORD"
+    priority_order: ["SAP_ERP", "SFDC_FSL", "TRASAR_IOT"]
+  date_of_birth:
+    policy: "SYSTEM_OF_RECORD"
+    priority_order: ["SAP_ERP", "SFDC_FSL", "TRASAR_IOT"]
+  tax_id_normalized:
+    policy: "FIRST_NON_NULL_VALID"
+    priority_order: ["SAP_ERP", "TRASAR_IOT", "SFDC_FSL"]
+  primary_phone_e164:
+    policy: "MOST_RECENT_ACTIVITY"
+    priority_order: ["TRASAR_IOT", "SFDC_FSL", "SAP_ERP"]
+  primary_email:
+    policy: "MOST_COMPLETE_VALID"
+    priority_order: ["SFDC_FSL", "SAP_ERP", "TRASAR_IOT"]
+  primary_postal_code:
+    policy: "SYSTEM_OF_RECORD"
+    priority_order: ["SAP_ERP", "SFDC_FSL", "TRASAR_IOT"]
