@@ -96,8 +96,8 @@ async def run(
                 for r in get_validation_rules().get("global_rules", [])
             ],
         },
-        "databricks_catalog": os.environ.get("DATABRICKS_CATALOG", "main"),
-        "silver_schema": os.environ.get("DATABRICKS_SILVER_SCHEMA", "banking_silver"),
+        "gcp_project_id": os.environ.get("GCP_PROJECT_ID", "eogwapq-agbg-internal-data-mig"),
+        "silver_dataset": os.environ.get("BQ_SILVER_DATASET", "banking_silver"),
 
         # ── Column composition rules ──────────────────────────────────────────
         "column_composition_rules": [

@@ -9,7 +9,10 @@ Per Tony Giordano's "Conforming Logic" (Slide 4):
 
 from __future__ import annotations
 
+from difflib import SequenceMatcher
 import hashlib
+import uuid
+from datetime import datetime
 from typing import Any, Dict, List, Optional, Set, Tuple
 
 
@@ -34,21 +37,26 @@ class DisjointSet:
 
 class IdentityResolver:
     def __init__(self):
-        pass
+        self.steward_review_queue: List[Dict[str, Any]] = []
 
     def resolve(self, standardized_records: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """
         Takes standardized records from multiple sources and groups them into resolved customer clusters.
+        Also populates `self.steward_review_queue` with Tier-3 probabilistic match candidates.
         """
+        self.steward_review_queue = []
+        now_ts = datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
+
         # Assign a local unique ID per source record
         record_map: Dict[str, Dict[str, Any]] = {}
         for r in standardized_records:
-            rec_id = f"{r['source_system']}:{r['source_customer_id']}"
+            rec_id = f"{r['source_system']}:{r.get('source_entity', '')}:{r['source_customer_id']}"
             r["_internal_id"] = rec_id
             record_map[rec_id] = r
 
         dset = DisjointSet()
         matches: Dict[Tuple[str, str], Dict[str, Any]] = {}
+        fuzzy_held_ids: Set[str] = set()
 
         # ── BLOCKING & COMPARISONS ────────────────────────────────────────────
         record_list = list(record_map.values())
@@ -68,11 +76,37 @@ class IdentityResolver:
                         "rule": rule_name,
                         "score": score,
                     }
+                else:
+                    fuzzy_ok, fuzzy_rule, fuzzy_score = self._evaluate_fuzzy_match(r1, r2)
+                    if fuzzy_ok:
+                        self.steward_review_queue.append({
+                            "review_id": f"REV-{uuid.uuid4().hex[:8].upper()}",
+                            "candidate_a_system": r1["source_system"],
+                            "candidate_a_entity": r1.get("source_entity", ""),
+                            "candidate_a_id": r1["source_customer_id"],
+                            "candidate_a_name": r1.get("legal_name", ""),
+                            "candidate_b_system": r2["source_system"],
+                            "candidate_b_entity": r2.get("source_entity", ""),
+                            "candidate_b_id": r2["source_customer_id"],
+                            "candidate_b_name": r2.get("legal_name", ""),
+                            "match_rule": fuzzy_rule,
+                            "similarity_score": round(fuzzy_score, 2),
+                            "shared_blocking_key": r1.get("primary_postal_code") or "",
+                            "review_status": "PENDING_STEWARD_REVIEW",
+                            "created_at": now_ts,
+                        })
+                        if r1.get("table_role") == "SECONDARY_PARTY_SOURCE":
+                            fuzzy_held_ids.add(id1)
+                        if r2.get("table_role") == "SECONDARY_PARTY_SOURCE":
+                            fuzzy_held_ids.add(id2)
 
         # ── GROUP BY ROOT PARENT ──────────────────────────────────────────────
         clusters: Dict[str, List[Dict[str, Any]]] = {}
         for rec_id, r in record_map.items():
             root = dset.find(rec_id)
+            if root == rec_id and rec_id in fuzzy_held_ids:
+                # Secondary party record held in Steward Review Queue until adjudicated
+                continue
             if root not in clusters:
                 clusters[root] = []
             clusters[root].append(r)
@@ -81,12 +115,12 @@ class IdentityResolver:
         resolved_clusters: List[Dict[str, Any]] = []
         for root, members in clusters.items():
             # Derive deterministic surrogate customer_key
-            # Priority: clean tax ID if available, else sorted source keys
+            # Priority: clean tax ID if available, else sorted primary source keys
             tax_ids = sorted([m["tax_id_normalized"] for m in members if m.get("tax_id_normalized")])
             if tax_ids:
                 seed = f"TAX:{tax_ids[0]}"
             else:
-                member_keys = sorted([m["_internal_id"] for m in members])
+                member_keys = sorted([f"{m['source_system']}:{m['source_customer_id']}" for m in members])
                 seed = f"KEYS:{'|'.join(member_keys)}"
 
             hash_digest = hashlib.sha256(seed.encode("utf-8")).hexdigest()[:12].upper()
@@ -96,12 +130,10 @@ class IdentityResolver:
             member_details: List[Dict[str, Any]] = []
             for m in members:
                 m_id = m["_internal_id"]
-                # Default for single anchor record
                 match_method = "PRIMARY_ENROLLMENT"
                 match_score = 1.00
                 review_status = "AUTO_APPROVED"
 
-                # If linked to another record, find the match rule applied
                 for (a, b), meta in matches.items():
                     if (m_id == a or m_id == b) and (dset.find(a) == root):
                         match_method = meta["rule"]
@@ -122,6 +154,22 @@ class IdentityResolver:
             })
 
         return resolved_clusters
+
+    def _evaluate_fuzzy_match(self, r1: Dict[str, Any], r2: Dict[str, Any]) -> Tuple[bool, str, float]:
+        """
+        Tier-3 Probabilistic Match (routed to Steward Review Queue instead of auto-linking):
+        Same 5-digit postal code + fuzzy last name similarity >= 0.80.
+        """
+        zip1 = (r1.get("primary_postal_code") or "").strip()[:5]
+        zip2 = (r2.get("primary_postal_code") or "").strip()[:5]
+        last1 = (r1.get("last_name") or "").strip().lower()
+        last2 = (r2.get("last_name") or "").strip().lower()
+        if not zip1 or not zip2 or zip1 != zip2 or not last1 or not last2:
+            return False, "NO_MATCH", 0.0
+        sim = SequenceMatcher(None, last1, last2).ratio()
+        if sim >= 0.80:
+            return True, "R3_FUZZY_NAME_POSTAL", round(0.80 + (sim - 0.80) * 0.6, 2)
+        return False, "NO_MATCH", 0.0
 
     def _evaluate_match(self, r1: Dict[str, Any], r2: Dict[str, Any]) -> Tuple[bool, str, float]:
         """

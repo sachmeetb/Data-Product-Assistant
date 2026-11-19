@@ -835,7 +835,7 @@ export default function BusinessGlossaryCard({
                               cursor: 'pointer',
                               boxSizing: 'border-box',
                             }}
-                            title="Select Databricks SQL / ANSI SQL data type"
+                            title="Select BigQuery / ANSI SQL data type"
                           >
                             {SQL_TYPES.map(t => (
                               <option key={t} value={t}>{t}</option>
@@ -923,7 +923,7 @@ export default function BusinessGlossaryCard({
         }}
       >
         <p style={{ margin: 0, fontSize: 11.5, color: '#64748B', lineHeight: 1.45 }}>
-          🔒 <strong>Relational Key Guardrail:</strong> Primary (<code>PK</code>) and Foreign (<code>FK</code>) keys are protected from deletion to keep join paths intact, while their business definitions remain editable. All changes propagate to your <strong>ODCS Data Contract</strong>, <strong>Databricks SQL DDL</strong>, and <strong>STTM Workbook</strong>.
+          🔒 <strong>Relational Key Guardrail:</strong> Primary (<code>PK</code>) and Foreign (<code>FK</code>) keys are protected from deletion to keep join paths intact, while their business definitions remain editable. All changes propagate to your <strong>ODCS Data Contract</strong>, <strong>BigQuery DDL</strong>, and <strong>STTM Workbook</strong>.
         </p>
       </div>
     </div>

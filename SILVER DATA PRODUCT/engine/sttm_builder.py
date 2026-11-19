@@ -1,10 +1,11 @@
 """
-sttm_builder.py — Multi-Source Bronze-to-Silver STTM Builder.
+sttm_builder.py — Generalized N-to-M Multi-Source Bronze-to-Silver STTM Builder.
 
-Discovers the 4 heterogeneous Bronze banking tables (TSYS Card, Hogan Deposit,
-AFS Commercial Loan, ACLS Retail Loan) from live BigQuery `banking_bronze`
-(falling back to local sample CSVs if not yet landed) and constructs an
-inspectable 4-to-1 Multi-Source STTM specification for Silver's STTMCard.
+Models the generalized enterprise mapping architecture:
+  Many Source Systems -> Many Source Tables/Files (1:N) -> Business Domain -> Multiple Silver Tables
+
+Supports reusable declarative YAML domain mapping specifications across domains and industries
+(e.g., Banking Customer 360 and Industrial Water Account 360).
 """
 
 from __future__ import annotations
@@ -14,48 +15,80 @@ import os
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-
-_BRONZE_4_SOURCES = [
-    ("HOGAN", "brz_hogan_ci_customer", "Hogan Core Deposits (CIS)"),
-    ("TSYS", "brz_tsys_cardholder", "TSYS / FDR Credit Cards"),
-    ("AFS", "brz_afs_borrower", "AFS Commercial Lending"),
-    ("ACLS", "brz_acls_applicant", "ACLS Retail Consumer Loans"),
-]
+from mappings.registry import load_domain_mapping
 
 
-def discover_bronze_tables(dataset_id: str = "banking_bronze") -> Dict[str, Any]:
-    """Inspect live Unity Catalog banking_bronze tables; fall back to local CSVs if unavailable."""
-    catalog = os.environ.get("DATABRICKS_CATALOG") or "main"
-    schema_name = os.environ.get("DATABRICKS_BRONZE_SCHEMA") or dataset_id
+def discover_bronze_tables(
+    dataset_id: str = "banking_bronze",
+    industry: str = "banking",
+    domain: str = "customer_360",
+) -> Dict[str, Any]:
+    """
+    Inspect live Unity Catalog Bronze tables (or local multi-table sample CSVs)
+    for all 1-to-many tables defined in the active domain mapping specification.
+    """
+    spec = load_domain_mapping(industry=industry, domain=domain)
+    project_id = (
+        os.environ.get("BQ_PROJECT")
+        or os.environ.get("GCP_PROJECT_ID")
+        or "eogwapq-agbg-internal-data-mig"
+    )
+    default_schema = "water_bronze" if spec.get("industry") == "energy_industrial" else dataset_id
+    schema_name = os.environ.get("BQ_BRONZE_DATASET") or default_schema
+
     discovered: List[Dict[str, Any]] = []
-    source_mode = "databricks"
+    systems_hierarchy: List[Dict[str, Any]] = []
+    source_mode = "bigquery"
+
+    flat_table_specs: List[Dict[str, Any]] = []
+    for sys_entry in spec.get("source_systems") or []:
+        sys_code = sys_entry["source_system"]
+        sys_name = sys_entry.get("system_name", sys_code)
+        modes = sys_entry.get("ingestion_modes", ["BATCH"])
+        for tbl in sys_entry.get("tables") or []:
+            flat_table_specs.append({
+                "source_system": sys_code,
+                "system_name": sys_name,
+                "ingestion_modes": modes,
+                "table_name": tbl["table_name"],
+                "role": tbl.get("role", "PARTY_MASTER"),
+                "primary_key": tbl.get("primary_key", ""),
+            })
 
     try:
-        from tools.databricks_auth import get_sql_connection
-        with get_sql_connection(catalog=catalog, schema=schema_name) as conn, conn.cursor() as cur:
-            for sys_code, tbl_name, label in _BRONZE_4_SOURCES:
-                fqn = f"{catalog}.{schema_name}.{tbl_name}"
-                quoted = f"`{catalog}`.`{schema_name}`.`{tbl_name}`"
-                cur.execute(f"SELECT COUNT(*) FROM {quoted}")
-                row_count = cur.fetchone()[0]
-                cur.execute(f"DESCRIBE TABLE {quoted}")
-                cols = [r[0] for r in cur.fetchall() if r[0] and not str(r[0]).startswith("#")]
-                discovered.append({
-                    "source_system": sys_code,
-                    "label": label,
-                    "table_name": tbl_name,
-                    "fqn": fqn,
-                    "row_count": row_count,
-                    "columns": cols,
-                })
+        if os.environ.get("BQ_OFFLINE_MODE") == "1":
+            raise RuntimeError("BQ_OFFLINE_MODE")
+        from tools.gcp_auth import get_bigquery_client
+
+        client = get_bigquery_client(project_id=project_id, location="US")
+        for item in flat_table_specs:
+            tbl_name = item["table_name"]
+            fqn = f"{project_id}.{schema_name}.{tbl_name}"
+            tbl_obj = client.get_table(fqn)
+            cols = [f.name for f in tbl_obj.schema if not f.name.startswith("_")]
+            discovered.append({
+                "source_system": item["source_system"],
+                "label": item["system_name"],
+                "table_name": tbl_name,
+                "role": item["role"],
+                "ingestion_modes": item["ingestion_modes"],
+                "fqn": fqn,
+                "row_count": int(tbl_obj.num_rows or 0),
+                "columns": cols,
+            })
     except Exception:
-        source_mode = "local_samples"
+        source_mode = "local_multi_table_lakehouse"
         discovered = []
-        base_dir = Path(__file__).parent.parent
-        samples_dir = base_dir.parent / "BRONZE DATA PRODUCT" / "samples" / "banking_4_sources"
+        base_dir = Path(__file__).resolve().parent.parent
+        folder_name = "water_multi_table" if spec.get("industry") == "energy_industrial" else "banking_multi_table"
+        samples_dir = base_dir / "samples" / folder_name
+        if not samples_dir.exists():
+            samples_dir = base_dir.parent / "BRONZE DATA PRODUCT" / "samples" / folder_name
         if not samples_dir.exists():
             samples_dir = base_dir / "samples" / "banking_4_sources"
-        for sys_code, tbl_name, label in _BRONZE_4_SOURCES:
+
+        for item in flat_table_specs:
+            tbl_name = item["table_name"]
             csv_path = samples_dir / f"{tbl_name}.csv"
             cols: List[str] = []
             row_count = 0
@@ -66,154 +99,186 @@ def discover_bronze_tables(dataset_id: str = "banking_bronze") -> Dict[str, Any]
                     if rows:
                         cols = list(rows[0].keys())
             discovered.append({
-                "source_system": sys_code,
-                "label": label,
+                "source_system": item["source_system"],
+                "label": item["system_name"],
                 "table_name": tbl_name,
-                "fqn": f"{project_id}.{dataset_id}.{tbl_name}",
+                "role": item["role"],
+                "ingestion_modes": item["ingestion_modes"],
+                "fqn": f"{project_id}.{schema_name}.{tbl_name}",
                 "row_count": row_count,
                 "columns": cols,
             })
 
+    # Group 1-to-many tables by source system
+    by_sys: Dict[str, List[Dict[str, Any]]] = {}
+    for d in discovered:
+        by_sys.setdefault(d["source_system"], []).append(d)
+
+    for sys_entry in spec.get("source_systems") or []:
+        scode = sys_entry["source_system"]
+        stbls = by_sys.get(scode, [])
+        systems_hierarchy.append({
+            "source_system": scode,
+            "system_name": sys_entry.get("system_name", scode),
+            "ingestion_modes": sys_entry.get("ingestion_modes", ["BATCH"]),
+            "table_count": len(stbls),
+            "total_rows": sum(t["row_count"] for t in stbls),
+            "tables": stbls,
+        })
+
     return {
         "project_id": project_id,
-        "dataset_id": dataset_id,
+        "dataset_id": schema_name,
         "source_mode": source_mode,
+        "industry": spec.get("industry", industry),
+        "domain": spec.get("domain", domain),
+        "domain_display_name": spec.get("domain_display_name", "Customer 360 Domain"),
+        "systems_hierarchy": systems_hierarchy,
         "tables": discovered,
+        "spec": spec,
     }
 
 
-def build_multi_source_sttm_view(dataset_id: str = "banking_bronze", target_dataset: str = "banking_silver") -> Dict[str, Any]:
-    """Construct a silver_transform_view payload for STTMCard showing 4-to-1 Bronze -> Silver mappings."""
-    meta = discover_bronze_tables(dataset_id=dataset_id)
+def build_multi_source_sttm_view(
+    dataset_id: str = "banking_bronze",
+    target_dataset: str = "banking_silver",
+    industry: str = "banking",
+    domain: str = "customer_360",
+) -> Dict[str, Any]:
+    """
+    Construct a generalized N-to-M `silver_transform_view` payload for STTMCard showing:
+      Many Source Systems -> Many Bronze Tables -> Business Domain -> Multiple Silver Tables.
+    """
+    meta = discover_bronze_tables(dataset_id=dataset_id, industry=industry, domain=domain)
+    spec = meta["spec"]
+    src_schema = meta["dataset_id"]
+    tgt_schema = "water_silver" if spec.get("industry") == "energy_industrial" else target_dataset
 
-    mappings: List[Dict[str, str]] = [
-        # Common Customer Surrogate Key & XREF
-        {
-            "source_system": "HOGAN | TSYS | AFS | ACLS",
-            "source_column": f"{dataset_id}.brz_*.{{CI_CUST_NUM, cardholder_id, BORROWER_ID, APPLICANT_ID}}",
-            "transform": "IDENTITY_MATCH(R1: Exact Tax ID, R2: DOB + E.164 Phone) -> SHA256_CLUSTER_KEY('CUST-')",
-            "target_table": f"{target_dataset}.slv_customer_360",
-            "target_column": "customer_key",
-        },
-        # Legal Name (4-to-1)
-        {
-            "source_system": "HOGAN (Deposit)",
-            "source_column": f"{dataset_id}.brz_hogan_ci_customer.CI_LEGAL_NAME",
-            "transform": "PARSE_LAST_FIRST_COMMA -> TITLE_CASE | SURVIVORSHIP_PRIORITY(1)",
-            "target_table": f"{target_dataset}.slv_customer_360",
-            "target_column": "legal_name",
-        },
-        {
-            "source_system": "AFS (Comm Loan)",
-            "source_column": f"{dataset_id}.brz_afs_borrower.PRIMARY_CONTACT_NAME",
-            "transform": "TRIM_TITLE_CASE | SURVIVORSHIP_PRIORITY(2)",
-            "target_table": f"{target_dataset}.slv_customer_360",
-            "target_column": "legal_name",
-        },
-        {
-            "source_system": "ACLS (Retail Loan)",
-            "source_column": f"{dataset_id}.brz_acls_applicant.FIRST_NAME || LAST_NAME",
-            "transform": "CONCAT_WS(' ', FIRST_NAME, MIDDLE_NAME, LAST_NAME) | SURVIVORSHIP_PRIORITY(3)",
-            "target_table": f"{target_dataset}.slv_customer_360",
-            "target_column": "legal_name",
-        },
-        {
-            "source_system": "TSYS (Card)",
-            "source_column": f"{dataset_id}.brz_tsys_cardholder.embossed_name",
-            "transform": "TRIM_TITLE_CASE | SURVIVORSHIP_PRIORITY(4)",
-            "target_table": f"{target_dataset}.slv_customer_360",
-            "target_column": "legal_name",
-        },
-        # Tax ID / SSN
-        {
-            "source_system": "HOGAN | TSYS | ACLS",
-            "source_column": f"{dataset_id}.brz_*.{{CI_TAX_ID, tax_ssn, NATIONAL_ID}}",
-            "transform": "STRIP_HYPHENS_VALIDATE_9DIGITS -> MASK_LAST4('***-**-XXXX')",
-            "target_table": f"{target_dataset}.slv_customer_360",
-            "target_column": "tax_id_masked",
-        },
-        # Date of Birth
-        {
-            "source_system": "HOGAN | ACLS",
-            "source_column": f"{dataset_id}.brz_*.{{CI_BIRTH_DT, DOB}}",
-            "transform": "PARSE_DATE_MULTI_FORMAT('YYYYMMDD', 'MM/DD/YYYY') -> ISO_8601('YYYY-MM-DD')",
-            "target_table": f"{target_dataset}.slv_customer_360",
-            "target_column": "date_of_birth",
-        },
-        # Phone E.164
-        {
-            "source_system": "TSYS | ACLS | HOGAN | AFS",
-            "source_column": f"{dataset_id}.brz_*.{{mobile_phone, CELL_PHONE, CI_PHONE, CONTACT_PHONE}}",
-            "transform": "STANDARDIZE_E164('+1XXXXXXXXXX') | SURVIVORSHIP(TSYS > ACLS > HOGAN > AFS)",
-            "target_table": f"{target_dataset}.slv_customer_360",
-            "target_column": "primary_phone_e164",
-        },
-        # Email
-        {
-            "source_system": "ACLS | AFS",
-            "source_column": f"{dataset_id}.brz_*.{{EMAIL, CONTACT_EMAIL}}",
-            "transform": "LOWER_TRIM_VALIDATE_EMAIL | SURVIVORSHIP(ACLS > AFS)",
-            "target_table": f"{target_dataset}.slv_customer_360",
-            "target_column": "primary_email",
-        },
-        # Address / Postal Code
-        {
-            "source_system": "HOGAN | TSYS | ACLS | AFS",
-            "source_column": f"{dataset_id}.brz_*.{{CI_POST_CODE, billing_postal_code, POSTAL_CODE, BUSINESS_ADDRESS}}",
-            "transform": "EXTRACT_5DIGIT_ZIP | SURVIVORSHIP(HOGAN > TSYS > ACLS > AFS)",
-            "target_table": f"{target_dataset}.slv_customer_360",
-            "target_column": "primary_postal_code",
-        },
-        # Crosswalk Customer Type & Relationship Status
-        {
-            "source_system": "ALL 4 SOURCES",
-            "source_column": f"{dataset_id}.brz_*.{{CI_CUST_TYPE, card_type, BORROWER_CLASS, CI_STATUS_CD, card_status, APP_STATUS, STATUS}}",
-            "transform": "CROSSWALK_LOOKUP(ref_crosswalk_customer_type, ref_crosswalk_status) -> IND/ORG, ACTIVE/DORMANT",
-            "target_table": f"{target_dataset}.slv_customer_360",
-            "target_column": "customer_type / relationship_status",
-        },
-        # XREF Lineage
-        {
-            "source_system": "ALL 4 SOURCES",
-            "source_column": f"{dataset_id}.brz_*.{{CI_CUST_NUM, cardholder_id, BORROWER_ID, APPLICANT_ID}}",
-            "transform": "EMIT_XREF_RECORD(source_system, source_customer_id, match_method, match_score)",
-            "target_table": f"{target_dataset}.slv_customer_source_xref",
-            "target_column": "source_customer_id",
-        },
-        # Many-to-One Banking Arrangements
-        {
-            "source_system": "HOGAN -> DEPOSIT | TSYS -> CREDIT_CARD | ACLS -> RETAIL_LOAN | AFS -> COMMERCIAL_LOAN",
-            "source_column": f"{dataset_id}.brz_*.{{credit_line, ORIGINATION_AMT, FACILITY_LIMIT}}",
-            "transform": "MAP_ARRANGEMENT_FK(customer_key) + NORMALIZE_PRODUCT_SUBTYPE",
-            "target_table": f"{target_dataset}.slv_customer_arrangement",
-            "target_column": "arrangement_type / limit_or_amount",
-        },
-    ]
+    mappings: List[Dict[str, str]] = []
+    for sys_entry in spec.get("source_systems") or []:
+        scode = sys_entry["source_system"]
+        sname = sys_entry.get("system_name", scode)
+        for tbl in sys_entry.get("tables") or []:
+            tname = tbl["table_name"]
+            role = tbl.get("role", "PARTY_MASTER")
+            fm = tbl.get("field_mappings") or {}
+            am = tbl.get("arrangement_mapping") or {}
+            cm = tbl.get("contact_mapping") or {}
+
+            if fm:
+                pk_col = fm.get("source_customer_id") or tbl.get("primary_key")
+                # 1. Identity Resolution -> slv_customer_360.customer_key & slv_customer_source_xref
+                mappings.append({
+                    "source_system": f"{scode} ({tname})",
+                    "source_column": f"{src_schema}.{tname}.{pk_col}",
+                    "transform": "IDENTITY_RESOLVE(R1: Exact Tax ID, R2: DOB+Phone) -> SHA256_CLUSTER_KEY('CUST-')",
+                    "target_table": f"{tgt_schema}.slv_customer_360",
+                    "target_column": "customer_key",
+                })
+                mappings.append({
+                    "source_system": f"{scode} ({tname})",
+                    "source_column": f"{src_schema}.{tname}.{pk_col}",
+                    "transform": f"EMIT_XREF_LINEAGE(source_system='{scode}', source_entity='{tname}', match_method, match_score)",
+                    "target_table": f"{tgt_schema}.slv_customer_source_xref",
+                    "target_column": "source_customer_id",
+                })
+                # 2. Name -> slv_customer_360.legal_name & slv_steward_review_queue
+                name_col = fm.get("raw_name") or fm.get("raw_last_name")
+                if name_col:
+                    mappings.append({
+                        "source_system": f"{scode} ({tname})",
+                        "source_column": f"{src_schema}.{tname}.{name_col}",
+                        "transform": f"STANDARDIZE_NAME({fm.get('name_format', 'TITLE_CASE')}) | MDM_SURVIVORSHIP(legal_name)",
+                        "target_table": f"{tgt_schema}.slv_customer_360",
+                        "target_column": "legal_name",
+                    })
+                    mappings.append({
+                        "source_system": f"{scode} ({tname})",
+                        "source_column": f"{src_schema}.{tname}.{name_col}",
+                        "transform": "TIER3_FUZZY_MATCH(SIMILARITY >= 0.80 + POSTAL_BLOCK) -> ROUTE_STEWARD_QUEUE",
+                        "target_table": f"{tgt_schema}.slv_steward_review_queue",
+                        "target_column": "candidate_a_name / similarity_score",
+                    })
+                # 3. Tax ID -> slv_customer_360.tax_id_masked
+                if fm.get("raw_tax_id"):
+                    mappings.append({
+                        "source_system": f"{scode} ({tname})",
+                        "source_column": f"{src_schema}.{tname}.{fm['raw_tax_id']}",
+                        "transform": "CLEAN_9DIGIT_TIN -> MASK_PII('***-**-XXXX') | SURVIVORSHIP(tax_id)",
+                        "target_table": f"{tgt_schema}.slv_customer_360",
+                        "target_column": "tax_id_masked",
+                    })
+                # 4. Phone / Email -> slv_customer_360 & slv_customer_contact
+                if fm.get("raw_phone"):
+                    mappings.append({
+                        "source_system": f"{scode} ({tname})",
+                        "source_column": f"{src_schema}.{tname}.{fm['raw_phone']}",
+                        "transform": "NORMALIZE_E164('+1XXXXXXXXXX') -> 1:N CONTACT_POINT & MDM_SURVIVORSHIP",
+                        "target_table": f"{tgt_schema}.slv_customer_contact",
+                        "target_column": "contact_value_normalized",
+                    })
+                if fm.get("raw_email"):
+                    mappings.append({
+                        "source_system": f"{scode} ({tname})",
+                        "source_column": f"{src_schema}.{tname}.{fm['raw_email']}",
+                        "transform": "LOWER_TRIM_VALIDATE_EMAIL -> 1:N CONTACT_POINT & MDM_SURVIVORSHIP",
+                        "target_table": f"{tgt_schema}.slv_customer_contact",
+                        "target_column": "contact_value_normalized",
+                    })
+
+            if am:
+                acct_col = am.get("source_account_id") or tbl.get("primary_key")
+                amt_col = am.get("amount_column", "")
+                mappings.append({
+                    "source_system": f"{scode} ({tname})",
+                    "source_column": f"{src_schema}.{tname}.{acct_col}",
+                    "transform": f"LINK_CLUSTER_FK(parent_key='{tbl.get('parent_join_key', acct_col)}') -> {am.get('arrangement_type')} ({ amt_col })",
+                    "target_table": f"{tgt_schema}.slv_customer_arrangement",
+                    "target_column": "arrangement_key / limit_or_amount",
+                })
+
+            if cm:
+                col_ref = cm.get("street_column") or cm.get("phone_column") or tbl.get("primary_key")
+                mappings.append({
+                    "source_system": f"{scode} ({tname})",
+                    "source_column": f"{src_schema}.{tname}.{col_ref}",
+                    "transform": f"NORMALIZE_1_TO_N_CONTACT(type='{cm.get('contact_type')}', parent_fk='{tbl.get('parent_join_key')}')",
+                    "target_table": f"{tgt_schema}.slv_customer_contact",
+                    "target_column": "contact_value_normalized",
+                })
 
     bronze_tables = [t["fqn"] for t in meta["tables"]]
     total_bronze_rows = sum(t["row_count"] for t in meta["tables"])
+    target_silver_tables = [
+        f"{tgt_schema}.{t['table_name']}" for t in (spec.get("target_silver_tables") or [])
+    ]
+    sys_count = len(meta["systems_hierarchy"])
+    tbl_count = len(meta["tables"])
+    slv_count = len(target_silver_tables)
 
     return {
         "multi_source": True,
+        "architecture_model": "N_SOURCES_TO_MANY_TABLES_TO_DOMAIN_TO_MULTIPLE_SILVER_TABLES",
+        "industry": meta["industry"],
+        "domain": meta["domain"],
+        "domain_display_name": meta["domain_display_name"],
         "bronze_source_mode": meta["source_mode"],
+        "systems_hierarchy": meta["systems_hierarchy"],
         "bronze_tables": meta["tables"],
-        "title": "Multi-Source Bronze → Silver Customer STTM (4-to-1 Integration)",
-        "step_label": "Tony Giordano Conforming Logic — Card + Deposit + Commercial Loan + Retail Loan → Silver Customer",
+        "title": f"N-to-M Domain STTM: {sys_count} Source Systems ({tbl_count} Bronze Tables) → {meta['domain_display_name']} ({slv_count} Silver Tables)",
+        "step_label": f"Generalized N-to-M Conforming Logic — {sys_count} Sources → {tbl_count} Source Tables → {meta['domain_display_name']} → {slv_count} Silver Tables",
         "summary": (
-            f"Discovered 4 heterogeneous Bronze tables ({total_bronze_rows} records via {meta['source_mode']}) "
-            f"and generated {len(mappings)} multi-source STTM rules feeding `slv_customer_360`, `slv_customer_source_xref`, and `slv_customer_arrangement`."
+            f"Discovered {sys_count} source systems with {tbl_count} Bronze tables ({total_bronze_rows} total records via {meta['source_mode']}) "
+            f"and generated {len(mappings)} declarative N-to-M STTM rules feeding {slv_count} Silver domain tables: "
+            f"{', '.join(t.split('.')[-1] for t in target_silver_tables)}."
         ),
         "silver_sources": bronze_tables,
-        "silver_tables": [
-            f"{target_dataset}.slv_customer_360",
-            f"{target_dataset}.slv_customer_source_xref",
-            f"{target_dataset}.slv_customer_arrangement",
-        ],
+        "silver_tables": target_silver_tables,
         "lineage_summary": [
-            f"{t['fqn']} ({t['row_count']} rows) → {target_dataset}.slv_customer_360 ({t['label']})"
-            for t in meta["tables"]
+            f"[{s['source_system']}] {s['system_name']} ({s['table_count']} tables: {', '.join(t['table_name'] for t in s['tables'])}) → {meta['domain_display_name']} → {slv_count} Silver Tables"
+            for s in meta["systems_hierarchy"]
         ],
-        "header": "Multi-Source Bronze → Silver STTM Mappings",
+        "header": f"Declarative N-to-M STTM Mappings ({sys_count} Systems · {tbl_count} Bronze Tables → {slv_count} Silver Tables)",
         "mappings": mappings,
         "mapping_count": len(mappings),
     }

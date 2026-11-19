@@ -4,7 +4,7 @@ const STARTING_POINTS = [
     title: 'Unstructured KYC Documents & Contracts (PDF / Scans)',
     badge: 'UNSTRUCTURED · OBJECT TABLE',
     description: 'Ingest customer identity verification PDFs, scanned passports, and loan contracts into BigLake Object Tables.',
-    agents: 'Source Scoping · Delta Lake Tables · Unity Catalog',
+    agents: 'Source Scoping · BigLake Object Tables · Dataplex Catalog',
     prompt: 'Help me ingest unstructured KYC verification documents — we have customer ID scans, passports, and loan agreement PDFs in GCS to register as BigLake Object Tables with SHA-256 integrity hashes, OCR text metadata, and 7-year regulatory retention.',
   },
   {
@@ -44,8 +44,8 @@ const STARTING_POINTS = [
     title: 'Salesforce CRM & Client KYC Ingestion',
     badge: 'BATCH · CRM',
     description: 'Salesforce customer Accounts and KYC compliance screening events with automated PII tagging.',
-    agents: 'Requirement Understanding · Source Scoper · Unity Catalog',
-    prompt: 'Help me ingest Salesforce CRM customer Accounts and KYC Verification compliance records into Bronze layer with automated PII classification, CDC replay metadata, and Unity Catalog tags.',
+    agents: 'Requirement Understanding · Source Scoper · Dataplex Catalog',
+    prompt: 'Help me ingest Salesforce CRM customer Accounts and KYC Verification compliance records into Bronze layer with automated PII classification, CDC replay metadata, and Dataplex tag templates.',
   },
   {
     key: 'temenos',

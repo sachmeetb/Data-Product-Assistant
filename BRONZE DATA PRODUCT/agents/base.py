@@ -1,15 +1,17 @@
 """
-base.py — Shared agent runner for BFSI-Bronze-Agent using Azure Databricks
-Model Serving (or Azure OpenAI) via the OpenAI-compatible AsyncOpenAI client.
+base.py — Shared agent runner for BFSI-Bronze-Agent using google.genai directly (Vertex AI).
 
 Provides:
-  - Databricks Model Serving / Azure OpenAI initialisation
+  - Vertex AI initialisation via google.genai.Client
+  - Direct Gemini model execution bypassing ADK
   - In-memory conversation history per session
   - Robust structured JSON output parsing
+  - OpenTelemetry tracing
 """
 
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
 import os
@@ -27,13 +29,11 @@ log = logging.getLogger(__name__)
 
 # ── Configuration ─────────────────────────────────────────────────────────────
 
-LLM_MODEL = (
-    os.environ.get("DATABRICKS_LLM_MODEL", "").strip()
-    or os.environ.get("AZURE_OPENAI_DEPLOYMENT", "").strip()
-    or os.environ.get("LLM_MODEL", "").strip()
-    or "databricks-meta-llama-3-3-70b-instruct"
-)
+GCP_PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "")
+GCP_LOCATION = os.environ.get("GCP_LOCATION", "us-central1")
+GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-2.5-flash")
 APP_NAME = os.environ.get("AGENT_APP_NAME", "bfsi-bronze-agent")
+GCP_CREDENTIALS_PATH = os.environ.get("GCP_CREDENTIALS_PATH", "")
 
 _PROMPTS_DIR = _PROJECT_ROOT / "prompts"
 
@@ -58,19 +58,31 @@ _AGENT_MAX_TOKENS: dict[str, int] = {
 }
 _DEFAULT_MAX_TOKENS = 4096
 
-# In-memory history: (agent_name, session_id) -> list of OpenAI message dicts
-_histories: dict[tuple[str, str], list[dict[str, str]]] = {}
+# In-memory history: (agent_name, session_id) -> list of Content
+_histories: dict[tuple[str, str], list] = {}
 
-_client_instance = None
+# ── google.genai Client ───────────────────────────────────────────────────────
+
+import google.genai as genai
+from google.genai.types import Content, GenerateContentConfig, Part
+
+_client_instance: Optional[genai.Client] = None
 
 
-def _get_client():
+def _get_client() -> genai.Client:
     global _client_instance
     if _client_instance is None:
-        from tools.databricks_auth import get_async_llm_client
-
-        _client_instance = get_async_llm_client()
-        log.info("LLM client initialised: model=%s", LLM_MODEL)
+        if GCP_PROJECT_ID and not os.environ.get("GOOGLE_GENAI_USE_VERTEXAI"):
+            os.environ["GOOGLE_GENAI_USE_VERTEXAI"] = "1"
+        _client_instance = genai.Client(
+            http_options={"timeout": 1800000},  # 1800s (value is milliseconds) — multi-agent LLM calls are slow
+        )
+        log.info(
+            "google.genai Client initialised: project=%s location=%s model=%s",
+            GCP_PROJECT_ID,
+            GCP_LOCATION,
+            GEMINI_MODEL,
+        )
     return _client_instance
 
 
@@ -256,22 +268,27 @@ async def run_agent(
 
     history_key = (agent_name, session_id)
     history = _histories.get(history_key, [])
-    new_user_msg = {"role": "user", "content": user_msg}
-    messages = [{"role": "system", "content": system_instruction}] + history + [new_user_msg]
+    new_user_content = Content(role="user", parts=[Part(text=user_msg)])
+    contents = history + [new_user_content]
 
     try:
         client = _get_client()
-        response = await client.chat.completions.create(
-            model=LLM_MODEL,
-            messages=messages,
-            max_tokens=max_tok,
-            temperature=0.2,
+        cfg_kwargs = {
+            "system_instruction": system_instruction,
+            "max_output_tokens": max_tok,
+            "temperature": 0.2,
+        }
+
+        response = await client.aio.models.generate_content(
+            model=GEMINI_MODEL,
+            contents=contents,
+            config=GenerateContentConfig(**cfg_kwargs),
         )
-        result_text = (response.choices[0].message.content or "") if response.choices else ""
+        result_text = response.text or ""
 
         # Persist conversation turn
-        model_msg = {"role": "assistant", "content": result_text}
-        _histories[history_key] = history + [new_user_msg, model_msg]
+        model_content = Content(role="model", parts=[Part(text=result_text)])
+        _histories[history_key] = history + [new_user_content, model_content]
 
         return parse_agent_output(result_text)
 

@@ -39,25 +39,27 @@ async def run(
     from tools.knowledge_tool import get_naming_conventions
     from tools.schema_loader import get_common_block_catalog
 
-    catalog       = os.environ.get("DATABRICKS_CATALOG", "main")
-    bronze_schema = os.environ.get("DATABRICKS_BRONZE_SCHEMA", "banking_bronze")
-    silver_schema = os.environ.get("DATABRICKS_SILVER_SCHEMA", "banking_silver")
+    project_id     = os.environ.get("GCP_PROJECT_ID", "eogwapq-agbg-internal-data-mig")
+    bronze_dataset = os.environ.get("BQ_BRONZE_DATASET", "banking_bronze")
+    silver_dataset = os.environ.get("BQ_SILVER_DATASET", "banking_silver")
 
     context: dict = {
         "bronze_product_plan": bronze_product_plan,
         "bank_profile": bank_profile,
-        "databricks_config": {
-            "catalog":       catalog,
-            "bronze_schema": bronze_schema,
-            "silver_schema": silver_schema,
+        "bigquery_config": {
+            "project_id":     project_id,
+            "bronze_dataset": bronze_dataset,
+            "silver_dataset": silver_dataset,
+            "location":       os.environ.get("BQ_LOCATION", "US"),
         },
         "naming_conventions": get_naming_conventions(),
         "ddl_rules": [
-            "Use Azure Databricks SQL (Unity Catalog + Delta Lake) only — no BigQuery syntax.",
-            "Table names: CREATE TABLE IF NOT EXISTS `{catalog}`.`{schema}`.`{table_name}` USING DELTA",
-            "Partitioning / Clustering: PARTITIONED BY (...) or CLUSTER BY (...) as appropriate for Delta Lake.",
-            "COMMENT '...' must cite: source systems, ingestion patterns, and common blocks used.",
-            "Column comments must cite the common block source, e.g. 'From ingestion-metadata block.'.",
+            "Use BigQuery Standard SQL only — no Databricks, no Azure SQL syntax.",
+            "Table names: CREATE TABLE IF NOT EXISTS `{project}.{dataset}.{table_name}`",
+            "Partition: PARTITION BY DATE(ingestion_ts)",
+            "Cluster: CLUSTER BY source_system, file_name",
+            "OPTIONS(description = '...') must cite: source systems, ingestion patterns, and common blocks used.",
+            "Column descriptions must cite the common block source, e.g. 'From ingestion-metadata block.'.",
             "Ingestion metadata columns come first, followed by raw payload.",
         ],
     }
@@ -79,10 +81,10 @@ async def run(
         )
     else:
         prompt = (
-            "Generate the complete Azure Databricks SQL (Delta Lake / Unity Catalog) DDL script and formal "
+            "Generate the complete BigQuery Standard SQL DDL script and formal "
             "specification JSON for the provided BronzeProductPlan. "
-            "Use the databricks_config for catalog/schema names. "
-            "Output ONLY valid Databricks SQL — no BigQuery syntax."
+            "Use the bigquery_config for project/dataset names. "
+            "Output ONLY valid BigQuery Standard SQL — no Databricks, no Azure syntax."
         )
 
     return await run_agent(

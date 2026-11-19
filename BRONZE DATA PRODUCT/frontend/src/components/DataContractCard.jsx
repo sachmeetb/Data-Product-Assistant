@@ -600,7 +600,7 @@ export default function DataContractCard({ view, onSave, isModal, onClose, sessi
               href={kcUrl}
               target="_blank"
               rel="noopener noreferrer"
-              title="Open this data product in Unity Catalog"
+              title="Open this data product in GCP Knowledge Catalog"
               style={{
                 background: '#1a73e8',
                 color: '#ffffff',
@@ -625,7 +625,7 @@ export default function DataContractCard({ view, onSave, isModal, onClose, sessi
               href={bqUrl}
               target="_blank"
               rel="noopener noreferrer"
-              title="Open bronze schema in Azure Databricks Catalog Explorer"
+              title="Open bronze dataset in BigQuery console"
               style={{
                 background: '#1a73e8',
                 color: '#ffffff',
@@ -641,7 +641,7 @@ export default function DataContractCard({ view, onSave, isModal, onClose, sessi
                 whiteSpace: 'nowrap',
               }}
             >
-              🔗 Open in Databricks
+              🔗 Open in BigQuery
             </a>
           )}
 
@@ -1168,7 +1168,7 @@ export default function DataContractCard({ view, onSave, isModal, onClose, sessi
                   value={contract.info?.target_dataset || ''}
                   onChange={e => updateInfo('target_dataset', e.target.value)}
                   style={{ ...inputStyle, marginTop: 4, fontFamily: 'monospace', fontWeight: 600 }}
-                  placeholder="Target Databricks Unity Catalog schema..."
+                  placeholder="Target BigQuery/Delta dataset..."
                 />
               </div>
 

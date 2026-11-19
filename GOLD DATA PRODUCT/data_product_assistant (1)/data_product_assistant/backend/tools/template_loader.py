@@ -34,7 +34,7 @@ class TemplateLoader:
     def __init__(self) -> None:
         self._registry_cache: Optional[dict] = None
         self._template_cache: dict[str, dict] = {}
-        self._bucket_name: str = os.environ.get("UC_TEMPLATES_VOLUME", os.environ.get("GCS_TEMPLATES_BUCKET", "")).rstrip("/")
+        self._bucket_name: str = os.environ.get("GCS_TEMPLATES_BUCKET", "")
 
     # ── registry ─────────────────────────────────────────────────────────────
 
@@ -189,14 +189,15 @@ class TemplateLoader:
             _logger.warning("[template-loader] Failed to load template %s/%s: %s", industry, domain, exc)
             return None
 
-    # ── Unity Catalog Volume helpers ─────────────────────────────────────────
+    # ── GCS helpers ──────────────────────────────────────────────────────────
 
     def _gcs_download_json(self, blob_name: str) -> dict:
-        from tools.databricks_auth import get_workspace_client
+        from google.cloud import storage  # lazy import — avoids hard dep in local dev
 
-        wc = get_workspace_client()
-        resp = wc.files.download(f"{self._bucket_name}/{blob_name.lstrip('/')}")
-        raw = resp.contents.read().decode("utf-8")
+        client = storage.Client()
+        bucket = client.bucket(self._bucket_name)
+        blob = bucket.blob(blob_name)
+        raw = blob.download_as_text(encoding="utf-8")
         return json.loads(raw)
 
     @staticmethod

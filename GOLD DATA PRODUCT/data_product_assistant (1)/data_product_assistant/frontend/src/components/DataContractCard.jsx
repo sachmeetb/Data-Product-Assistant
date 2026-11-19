@@ -64,7 +64,7 @@ export const DEFAULT_GOLD_CONTRACT = {
     description: 'Official Gold Layer Data Contract governing conformed entities, consumption-ready star/snowflake schemas, KPIs, and automated quality assertions.',
     domain: 'Enterprise Gold Domain',
     owner: 'Enterprise Data Governance & BI Team',
-    standards: ['Databricks Delta Lake', 'Unity Catalog', 'BCBS 239'],
+    standards: ['BigQuery Native', 'Knowledge Catalog', 'BCBS 239'],
     target_dataset: 'gold',
   },
   servicelevels: {
@@ -2516,7 +2516,7 @@ export default function DataContractCard({ view, sessionId, onSave, onContractCh
                   value={contract.info?.target_dataset || ''}
                   onChange={e => updateInfo('target_dataset', e.target.value)}
                   style={{ ...inputStyle, marginTop: 4, fontFamily: 'monospace', fontWeight: 600 }}
-                  placeholder="Target Databricks Unity Catalog schema..."
+                  placeholder="Target BigQuery/Delta dataset..."
                 />
               </div>
 

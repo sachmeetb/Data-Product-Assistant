@@ -1,6 +1,22 @@
 """
-base.py — shared agent runner using Azure Databricks Model Serving (or Azure OpenAI)
-via the OpenAI-compatible AsyncOpenAI client.
+base.py — shared agent runner using google.genai directly (Vertex AI).
+
+Replaces the ADK LlmAgent/Runner stack. ADK 0.5.x's instruction template
+engine applies format_map(session.state) to every instruction string — even
+callable-wrapped ones — causing KeyError on SKILL.md files that contain JSON
+examples with bare {field} notation. Bypassing ADK eliminates the problem.
+
+Thread model
+------------
+  1. Server creates ONE conversation thread per agent-skill per HTTP session
+     via create_thread(skill_name, thread_id=<http_session_id>).
+  2. The thread_id (plain string) is passed to run_agent() on every call.
+  3. Multi-turn history is stored in _histories[(skill_name, thread_id)]
+     as a list of Content objects. This lives in process memory — identical
+     to InMemorySessionService but without the template-engine overhead.
+  4. With --min-instances=1 on Cloud Run, one warm instance holds all sessions
+     and history survives across requests. Scale-out would need Redis-backed
+     history (future work).
 """
 
 import asyncio
@@ -10,12 +26,45 @@ import os
 import uuid
 from pathlib import Path
 
+# ── Bootstrap: load .env and set GCP env vars before any google imports ───────
 from dotenv import load_dotenv
 
 _PROJECT_ROOT = Path(__file__).parent.parent
 load_dotenv(_PROJECT_ROOT / ".env")
 
+_GCP_PROJECT  = os.environ.get("GOOGLE_CLOUD_PROJECT", "")
+_GCP_LOCATION = os.environ.get("GOOGLE_CLOUD_LOCATION", "us-central1")
+# Gemini model calls use their own location, decoupled from the data/BQ region.
+# Gemini 3.x models (e.g. gemini-3.8-flash) are only served from the "global"
+# Vertex location; gemini-2.5-pro is available there too, so route all model
+# traffic to global while BigQuery/GCS stay in GOOGLE_CLOUD_LOCATION.
+_GENAI_LOCATION = os.environ.get("GOOGLE_GENAI_LOCATION", "global")
+
+# google.genai reads this env var when the Client is constructed to decide
+# whether to route to Vertex AI or Google AI Studio.
+if _GCP_PROJECT and not os.environ.get("GOOGLE_GENAI_USE_VERTEXAI"):
+    os.environ["GOOGLE_GENAI_USE_VERTEXAI"] = "1"
+
+# ── Google packages (after env vars are set) ──────────────────────────────────
+import google.genai as genai
+from google.genai.types import Content, GenerateContentConfig, Part
+try:
+    # Available in google-genai >= 1.x; guarded so an older SDK can't crash the
+    # runner at import time (we simply skip the thinking cap if unavailable).
+    from google.genai.types import ThinkingConfig
+except ImportError:  # pragma: no cover
+    ThinkingConfig = None
 from opentelemetry import trace
+from opentelemetry.exporter.cloud_trace import CloudTraceSpanExporter
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import BatchSpanProcessor
+
+if _GCP_PROJECT:
+    _trace_provider = TracerProvider()
+    _trace_provider.add_span_processor(
+        BatchSpanProcessor(CloudTraceSpanExporter(project_id=_GCP_PROJECT))
+    )
+    trace.set_tracer_provider(_trace_provider)
 
 tracer = trace.get_tracer("agents")
 
@@ -52,25 +101,17 @@ _SKILL_MAX_TOKENS: dict[str, int] = {
 }
 _DEFAULT_MAX_TOKENS = 4096
 
-_DEFAULT_MODEL = (
-    os.getenv("DATABRICKS_LLM_MODEL")
-    or os.getenv("AZURE_OPENAI_DEPLOYMENT")
-    or os.getenv("LLM_MODEL")
-    or "databricks-meta-llama-3-3-70b-instruct"
-)
-_FLASH_MODEL = (
-    os.getenv("DATABRICKS_FAST_LLM_MODEL")
-    or _DEFAULT_MODEL
-)
+_DEFAULT_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-pro")
+_FLASH_MODEL   = os.getenv("GEMINI_FLASH_MODEL", "gemini-3.8-flash")
 
 _SKILL_MODEL: dict[str, str] = {
-    # Heavy structured JSON output
+    # Pro: heavy structured JSON output
     "gold-er":                   _DEFAULT_MODEL,
     "silver-sttm":               _DEFAULT_MODEL,
     "silver-transformation":     _DEFAULT_MODEL,
     "gold-final":                _DEFAULT_MODEL,
     "pipeline-generator":        _DEFAULT_MODEL,
-    # Fast classification, routing, validation
+    # Flash: classification, routing, validation
     "orchestrator":              _FLASH_MODEL,
     "requirement-understanding": _FLASH_MODEL,
     "use-case-classification":   _FLASH_MODEL,
@@ -79,23 +120,51 @@ _SKILL_MODEL: dict[str, str] = {
     "test-agent":                _FLASH_MODEL,
     "publisher":                 _FLASH_MODEL,
 }
+if os.getenv("GEMINI_MODEL_TIER") == "flash":
+    _SKILL_MODEL = {k: _FLASH_MODEL for k in _SKILL_MODEL}
 
-# ── OpenAI-compatible LLM client (lazy, one per process) ──────────────────────
+# ── Thinking budget ───────────────────────────────────────────────────────────
+# The flash model has "thinking" ON by default, and thinking tokens are drawn
+# from the SAME max_output_tokens budget as the answer. For agents that must emit
+# a large structured JSON (Silver STTM, Test Agent, Challenger, …), unbounded thinking
+# can consume the budget and truncate the JSON mid-object → the response fails to
+# parse → run_agent returns {"raw_output": ...}. Capping the thinking budget guarantees
+# room for the actual answer. Applied to any flash models.
+_FLASH_THINKING_BUDGET = int(os.getenv("FLASH_THINKING_BUDGET", "1024"))
 
-_llm_client = None
+
+def _thinking_config_for(skill_name: str):
+    """Return a ThinkingConfig for flash agents (bounded budget), else None."""
+    if ThinkingConfig is None:
+        return None
+    model_name = _SKILL_MODEL.get(skill_name, _DEFAULT_MODEL)
+    if "flash" not in model_name.lower():
+        return None
+    try:
+        return ThinkingConfig(thinking_budget=_FLASH_THINKING_BUDGET)
+    except Exception:  # pragma: no cover - defensive against SDK field changes
+        return None
+
+# ── google.genai client (lazy, one per process) ───────────────────────────────
+
+_genai_client: genai.Client | None = None
 
 
-def _client():
-    global _llm_client
-    if _llm_client is None:
-        from tools.databricks_auth import get_async_llm_client
-        _llm_client = get_async_llm_client()
-    return _llm_client
+def _client() -> genai.Client:
+    global _genai_client
+    if _genai_client is None:
+        _genai_client = genai.Client(
+            vertexai=True,
+            project=_GCP_PROJECT,
+            location=_GENAI_LOCATION,
+            http_options={"timeout": 1800000},  # 1800s (value is milliseconds) — LLM agent calls are slow
+        )
+    return _genai_client
 
 
 # ── Conversation history (in-process, per skill × session) ───────────────────
-# {(skill_name, session_id): [{"role": "user"|"assistant", "content": "..."}, ...]}
-_histories: dict[tuple[str, str], list[dict[str, str]]] = {}
+# {(skill_name, session_id): [Content(role="user"|"model", ...), ...]}
+_histories: dict[tuple[str, str], list[Content]] = {}
 
 
 # ── Skill loading ─────────────────────────────────────────────────────────────
@@ -387,24 +456,31 @@ async def run_agent(
 
     history_key = (skill_name, session)
     history = _histories.get(history_key, [])
-    new_user_msg = {"role": "user", "content": user_msg}
-    messages = [{"role": "system", "content": system_instruction}] + history + [new_user_msg]
+    new_user_content = Content(role="user", parts=[Part(text=user_msg)])
+    contents = history + [new_user_content]
 
     with tracer.start_as_current_span(f"agent.{skill_name}") as span:
         span.set_attribute("agent.skill",     skill_name)
         span.set_attribute("agent.thread_id", session)
 
         try:
-            response = await _client().chat.completions.create(
+            _cfg_kwargs = {
+                "system_instruction": system_instruction,
+                "max_output_tokens": max_tok,
+            }
+            _tcfg = _thinking_config_for(skill_name)
+            if _tcfg is not None:
+                _cfg_kwargs["thinking_config"] = _tcfg
+            response = await _client().aio.models.generate_content(
                 model=model,
-                messages=messages,
-                max_tokens=max_tok,
-                temperature=0.2,
+                contents=contents,
+                config=GenerateContentConfig(**_cfg_kwargs),
             )
-            result_text = (response.choices[0].message.content or "") if response.choices else ""
+            result_text = response.text
 
             # Persist the turn so subsequent calls have conversation history.
-            _histories[history_key] = history + [new_user_msg, {"role": "assistant", "content": result_text}]
+            model_content = Content(role="model", parts=[Part(text=result_text)])
+            _histories[history_key] = history + [new_user_content, model_content]
 
         except Exception as exc:
             logging.getLogger(__name__).error(

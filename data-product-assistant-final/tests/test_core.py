@@ -37,13 +37,6 @@ def test_double_renders_to_valid_bigquery():
     assert render(normalize("DOUBLE")) == "FLOAT64"
 
 
-def test_databricks_type_rendering():
-    assert render(normalize("INT64"), target="databricks") == "BIGINT"
-    assert render(normalize("FLOAT64"), target="databricks") == "DOUBLE"
-    assert render(normalize("NUMERIC"), target="databricks") == "DECIMAL"
-    assert render(normalize("BOOL"), target="databricks") == "BOOLEAN"
-
-
 def test_unknown_type_raises_rather_than_defaulting():
     with pytest.raises(UnknownTypeError):
         normalize("WIDGET")

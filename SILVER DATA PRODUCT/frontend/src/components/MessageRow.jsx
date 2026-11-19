@@ -225,7 +225,7 @@ function SilverPublishReportCard({ view }) {
       {/* Per-Table Links & dbt DQ Status Table */}
       <div style={{ padding: '14px 18px' }}>
         <div style={{ fontSize: '12px', fontWeight: 700, color: '#334155', textTransform: 'uppercase', marginBottom: '8px' }}>
-          Published Silver Entities — Azure Databricks &amp; Unity Catalog Deep Links
+          Published Silver Entities — BigQuery & Knowledge Catalog Deep Links
         </div>
         <div style={{ overflowX: 'auto' }}>
           <table style={{ width: '100%', minWidth: '580px', tableLayout: 'auto', borderCollapse: 'collapse', fontSize: '12.5px' }}>
@@ -233,8 +233,8 @@ function SilverPublishReportCard({ view }) {
               <tr style={{ background: '#f8fafc', borderBottom: '2px solid #e2e8f0', textAlign: 'left' }}>
                 <th style={{ padding: '8px 12px', color: '#475569', whiteSpace: 'nowrap' }}>Silver Entity</th>
                 <th style={{ padding: '8px 12px', color: '#475569', whiteSpace: 'nowrap' }}>dbt Data Quality</th>
-                <th style={{ padding: '8px 12px', color: '#475569', whiteSpace: 'nowrap' }}>Databricks Explorer</th>
-                <th style={{ padding: '8px 12px', color: '#475569', whiteSpace: 'nowrap' }}>Unity Catalog</th>
+                <th style={{ padding: '8px 12px', color: '#475569', whiteSpace: 'nowrap' }}>BigQuery Console</th>
+                <th style={{ padding: '8px 12px', color: '#475569', whiteSpace: 'nowrap' }}>GCP Knowledge Catalog</th>
               </tr>
             </thead>
             <tbody>
@@ -274,7 +274,7 @@ function SilverPublishReportCard({ view }) {
                         display: 'inline-block',
                       }}
                     >
-                      View in Databricks ↗
+                      View in BigQuery ↗
                     </a>
                   </td>
                   <td style={{ padding: '9px 12px', whiteSpace: 'nowrap' }}>
@@ -330,7 +330,7 @@ function SilverPublishReportCard({ view }) {
           <div style={{ marginTop: '14px' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px', flexWrap: 'wrap', gap: '6px' }}>
               <div style={{ fontSize: '11.5px', fontWeight: 700, color: '#475569', textTransform: 'uppercase' }}>
-                Live Databricks Conformed Rows Preview ({ previewTable.rows?.length || 0 } rows)
+                Live BigQuery Conformed Rows Preview ({ previewTable.rows?.length || 0 } rows)
               </div>
               <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
                 {Object.keys(actualData).map(fqn => {
@@ -425,32 +425,51 @@ function SilverPublishReportCard({ view }) {
 }
 
 function Conformance360Card({ view }) {
+  const [activeTab, setActiveTab] = useState('customers')
   if (!view) return null
   const customers = view.golden_customers || []
+  const xrefs = view.xrefs || []
+  const contacts = view.contacts || []
+  const reviews = view.steward_review_queue || []
   const sc = view.source_counts || {}
+  const stc = view.source_table_counts || {}
   const pub = view.publish_report || null
   const pubTables = pub?.tables || []
+  const sysSummary = Object.keys(stc).length > 0
+    ? Object.entries(stc).map(([sys, tblMap]) => `${sys} (${Object.keys(tblMap).length} tables)`).join(' + ')
+    : Object.entries(sc).map(([sys, cnt]) => `${sys} (${cnt})`).join(' + ')
+
   return (
     <div style={{ marginTop: '12px', border: '1px solid #cbd5e1', borderRadius: '12px', background: '#ffffff', overflow: 'hidden' }}>
       <div style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%)', color: '#ffffff', padding: '12px 16px', display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}>
         <div>
-          <div style={{ fontSize: '14px', fontWeight: 700 }}>4-Source Bronze → Unified Silver Customer 360</div>
+          <div style={{ fontSize: '14px', fontWeight: 700 }}>
+            N-to-M Domain Mastering: {view.source_system_count || Object.keys(sc).length} Systems ({view.total_bronze_tables || 12} Bronze Tables) → {view.domain_display_name || 'Unified Silver Customer 360'} (5 Silver Tables)
+          </div>
           <div style={{ fontSize: '11.5px', opacity: 0.9 }}>
-            Hogan ({sc.HOGAN || 0}) + AFS ({sc.AFS || 0}) + TSYS ({sc.TSYS || 0}) + ACLS ({sc.ACLS || 0}) = {view.total_bronze_records || 0} Bronze Records → {view.unified_customers || 0} Unified Customers ({view.dedup_ratio_pct || 0}% dedup)
+            {sysSummary} → {view.total_all_table_rows || view.total_bronze_records || 0} Total Bronze Rows ({view.total_bronze_records || 0} Party Rows) → {view.unified_customers || 0} Golden Entities ({view.dedup_ratio_pct || 0}% compression)
           </div>
         </div>
-        <span style={{ background: '#10b981', color: '#fff', fontSize: '11px', fontWeight: 700, padding: '4px 10px', borderRadius: '999px' }}>
-          {view.total_arrangements || 0} Arrangements Linked
-        </span>
+        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+          <span style={{ background: '#10b981', color: '#fff', fontSize: '11px', fontWeight: 700, padding: '4px 10px', borderRadius: '999px' }}>
+            {view.total_arrangements || 0} Arrangements
+          </span>
+          <span style={{ background: '#0ea5e9', color: '#fff', fontSize: '11px', fontWeight: 700, padding: '4px 10px', borderRadius: '999px' }}>
+            {view.total_contacts || contacts.length} 1:N Contacts
+          </span>
+          <span style={{ background: '#f59e0b', color: '#fff', fontSize: '11px', fontWeight: 700, padding: '4px 10px', borderRadius: '999px' }}>
+            {view.total_steward_reviews ?? reviews.length} Steward Reviews
+          </span>
+        </div>
       </div>
 
       {pub && (
         <div style={{ padding: '12px 16px', background: '#faf5ff', borderBottom: '1px solid #ede9fe' }}>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center', marginBottom: pubTables.length ? '10px' : 0 }}>
-            <span style={{ fontSize: '12px', fontWeight: 700, color: '#4c1d95', marginRight: '4px' }}>Databricks Explorer Links:</span>
+            <span style={{ fontSize: '12px', fontWeight: 700, color: '#4c1d95', marginRight: '4px' }}>GCP Console Links:</span>
             {pub.bigquery_dataset_url && (
               <a href={pub.bigquery_dataset_url} target="_blank" rel="noopener noreferrer" style={{ background: '#1d4ed8', color: '#fff', fontSize: '11.5px', fontWeight: 600, padding: '5px 10px', borderRadius: '6px', textDecoration: 'none' }}>
-                Open Schema in Databricks ↗
+                Open Dataset in BigQuery ↗
               </a>
             )}
             {pub.knowledge_catalog_data_product_url && (
@@ -479,37 +498,149 @@ function Conformance360Card({ view }) {
         </div>
       )}
 
+      {/* Multi-Table Silver Domain Switcher Tabs */}
+      <div style={{ display: 'flex', gap: '6px', padding: '10px 16px', background: '#f8fafc', borderBottom: '1px solid #e2e8f0', flexWrap: 'wrap' }}>
+        {[
+          { id: 'customers', label: `slv_customer_360 & slv_customer_arrangement (${customers.length})` },
+          { id: 'xrefs', label: `slv_customer_source_xref (${xrefs.length})` },
+          { id: 'contacts', label: `slv_customer_contact (${contacts.length})` },
+          { id: 'reviews', label: `slv_steward_review_queue (${reviews.length})` },
+        ].map(tab => (
+          <button
+            key={tab.id}
+            type="button"
+            onClick={() => setActiveTab(tab.id)}
+            style={{
+              fontSize: '11.5px',
+              fontWeight: 700,
+              padding: '5px 11px',
+              borderRadius: '6px',
+              border: activeTab === tab.id ? '1px solid #1e3a8a' : '1px solid #cbd5e1',
+              background: activeTab === tab.id ? '#1e3a8a' : '#ffffff',
+              color: activeTab === tab.id ? '#ffffff' : '#334155',
+              cursor: 'pointer',
+            }}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
       <div style={{ padding: '12px 16px', overflowX: 'auto' }}>
-        <table style={{ width: 'max-content', minWidth: '100%', tableLayout: 'auto', borderCollapse: 'collapse', fontSize: '12px', margin: 0 }}>
-          <thead>
-            <tr style={{ background: '#f8fafc', borderBottom: '2px solid #e2e8f0', textAlign: 'left' }}>
-              <th style={{ padding: '8px 12px', whiteSpace: 'nowrap' }}>Customer Key</th>
-              <th style={{ padding: '8px 12px', whiteSpace: 'nowrap' }}>Golden Legal Name</th>
-              <th style={{ padding: '8px 12px', whiteSpace: 'nowrap' }}>Contributing Sources</th>
-              <th style={{ padding: '8px 12px', whiteSpace: 'nowrap' }}>Linked Banking Arrangements (Deposit / Card / Loans)</th>
-            </tr>
-          </thead>
-          <tbody>
-            {customers.map(c => (
-              <tr key={c.customer_key} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                <td style={{ padding: '8px 12px', fontFamily: 'monospace', fontWeight: 600, whiteSpace: 'nowrap' }}>{c.customer_key}</td>
-                <td style={{ padding: '8px 12px', fontWeight: 600, whiteSpace: 'nowrap' }}>{c.legal_name}</td>
-                <td style={{ padding: '8px 12px', whiteSpace: 'nowrap' }}>
-                  {(c.contributing_sources || []).map(s => (
-                    <span key={s} style={{ display: 'inline-block', background: '#eff6ff', color: '#1d4ed8', border: '1px solid #bfdbfe', borderRadius: '4px', padding: '1px 6px', marginRight: '4px', fontSize: '11px', fontWeight: 600 }}>{s}</span>
-                  ))}
-                </td>
-                <td style={{ padding: '8px 12px', whiteSpace: 'nowrap' }}>
-                  {(c.arrangements || []).map(a => (
-                    <span key={a.arrangement_key} style={{ display: 'inline-block', background: '#ecfdf5', color: '#047857', border: '1px solid #a7f3d0', borderRadius: '4px', padding: '1px 6px', marginRight: '4px', fontSize: '11px', fontWeight: 600 }}>
-                      {a.arrangement_type} ({a.source_account_id})
-                    </span>
-                  ))}
-                </td>
+        {activeTab === 'customers' && (
+          <table style={{ width: 'max-content', minWidth: '100%', tableLayout: 'auto', borderCollapse: 'collapse', fontSize: '12px', margin: 0 }}>
+            <thead>
+              <tr style={{ background: '#f8fafc', borderBottom: '2px solid #e2e8f0', textAlign: 'left' }}>
+                <th style={{ padding: '8px 12px', whiteSpace: 'nowrap' }}>Customer Key</th>
+                <th style={{ padding: '8px 12px', whiteSpace: 'nowrap' }}>Golden Legal Name (Won By)</th>
+                <th style={{ padding: '8px 12px', whiteSpace: 'nowrap' }}>Contributing Sources</th>
+                <th style={{ padding: '8px 12px', whiteSpace: 'nowrap' }}>Linked Domain Arrangements (`slv_customer_arrangement`)</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {customers.map(c => (
+                <tr key={c.customer_key} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                  <td style={{ padding: '8px 12px', fontFamily: 'monospace', fontWeight: 600, whiteSpace: 'nowrap' }}>{c.customer_key}</td>
+                  <td style={{ padding: '8px 12px', fontWeight: 600, whiteSpace: 'nowrap' }}>
+                    {c.legal_name}{' '}
+                    <span style={{ fontSize: '10px', color: '#64748b', fontWeight: 500 }}>({c.survivorship_source})</span>
+                  </td>
+                  <td style={{ padding: '8px 12px', whiteSpace: 'nowrap' }}>
+                    {(c.contributing_sources || []).map(s => (
+                      <span key={s} style={{ display: 'inline-block', background: '#eff6ff', color: '#1d4ed8', border: '1px solid #bfdbfe', borderRadius: '4px', padding: '1px 6px', marginRight: '4px', fontSize: '11px', fontWeight: 600 }}>{s}</span>
+                    ))}
+                  </td>
+                  <td style={{ padding: '8px 12px', whiteSpace: 'nowrap' }}>
+                    {(c.arrangements || []).map(a => (
+                      <span key={a.arrangement_key} style={{ display: 'inline-block', background: '#ecfdf5', color: '#047857', border: '1px solid #a7f3d0', borderRadius: '4px', padding: '1px 6px', marginRight: '4px', fontSize: '11px', fontWeight: 600 }}>
+                        {a.arrangement_type}: {a.source_account_id} ({a.source_table || a.source_system})
+                      </span>
+                    ))}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+
+        {activeTab === 'xrefs' && (
+          <table style={{ width: 'max-content', minWidth: '100%', tableLayout: 'auto', borderCollapse: 'collapse', fontSize: '12px', margin: 0 }}>
+            <thead>
+              <tr style={{ background: '#f8fafc', borderBottom: '2px solid #e2e8f0', textAlign: 'left' }}>
+                <th style={{ padding: '8px 12px', whiteSpace: 'nowrap' }}>XREF Key</th>
+                <th style={{ padding: '8px 12px', whiteSpace: 'nowrap' }}>Customer Key</th>
+                <th style={{ padding: '8px 12px', whiteSpace: 'nowrap' }}>Source System</th>
+                <th style={{ padding: '8px 12px', whiteSpace: 'nowrap' }}>Originating Bronze Table</th>
+                <th style={{ padding: '8px 12px', whiteSpace: 'nowrap' }}>Natural Key</th>
+                <th style={{ padding: '8px 12px', whiteSpace: 'nowrap' }}>Match Rule &amp; Score</th>
+              </tr>
+            </thead>
+            <tbody>
+              {xrefs.map(x => (
+                <tr key={x.xref_key} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                  <td style={{ padding: '7px 12px', fontFamily: 'monospace' }}>{x.xref_key}</td>
+                  <td style={{ padding: '7px 12px', fontFamily: 'monospace', fontWeight: 600 }}>{x.customer_key}</td>
+                  <td style={{ padding: '7px 12px', fontWeight: 600 }}>{x.source_system}</td>
+                  <td style={{ padding: '7px 12px', fontFamily: 'monospace' }}>{x.source_entity}</td>
+                  <td style={{ padding: '7px 12px', fontFamily: 'monospace' }}>{x.source_customer_id}</td>
+                  <td style={{ padding: '7px 12px' }}>{x.match_method} ({x.match_score})</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+
+        {activeTab === 'contacts' && (
+          <table style={{ width: 'max-content', minWidth: '100%', tableLayout: 'auto', borderCollapse: 'collapse', fontSize: '12px', margin: 0 }}>
+            <thead>
+              <tr style={{ background: '#f8fafc', borderBottom: '2px solid #e2e8f0', textAlign: 'left' }}>
+                <th style={{ padding: '8px 12px', whiteSpace: 'nowrap' }}>Customer Key</th>
+                <th style={{ padding: '8px 12px', whiteSpace: 'nowrap' }}>Contact Type</th>
+                <th style={{ padding: '8px 12px', whiteSpace: 'nowrap' }}>Usage</th>
+                <th style={{ padding: '8px 12px', whiteSpace: 'nowrap' }}>Normalized Value</th>
+                <th style={{ padding: '8px 12px', whiteSpace: 'nowrap' }}>Source System &amp; Table</th>
+                <th style={{ padding: '8px 12px', whiteSpace: 'nowrap' }}>Verification</th>
+              </tr>
+            </thead>
+            <tbody>
+              {contacts.map(cnt => (
+                <tr key={cnt.contact_key} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                  <td style={{ padding: '7px 12px', fontFamily: 'monospace', fontWeight: 600 }}>{cnt.customer_key}</td>
+                  <td style={{ padding: '7px 12px', fontWeight: 600 }}>{cnt.contact_type}</td>
+                  <td style={{ padding: '7px 12px' }}>{cnt.contact_usage}</td>
+                  <td style={{ padding: '7px 12px', fontFamily: 'monospace' }}>{cnt.contact_value_normalized}</td>
+                  <td style={{ padding: '7px 12px' }}>{cnt.source_system} ({cnt.source_table})</td>
+                  <td style={{ padding: '7px 12px' }}>{cnt.verification_status}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+
+        {activeTab === 'reviews' && (
+          <table style={{ width: 'max-content', minWidth: '100%', tableLayout: 'auto', borderCollapse: 'collapse', fontSize: '12px', margin: 0 }}>
+            <thead>
+              <tr style={{ background: '#f8fafc', borderBottom: '2px solid #e2e8f0', textAlign: 'left' }}>
+                <th style={{ padding: '8px 12px', whiteSpace: 'nowrap' }}>Review ID</th>
+                <th style={{ padding: '8px 12px', whiteSpace: 'nowrap' }}>Candidate A</th>
+                <th style={{ padding: '8px 12px', whiteSpace: 'nowrap' }}>Candidate B</th>
+                <th style={{ padding: '8px 12px', whiteSpace: 'nowrap' }}>Rule &amp; Score</th>
+                <th style={{ padding: '8px 12px', whiteSpace: 'nowrap' }}>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {reviews.map(r => (
+                <tr key={r.review_id} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                  <td style={{ padding: '7px 12px', fontFamily: 'monospace', fontWeight: 600 }}>{r.review_id}</td>
+                  <td style={{ padding: '7px 12px' }}>{r.candidate_a_name} ({r.candidate_a_system}.{r.candidate_a_entity}: {r.candidate_a_id})</td>
+                  <td style={{ padding: '7px 12px' }}>{r.candidate_b_name} ({r.candidate_b_system}.{r.candidate_b_entity}: {r.candidate_b_id})</td>
+                  <td style={{ padding: '7px 12px', fontWeight: 600 }}>{r.match_rule} ({r.similarity_score})</td>
+                  <td style={{ padding: '7px 12px', color: '#b45309', fontWeight: 700 }}>{r.review_status}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
       </div>
     </div>
   )

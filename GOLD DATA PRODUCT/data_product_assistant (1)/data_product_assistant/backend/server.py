@@ -85,7 +85,7 @@ from tools.gold_artifact_generator import (
     generate_dbt_models_sql,
     generate_gold_dataplex_manifest_json,
 )
-from tools.databricks_tool import DatabricksPublisher
+from tools.bigquery_tool import BigQueryPublisher
 from tools.knowledge_catalog import KnowledgeCatalogClient
 
 app = FastAPI(title="AI Retail Data Agent API", version="4.0.0")
@@ -994,14 +994,11 @@ def _save_requirement_files(result: dict, session_id: str) -> list[dict]:
 
 
 def _bigquery_console_url() -> str:
-    """Build Azure Databricks Catalog Explorer URL from env vars."""
-    host = (os.environ.get("DATABRICKS_HOST") or "").strip().rstrip("/")
-    catalog = os.environ.get("DATABRICKS_CATALOG", "main")
-    if not host:
+    """Build BigQuery Console URL from env vars."""
+    project = os.environ.get("BQ_PROJECT") or os.environ.get("GOOGLE_CLOUD_PROJECT", "")
+    if not project:
         return ""
-    if not host.startswith("http"):
-        host = f"https://{host}"
-    return f"{host}/explore/data/{catalog}"
+    return f"https://console.cloud.google.com/bigquery?project={project}"
 
 
 def _knowledge_catalog_console_url() -> str:
@@ -2294,7 +2291,7 @@ async def _execute_gold_publish_and_catalog_sync(
         {"dataset": target_dataset, "tables": saved_entities},
     )
 
-    publisher = DatabricksPublisher(gold_dataset=target_dataset, mode=mode or "live")
+    publisher = BigQueryPublisher(gold_dataset=target_dataset, mode=mode or "live")
     bq_report = await asyncio.to_thread(publisher.publish, ddl)
 
     project_id = publisher.project_id

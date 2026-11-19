@@ -116,26 +116,8 @@ _BIGQUERY: dict[CanonicalType, str] = {
     CanonicalType.GEOGRAPHY: "GEOGRAPHY",
 }
 
-_DATABRICKS: dict[CanonicalType, str] = {
-    CanonicalType.STRING: "STRING",
-    CanonicalType.INT: "BIGINT",
-    CanonicalType.DECIMAL: "DECIMAL",
-    CanonicalType.FLOAT: "DOUBLE",
-    CanonicalType.BOOL: "BOOLEAN",
-    CanonicalType.DATE: "DATE",
-    CanonicalType.TIME: "STRING",
-    CanonicalType.DATETIME: "TIMESTAMP_NTZ",
-    CanonicalType.TIMESTAMP: "TIMESTAMP",
-    CanonicalType.BYTES: "BINARY",
-    CanonicalType.JSON: "STRING",
-    CanonicalType.STRUCT: "STRUCT",
-    CanonicalType.ARRAY: "ARRAY",
-    CanonicalType.GEOGRAPHY: "STRING",
-}
-
 _TARGETS: dict[str, dict[CanonicalType, str]] = {
     "bigquery": _BIGQUERY,
-    "databricks": _DATABRICKS,
 }
 
 

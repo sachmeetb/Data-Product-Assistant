@@ -18,8 +18,14 @@ function ts() {
 export default function App() {
   const [messages, setMessages]           = useState([{
     id: 0, role: 'agent', agent: 'Bronze Agent',
-    text: "Welcome to **Bronze Agent**! Please describe your **incoming data sources** (e.g., Core Banking feeds, Mainframe COBOL copybooks, Real-time Kafka streams, KYC Document stores, SAP ERP), upload a source specification file, or click **Land 4-Source Banking Data** to upload & land Card, Deposit, Commercial Loan & Retail Loan datasets into `banking_bronze`.",
-    chips: ["Land 4-Source Banking Data", "Design Bronze Data Product (Standard Flow)"], loading: false, time: ts(), startingPoint: false,
+    text: "Welcome to **Bronze Agent**! Our architecture models every source system as **1-to-many datasets** across **Batch**, **Real-Time Streaming**, and **Kafka** alongside manual evaluation uploads.\n\nChoose an automated ingestion workflow below, click **Land 4-Source Banking Data** for manual CSV/Excel upload, or describe your custom source system:",
+    chips: [
+      "Auto-Ingest Multi-Table Sources (Batch + Kafka)",
+      "Simulate Kafka Card Auth Stream",
+      "Auto-Ingest Water Account 360 Sources",
+      "Land 4-Source Banking Data",
+      "Design Bronze Data Product (Standard Flow)",
+    ], loading: false, time: ts(), startingPoint: false,
   }])
   const [sessionId, setSessionId]             = useState(null)
   const [generatedFiles, setGeneratedFiles]   = useState([])

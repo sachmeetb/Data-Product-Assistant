@@ -39,11 +39,11 @@ async def run(
     from tools.knowledge_tool import get_naming_conventions
     from tools.schema_loader import get_crosswalk, get_common_block_catalog
 
-    catalog       = os.environ.get("DATABRICKS_CATALOG", "main")
-    silver_schema = os.environ.get("DATABRICKS_SILVER_SCHEMA", "banking_silver")
-    gold_schema   = os.environ.get("DATABRICKS_GOLD_SCHEMA",  "banking_gold")
+    project_id     = os.environ.get("GCP_PROJECT_ID", "eogwapq-agbg-internal-data-mig")
+    silver_dataset = os.environ.get("BQ_SILVER_DATASET", "banking_silver")
+    gold_dataset   = os.environ.get("BQ_GOLD_DATASET",  "banking_gold")
 
-    # Block-level standards alignment (for DDL COMMENT descriptions)
+    # Block-level standards alignment (for DDL OPTIONS descriptions)
     block_standards = {
         name: blk["standards_alignment"]
         for name, blk in get_common_block_catalog().items()
@@ -52,23 +52,25 @@ async def run(
     context: dict = {
         "silver_product_plan": silver_product_plan,
         "bank_profile": bank_profile,
-        "databricks_config": {
-            "catalog":       catalog,
-            "silver_schema": silver_schema,
-            "gold_schema":   gold_schema,
+        "bigquery_config": {
+            "project_id":     project_id,
+            "silver_dataset": silver_dataset,
+            "gold_dataset":   gold_dataset,
+            "location":       os.environ.get("BQ_LOCATION", "US"),
         },
         "naming_conventions": get_naming_conventions(),
         "standards_crosswalk": get_crosswalk(),
         "block_standards_alignment": block_standards,
         "ddl_rules": [
-            "Use Azure Databricks SQL (Unity Catalog + Delta Lake) only — no BigQuery syntax.",
-            "Table names: CREATE TABLE IF NOT EXISTS `{catalog}`.`{schema}`.`{table_name}` USING DELTA",
-            "Partitioning / Clustering: PARTITIONED BY (...) or CLUSTER BY (surrogate_key) as appropriate for Delta Lake.",
-            "COMMENT '...' must cite: BIAN service domain, ISO 20022 message, FIBO entity, and common blocks used.",
-            "Column comments must cite the common block source, e.g. 'From money block. ISO 20022: ActiveCurrencyAndAmount. ISO 4217 currency.'.",
-            "NEVER use DOUBLE for monetary or rate values — always DECIMAL(18, 4).",
-            "Use TIMESTAMP for date-time values.",
-            "surrogate_key is always the first column. Technical-metadata columns follow. Business columns come last.",
+            "Use BigQuery Standard SQL only — no Databricks, no Azure SQL syntax.",
+            "Table names: CREATE TABLE IF NOT EXISTS `{project}.{dataset}.{table_name}`",
+            "Partition: PARTITION BY DATE(silver_load_ts)",
+            "Cluster: CLUSTER BY surrogate_key (add business key if applicable)",
+            "OPTIONS(description = '...') must cite: BIAN service domain, ISO 20022 message, FIBO entity, and common blocks used.",
+            "Column descriptions must cite the common block source, e.g. 'From money block. ISO 20022: ActiveCurrencyAndAmount. ISO 4217 currency.'.",
+            "NEVER use FLOAT64 for monetary or rate values — always NUMERIC.",
+            "NEVER use DATETIME — always TIMESTAMP for date-time values.",
+            "Surrogate_key is always the first column. Technical-metadata columns follow. Business columns come last.",
         ],
     }
 
