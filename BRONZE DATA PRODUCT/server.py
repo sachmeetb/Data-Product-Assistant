@@ -485,6 +485,7 @@ class ChatRequest(BaseModel):
     message: str = Field("", description="User message text")
     action: Optional[str] = Field(None, description="Action override")
     file_ref_id: Optional[str] = Field(None, description="Uploaded file reference ID")
+    file_ref_ids: Optional[list[str]] = Field(None, description="Multiple uploaded file reference IDs")
 
 
 @app.post("/upload")
@@ -659,33 +660,248 @@ async def _handle_chat(body: ChatRequest, session_id: str):
     action = body.action
     session["turns"] = session.get("turns", 0) + 1
 
-    # Ingest uploaded file if referenced or mentioned
-    file_info = None
-    if body.file_ref_id:
-        file_info = _get_file_info(body.file_ref_id, filename_hint=session.get("uploaded_file_name", ""))
+    # Ingest one or multiple uploaded files if referenced or mentioned
+    ref_ids: list[str] = []
+    if body.file_ref_ids:
+        ref_ids.extend([r for r in body.file_ref_ids if r])
+    if body.file_ref_id and body.file_ref_id not in ref_ids:
+        ref_ids.append(body.file_ref_id)
 
-    # If not found by ID, inspect user_msg for any sample filename
-    if not file_info and user_msg:
+    extracted_parts: list[str] = []
+    uploaded_names: list[str] = []
+    for rid in ref_ids:
+        fi = _get_file_info(rid, filename_hint=session.get("uploaded_file_name", ""))
+        if fi:
+            txt = _extract_text_from_file_info(fi)
+            fname = fi.get("name", "uploaded_file")
+            uploaded_names.append(fname)
+            extracted_parts.append(f"=== Source File: {fname} ===\n{txt}")
+
+    # Fallback: inspect user_msg for any sample filename
+    if not extracted_parts and user_msg:
         for s_file in (_ROOT / "samples").glob("*.*"):
             if s_file.name.lower() in user_msg.lower():
-                file_info = _get_file_info(s_file.name, s_file.name)
+                fi = _get_file_info(s_file.name, s_file.name)
+                if fi:
+                    uploaded_names.append(fi.get("name", s_file.name))
+                    extracted_parts.append(f"=== Source File: {fi.get('name', s_file.name)} ===\n{_extract_text_from_file_info(fi)}")
                 break
 
-    if file_info:
-        extracted_text = _extract_text_from_file_info(file_info)
-        session["uploaded_file_id"] = file_info.get("id") or body.file_ref_id
-        session["uploaded_file_name"] = file_info.get("name", "uploaded_file")
-        session["uploaded_file_text"] = extracted_text
-        if not user_msg or body.action == "use_file" or "use this file" in user_msg.lower():
-            user_msg = f"User uploaded requirements file '{file_info.get('name')}':\n\n{extracted_text}"
+    if extracted_parts:
+        combined_text = "\n\n".join(extracted_parts)
+        session["uploaded_file_id"] = ref_ids[0] if ref_ids else None
+        session["uploaded_file_ids"] = ref_ids
+        session["uploaded_file_name"] = ", ".join(uploaded_names)
+        session["uploaded_file_text"] = combined_text
+        if not user_msg or body.action == "use_file" or "use this file" in user_msg.lower() or "use uploaded file" in user_msg.lower():
+            user_msg = f"User uploaded {len(uploaded_names)} file(s) ({', '.join(uploaded_names)}):\n\n{combined_text}"
         else:
-            user_msg = f"{user_msg}\n\nDocument '{file_info.get('name')}':\n\n{extracted_text}"
+            user_msg = f"{user_msg}\n\nUploaded Documents ({', '.join(uploaded_names)}):\n\n{combined_text}"
 
     current_step = session.get("step", "bank_profile")
 
     if action == "edit":
         current_step = "requirement"
         session["step"] = "requirement"
+
+    if "design bronze data product" in user_msg.lower() or "switch to standard bronze flow" in user_msg.lower():
+        session["step"] = "bank_profile"
+        store.set(session_id, session)
+        return {
+            "session_id": session_id,
+            "current_step": "initial",
+            "messages": [{
+                "agent": "Bronze Agent",
+                "text": (
+                    "Switched to the **Standard Bronze Data Product Design Flow**. "
+                    "Please describe your institution & incoming data sources (e.g., Hogan Mainframe, SWIFT, SAP ERP, Kafka streams), "
+                    "or attach an Excel/JSON/Word requirements file."
+                ),
+                "chips": ["Hogan Core Banking (Mainframe)", "SWIFT & Faster Payments", "Land 4-Source Banking Data"],
+                "files": [],
+            }],
+            "chips": ["Hogan Core Banking (Mainframe)", "SWIFT & Faster Payments", "Land 4-Source Banking Data"],
+        }
+
+    # Step 1 of 4-Source Landing: prompt user to upload their CSV/Excel files (or use sample files)
+    if (action == "land_4_sources" or "land 4-source" in user_msg.lower()) and not ref_ids:
+        session["step"] = "awaiting_4_source_upload"
+        store.set(session_id, session)
+        return {
+            "session_id": session_id,
+            "current_step": "awaiting_4_source_upload",
+            "messages": [{
+                "agent": "Bronze Agent",
+                "text": (
+                    "📤 **Upload Your 4-Source Banking Files (CSV or Excel `.xlsx`/`.xls`)**\n\n"
+                    "Please use the **📎 attachment button** below to select and upload one or multiple CSV / Excel files for:\n"
+                    "1. **Card** (e.g. `brz_tsys_cardholder.csv` — `cardholder_id`, `embossed_name`, `tax_ssn`, `mobile_phone`, `card_type`, `credit_line`)\n"
+                    "2. **Deposit** (e.g. `brz_hogan_ci_customer.csv` — `CI_CUST_NUM`, `CI_LEGAL_NAME`, `CI_TAX_ID`, `CI_BIRTH_DT`, `CI_PHONE`, `CI_POST_CODE`)\n"
+                    "3. **Commercial Loan** (e.g. `brz_afs_borrower.csv` — `BORROWER_ID`, `LEGAL_ENTITY_NAME`, `TAX_EIN`, `PRIMARY_CONTACT_NAME`, `CONTACT_PHONE`, `FACILITY_LIMIT`)\n"
+                    "4. **Retail Loan** (e.g. `brz_acls_applicant.csv` — `APPLICANT_ID`, `FIRST_NAME`, `LAST_NAME`, `DOB`, `NATIONAL_ID`, `CELL_PHONE`, `EMAIL`, `LOAN_PURPOSE`)\n\n"
+                    "Once uploaded, click **Extract & Use** to land them into `banking_bronze` and sync with **GCP Knowledge Catalog**, "
+                    "or click **Use Sample 4-Source Files** below to load the built-in sample datasets."
+                ),
+                "chips": ["Use Sample 4-Source Files", "Switch to Standard Bronze Flow"],
+                "files": [],
+            }],
+            "chips": ["Use Sample 4-Source Files", "Switch to Standard Bronze Flow"],
+        }
+
+    # Step 2 of 4-Source Landing: execute landing from uploaded files OR sample files
+    if (
+        (session.get("step") == "awaiting_4_source_upload" and ref_ids)
+        or "use sample 4-source" in user_msg.lower()
+    ):
+        uploaded_file_objs = [
+            _get_file_info(rid, filename_hint=session.get("uploaded_file_name", ""))
+            for rid in ref_ids
+        ] if ref_ids else None
+        if uploaded_file_objs:
+            uploaded_file_objs = [f for f in uploaded_file_objs if f]
+        landed = await asyncio.to_thread(_land_4_sources_to_bronze, None, uploaded_file_objs or None)
+        session["landed_4_sources"] = landed
+        session["step"] = "bronze_landed"
+        store.set(session_id, session)
+        rows_md = "\n".join(
+            f"| `{t['source_system']}` | `{t['fqn']}` | {t['row_count']} | {len(t['columns'])} cols | [BigQuery ↗]({t['bigquery_url']}) |"
+            for t in landed["tables"]
+        )
+        dp = landed.get("knowledge_catalog_data_product") or {}
+        gl = landed.get("knowledge_catalog_glossary") or {}
+        source_label = "Uploaded Files" if uploaded_file_objs else "Built-in Sample Datasets"
+        msg = (
+            f"✅ **Landed {len(landed['tables'])} Banking Source Table(s) into `{landed['project_id']}.{landed['dataset_id']}`** *(from {source_label})*\n\n"
+            f"| Source System | BigQuery Bronze Table | Rows | Schema | Console |\n"
+            f"| :--- | :--- | ---: | ---: | :--- |\n"
+            f"{rows_md}\n\n"
+            f"- **Total Bronze Records Landed**: `{landed['total_rows']}`\n"
+        )
+        if dp.get("ok"):
+            msg += f"- **Knowledge Catalog Data Product**: `{dp.get('data_product_id')}` ({dp.get('assets_registered', 0)} assets) — [Open Data Products ↗]({dp.get('knowledge_catalog_url')})\n"
+        if gl.get("ok"):
+            msg += f"- **Knowledge Catalog Glossary**: `{gl.get('glossary_id')}` ({gl.get('terms_synced', 0)} terms) — [Open Glossaries ↗]({gl.get('glossary_url')})\n"
+        msg += "\n**Next Step**: Open **Silver Data Product Assistant** and click **Map Multi-Source Bronze → Silver Customer 360 (N-to-M STTM)** to discover these Bronze tables and build the multi-source STTM."
+        return {
+            "session_id": session_id,
+            "current_step": "bronze_landed",
+            "messages": [{"agent": "Bronze Agent", "text": msg, "chips": ["Auto-Ingest Multi-Table Sources (Batch + Kafka)", "Land 4-Source Banking Data", "Design Bronze Data Product (Standard Flow)"], "files": []}],
+            "chips": ["Auto-Ingest Multi-Table Sources (Batch + Kafka)", "Land 4-Source Banking Data", "Design Bronze Data Product (Standard Flow)"],
+        }
+
+    # Automated 1-to-Many Multi-Table Bronze Ingestion (Batch + Kafka Streaming) -> GCP BigQuery & Dataplex
+    if (
+        action in ("auto_ingest_multi_table", "auto_ingest_water")
+        or "auto-ingest multi-table" in user_msg.lower()
+        or "auto-ingest water" in user_msg.lower()
+        or "1-to-many bronze" in user_msg.lower()
+    ):
+        from ingestion.orchestrator import AutomatedBronzeOrchestrator
+
+        ind_domain = "water" if ("water" in user_msg.lower() or action == "auto_ingest_water") else "banking"
+        orchestrator = AutomatedBronzeOrchestrator()
+        res = await asyncio.to_thread(orchestrator.run_automated_ingestion, None, ind_domain, None)
+        session["auto_ingested_bronze"] = res
+        session["step"] = "bronze_landed"
+        store.set(session_id, session)
+
+        sys_rows_md = "\n".join(
+            f"| **{s['source_system']}** ({s['system_label']}) | **{s['table_count']} tables** | `{', '.join(s['tables'])}` | `{', '.join(s['ingestion_modes'])}` | {s['total_rows']} |"
+            for s in res["systems_summary"]
+        )
+        tbl_rows_md = "\n".join(
+            f"| `{t['source_system']}` | `{t['fqn']}` | `{t['ingestion_mode']}` | {t['row_count']} | {len(t['columns'])} raw + {len(t.get('envelope_columns', []))} env | [BigQuery ↗]({t.get('bigquery_url', '#')}) |"
+            for t in res["tables"]
+        )
+        dp = res.get("knowledge_catalog_data_product") or {}
+        gl = res.get("knowledge_catalog_glossary") or {}
+
+        msg = (
+            f"⚡ **Automated 1-to-Many Bronze Ingestion Complete (`{res['project_id']}.{res['dataset_id']}`)**\n\n"
+            f"Modeled **{res['source_system_count']} Source Systems → {res['total_tables']} Bronze Tables** "
+            f"(`{res['batch_tables_count']}` Batch + `{res['streaming_tables_count']}` Real-Time Kafka Stream, **{res['total_rows']} total records**) "
+            f"with automated schema inference and 6-field ingestion envelopes (`_ingest_batch_id`, `_ingest_ts`, `_source_system`, `_source_file_or_topic`, `_ingestion_mode`, `_record_hash`).\n\n"
+            f"### 1-to-Many Source System Summary\n"
+            f"| Source System | Dataset Cardinality | Bronze Tables Provisioned | Ingestion Modes | Total Rows |\n"
+            f"| :--- | :--- | :--- | :--- | ---: |\n"
+            f"{sys_rows_md}\n\n"
+            f"### Provisioned BigQuery Bronze Tables & Console Links\n"
+            f"| System | BigQuery Bronze Table | Mode | Rows | Columns | Console |\n"
+            f"| :--- | :--- | :--- | ---: | :--- | :--- |\n"
+            f"{tbl_rows_md}\n\n"
+        )
+        if dp.get("ok"):
+            msg += f"- **GCP Knowledge Catalog Data Product**: `{dp.get('data_product_id')}` ({dp.get('assets_registered', 0)} assets) — [Open Data Products ↗]({dp.get('knowledge_catalog_url')})\n"
+        if gl.get("ok"):
+            msg += f"- **GCP Knowledge Catalog Glossary**: `{gl.get('glossary_id')}` ({gl.get('terms_synced', 0)} terms) — [Open Glossaries ↗]({gl.get('glossary_url')})\n"
+        msg += "\n**Next Step**: Open **Silver Data Product Assistant** to run the **N-to-M Multi-Source Domain Mapping** (`Many Sources → Many Tables → Domain → Multiple Silver Tables`)."
+
+        return {
+            "session_id": session_id,
+            "current_step": "bronze_landed",
+            "messages": [
+                {
+                    "agent": "Bronze Agent",
+                    "text": msg,
+                    "chips": [
+                        "Simulate Kafka Card Auth Stream",
+                        "Auto-Ingest Water Account 360 Sources",
+                        "Land 4-Source Banking Data",
+                        "Design Bronze Data Product (Standard Flow)",
+                    ],
+                    "files": [],
+                }
+            ],
+            "chips": [
+                "Simulate Kafka Card Auth Stream",
+                "Auto-Ingest Water Account 360 Sources",
+                "Land 4-Source Banking Data",
+                "Design Bronze Data Product (Standard Flow)",
+            ],
+        }
+
+    # Dedicated Kafka Streaming Simulation Handler -> GCP BigQuery
+    if action == "simulate_kafka" or "simulate kafka" in user_msg.lower():
+        from ingestion.kafka_connector import KafkaStreamingConnector
+
+        kafka_conn = KafkaStreamingConnector()
+        k_res = await asyncio.to_thread(
+            kafka_conn.ingest_stream_table,
+            "TSYS",
+            "brz_tsys_auth_events",
+            "payments.tsys.card.auth.v1",
+            "KAFKA-AUTH-STREAM (ISO 8583 Card Authorizations)",
+            "Real-time Kafka event stream capturing card authorizations and verified mobile touchpoints.",
+        )
+        msg = (
+            f"📡 **Kafka Streaming Ingestion Executed (`{k_res['kafka_topic']}` → `{k_res['fqn']}`)**\n\n"
+            f"- **Stream Execution Mode**: `{k_res['stream_mode']}`\n"
+            f"- **Events Materialized in BigQuery**: `{k_res['row_count']}` real-time ISO 8583 authorization events\n"
+            f"- **Dead-Letter Queue (DLQ) Rejects**: `{k_res.get('dlq_count', 0)}`\n"
+            f"- **Kafka Lineage Captured**: `kafka_topic`, `kafka_partition`, `kafka_offset`, `event_ts`, plus Bronze envelope (`_ingest_batch_id`, `_record_hash`)\n"
+            f"- **BigQuery Console Link**: [Open `{k_res['table_name']}` in BigQuery ↗]({k_res['bigquery_url']})"
+        )
+        return {
+            "session_id": session_id,
+            "current_step": "bronze_landed",
+            "messages": [
+                {
+                    "agent": "Bronze Agent",
+                    "text": msg,
+                    "chips": [
+                        "Auto-Ingest Multi-Table Sources (Batch + Kafka)",
+                        "Land 4-Source Banking Data",
+                        "Design Bronze Data Product (Standard Flow)",
+                    ],
+                    "files": [],
+                }
+            ],
+            "chips": [
+                "Auto-Ingest Multi-Table Sources (Batch + Kafka)",
+                "Land 4-Source Banking Data",
+                "Design Bronze Data Product (Standard Flow)",
+            ],
+        }
 
     if action == "publish" or user_msg.lower() == "publish to bigquery":
         ddl = session.get("ddl_script", "")
@@ -1330,4 +1546,303 @@ async def _handle_chat(body: ChatRequest, session_id: str):
             }
         ],
         "chips": chips,
+    }
+
+
+# ── 4-Source Banking Landing (Card, Deposit, Commercial Loan, Retail Loan) ────
+
+_FOUR_SOURCE_SPECS = [
+    {
+        "source_system": "TSYS (Card)",
+        "table_name": "brz_tsys_cardholder",
+        "csv_file": "brz_tsys_cardholder.csv",
+        "description": "TSYS / FDR Revolving Credit Card cardholder raw landing table.",
+    },
+    {
+        "source_system": "HOGAN (Deposit)",
+        "table_name": "brz_hogan_ci_customer",
+        "csv_file": "brz_hogan_ci_customer.csv",
+        "description": "Hogan Core Deposits CIS customer raw landing table.",
+    },
+    {
+        "source_system": "AFS (Commercial Loan)",
+        "table_name": "brz_afs_borrower",
+        "csv_file": "brz_afs_borrower.csv",
+        "description": "AFS Commercial Lending borrower & credit facility raw landing table.",
+    },
+    {
+        "source_system": "ACLS (Retail Loan)",
+        "table_name": "brz_acls_applicant",
+        "csv_file": "brz_acls_applicant.csv",
+        "description": "ACLS Consumer Retail Loan applicant raw landing table.",
+    },
+]
+
+
+def _parse_uploaded_tabular_rows(file_info: dict) -> tuple[str, str, list[dict]]:
+    """Parse an uploaded CSV or Excel (.xlsx/.xls) file into (source_system, table_name, rows)."""
+    import csv, io
+    fname = file_info.get("name") or "uploaded_source.csv"
+    stem = Path(fname).stem.lower()
+    clean_tbl = re.sub(r"[^a-z0-9_]+", "_", stem).strip("_") or "uploaded_source"
+    if not clean_tbl.startswith("brz_"):
+        clean_tbl = f"brz_{clean_tbl}"
+
+    if "tsys" in stem or "card" in stem:
+        src_sys = "TSYS (Card)"
+    elif "hogan" in stem or "deposit" in stem:
+        src_sys = "HOGAN (Deposit)"
+    elif "afs" in stem or "comm" in stem:
+        src_sys = "AFS (Commercial Loan)"
+    elif "acls" in stem or "retail" in stem or "loan" in stem:
+        src_sys = "ACLS (Retail Loan)"
+    else:
+        src_sys = stem.replace("_", " ").title()
+
+    content = file_info.get("content") or b""
+    ext = Path(fname).suffix.lower().lstrip(".")
+    rows: list[dict] = []
+
+    if ext == "csv":
+        text = content.decode("utf-8-sig", errors="ignore")
+        rows = [dict(r) for r in csv.DictReader(io.StringIO(text))]
+    elif ext in ("xlsx", "xls"):
+        import openpyxl
+        wb = openpyxl.load_workbook(io.BytesIO(content), data_only=True)
+        ws = wb.active
+        all_rows = list(ws.iter_rows(values_only=True))
+        if len(all_rows) >= 2:
+            headers = [re.sub(r"[^a-zA-Z0-9_]+", "_", str(h or f"col_{i}")).strip("_") for i, h in enumerate(all_rows[0])]
+            for r in all_rows[1:]:
+                if any(v is not None for v in r):
+                    rows.append({headers[i]: ("" if r[i] is None else str(r[i])) for i in range(len(headers))})
+    return src_sys, clean_tbl, rows
+
+
+def _land_4_sources_to_bronze(dataset_id: Optional[str] = None, uploaded_files: Optional[list[dict]] = None) -> dict:
+    import csv
+    from google.cloud import bigquery
+    from tools.gcp_auth import get_bigquery_client
+
+    project_id = os.environ.get("BQ_PROJECT") or os.environ.get("GCP_PROJECT_ID") or "eogwapq-agbg-internal-data-mig"
+    ds_id = dataset_id or os.environ.get("BQ_BRONZE_DATASET") or "banking_bronze"
+    samples_dir = Path(__file__).parent / "samples" / "banking_4_sources"
+
+    client = get_bigquery_client(project_id=project_id, location="US")
+    ds_ref = bigquery.Dataset(f"{project_id}.{ds_id}")
+    ds_ref.location = "US"
+    client.create_dataset(ds_ref, exists_ok=True)
+
+    sources_to_load: list[tuple[str, str, str, list[dict]]] = []
+    if uploaded_files:
+        for fi in uploaded_files:
+            src_sys, tbl_name, rows = _parse_uploaded_tabular_rows(fi)
+            if rows:
+                sources_to_load.append((src_sys, tbl_name, f"Uploaded Bronze raw table {tbl_name} from {fi.get('name')}", rows))
+    else:
+        for spec in _FOUR_SOURCE_SPECS:
+            csv_path = samples_dir / spec["csv_file"]
+            with open(csv_path, "r", encoding="utf-8-sig") as f:
+                rows = list(csv.DictReader(f))
+            if rows:
+                sources_to_load.append((spec["source_system"], spec["table_name"], spec["description"], rows))
+
+    landed_tables = []
+    total_rows = 0
+    for src_sys, tbl_name, tbl_desc, rows in sources_to_load:
+        cols = list(rows[0].keys())
+        schema = [bigquery.SchemaField(c, "STRING", mode="NULLABLE", description=f"Raw field {c} from {src_sys}") for c in cols]
+        fqn = f"{project_id}.{ds_id}.{tbl_name}"
+        job_cfg = bigquery.LoadJobConfig(
+            schema=schema,
+            write_disposition=bigquery.WriteDisposition.WRITE_TRUNCATE,
+        )
+        job = client.load_table_from_json(rows, fqn, job_config=job_cfg)
+        job.result()
+
+        # Enrich table description & labels
+        tbl_obj = client.get_table(fqn)
+        tbl_obj.description = tbl_desc
+        tbl_obj.labels = {"layer": "bronze", "source_system": re.sub(r"[^a-z0-9_-]", "_", src_sys.lower())[:63]}
+        client.update_table(tbl_obj, ["description", "labels"])
+
+        total_rows += len(rows)
+        landed_tables.append({
+            "source_system": src_sys,
+            "table_name": tbl_name,
+            "fqn": fqn,
+            "row_count": len(rows),
+            "columns": cols,
+            "bigquery_url": f"https://console.cloud.google.com/bigquery?project={project_id}&ws=!1m5!1m4!4m3!1s{project_id}!2s{ds_id}!3s{tbl_name}",
+        })
+
+    kc = KnowledgeCatalogClient(project_id=project_id, dataset_id=ds_id)
+    dp_res = kc.register_data_product(
+        ds_id,
+        "bronze-banking-4-sources",
+        "Bronze 4-Source Banking Raw Landing (TSYS, Hogan, AFS, ACLS)",
+        "Heterogeneous Card, Deposit, Commercial Loan, and Retail Loan Bronze tables.",
+        [t["table_name"] for t in landed_tables],
+    )
+    gl_res = kc.sync_business_glossary(
+        "bronze-banking-4-sources-glossary",
+        "Bronze 4-Source Banking Glossary",
+        "Raw Source Schemas for Card, Deposit, Commercial Loan, and Retail Loan",
+        [{"name": t["table_name"], "description": f"{t['source_system']} raw table ({len(t['columns'])} cols)"} for t in landed_tables],
+    )
+    return {
+        "status": "landed",
+        "project_id": project_id,
+        "dataset_id": ds_id,
+        "total_rows": total_rows,
+        "tables": landed_tables,
+        "knowledge_catalog_data_product": dp_res,
+        "knowledge_catalog_glossary": gl_res,
+    }
+
+
+@app.post("/v1/bronze/land-4-sources")
+async def land_4_sources_endpoint(dataset_id: Optional[str] = None):
+    """Land all 4 heterogeneous banking source CSVs into BigQuery banking_bronze + Knowledge Catalog."""
+    return await asyncio.to_thread(_land_4_sources_to_bronze, dataset_id)
+
+
+class AutoIngestRequest(BaseModel):
+    source_systems: Optional[list[str]] = None
+    industry_domain: str = "banking"
+    dataset_id: Optional[str] = None
+
+
+class KafkaSimulateRequest(BaseModel):
+    source_system: str = "TSYS"
+    table_name: str = "brz_tsys_auth_events"
+    topic: str = "payments.tsys.card.auth.v1"
+    events: Optional[list[dict]] = None
+    dataset_id: Optional[str] = None
+
+
+@app.post("/v1/bronze/ingest/auto")
+async def auto_ingest_multi_table_endpoint(body: Optional[AutoIngestRequest] = None):
+    """Automated 1-to-many Bronze ingestion (Batch + Kafka Streaming) across multiple tables per source system into BigQuery."""
+    from ingestion.orchestrator import AutomatedBronzeOrchestrator
+
+    req = body or AutoIngestRequest()
+    orchestrator = AutomatedBronzeOrchestrator()
+    return await asyncio.to_thread(
+        orchestrator.run_automated_ingestion,
+        req.source_systems,
+        req.industry_domain,
+        req.dataset_id,
+    )
+
+
+@app.post("/v1/bronze/ingest/kafka/simulate")
+async def simulate_kafka_ingest_endpoint(body: Optional[KafkaSimulateRequest] = None):
+    """Consume from live Kafka topic or replay JSONL event stream into BigQuery Bronze with offset lineage and DLQ routing."""
+    from ingestion.kafka_connector import KafkaStreamingConnector
+
+    req = body or KafkaSimulateRequest()
+    connector = KafkaStreamingConnector()
+    return await asyncio.to_thread(
+        connector.ingest_stream_table,
+        req.source_system,
+        req.table_name,
+        req.topic,
+        f"KAFKA-STREAM ({req.topic})",
+        f"Real-time Kafka event stream for {req.source_system}.{req.table_name}",
+        "brz_tsys_auth_events.jsonl",
+        req.events,
+        None,
+        req.dataset_id,
+    )
+
+
+@app.get("/v1/bronze/sources")
+async def get_bronze_multi_table_sources(industry_domain: str = "banking"):
+    """Return 1-to-many source system definitions and their provisioned Bronze tables (Batch, Streaming, Upload)."""
+    from ingestion.orchestrator import MULTI_TABLE_SOURCE_SPECS, WATER_MULTI_TABLE_SPECS
+
+    specs_map = WATER_MULTI_TABLE_SPECS if industry_domain == "water" else MULTI_TABLE_SOURCE_SPECS
+    systems = []
+    for sys_code, tbl_specs in specs_map.items():
+        systems.append({
+            "source_system": sys_code,
+            "system_label": tbl_specs[0]["system_label"] if tbl_specs else sys_code,
+            "table_count": len(tbl_specs),
+            "tables": tbl_specs,
+        })
+    return {
+        "architecture_model": "1_TO_MANY_PER_SOURCE_SYSTEM",
+        "industry_domain": industry_domain,
+        "source_system_count": len(systems),
+        "total_tables": sum(s["table_count"] for s in systems),
+        "systems": systems,
+    }
+
+
+@app.get("/v1/bronze/catalog")
+async def get_bronze_catalog(dataset_id: Optional[str] = None, industry_domain: str = "banking"):
+    """Return live BigQuery Bronze table schemas and row counts (supporting 1-to-many tables per source system)."""
+    from ingestion.orchestrator import MULTI_TABLE_SOURCE_SPECS, WATER_MULTI_TABLE_SPECS
+
+    project_id = os.environ.get("BQ_PROJECT") or os.environ.get("GCP_PROJECT_ID") or "eogwapq-agbg-internal-data-mig"
+    ds_id = dataset_id or os.environ.get("BQ_BRONZE_DATASET") or (
+        "water_bronze" if industry_domain == "water" else "banking_bronze"
+    )
+    specs_map = WATER_MULTI_TABLE_SPECS if industry_domain == "water" else MULTI_TABLE_SOURCE_SPECS
+    all_specs = [spec for tbl_list in specs_map.values() for spec in tbl_list]
+    tables_out = []
+
+    try:
+        from tools.gcp_auth import get_bigquery_client
+
+        client = get_bigquery_client(project_id=project_id, location="US")
+        for spec in all_specs:
+            fqn = f"{project_id}.{ds_id}.{spec['table_name']}"
+            try:
+                tbl = client.get_table(fqn)
+                tables_out.append({
+                    "source_system": spec["source_system"],
+                    "system_label": spec.get("system_label", spec["source_system"]),
+                    "table_name": spec["table_name"],
+                    "ingestion_mode": spec.get("ingestion_mode", "BATCH"),
+                    "fqn": fqn,
+                    "row_count": tbl.num_rows,
+                    "columns": [{"name": f.name, "type": f.field_type, "description": f.description} for f in tbl.schema],
+                })
+            except Exception:
+                continue
+    except Exception:
+        pass
+
+    if not tables_out:
+        import csv as _csv
+
+        sdir = _ROOT / "samples" / ("water_multi_table" if industry_domain == "water" else "banking_multi_table")
+        for spec in all_specs:
+            csv_name = spec["file_name"].replace(".jsonl", ".csv")
+            cpath = sdir / csv_name
+            cols = []
+            rc = 0
+            if cpath.exists():
+                with open(cpath, "r", encoding="utf-8-sig") as f:
+                    rows = list(_csv.DictReader(f))
+                    rc = len(rows)
+                    if rows:
+                        cols = [{"name": k, "type": "STRING", "description": ""} for k in rows[0].keys()]
+            tables_out.append({
+                "source_system": spec["source_system"],
+                "system_label": spec.get("system_label", spec["source_system"]),
+                "table_name": spec["table_name"],
+                "ingestion_mode": spec.get("ingestion_mode", "BATCH"),
+                "fqn": f"{project_id}.{ds_id}.{spec['table_name']}",
+                "row_count": rc,
+                "columns": cols,
+            })
+
+    return {
+        "architecture_model": "1_TO_MANY_PER_SOURCE_SYSTEM",
+        "project_id": project_id,
+        "dataset_id": ds_id,
+        "tables": tables_out,
     }

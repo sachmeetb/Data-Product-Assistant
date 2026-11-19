@@ -11,6 +11,10 @@ COPY knowledge/ ./knowledge/
 COPY mappings/ ./mappings/
 COPY prompts/ ./prompts/
 COPY tools/ ./tools/
+COPY engine/ ./engine/
+COPY reference/ ./reference/
+COPY sql/ ./sql/
+COPY samples/ ./samples/
 COPY pipeline.py session_store.py server.py main.py ./
 
 ENV PORT=8080

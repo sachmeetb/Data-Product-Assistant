@@ -335,6 +335,7 @@ class ChatRequest(BaseModel):
     message: str = Field("", description="User message text")
     action: Optional[str] = Field(None, description="Action override")
     file_ref_id: Optional[str] = Field(None, description="Uploaded file reference ID")
+    file_ref_ids: Optional[list[str]] = Field(None, description="Multiple uploaded file reference IDs")
     selected_entities: Optional[list[str]] = Field(None, description="Explicit list of selected entity table names")
     selected_attributes: Optional[dict[str, list[str]]] = Field(None, description="Map of table -> selected column names")
     domain_name: Optional[str] = Field(None, description="Selected domain name override")
@@ -1829,10 +1830,42 @@ async def chat_endpoint(body: ChatRequest):
     action = body.action
     session["turns"] = session.get("turns", 0) + 1
 
-    if body.file_ref_id and body.file_ref_id in FILE_STORE:
-        file_info = FILE_STORE[body.file_ref_id]
-        if file_info.get("preview"):
-            user_msg = f"Extracted from file '{file_info['name']}':\n{file_info['preview']}\n{user_msg}"
+    ref_ids: list[str] = []
+    if body.file_ref_ids:
+        ref_ids.extend([r for r in body.file_ref_ids if r])
+    if body.file_ref_id and body.file_ref_id not in ref_ids:
+        ref_ids.append(body.file_ref_id)
+
+    extracted_parts: list[str] = []
+    for rid in ref_ids:
+        file_info = FILE_STORE.get(rid)
+        if not file_info:
+            continue
+        fname = file_info.get("name", "uploaded_file")
+        ext = file_info.get("type", "")
+        content = file_info.get("content", b"")
+        txt = file_info.get("preview") or ""
+        if ext in ("xlsx", "xls") and content:
+            try:
+                import io, openpyxl
+                wb = openpyxl.load_workbook(io.BytesIO(content), data_only=True)
+                sheet_lines = []
+                for sname in wb.sheetnames:
+                    ws = wb[sname]
+                    sheet_lines.append(f"[Sheet: {sname}]")
+                    for row in ws.iter_rows(values_only=True):
+                        if any(v is not None for v in row):
+                            sheet_lines.append(" | ".join(str(v) if v is not None else "" for v in row))
+                txt = "\n".join(sheet_lines)
+            except Exception:
+                pass
+        elif ext == "csv" and content:
+            txt = content.decode("utf-8", errors="ignore")
+        if txt:
+            extracted_parts.append(f"Extracted from file '{fname}':\n{txt}")
+
+    if extracted_parts:
+        user_msg = "\n\n".join(extracted_parts) + (f"\n\n{user_msg}" if user_msg else "")
 
     current_step = session.get("step", "industry_selection")
 
@@ -1922,6 +1955,144 @@ async def chat_endpoint(body: ChatRequest):
                 }
             ],
             "chips": ["Publish to BigQuery", "Open & Edit Existing Silver Structure", "Adjust the model", "Tweak the mapping", "Change Entity Selection"],
+        }
+
+    # Direct handler for Generalized N-to-M Multi-Source Bronze -> Silver STTM (Banking Customer 360 & Water Account 360)
+    if action in ("multi_source_sttm", "water_sttm") or any(
+        kw in user_msg.lower()
+        for kw in (
+            "map bronze",
+            "map multi-source",
+            "4-to-1 sttm",
+            "n-to-m sttm",
+            "multi-source sttm",
+            "bronze → silver",
+            "map water account 360",
+            "water account 360 sttm",
+        )
+    ):
+        from engine.sttm_builder import build_multi_source_sttm_view
+
+        is_water = "water" in user_msg.lower() or action == "water_sttm"
+        ind = "water" if is_water else "banking"
+        dom = "account_360" if is_water else "customer_360"
+        brz_ds = "water_bronze" if is_water else "banking_bronze"
+        slv_ds = "water_silver" if is_water else "banking_silver"
+
+        session["conformance_industry"] = ind
+        session["conformance_domain"] = dom
+        store.set(session_id, session)
+
+        sttm_view = await asyncio.to_thread(build_multi_source_sttm_view, brz_ds, slv_ds, ind, dom)
+        sys_hierarchy = sttm_view.get("systems_hierarchy", [])
+        sys_bullets = "\n".join(
+            f"  - **{s['source_system']} ({s['system_name']})** → `{s['table_count']} tables` (`{', '.join(t['table_name'] for t in s['tables'])}`)"
+            for s in sys_hierarchy
+        )
+        slv_short = ", ".join(f"`{t.split('.')[-1]}`" for t in sttm_view.get("silver_tables", []))
+        return {
+            "session_id": session_id,
+            "current_step": "sttm_ready",
+            "silver_transform_view": sttm_view,
+            "messages": [
+                {
+                    "agent": "Silver STTM & Conformance Architect",
+                    "text": (
+                        f"Discovered **{len(sys_hierarchy)} Source Systems → {len(sttm_view.get('bronze_tables', []))} Bronze Tables** "
+                        f"(`{sttm_view['bronze_source_mode']}`) and generated the generalized **N-to-M Domain STTM** for **{sttm_view.get('domain_display_name')}**:\n\n"
+                        f"{sys_bullets}\n\n"
+                        f"**Target Silver Domain Tables ({len(sttm_view.get('silver_tables', []))})**: {slv_short}\n\n"
+                        f"Review the declarative column mappings and N-to-M lineage below, then click **Execute STTM & Conform**."
+                    ),
+                    "silver_transform_view": sttm_view,
+                    "chips": [
+                        "Execute STTM & Conform",
+                        "Publish Customer 360 to BigQuery",
+                        "Map Water Account 360 (Cross-Industry STTM)",
+                        "Start New Silver Product",
+                    ],
+                }
+            ],
+            "chips": [
+                "Execute STTM & Conform",
+                "Publish Customer 360 to BigQuery",
+                "Map Water Account 360 (Cross-Industry STTM)",
+                "Start New Silver Product",
+            ],
+        }
+
+    # Direct handler for N-to-M Customer 360 / Water Account 360 Conformance
+    if action == "run_conformance" or any(
+        kw in user_msg.lower()
+        for kw in (
+            "execute sttm",
+            "run 4-source customer 360",
+            "4-source customer 360",
+            "run conformance",
+            "conformance pipeline",
+            "conform water account 360",
+        )
+    ):
+        ind = "water" if "water" in user_msg.lower() else session.get("conformance_industry", "banking")
+        dom = "account_360" if ind == "water" else session.get("conformance_domain", "customer_360")
+        slv_ds = "water_silver" if ind == "water" else "banking_silver"
+        conf_res = await _run_and_format_conformance(publish=False, dataset_id=slv_ds, industry=ind, domain=dom)
+        sys_counts_str = ", ".join(f"{k}: {v}" for k, v in conf_res.get("source_counts", {}).items())
+        return {
+            "session_id": session_id,
+            "current_step": "conformance_ready",
+            "conformance_view": conf_res,
+            "messages": [
+                {
+                    "agent": "Silver Conformance Engine",
+                    "text": (
+                        f"Executed **N-to-M Multi-Table Bronze → {conf_res.get('domain_display_name', 'Silver Customer 360')} Conformance** "
+                        f"(`{conf_res.get('source_system_count', 4)} Systems` · `{conf_res.get('total_bronze_tables', 12)} Bronze Tables` → `5 Silver Domain Tables`):\n\n"
+                        f"- **Bronze Tables & Records Ingested**: `{conf_res.get('total_bronze_tables', 12)} tables` (`{conf_res.get('total_all_table_rows', 0)} total rows`; `{conf_res['total_bronze_records']}` primary party records across {sys_counts_str})\n"
+                        f"- **Unified Silver Golden Entities (`slv_customer_360`)**: `{conf_res['unified_customers']}` "
+                        f"({conf_res['deduplicated_count']} duplicates merged — **{conf_res['dedup_ratio_pct']}%** compression)\n"
+                        f"- **Multi-Table Source XREFs (`slv_customer_source_xref`)**: `{conf_res['total_xrefs']}` bi-directional links\n"
+                        f"- **Linked Domain Arrangements (`slv_customer_arrangement`)**: `{conf_res['total_arrangements']}`\n"
+                        f"- **Normalized 1:N Contacts (`slv_customer_contact`)**: `{conf_res.get('total_contacts', 0)}` (E.164 Phones, Emails, Addresses & Kafka OTP Streams)\n"
+                        f"- **Steward Review Queue (`slv_steward_review_queue`)**: `{conf_res.get('total_steward_reviews', 0)}` Tier-3 fuzzy match candidates"
+                    ),
+                    "conformance_view": conf_res,
+                    "chips": [
+                        "Publish Customer 360 to BigQuery",
+                        "Map Water Account 360 (Cross-Industry STTM)",
+                        "Start New Silver Product",
+                    ],
+                }
+            ],
+            "chips": [
+                "Publish Customer 360 to BigQuery",
+                "Map Water Account 360 (Cross-Industry STTM)",
+                "Start New Silver Product",
+            ],
+        }
+
+    if user_msg.lower() in ("publish customer 360 to bigquery", "publish water account 360 to bigquery"):
+        ind = "water" if "water" in user_msg.lower() else session.get("conformance_industry", "banking")
+        dom = "account_360" if ind == "water" else session.get("conformance_domain", "customer_360")
+        slv_ds = "water_silver" if ind == "water" else "banking_silver"
+        conf_res = await _run_and_format_conformance(publish=True, dataset_id=slv_ds, industry=ind, domain=dom)
+        return {
+            "session_id": session_id,
+            "current_step": "conformance_published",
+            "conformance_view": conf_res,
+            "messages": [
+                {
+                    "agent": "Silver Conformance Engine",
+                    "text": (
+                        f"✅ Materialized **5 Silver Domain Tables (`slv_customer_360`, `slv_customer_source_xref`, "
+                        f"`slv_customer_arrangement`, `slv_customer_contact`, `slv_steward_review_queue`)** "
+                        f"in BigQuery (`{slv_ds}`) & synced to **GCP Knowledge Catalog**!"
+                    ),
+                    "conformance_view": conf_res,
+                    "chips": ["Map Water Account 360 (Cross-Industry STTM)", "Start New Silver Product"],
+                }
+            ],
+            "chips": ["Map Water Account 360 (Cross-Industry STTM)", "Start New Silver Product"],
         }
 
     # Direct handler for "Publish to BigQuery" (executes live BigQuery DDL + syncs to GCP Knowledge Catalog)
@@ -2538,5 +2709,286 @@ async def chat_endpoint(body: ChatRequest):
         ],
         "chips": ["Apply & Save Contract", "Change Entity Selection"],
     }
+
+
+# ── N-to-M Multi-Table Customer 360 / Domain Conformance Endpoint ─────────────
+
+class ConformanceRunRequest(BaseModel):
+    publish: bool = Field(False, description="When true, materialize all 5 Silver Domain tables in BigQuery & GCP Knowledge Catalog")
+    dataset_id: str = Field("banking_silver", description="Target Silver BigQuery dataset")
+    industry: str = Field("banking", description="Industry key (e.g. banking, water)")
+    domain: str = Field("customer_360", description="Domain key (e.g. customer_360, account_360)")
+
+
+async def _run_and_format_conformance(
+    publish: bool = False,
+    dataset_id: str = "banking_silver",
+    industry: str = "banking",
+    domain: str = "customer_360",
+) -> dict:
+    from engine.pipeline_runner import run_conformance_pipeline
+
+    res = await asyncio.to_thread(run_conformance_pipeline, industry, domain)
+    arr_by_cust: dict[str, list[dict]] = {}
+    for arr in res.get("arrangements", []):
+        arr_by_cust.setdefault(arr["customer_key"], []).append(arr)
+
+    cnt_by_cust: dict[str, list[dict]] = {}
+    for cnt in res.get("contacts", []):
+        cnt_by_cust.setdefault(cnt["customer_key"], []).append(cnt)
+
+    enriched_customers = []
+    for gc in res.get("golden_customers", []):
+        enriched_customers.append({
+            **gc,
+            "arrangements": arr_by_cust.get(gc["customer_key"], []),
+            "contacts": cnt_by_cust.get(gc["customer_key"], []),
+        })
+    res["golden_customers"] = enriched_customers
+
+    if publish:
+        publisher = BigQueryPublisher(silver_dataset=dataset_id, mode="live")
+        ddl = f"""
+CREATE OR REPLACE TABLE `{publisher.project_id}.{dataset_id}.slv_customer_360` (
+  customer_key STRING NOT NULL OPTIONS(description='[PK] Unified Silver Customer Surrogate Key'),
+  customer_type STRING OPTIONS(description='Standardized Customer Type (IND/ORG)'),
+  legal_name STRING OPTIONS(description='[PII: RESTRICTED] Survived Golden Legal Name'),
+  date_of_birth STRING OPTIONS(description='[PII: RESTRICTED] ISO-8601 Date of Birth'),
+  tax_id_masked STRING OPTIONS(description='[PII: RESTRICTED] Masked Tax Identifier'),
+  primary_phone_e164 STRING OPTIONS(description='[PII: RESTRICTED] E.164 Primary Phone'),
+  primary_email STRING OPTIONS(description='[PII: RESTRICTED] Verified Primary Email'),
+  primary_postal_code STRING OPTIONS(description='Primary Postal Code'),
+  relationship_status STRING OPTIONS(description='Standardized Relationship Status'),
+  survivorship_source STRING OPTIONS(description='Winning System of Record'),
+  contributing_sources STRING OPTIONS(description='Pipe-delimited Contributing Bronze Systems'),
+  source_record_count INT64 OPTIONS(description='Count of Merged Bronze Records'),
+  arrangement_count INT64 OPTIONS(description='Count of Linked Banking Arrangements'),
+  arrangement_types STRING OPTIONS(description='Pipe-delimited Linked Arrangement Types'),
+  contact_count INT64 OPTIONS(description='Count of 1:N Normalized Contact Points')
+) OPTIONS(description='Conformed Silver Customer 360 Golden Record (N-to-M Domain Mastering)');
+
+CREATE OR REPLACE TABLE `{publisher.project_id}.{dataset_id}.slv_customer_source_xref` (
+  xref_key STRING NOT NULL OPTIONS(description='[PK] Cross-Reference Surrogate Key'),
+  customer_key STRING NOT NULL OPTIONS(description='[FK->slv_customer_360.customer_key] Unified Customer Key'),
+  source_system STRING NOT NULL OPTIONS(description='Originating Bronze Source System'),
+  source_entity STRING OPTIONS(description='Originating Bronze Table'),
+  source_customer_id STRING NOT NULL OPTIONS(description='Source System Natural Key'),
+  match_method STRING OPTIONS(description='Identity Resolution Match Rule'),
+  match_score FLOAT64 OPTIONS(description='Entity Resolution Confidence Score')
+) OPTIONS(description='Auditable Multi-Table Source Cross-Reference (XREF)');
+
+CREATE OR REPLACE TABLE `{publisher.project_id}.{dataset_id}.slv_customer_arrangement` (
+  arrangement_key STRING NOT NULL OPTIONS(description='[PK] Silver Arrangement Surrogate Key'),
+  customer_key STRING NOT NULL OPTIONS(description='[FK->slv_customer_360.customer_key] Unified Customer Key'),
+  source_system STRING NOT NULL OPTIONS(description='Originating System'),
+  source_table STRING OPTIONS(description='Originating Bronze Table'),
+  source_account_id STRING NOT NULL OPTIONS(description='Source Account, Facility, or Contract ID'),
+  arrangement_type STRING NOT NULL OPTIONS(description='DEPOSIT | CREDIT_CARD | RETAIL_LOAN | COMMERCIAL_LOAN | COMMERCIAL_COLLATERAL'),
+  product_subtype STRING OPTIONS(description='Product Subtype Description'),
+  status STRING OPTIONS(description='Normalized Arrangement Status'),
+  limit_or_amount FLOAT64 OPTIONS(description='Credit Line, Principal, or Appraised Amount'),
+  branch_or_channel STRING OPTIONS(description='Branch or Servicing Channel')
+) OPTIONS(description='Many-to-One Domain Arrangements Linked to Unified Silver Customer');
+
+CREATE OR REPLACE TABLE `{publisher.project_id}.{dataset_id}.slv_customer_contact` (
+  contact_key STRING NOT NULL OPTIONS(description='[PK] Normalized Contact Point Surrogate Key'),
+  customer_key STRING NOT NULL OPTIONS(description='[FK->slv_customer_360.customer_key] Unified Customer Key'),
+  contact_type STRING NOT NULL OPTIONS(description='PHONE_E164 | EMAIL | POSTAL_ADDRESS | KAFKA_OTP_MOBILE'),
+  contact_usage STRING OPTIONS(description='Usage Classification'),
+  contact_value_normalized STRING NOT NULL OPTIONS(description='Normalized Contact Value'),
+  source_system STRING NOT NULL OPTIONS(description='Originating Source System'),
+  source_table STRING NOT NULL OPTIONS(description='Originating Bronze Table'),
+  verification_status STRING OPTIONS(description='Verification Status')
+) OPTIONS(description='1:N Normalized Contact Points & Kafka Verified Touchpoints');
+
+CREATE OR REPLACE TABLE `{publisher.project_id}.{dataset_id}.slv_steward_review_queue` (
+  review_id STRING NOT NULL OPTIONS(description='[PK] Steward Review Queue ID'),
+  candidate_a_system STRING NOT NULL OPTIONS(description='Candidate A Source System'),
+  candidate_a_entity STRING OPTIONS(description='Candidate A Bronze Table'),
+  candidate_a_id STRING NOT NULL OPTIONS(description='Candidate A Natural Key'),
+  candidate_a_name STRING OPTIONS(description='Candidate A Legal Name'),
+  candidate_b_system STRING NOT NULL OPTIONS(description='Candidate B Source System'),
+  candidate_b_entity STRING OPTIONS(description='Candidate B Bronze Table'),
+  candidate_b_id STRING NOT NULL OPTIONS(description='Candidate B Natural Key'),
+  candidate_b_name STRING OPTIONS(description='Candidate B Legal Name'),
+  match_rule STRING OPTIONS(description='Tier-3 Probabilistic Rule Triggered'),
+  similarity_score FLOAT64 OPTIONS(description='Fuzzy Match Similarity Score'),
+  review_status STRING OPTIONS(description='Steward Review Status')
+) OPTIONS(description='Tier-3 Probabilistic Identity Resolution Candidates for Steward Review');
+"""
+        bq_report = await asyncio.to_thread(publisher.publish, ddl)
+        try:
+            from google.cloud import bigquery as _bq
+            bq_client = publisher._get_client()
+            cust_rows = [
+                {
+                    "customer_key": gc["customer_key"],
+                    "customer_type": gc.get("customer_type", "IND"),
+                    "legal_name": gc.get("legal_name", ""),
+                    "date_of_birth": str(gc.get("date_of_birth") or ""),
+                    "tax_id_masked": gc.get("tax_id_masked", ""),
+                    "primary_phone_e164": gc.get("primary_phone_e164", ""),
+                    "primary_email": gc.get("primary_email", ""),
+                    "primary_postal_code": gc.get("primary_postal_code", ""),
+                    "relationship_status": gc.get("relationship_status", "ACTIVE"),
+                    "survivorship_source": gc.get("survivorship_source", ""),
+                    "contributing_sources": "|".join(gc.get("contributing_sources", [])),
+                    "source_record_count": int(gc.get("source_record_count", 1)),
+                    "arrangement_count": int(gc.get("arrangement_count", 0)),
+                    "arrangement_types": "|".join(gc.get("arrangement_types", [])),
+                    "contact_count": int(gc.get("contact_count", 0)),
+                }
+                for gc in enriched_customers
+            ]
+            xref_rows = [
+                {
+                    "xref_key": x["xref_key"],
+                    "customer_key": x["customer_key"],
+                    "source_system": x["source_system"],
+                    "source_entity": x.get("source_entity", ""),
+                    "source_customer_id": x["source_customer_id"],
+                    "match_method": x.get("match_method", ""),
+                    "match_score": float(x.get("match_score", 1.0)),
+                }
+                for x in res.get("xrefs", [])
+            ]
+            arr_rows = [
+                {
+                    "arrangement_key": a["arrangement_key"],
+                    "customer_key": a["customer_key"],
+                    "source_system": a["source_system"],
+                    "source_table": a.get("source_table", ""),
+                    "source_account_id": a["source_account_id"],
+                    "arrangement_type": a["arrangement_type"],
+                    "product_subtype": a.get("product_subtype", ""),
+                    "status": a.get("status", "ACTIVE"),
+                    "limit_or_amount": float(a.get("limit_or_amount") or 0.0),
+                    "branch_or_channel": a.get("branch_or_channel", ""),
+                }
+                for a in res.get("arrangements", [])
+            ]
+            cnt_rows = [
+                {
+                    "contact_key": c["contact_key"],
+                    "customer_key": c["customer_key"],
+                    "contact_type": c["contact_type"],
+                    "contact_usage": c.get("contact_usage", ""),
+                    "contact_value_normalized": c["contact_value_normalized"],
+                    "source_system": c["source_system"],
+                    "source_table": c.get("source_table", ""),
+                    "verification_status": c.get("verification_status", "VERIFIED"),
+                }
+                for c in res.get("contacts", [])
+            ]
+            rev_rows = [
+                {
+                    "review_id": r["review_id"],
+                    "candidate_a_system": r["candidate_a_system"],
+                    "candidate_a_entity": r.get("candidate_a_entity", ""),
+                    "candidate_a_id": r["candidate_a_id"],
+                    "candidate_a_name": r.get("candidate_a_name", ""),
+                    "candidate_b_system": r["candidate_b_system"],
+                    "candidate_b_entity": r.get("candidate_b_entity", ""),
+                    "candidate_b_id": r["candidate_b_id"],
+                    "candidate_b_name": r.get("candidate_b_name", ""),
+                    "match_rule": r.get("match_rule", ""),
+                    "similarity_score": float(r.get("similarity_score", 0.85)),
+                    "review_status": r.get("review_status", "PENDING_STEWARD_REVIEW"),
+                }
+                for r in res.get("steward_review_queue", [])
+            ]
+            w_cfg = _bq.LoadJobConfig(write_disposition=_bq.WriteDisposition.WRITE_TRUNCATE)
+            for tname, rows_payload in [
+                ("slv_customer_360", cust_rows),
+                ("slv_customer_source_xref", xref_rows),
+                ("slv_customer_arrangement", arr_rows),
+                ("slv_customer_contact", cnt_rows),
+                ("slv_steward_review_queue", rev_rows),
+            ]:
+                if rows_payload:
+                    await asyncio.to_thread(
+                        lambda tn=tname, rp=rows_payload: bq_client.load_table_from_json(
+                            rp, f"{publisher.project_id}.{dataset_id}.{tn}", job_config=w_cfg
+                        ).result()
+                    )
+        except Exception as load_exc:
+            log.warning("Conformed BigQuery row load warning: %s", load_exc)
+
+        all_5_tables = [
+            "slv_customer_360",
+            "slv_customer_source_xref",
+            "slv_customer_arrangement",
+            "slv_customer_contact",
+            "slv_steward_review_queue",
+        ]
+        kc = KnowledgeCatalogClient(project_id=publisher.project_id, dataset_id=dataset_id)
+        dp_res = await asyncio.to_thread(
+            kc.register_data_product,
+            dataset_id,
+            f"silver-{domain}-n-to-m",
+            f"Silver {res.get('domain_display_name', 'Customer 360')} (N-to-M Multi-Table Mastering)",
+            "Unified Silver Golden Records, Multi-Table XREF, Arrangements, 1:N Contacts & Steward Review Queue",
+            all_5_tables,
+        )
+        gl_res = await asyncio.to_thread(
+            kc.sync_business_glossary,
+            f"silver-{domain}-glossary",
+            f"Silver {res.get('domain_display_name', 'Customer 360')} Business Glossary",
+            "N-to-M Domain Conformance, Survivorship & MDM Definitions",
+            [
+                {"name": "slv_customer_360", "description": "Unified Silver Golden Master Record"},
+                {"name": "slv_customer_source_xref", "description": "Multi-Table Identity Resolution Cross-Reference"},
+                {"name": "slv_customer_arrangement", "description": "Linked Deposits, Cards, Commercial Facilities, Collateral & Loans"},
+                {"name": "slv_customer_contact", "description": "1:N Normalized Phones, Emails, Addresses & Kafka Verified Mobiles"},
+                {"name": "slv_steward_review_queue", "description": "Tier-3 Probabilistic Identity Match Candidates for Steward Review"},
+            ],
+        )
+        console_links = kc.build_console_links(
+            project_id=publisher.project_id,
+            dataset_id=dataset_id,
+            table_names=all_5_tables,
+            dataset_location="US",
+        )
+        res["publish_report"] = {
+            **bq_report,
+            "bigquery_dataset_url": console_links["bigquery_dataset_url"],
+            "knowledge_catalog_data_product_url": dp_res.get("knowledge_catalog_url"),
+            "knowledge_catalog_glossary_url": gl_res.get("glossary_url"),
+            "tables": console_links["tables"],
+            "knowledge_catalog_data_product": dp_res,
+            "knowledge_catalog_glossary": gl_res,
+        }
+    return res
+
+
+@app.get("/v1/mappings/domains")
+async def list_reusable_domain_mappings_endpoint():
+    """Return all registered declarative N-to-M cross-industry domain mapping specifications."""
+    from mappings.registry import list_available_mappings
+    return {"mappings": await asyncio.to_thread(list_available_mappings)}
+
+
+@app.post("/v1/sttm/multi-source")
+async def get_multi_source_sttm_endpoint(
+    bronze_dataset: str = "banking_bronze",
+    target_dataset: str = "banking_silver",
+    industry: str = "banking",
+    domain: str = "customer_360",
+):
+    """Discover 1-to-many Bronze tables per source system and generate the generalized N-to-M STTM specification."""
+    from engine.sttm_builder import build_multi_source_sttm_view
+    return await asyncio.to_thread(build_multi_source_sttm_view, bronze_dataset, target_dataset, industry, domain)
+
+
+@app.post("/v1/conformance/run")
+async def run_multi_source_conformance_endpoint(body: Optional[ConformanceRunRequest] = None):
+    """Execute the N-to-M Multi-Table Domain Conformance Engine (Banking Customer 360 or Water Account 360)."""
+    req = body or ConformanceRunRequest()
+    return await _run_and_format_conformance(
+        publish=req.publish,
+        dataset_id=req.dataset_id,
+        industry=req.industry,
+        domain=req.domain,
+    )
 
 

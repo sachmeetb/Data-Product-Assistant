@@ -1,0 +1,253 @@
+# ==============================================================================
+# DECLARATIVE N-TO-M DOMAIN MAPPING SPECIFICATION
+# Industry: Banking & Financial Services (banking)
+# Business Domain: Customer 360 & MDM Mastering (customer_360)
+# Architecture: Many Source Systems (4) -> Many Source Tables (12) -> Domain -> Multiple Silver Tables (5)
+# ==============================================================================
+
+mapping_version: "3.0.0"
+architecture_model: "N_SOURCES_TO_MANY_TABLES_TO_DOMAIN_TO_MULTIPLE_SILVER_TABLES"
+industry: "banking"
+industry_name: "Banking & Financial Services"
+domain: "customer_360"
+domain_display_name: "Customer 360 & Party Mastering Domain"
+standards:
+  - "BIAN Party Reference Data v12"
+  - "ISO 20022"
+  - "FIBO Party & Autonomous Agent"
+  - "Tony Giordano Conforming Logic (Steps 3, 4, 5)"
+
+target_silver_tables:
+  - table_name: "slv_customer_360"
+    entity_role: "GOLDEN_MASTER"
+    grain: "One row per resolved unique real-world customer party (Individual or Organization)"
+    primary_key: "customer_key"
+    description: "Unified Silver Customer Golden Record with MDM attribute survivorship and SCD Type-2 envelope."
+  - table_name: "slv_customer_source_xref"
+    entity_role: "SOURCE_LINEAGE_XREF"
+    grain: "One row per contributing source system record linked to a Golden Customer"
+    primary_key: "xref_key"
+    foreign_key: "customer_key"
+    description: "Bi-directional cross-reference table preserving lineage back to every originating Bronze table and natural key."
+  - table_name: "slv_customer_arrangement"
+    entity_role: "DOMAIN_RELATIONSHIP"
+    grain: "One row per banking product arrangement (Deposit, Card, Commercial Facility, Collateral, Retail Loan)"
+    primary_key: "arrangement_key"
+    foreign_key: "customer_key"
+    description: "Many-to-one banking arrangements and credit facilities linked to the unified Silver customer."
+  - table_name: "slv_customer_contact"
+    entity_role: "NORMALIZED_CHILD"
+    grain: "One row per distinct verified contact point (Phone, Email, Physical Address) per Customer"
+    primary_key: "contact_key"
+    foreign_key: "customer_key"
+    description: "1:N normalized contact points (E.164 phones, verified emails, multi-usage addresses) harvested across all source tables."
+  - table_name: "slv_steward_review_queue"
+    entity_role: "MDM_GOVERNANCE_QUEUE"
+    grain: "One row per probabilistic/fuzzy identity match pair requiring Data Steward review"
+    primary_key: "review_id"
+    description: "Tier-3 probabilistic identity resolution candidates routed for human Data Steward adjudication."
+
+source_systems:
+  - source_system: "HOGAN"
+    system_name: "Hogan Core Banking (Mainframe)"
+    ingestion_modes: ["BATCH_COPYBOOK"]
+    tables:
+      - table_name: "brz_hogan_ci_customer"
+        role: "PARTY_MASTER"
+        primary_key: "CI_CUST_NUM"
+        field_mappings:
+          source_customer_id: "CI_CUST_NUM"
+          raw_name: "CI_LEGAL_NAME"
+          name_format: "LAST_FIRST_COMMA"
+          raw_tax_id: "CI_TAX_ID"
+          raw_dob: "CI_BIRTH_DT"
+          raw_phone: "CI_PHONE"
+          raw_email: ""
+          raw_postal_code: "CI_POST_CODE"
+          raw_customer_type: "CI_CUST_TYPE"
+          raw_status: "CI_STATUS_CD"
+      - table_name: "brz_hogan_dd_account"
+        role: "ARRANGEMENT_SOURCE"
+        primary_key: "DD_ACCT_NUM"
+        parent_join_key: "DD_CUST_NUM"
+        arrangement_mapping:
+          arrangement_prefix: "ARR-DEP"
+          source_account_id: "DD_ACCT_NUM"
+          arrangement_type: "DEPOSIT"
+          subtype_column: "DD_PROD_TYPE"
+          subtype_suffix: "Deposit Account"
+          amount_column: "DD_CURR_BAL"
+          status_column: "DD_STATUS_CD"
+          channel_column: "DD_BRANCH_NUM"
+          date_column: "DD_OPEN_DT"
+      - table_name: "brz_hogan_ci_address"
+        role: "CONTACT_SOURCE"
+        primary_key: "CI_ADDR_ID"
+        parent_join_key: "CI_CUST_NUM"
+        contact_mapping:
+          contact_type: "ADDRESS"
+          usage_column: "ADDR_USAGE_CD"
+          street_column: "STREET_LINE_1"
+          city_column: "CITY_NAME"
+          state_column: "STATE_CD"
+          postal_column: "POSTAL_CD"
+
+  - source_system: "AFS"
+    system_name: "AFS Commercial Lending"
+    ingestion_modes: ["BATCH_SCHEDULED"]
+    tables:
+      - table_name: "brz_afs_borrower"
+        role: "PARTY_MASTER"
+        primary_key: "BORROWER_ID"
+        field_mappings:
+          source_customer_id: "BORROWER_ID"
+          raw_name: "PRIMARY_CONTACT_NAME"
+          fallback_org_name: "LEGAL_ENTITY_NAME"
+          name_format: "FIRST_LAST_SPACE"
+          raw_tax_id: "TAX_EIN"
+          raw_dob: ""
+          raw_phone: "CONTACT_PHONE"
+          raw_email: "CONTACT_EMAIL"
+          raw_postal_code: "BUSINESS_ADDRESS"
+          postal_extract_regex: true
+          raw_customer_type: "BORROWER_CLASS"
+          raw_status: "STATUS"
+      - table_name: "brz_afs_facility"
+        role: "ARRANGEMENT_SOURCE"
+        primary_key: "FACILITY_ID"
+        parent_join_key: "BORROWER_ID"
+        arrangement_mapping:
+          arrangement_prefix: "ARR-FAC"
+          source_account_id: "FACILITY_ID"
+          arrangement_type: "COMMERCIAL_LOAN"
+          subtype_column: "FACILITY_TYPE"
+          subtype_suffix: "Commercial Facility"
+          amount_column: "COMMITMENT_AMT"
+          status_column: "FACILITY_STATUS"
+          channel_literal: "COMMERCIAL_LENDING"
+          date_column: "MATURITY_DATE"
+      - table_name: "brz_afs_collateral"
+        role: "ARRANGEMENT_SOURCE"
+        primary_key: "COLLATERAL_ID"
+        parent_join_key: "BORROWER_ID"
+        arrangement_mapping:
+          arrangement_prefix: "ARR-COL"
+          source_account_id: "COLLATERAL_ID"
+          arrangement_type: "COMMERCIAL_COLLATERAL"
+          subtype_column: "COLLATERAL_TYPE"
+          subtype_suffix: "Pledged Collateral"
+          amount_column: "APPRAISED_VALUE"
+          status_literal: "PLEDGED"
+          channel_literal: "COLLATERAL_MGMT"
+          date_column: "VALUATION_DATE"
+      - table_name: "brz_afs_guarantor"
+        role: "SECONDARY_PARTY_SOURCE"
+        primary_key: "GUARANTOR_ID"
+        parent_join_key: "BORROWER_ID"
+        field_mappings:
+          source_customer_id: "GUARANTOR_ID"
+          raw_name: "GUARANTOR_NAME"
+          name_format: "FIRST_LAST_SPACE"
+          raw_tax_id: "GUARANTOR_SSN_TIN"
+          raw_dob: "GUARANTOR_DOB"
+          raw_phone: "GUARANTOR_PHONE"
+          raw_email: "GUARANTOR_EMAIL"
+          raw_postal_code: "GUARANTOR_ZIP"
+          raw_customer_type: "IND"
+          raw_status: "A"
+
+  - source_system: "TSYS"
+    system_name: "TSYS / FDR Card Servicing"
+    ingestion_modes: ["DAILY_BATCH", "KAFKA_STREAM"]
+    tables:
+      - table_name: "brz_tsys_cardholder"
+        role: "PARTY_MASTER"
+        primary_key: "cardholder_id"
+        field_mappings:
+          source_customer_id: "cardholder_id"
+          raw_name: "embossed_name"
+          name_format: "FIRST_LAST_SPACE"
+          raw_tax_id: "tax_ssn"
+          raw_dob: ""
+          raw_phone: "mobile_phone"
+          raw_email: ""
+          raw_postal_code: "billing_postal_code"
+          raw_customer_type: "card_type"
+          raw_status: "card_status"
+      - table_name: "brz_tsys_card_account"
+        role: "ARRANGEMENT_SOURCE"
+        primary_key: "card_account_id"
+        parent_join_key: "cardholder_id"
+        arrangement_mapping:
+          arrangement_prefix: "ARR-CRD"
+          source_account_id: "card_account_id"
+          arrangement_type: "CREDIT_CARD"
+          subtype_column: "product_code"
+          subtype_suffix: "Revolving Card"
+          amount_column: "credit_limit"
+          status_column: "account_status"
+          channel_literal: "CARD_SERVICING"
+          date_column: "cycle_date"
+      - table_name: "brz_tsys_auth_events"
+        role: "STREAMING_CONTACT_ENRICHMENT"
+        primary_key: "auth_event_id"
+        parent_join_key: "cardholder_id"
+        contact_mapping:
+          contact_type: "MOBILE_OTP_STREAM"
+          phone_column: "verified_mobile"
+          event_ts_column: "event_ts"
+
+  - source_system: "ACLS"
+    system_name: "ACLS Consumer Loans"
+    ingestion_modes: ["DAILY_BATCH"]
+    tables:
+      - table_name: "brz_acls_applicant"
+        role: "PARTY_MASTER"
+        primary_key: "APPLICANT_ID"
+        field_mappings:
+          source_customer_id: "APPLICANT_ID"
+          raw_first_name: "FIRST_NAME"
+          raw_middle_name: "MIDDLE_NAME"
+          raw_last_name: "LAST_NAME"
+          name_format: "SPLIT_FIRST_MIDDLE_LAST"
+          raw_tax_id: "NATIONAL_ID"
+          raw_dob: "DOB"
+          raw_phone: "CELL_PHONE"
+          raw_email: "EMAIL"
+          raw_postal_code: "POSTAL_CODE"
+          raw_customer_type: "IND"
+          raw_status: "APP_STATUS"
+      - table_name: "brz_acls_loan_application"
+        role: "ARRANGEMENT_SOURCE"
+        primary_key: "LOAN_CONTRACT_ID"
+        parent_join_key: "APPLICANT_ID"
+        arrangement_mapping:
+          arrangement_prefix: "ARR-LON"
+          source_account_id: "LOAN_CONTRACT_ID"
+          arrangement_type: "RETAIL_LOAN"
+          subtype_column: "PRODUCT_SUBTYPE"
+          subtype_suffix: "Consumer Loan"
+          amount_column: "PRINCIPAL_AMT"
+          status_column: "CONTRACT_STATUS"
+          channel_literal: "RETAIL_LENDING"
+          date_column: "ORIGINATION_DATE"
+
+survivorship_policies:
+  legal_name:
+    policy: "SYSTEM_OF_RECORD"
+    priority_order: ["HOGAN", "AFS", "ACLS", "TSYS"]
+  date_of_birth:
+    policy: "SYSTEM_OF_RECORD"
+    priority_order: ["HOGAN", "ACLS", "AFS", "TSYS"]
+  tax_id_normalized:
+    policy: "FIRST_NON_NULL_VALID"
+    priority_order: ["HOGAN", "ACLS", "TSYS", "AFS"]
+  primary_phone_e164:
+    policy: "MOST_RECENT_ACTIVITY"
+    priority_order: ["TSYS", "ACLS", "HOGAN", "AFS"]
+  primary_email:
+    policy: "MOST_COMPLETE_VALID"
+    priority_order: ["ACLS", "AFS", "TSYS", "HOGAN"]
+  primary_postal_code:
+    policy: "SYSTEM_OF_RECORD"
+    priority_order: ["HOGAN", "ACLS", "TSYS", "AFS"]

@@ -197,19 +197,30 @@ def generate_data_contract_dict(
 
     # Build Lineage Specification (Upstream Bronze -> Silver Conformed -> Downstream Gold)
     raw_sources = (
-        structured_req.get("data_sources")
+        product_plan.get("upstream_sources")
+        or structured_req.get("data_sources")
         or structured_req.get("source_systems")
-        or ["raw_bronze.master_feed", "raw_bronze.events_stream"]
+        or ["Hogan Core Banking", "AFS Commercial Lending", "TSYS / FDR Card Servicing", "ACLS Consumer Loans"]
     )
     upstream_sources = []
     for idx, s in enumerate(raw_sources):
-        s_name = s if isinstance(s, str) else s.get("source_name", f"Bronze_Source_{idx+1}")
-        upstream_sources.append({
-            "system": s_name,
-            "layer": "BRONZE",
-            "type": "CDC_STREAM" if "stream" in s_name.lower() or "event" in s_name.lower() else "BATCH_FILE",
-            "frequency": "HOURLY" if "stream" in s_name.lower() else "DAILY",
-        })
+        if isinstance(s, dict):
+            upstream_sources.append({
+                "system": s.get("system") or s.get("system_name") or f"Bronze_Source_{idx+1}",
+                "dataset": s.get("dataset") or s.get("dataset_name") or f"brz_source_{idx+1}",
+                "layer": "BRONZE",
+                "type": s.get("type", "BATCH_FILE"),
+                "frequency": s.get("frequency", "DAILY"),
+                "is_system_of_record": s.get("is_system_of_record_for", []),
+            })
+        else:
+            s_name = str(s)
+            upstream_sources.append({
+                "system": s_name,
+                "layer": "BRONZE",
+                "type": "CDC_STREAM" if "stream" in s_name.lower() or "event" in s_name.lower() else "BATCH_FILE",
+                "frequency": "HOURLY" if "stream" in s_name.lower() else "DAILY",
+            })
 
     entity_lineage = []
     for tname, mdef in models.items():

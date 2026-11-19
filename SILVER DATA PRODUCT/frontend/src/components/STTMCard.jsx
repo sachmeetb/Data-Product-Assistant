@@ -95,7 +95,35 @@ function typeFromTransform(transform) {
  * targets (when supplied) become trailing entities. Arrows go Bronze → Silver
  * → Gold so the user can read the data flow left-to-right.
  */
-function buildLineageMermaid({ silver_tables = [], mappings = [] }) {
+function buildLineageMermaid({ silver_tables = [], mappings = [], systems_hierarchy = [], domain_display_name = '' }) {
+  if (systems_hierarchy && systems_hierarchy.length > 0) {
+    const lines = ['flowchart LR']
+    const domId = 'DOM_HUB'
+    const domLabel = (domain_display_name || 'Customer 360 Business Domain').replace(/"/g, "'")
+    lines.push(`    ${domId}["${domLabel}"]`)
+
+    for (const sys of systems_hierarchy) {
+      const sysId = `SYS_${sanitiseId(sys.source_system)}`
+      const sysLabel = `${sys.source_system}: ${(sys.system_name || '').replace(/"/g, "'")} (${sys.table_count} tables)`
+      lines.push(`    ${sysId}["${sysLabel}"]`)
+      for (const tbl of (sys.tables || [])) {
+        const tblId = `BRZ_${sanitiseId(tbl.table_name)}`
+        const tblLabel = `${tbl.table_name} (${tbl.row_count || 0} rows)`
+        lines.push(`    ${tblId}["${tblLabel}"]`)
+        lines.push(`    ${sysId} --> ${tblId}`)
+        lines.push(`    ${tblId} --> ${domId}`)
+      }
+    }
+
+    for (const st of (silver_tables || [])) {
+      const sName = shortName(st)
+      const sId = `SLV_${sanitiseId(sName)}`
+      lines.push(`    ${sId}["${sName}"]`)
+      lines.push(`    ${domId} --> ${sId}`)
+    }
+    return lines.join('\n')
+  }
+
   if (!mappings || mappings.length === 0) {
     return ''
   }
@@ -171,6 +199,7 @@ export default function STTMCard({ view, variant = 'gold' }) {
     title, step_label, summary, narrative,
     silver_sources, gold_targets, derived,
     lineage_summary, silver_tables,
+    systems_hierarchy, domain_display_name,
     header, mappings = [], mapping_count,
   } = view
 
@@ -178,7 +207,7 @@ export default function STTMCard({ view, variant = 'gold' }) {
   const narrativeText = summary || narrative
   const narrativeBullets = isSilver ? splitNarrativeIntoBullets(narrativeText) : []
   const lineageChart = isSilver
-    ? buildLineageMermaid({ silver_tables, gold_targets, mappings })
+    ? buildLineageMermaid({ silver_tables, gold_targets, mappings, systems_hierarchy, domain_display_name })
     : ''
 
   // Domain framework — use backend-injected value when present; otherwise default to Banking Framework
